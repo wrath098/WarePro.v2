@@ -14,7 +14,7 @@ class FundController extends Controller
      */
     public function index(): Response
     {
-        $funds = ['id' => 1,'id' => 2,'id' => 3,'id' => 4,'id' => 5];
+        $funds = Fund::all();
         return Inertia::render('Fund/Index', ['fundCluster' => $funds]);
     }
 

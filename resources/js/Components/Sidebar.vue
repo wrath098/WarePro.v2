@@ -5,7 +5,6 @@
     import SubSidebarLink from '@/Components/Buttons/SubSidebarLink.vue';
     import Humburger from '@/Components/Svgs/Hamburger.vue';
     import Pie from '@/Components/Svgs/Pie.vue';
-    import Clipboard from '@/Components/Svgs/Clipboard.vue';
     import ArrowDown from '@/Components/Svgs/ArrowDown.vue';
     import ArrowRight from '@/Components/Svgs/ArrowRight.vue';
     import Bag from '@/Components/Svgs/Bag.vue';
