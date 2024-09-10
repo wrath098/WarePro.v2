@@ -25,16 +25,18 @@ const closeModal = () => {
 
 const props = defineProps({
     fundCluster: Array,
+    authUserId: Number,
 });
 
 
 const form = reactive({
     fundName: '',
     fundDesc: '',
+    createdBy: props.authUserId || '',
 });
 
 const submit = () => {
-    Inertia.post('/funds/save', form, {
+    Inertia.post('funds/save', form, {
         onSuccess: () => {
             closeModal();
         },
@@ -59,6 +61,12 @@ const getInitials = (name) => {
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-3">Fund Clusters</h2>
+            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+                {{ $page.props.flash.message }}
+            </div>
+            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+                {{ $page.props.flash.error }}
+            </div>
         </template>
 
         <div class="py-8">
@@ -71,25 +79,25 @@ const getInitials = (name) => {
                                     {{ getInitials(fund.fund_name) }}
                                 </div>
 
-                                <div class="flex-1 flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                                <div class="flex-1 flex items-start justify-between bg-gray-50 p-4 rounded-lg">
                                     <div class="flex flex-col gap-1">
-                                        <a href="#" class="text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        <p class="text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
                                             {{ fund.fund_name }}
-                                        </a>
+                                        </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ fund.description }}
+                                            {{ fund.description || 'No Description' }}
                                         </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
                                             {{ fund.fund_status }}
                                         </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ fund.created_by }}
+                                            {{ fund.nameOfCreator }}
                                         </p>
                                     </div>
                                     <div class="flex items-center">
                                         <Dropdown>
                                             <template #trigger>
-                                                <button class="flex items-center bg-gray-700 text-gray-100 p-2 rounded-full hover:text-gray-900  hover:bg-gray-300 transition">
+                                                <button class="flex items-center bg-yellow-700 text-indigo-100 p-2 rounded-full hover:text-yellow-900  hover:bg-indigo-50 transition">
                                                     <span class="sr-only">Open options</span>
                                                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
                                                         <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
@@ -108,7 +116,7 @@ const getInitials = (name) => {
                                     </div>
                                 </div>
                             </li>
-                            <button @click="showAddFundModal" class="flex items-center justify-center h-auto rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
+                            <button @click="showAddFundModal" class="flex items-center justify-center h-44 rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
                                 <span class="text-xl text-gray-900">
                                     <svg class="w-6 h-6 text-indigo-900 transition duration-75" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M3 12h18"/>
@@ -130,8 +138,8 @@ const getInitials = (name) => {
                                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Fund Cluster</h3>
                                                 <div class="mt-2">
                                                     <p class="text-sm text-gray-500"> Enter the details for the new cluster you wish to add.</p>
-                                                    <input type="text" v-model="form.fundName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-blue-500" placeholder="Name : Ex. Common Supplies Expense">
-                                                    <input type="text" v-model="form.fundDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-blue-500" placeholder="Description : Optional">
+                                                    <input type="text" v-model="form.fundName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Supplies Expense" required>
+                                                    <input type="text" v-model="form.fundDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Optional">
                                                 </div>
                                             </div>
                                         </div>

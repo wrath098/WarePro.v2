@@ -22,9 +22,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->prefix('funds')->group(function () {
     Route::get('/', [FundController::class, 'index'])->name('fund.display.all');
-    Route::get('/save', [FundController::class, 'index'])->name('fund.store');
+    Route::post('/save', [FundController::class, 'store'])->name('fund.store');
 });
-
-
 
 require __DIR__.'/auth.php';

@@ -21,6 +21,7 @@
         "@inertiajs/progress": "^0.2.7",
         "nprogress": "^0.2.0",
         "primevue": "^4.0.5",
-        "vue3-data-table": "^1.0.2"
+        "vue3-data-table": "^1.0.2",
+        "ziggy-js": "^2.3.0"
     }
 }
