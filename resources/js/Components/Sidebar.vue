@@ -67,7 +67,7 @@
                             <SubSidebarLink :href="route('fund.display.all')">Fund Clusters</SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Categories</SubSidebarLink>
+                            <SubSidebarLink :href="route('category.display.active')" :active="true">Categories</SubSidebarLink>
                         </li>
                         <li>
                             <SubSidebarLink :href="route('dashboard')" :active="true">Products</SubSidebarLink>

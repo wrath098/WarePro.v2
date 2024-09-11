@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -25,6 +26,12 @@ Route::middleware('auth')->prefix('funds')->group(function () {
     Route::post('/save', [FundController::class, 'store'])->name('fund.store');
     Route::post('/update', [FundController::class, 'update'])->name('fund.update');
     Route::post('/deactivate', [FundController::class, 'deactivate'])->name('fund.deactivate');
+});
+
+Route::middleware('auth')->prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('category.display.active');
+    Route::post('/save', [CategoryController::class, 'store'])->name('category.store');
+
 });
 
 require __DIR__.'/auth.php';

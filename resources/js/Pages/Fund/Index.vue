@@ -133,13 +133,13 @@ const getInitials = (name) => {
                                             {{ fund.fund_name }}
                                         </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ fund.description || 'No Description' }}
+                                            <span class="font-medium">Description: </span> {{ fund.description || 'No Description' }}
                                         </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ fund.fund_status }}
+                                            <span class="font-medium">Status: </span> {{ fund.fund_status }}
                                         </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ fund.nameOfCreator }}
+                                            <span class="font-medium">Added By: </span> {{ fund.nameOfCreator }}
                                         </p>
                                     </div>
                                     <div class="flex items-center">

@@ -6,18 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Fund extends Model
+class Category extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'funds';
+    protected $table = 'categories';
 
     protected $fillable = [
-        'fund_name', 
-        'fund_status', 
-        'description', 
+        'fund_id', 
+        'cat_code', 
+        'cat_name', 
+        'cat_status', 
         'created_by', 
         'updated_by '
     ];
@@ -37,8 +37,8 @@ class Fund extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function categories(): HasMany
+    public function funder() : BelongsTo
     {
-        return $this->hasMany(Category::class);
+        return $this->belongsTo(Fund::class, 'fund_id');
     }
 }
