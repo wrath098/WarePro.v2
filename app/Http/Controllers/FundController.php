@@ -18,7 +18,9 @@ class FundController extends Controller
      */
     public function index(): Response
     {
-        $funds = Fund::all();
+        $funds = Fund::where('fund_status', 'active')
+                    ->orderBy('fund_name')
+                    ->get();
         foreach ($funds as $list) {
             $creator = User::findOrFail($list->created_by);
             $list['nameOfCreator'] = $creator->name;
@@ -46,26 +48,10 @@ class FundController extends Controller
                     'created_by' => $validation['createdBy'],
                 ]);
             });
-            return redirect()->route('fund.display.all')->with(['message' => 'Fund created successfully']);
+            return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster created successfully']);
         } catch (\Exception $e) {
-            return redirect()->route('fund.display.all')->with(['error' => 'Failed to create fund']);
+            return redirect()->route('fund.display.all')->with(['error' => 'Failed to create Fund Cluster']);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Fund $fund)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Fund $fund)
-    {
-        //
     }
 
     /**
@@ -73,14 +59,51 @@ class FundController extends Controller
      */
     public function update(Request $request, Fund $fund)
     {
-        //
+        $validation = $request->validate([
+            'fundId' => 'required|integer',
+            'updatedBy' => 'required|integer',
+            'fundName' => 'required|string|max:255',
+            'fundDesc' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            DB::transaction(function () use ($validation, $fund) {
+                $fund = Fund::findOrFail($validation['fundId']);
+
+                $fund->fill([
+                    'fund_name' => $validation['fundName'],
+                    'description' => $validation['fundName'],
+                    'updated_by' => $validation['updatedBy'],
+                ])->save();
+            });
+            return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster updated successfully.']);
+        } catch (\Exception $e) {
+            return redirect()->route('fund.display.all')->with(['error' => 'Failed to update the fund cluster.']);
+        }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Update the status specified resource in storage.
      */
-    public function destroy(Fund $fund)
+    public function deactivate(Request $request, Fund $fund)
     {
-        //
+        $validation = $request->validate([
+            'fundId' => 'required|integer',
+            'updatedBy' => 'required|integer',
+        ]);
+
+        try {
+            DB::transaction(function () use ($validation, $fund) {
+                $fund = Fund::findOrFail($validation['fundId']);
+
+                $fund->fill([
+                    'fund_status' => 'deactivated',
+                    'updated_by' => $validation['updatedBy'],
+                ])->save();
+            });
+            return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster deactivated successfully.']);
+        } catch (\Exception $e) {
+            return redirect()->route('fund.display.all')->with(['error' => 'Failed to deactivate the fund cluster.']);
+        }
     }
 }

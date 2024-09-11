@@ -23,6 +23,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->prefix('funds')->group(function () {
     Route::get('/', [FundController::class, 'index'])->name('fund.display.all');
     Route::post('/save', [FundController::class, 'store'])->name('fund.store');
+    Route::post('/update', [FundController::class, 'update'])->name('fund.update');
+    Route::post('/deactivate', [FundController::class, 'deactivate'])->name('fund.deactivate');
 });
 
 require __DIR__.'/auth.php';
