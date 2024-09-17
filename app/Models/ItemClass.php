@@ -8,19 +8,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Category extends Model
+class ItemClass extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'categories';
+    protected $table = 'item_classes';
 
     protected $fillable = [
-        'fund_id', 
-        'cat_code', 
-        'cat_name', 
-        'cat_status', 
+        'item_code', 
+        'item_name', 
+        'item_status', 
+        'cat_id', 
+        'subcat_id',
         'created_by', 
-        'updated_by '
+        'updated_by', 
     ];
 
     protected $casts = [
@@ -38,13 +39,8 @@ class Category extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function funder() : BelongsTo
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Fund::class, 'fund_id');
-    }
-
-    public function items() : HasMany
-    {
-        return $this->hasMany(ItemClass::class, 'cat_id');
+        return $this->belongsTo(Category::class, 'cat_id');
     }
 }

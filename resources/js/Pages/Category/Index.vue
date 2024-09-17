@@ -12,6 +12,8 @@ import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
 const modalState = ref(null);
 
 const isAddModalOpen = computed(() => modalState.value === 'add');
+const isEditModalOpen = computed(() => modalState.value === 'edit');
+const isDropModalOpen = computed(() => modalState.value === 'deactivate');
 
 const showModal = (modalType) => {
     modalState.value = modalType;
@@ -34,16 +36,44 @@ const form = reactive({
     createdBy: props.authUserId || '',
 });
 
-const submit = () => {
-    Inertia.post('categories/save', form, {
-        onSuccess: () => {
-            closeModal();
-        },
+const editForm = reactive({
+    catId: '',
+    catName: '',
+    catCode: '',
+    fundId: '',
+    updater: props.authUserId || '',
+});
+
+const dropForm = reactive({
+    catId: '',
+    updater: props.authUserId || '',
+});
+
+const openEditModal = (category) => {
+    editForm.catId = category.id;
+    editForm.catName = category.name;
+    editForm.catCode = category.code;
+    editForm.fundId = category.fundId;
+    modalState.value = 'edit';
+};
+
+const openDropModal = (category) => {
+    dropForm.catId = category.id;
+    modalState.value = 'deactivate';
+};
+
+const submitForm = (url, data) => {
+    Inertia.post(url, data, {
+        onSuccess: () => closeModal(),
         onError: (errors) => {
-            console.error('Form submission failed', errors);
+            console.error(`Form submission failed for ${url}`, errors);
         },
     });
 };
+
+const submit = () => submitForm('categories/save', form);
+const submitEdit = () => submitForm('categories/update', editForm);
+const submitDrop = () => submitForm('categories/deactivate', dropForm);
 </script>
 
 <template>
@@ -97,10 +127,10 @@ const submit = () => {
                                                 </button>
                                             </template>
                                             <template #content>
-                                                <button class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                                <button @click="openEditModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
                                                     Edit 
                                                 </button>
-                                                <button class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                                <button @click="openDropModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
                                                     Remove
                                                 </button>
                                             </template>
@@ -116,57 +146,133 @@ const submit = () => {
                                     Add
                                 </span>
                             </button>
-                            <Modal :show="isAddModalOpen" @close="closeModal"> 
-                                <form @submit.prevent="submit">
-                                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                        <div class="sm:flex sm:items-start">
-                                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                                                <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
-                                                </svg>
-
-            
-                                            </div>
-                                            <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Category</h3>
-                                                <div class="mt-2">
-                                                    <p class="text-sm text-gray-500"> Enter the details for the new category you wish to add.</p>
-                                                    <input type="hidden" v-model="form.createdBy">
-                                                    <input type="text" v-model="form.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
-                                                    <input type="number" v-model="form.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required>
-                                                    <select v-model="form.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                                        <option value="" disabled selected>Please choose its fund cluster if applicable</option>
-                                                        <option v-for="fund in funds" :key="fund.id" :value="fund.id">
-                                                            {{ fund.name }}
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                                        <SuccessButton>
-                                            <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                            </svg>
-                                            Confirm 
-                                        </SuccessButton>
-
-                                        <DangerButton @click="closeModal"> 
-                                            <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                            </svg>
-                                            Cancel
-                                        </DangerButton>
-                                    </div>
-                                </form>
-                            </Modal>
-                            
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
+        <Modal :show="isAddModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submit">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Category</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500"> Enter the details for the new category you wish to add.</p>
+                                <input type="hidden" v-model="form.createdBy">
+                                <input type="text" v-model="form.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
+                                <input type="number" v-model="form.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required>
+                                <select v-model="form.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                    <option value="" disabled selected>Please choose its fund cluster if applicable</option>
+                                    <option v-for="fund in funds" :key="fund.id" :value="fund.id">
+                                        {{ fund.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton>
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Confirm 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isEditModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitEdit">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+
+
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Edit Category</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500"> Enter the details for the new category you wish to add.</p>
+                                <input type="hidden" v-model="editForm.updater">
+                                <input type="hidden" v-model="editForm.catId">
+                                <input type="text" v-model="editForm.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
+                                <input type="number" v-model="editForm.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required>
+                                <select v-model="editForm.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                    <option value="" disabled>Please choose its fund cluster if applicable</option>
+                                    <option v-for="fund in funds" :key="fund.id" :value="fund.id">
+                                        {{ fund.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton>
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Save Changes 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isDropModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitDrop">
+                <input type="hidden" v-model="dropForm.catId">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                        </svg>
+
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Are you sure!</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will remove the selected Category into the list.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton>
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </Modal>
     </AuthenticatedLayout>
     </div>
 </template>

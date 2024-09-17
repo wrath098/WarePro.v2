@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('sub_categories', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('fund_id')->nullable();
-            $table->foreign('fund_id')->references('id')->on('funds');
-            $table->string('cat_code', 255)->nullable();
-            $table->string('cat_name', 255)->nullable();
-            $table->string('cat_status', 50)->default('active');
+            $table->string('sub_name')->nullable();
+            $table->string('sub_status')->default('active');
+            $table->unsignedBigInteger('cat_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('updated_by')->references('id')->on('users');
+            $table->foreign('cat_id')->references('id')->on('categories');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('sub_categories');
     }
 };

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FundController;
+use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -31,7 +32,13 @@ Route::middleware('auth')->prefix('funds')->group(function () {
 Route::middleware('auth')->prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('category.display.active');
     Route::post('/save', [CategoryController::class, 'store'])->name('category.store');
+    Route::post('/update', [CategoryController::class, 'update'])->name('category.update');
+    Route::post('/deactivate', [CategoryController::class, 'deactivate'])->name('category.deactivate');
+});
 
+Route::middleware('auth')->prefix('items')->group(function () {
+    Route::get('/', [ItemClassController::class, 'index'])->name('item.display.active');
+    Route::post('/save', [ItemClassController::class, 'store'])->name('item.store');
 });
 
 require __DIR__.'/auth.php';

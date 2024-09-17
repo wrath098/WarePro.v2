@@ -48,7 +48,7 @@
                 <li>
                     <SidebarLink :href="route('dashboard')" :active="true">
                         <Pie/>
-                        <span class="ml-3">Dashboard</span>
+                        <span>Dashboard</span>
                     </SidebarLink>
                 </li>
                 <li>
@@ -70,7 +70,7 @@
                             <SubSidebarLink :href="route('category.display.active')" :active="true">Categories</SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Products</SubSidebarLink>
+                            <SubSidebarLink :href="route('item.display.active')" :active="true">Item Classes </SubSidebarLink>
                         </li>
                         <li>
                             <SubSidebarLink :href="route('dashboard')" :active="true">Offices</SubSidebarLink>
