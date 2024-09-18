@@ -20,7 +20,7 @@ class ProductService
 
     public function getActiveItemclass()
     {
-        return ItemClass::where('item_status', 'active')->orderBy('cat_id')->get();
+        return ItemClass::where('item_status', 'active')->orderBy('cat_id')->paginate(10);
     }
 
     public function validateCategoryExistence($fundId, $code, $name)

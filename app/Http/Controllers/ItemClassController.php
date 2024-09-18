@@ -24,11 +24,13 @@ class ItemClassController extends Controller
      */
     public function index(): Response
     {
-        $itemClass = $this->productService->getActiveItemclass()->map(fn($item) => [
-            'id' => $item->id,
-            'code' => sprintf('%02d', $item->item_code),
-            'name' => $item->item_name
-        ]);
+        // $itemClass = $this->productService->getActiveItemclass()->map(fn($item) => [
+        //     'id' => $item->id,
+        //     'code' => sprintf('%02d', $item->item_code),
+        //     'name' => $item->item_name
+        // ]);
+
+        $itemClass = $this->productService->getActiveItemclass();
 
         $categories = $this->productService->getActiveCategory()->map(fn($category) => [
             'id' => $category->id,
