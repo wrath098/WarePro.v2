@@ -1,6 +1,6 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
-import { ref, reactive, computed } from 'vue';
+import { Head } from '@inertiajs/vue3';
+import { ref, reactive, computed, watch } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -9,7 +9,6 @@ import Modal from '@/Components/Modal.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
 import Pagination from '@/Components/Pagination.vue';
-
 
 const props = defineProps({
     itemClasses: Object,
@@ -45,6 +44,12 @@ const submitForm = (url, data) => {
 };
 
 const submit = () => submitForm('items/save', form);
+
+let searchItem = ref('');
+
+watch(searchItem, value => {
+    Inertia.get('/items/', { searchItem: value });
+});
 </script>
 
 <template>
@@ -78,38 +83,50 @@ const submit = () => submitForm('items/save', form);
                                 <div class="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
                                     <svg class="w-5 h-5 text-indigo-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                                 </div>
-                                <input type="text" id="table-search" class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search for items">
+                                <input type="text" v-model="searchItem" id="table-search" class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search for items">
                             </div>
                         </div>
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-500 ">
-                            <thead class="text-xs text-gray-100 uppercase bg-indigo-600">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-900 ">
+                            <thead class="text-xs text-center text-gray-100 uppercase bg-indigo-600">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">
+                                    <th scope="col" class="px-6 py-3 w-1/12">
                                         No#
                                     </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Item Code
+                                    <th scope="col" class="px-6 py-3 w-1/12">
+                                        Code
                                     </th>
-                                    <th scope="col" class="px-6 py-3">
-                                        Item Name
+                                    <th scope="col" class="px-6 py-3 w-3/12">
+                                        Name
                                     </th>
-                                    <th scope="col" class="px-6 py-3">
+                                    <th scope="col" class="px-6 py-3 w-3/12">
+                                        Category
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
+                                        Status
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
                                         Action
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(item, index) in itemClasses.data" :key="item.id" class="bg-white border-b whitespace-nowrap">
-                                    <th scope="row" class="px-6 py-4">
+                                    <th scope="row" class="py-2 text-center">
                                         {{  index+1 }}
                                     </th>
-                                    <th scope="row" class="px-6 py-4">
-                                        {{  item.item_code.toString().padStart(2, '0') }}
+                                    <th scope="row" class="py-2 text-center">
+                                        {{  item.code }}
                                     </th>
-                                    <td class="px-6 py-4">
-                                        {{ item.item_name }}
+                                    <td class="py-2">
+                                        {{ item.name }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="py-2">
+                                        {{ item.category }}
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        {{ item.status }}
+                                    </td>
+                                    <td class="py-2 text-center">
                                         <CircleButton>
                                             <svg class="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                                 <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
@@ -126,8 +143,8 @@ const submit = () => submitForm('items/save', form);
                             </tbody>
                         </table>
                     </div>
-                    <div class="my-4 p-4 bg-white rounded-lg shadow-md">
-                        <Pagination :links="itemClasses.links"/>
+                    <div class="flex justify-center p-5">
+                        <Pagination :links="itemClasses.links" />
                     </div>
                 </div>
             </div>

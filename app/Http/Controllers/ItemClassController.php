@@ -30,7 +30,13 @@ class ItemClassController extends Controller
         //     'name' => $item->item_name
         // ]);
 
-        $itemClass = $this->productService->getActiveItemclass();
+        $itemClass = $this->productService->getActiveItemclass()->through(fn($item) => [
+            'id' => $item->id,
+            'code' => str_pad($item->item_code, 2, '0', STR_PAD_LEFT),
+            'name' => $item->item_name,
+            'category' => $item->category->cat_name,
+            'status' => $item->item_status,
+        ]);
 
         $categories = $this->productService->getActiveCategory()->map(fn($category) => [
             'id' => $category->id,
