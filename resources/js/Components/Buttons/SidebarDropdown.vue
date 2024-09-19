@@ -12,8 +12,8 @@
     });
     const classes = computed(() =>
         props.active
-            ? 'flex items-center p-2 w-full text-base rounded-lg font-medium leading-5 text-gray-900 rounded-lg transition duration-75 hover:text-gray-50 hover:bg-indigo-900  group'
-            : 'flex items-center p-2 w-full text-base rounded-lg font-medium leading-5 text-gray-900 rounded-lg transition duration-75 hover:text-gray-50 hover:bg-indigo-900  group'
+        ? 'flex items-center p-2 w-full text-base rounded-lg font-medium leading-5 text-white bg-indigo-900 transition duration-75 group'
+        : 'flex items-center p-2 w-full text-base rounded-lg font-medium leading-5 text-gray-900 hover:text-gray-50 hover:bg-indigo-900 transition duration-75 group'
     );
 </script>
 <template>

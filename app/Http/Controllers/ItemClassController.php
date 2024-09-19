@@ -22,20 +22,27 @@ class ItemClassController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // $itemClass = $this->productService->getActiveItemclass()->map(fn($item) => [
-        //     'id' => $item->id,
-        //     'code' => sprintf('%02d', $item->item_code),
-        //     'name' => $item->item_name
-        // ]);
+        $queryItem = ItemClass::query()
+        ->when($request->input('search'), function ($query, $search){
+            $query->where('item_name', 'like', '%' . $search . '%');
+        })
+        ->with('category', 'creator')
+        ->where('item_status', 'active')
+        ->orderBy('cat_id', 'asc')
+        ->orderBy('item_name', 'asc')
+        ->paginate(10)
+        ->withQueryString();
 
-        $itemClass = $this->productService->getActiveItemclass()->through(fn($item) => [
+        $itemClass = $queryItem->through(fn($item) => [
             'id' => $item->id,
             'code' => str_pad($item->item_code, 2, '0', STR_PAD_LEFT),
             'name' => $item->item_name,
+            'catId' => $item->category->id,
             'category' => $item->category->cat_name,
-            'status' => $item->item_status,
+            'status' => ucfirst($item->item_status),
+            'creator' => $item->creator->name,
         ]);
 
         $categories = $this->productService->getActiveCategory()->map(fn($category) => [
@@ -43,7 +50,7 @@ class ItemClassController extends Controller
             'name' => $category->cat_name
         ]);
 
-        return Inertia::render('Item/Index', ['itemClasses' => $itemClass, 'categories' => $categories, 'authUserId' => Auth::id()]);
+        return Inertia::render('Item/Index', ['itemClasses' => $itemClass, 'filters' => $request->only(['search']), 'categories' => $categories, 'authUserId' => Auth::id()]);
     }
 
     /**
@@ -88,34 +95,48 @@ class ItemClassController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(ItemClass $itemClass)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ItemClass $itemClass)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, ItemClass $itemClass)
     {
-        //
+        $validatedData = $request->validate([
+            'itemId' => 'required|integer',
+            'editName' => 'required|string|max:255',
+            'updatedBy' => 'required|integer',
+        ]);
+
+        try {
+            $itemClass = ItemClass::findOrFail($validatedData['itemId']);
+
+            $itemClass->fill([
+                'item_name' => $validatedData['editName'],
+                'updated_by' => $validatedData['updatedBy'],
+            ])->save();
+
+            return redirect()->route('item.display.active')->with(['message' => 'Item Class name was updated successfully.']);
+        } catch (\Exception $e) {
+            return redirect()->route('item.display.active')->with(['error' => 'An error occurred while adding the new item class.']);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ItemClass $itemClass)
+    public function deactivate(Request $request, ItemClass $itemClass)
     {
-        //
+        $validatedData = $request->validate([
+            'itemId' => 'required|integer',
+            'updatedBy' => 'required|integer',
+        ]);
+
+        try {
+            $itemClass = ItemClass::findOrFail($validatedData['itemId']);
+
+            $itemClass->fill([
+                'item_status' => 'deactivated',
+                'updated_by' => $validatedData['updatedBy'],
+            ])->save();
+
+            return redirect()->route('item.display.active')->with(['message' => 'Item Class name was updated successfully.']);
+        } catch (\Exception $e) {
+            return redirect()->route('item.display.active')->with(['error' => 'An error occurred while adding the new item class.']);
+        }
     }
 }

@@ -1,5 +1,5 @@
 <script setup>
-    import { ref } from 'vue';
+    import { ref, computed, watch } from 'vue';
     import SidebarLink from '@/Components/Buttons/SidebarLink.vue';
     import SidebarDropdown from '@/Components/Buttons/SidebarDropdown.vue';
     import SubSidebarLink from '@/Components/Buttons/SubSidebarLink.vue';
@@ -46,9 +46,9 @@
                     </div>
                 </li>
                 <li>
-                    <SidebarLink :href="route('dashboard')" :active="true">
-                        <Pie/>
-                        <span>Dashboard</span>
+                    <SidebarLink :href="route('dashboard')" :active="$page.component == 'Dashboard'">
+                        <Pie :class="{'text-white': $page.component == 'Dashboard'}"/>
+                        <span class="flex-1 ml-3 text-left whitespace-nowrap">Dashboard</span>
                     </SidebarLink>
                 </li>
                 <li>
@@ -73,7 +73,7 @@
                             <SubSidebarLink :href="route('item.display.active')" :active="true">Item Classes </SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Offices</SubSidebarLink>
+                            <SubSidebarLink :href="route('item.display.active')" :active="true">Offices</SubSidebarLink>
                         </li>
                     </ul>
                 </li>
@@ -83,7 +83,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">PPMP</div>
                         </div>
                     </div>
-                    <SidebarLink :href="route('dashboard')" :active="true">
+                    <SidebarLink :href="route('dashboard')" :active="false">
                         <Import/>
                         <span class="ml-3">Upload</span>
                     </SidebarLink>
@@ -91,13 +91,13 @@
                 <li>
                     <ul id="dropdown-iPPMP" :class="{ 'hidden': !isiPPMPOpen, 'py-2 space-y-2': false }">
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Drafts</SubSidebarLink>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">Drafts</SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Initials</SubSidebarLink>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">Initials</SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Approved</SubSidebarLink>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">Approved</SubSidebarLink>
                         </li>
                     </ul>
                 </li>
@@ -109,13 +109,13 @@
                     </SidebarDropdown>
                     <ul id="dropdown-cPPMP" :class="{ 'hidden': !iscPPMPOpen, 'py-2 space-y-2': false }">
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Drafts</SubSidebarLink>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">Drafts</SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Initials</SubSidebarLink>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">Initials</SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('dashboard')" :active="true">Approved</SubSidebarLink>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">Approved</SubSidebarLink>
                         </li>
                     </ul>
                 </li>
@@ -191,13 +191,13 @@
             </ul>
             <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
                 <li>
-                    <SidebarLink :href="route('dashboard')" :active="true">
+                    <SidebarLink :href="route('dashboard')" :active="false">
                         <Documents/>
                         <span class="ml-3">Reports</span>
                     </SidebarLink>
                 </li>
                 <li>
-                    <SidebarLink :href="route('dashboard')" :active="true">
+                    <SidebarLink :href="route('dashboard')" :active="false">
                         <CircleDot/>
                         <span class="ml-3">Help</span>
                     </SidebarLink>

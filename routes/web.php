@@ -39,6 +39,8 @@ Route::middleware('auth')->prefix('categories')->group(function () {
 Route::middleware('auth')->prefix('items')->group(function () {
     Route::get('/', [ItemClassController::class, 'index'])->name('item.display.active');
     Route::post('/save', [ItemClassController::class, 'store'])->name('item.store');
+    Route::post('/update', [ItemClassController::class, 'update'])->name('item.update');
+    Route::post('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
 });
 
 require __DIR__.'/auth.php';
