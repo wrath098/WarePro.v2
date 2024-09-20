@@ -1,5 +1,5 @@
 <script setup>
-    import { ref, computed, watch } from 'vue';
+    import { ref} from 'vue';
     import SidebarLink from '@/Components/Buttons/SidebarLink.vue';
     import SidebarDropdown from '@/Components/Buttons/SidebarDropdown.vue';
     import SubSidebarLink from '@/Components/Buttons/SubSidebarLink.vue';
@@ -14,13 +14,18 @@
     import CircleDot from '@/Components/Svgs/CircleDot.vue';
     import Import from '@/Components/Svgs/Import.vue';
     import ClipboardList from '@/Components/Svgs/ClipboardList.vue';
+    import ArrowHeadRight from './Svgs/ArrowHeadRight.vue';
 
     const isComponentOpen = ref(false);
+    const isProductOpen = ref(false);
     const isiPPMPOpen = ref(false);
     const iscPPMPOpen = ref(false);
     
     const toggleComponent = () => {
         isComponentOpen.value = !isComponentOpen.value;
+    };
+    const toggleProduct = () => {
+        isProductOpen.value = !isProductOpen.value;
     };
     const toggleiPPMP = () => {
         isiPPMPOpen.value = !isiPPMPOpen.value;
@@ -28,7 +33,6 @@
     const togglecPPMP = () => {
         iscPPMPOpen.value = !iscPPMPOpen.value;
     };
-
 </script>
 
 <template>
@@ -57,23 +61,62 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Core</div>
                         </div>
                     </div>
-                    <SidebarDropdown  @click="toggleComponent" :active="false" aria-controls="dropdown-component" data-collapse-toggle="dropdown-component">
-                        <Files/>
+                    <SidebarDropdown  @click="toggleComponent" :active="$page.url.startsWith('/funds') || $page.url.startsWith('/categories') || $page.url.startsWith('/items') || $page.url.startsWith('/offices')" aria-controls="dropdown-component" data-collapse-toggle="dropdown-component">
+                        <Files :class="{'text-white': $page.url.startsWith('/funds') || $page.url.startsWith('/categories') || $page.url.startsWith('/items') || $page.url.startsWith('/offices')}" />
                         <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
-                        <ArrowDown/>
+                        <ArrowDown :class="{'text-white': $page.url.startsWith('/funds') || $page.url.startsWith('/categories') || $page.url.startsWith('/items') || $page.url.startsWith('/offices')}" />
                     </SidebarDropdown>
                     <ul :class="{ 'hidden': !isComponentOpen, 'py-2 space-y-2': false }" id="dropdown-component">
                         <li>
-                            <SubSidebarLink :href="route('fund.display.all')">Fund Clusters</SubSidebarLink>
+                            <SubSidebarLink :href="route('fund.display.all')" :active="$page.url.startsWith('/funds')">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/funds')}"/>
+                                Fund Clusters
+                            </SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('category.display.active')" :active="true">Categories</SubSidebarLink>
+                            <SubSidebarLink :href="route('category.display.active')" :active="$page.url.startsWith('/categories')">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/categories')}"/>
+                                Categories
+                            </SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('item.display.active')" :active="true">Item Classes </SubSidebarLink>
+                            <SubSidebarLink :href="route('item.display.active')" :active="$page.url.startsWith('/items')">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/items')}"/>
+                                Item Classes
+                            </SubSidebarLink>
                         </li>
                         <li>
-                            <SubSidebarLink :href="route('item.display.active')" :active="true">Offices</SubSidebarLink>
+                            <SubSidebarLink :href="route('office.display.active')" :active="$page.url.startsWith('/offices')">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/offices')}"/>
+                                Offices
+                            </SubSidebarLink>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <SidebarDropdown @click="toggleProduct" :active="false"  aria-controls="dropdown-product" data-collapse-toggle="dropdown-product">
+                        <ClipboardList/>
+                        <span class="flex-1 ml-3 text-left whitespace-nowrap">Product</span>
+                        <ArrowDown/>
+                    </SidebarDropdown>
+                    <ul id="dropdown-product" :class="{ 'hidden': !isProductOpen, 'py-2 space-y-2': false }">
+                        <li>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/items')}"/>
+                                List
+                            </SubSidebarLink>
+                        </li>
+                        <li>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/items')}"/>
+                                Prices
+                            </SubSidebarLink>
+                        </li>
+                        <li>
+                            <SubSidebarLink :href="route('dashboard')" :active="false">
+                                <ArrowHeadRight :class="{ 'text-white' : $page.url.startsWith('/items')}"/>
+                                Inventory
+                            </SubSidebarLink>
                         </li>
                     </ul>
                 </li>
@@ -89,6 +132,11 @@
                     </SidebarLink>
                 </li>
                 <li>
+                    <SidebarDropdown @click="toggleiPPMP" :active="false"  aria-controls="dropdown-cPPMP" data-collapse-toggle="dropdown-cPPMP">
+                        <ClipboardList/>
+                        <span class="flex-1 ml-3 text-left whitespace-nowrap">Individaual</span>
+                        <ArrowDown/>
+                    </SidebarDropdown>
                     <ul id="dropdown-iPPMP" :class="{ 'hidden': !isiPPMPOpen, 'py-2 space-y-2': false }">
                         <li>
                             <SubSidebarLink :href="route('dashboard')" :active="false">Drafts</SubSidebarLink>
@@ -102,7 +150,7 @@
                     </ul>
                 </li>
                 <li>
-                    <SidebarDropdown @click="togglecPPMP" :active="true"  aria-controls="dropdown-cPPMP" data-collapse-toggle="dropdown-cPPMP">
+                    <SidebarDropdown @click="togglecPPMP" :active="false"  aria-controls="dropdown-cPPMP" data-collapse-toggle="dropdown-cPPMP">
                         <ClipboardList/>
                         <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated</span>
                         <ArrowDown/>
@@ -125,7 +173,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Purchase Request</div>
                         </div>
                     </div>
-                    <SidebarDropdown :active="true" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
+                    <SidebarDropdown :active="false" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
                         <Bag/>
                         <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request</span>
                         <ArrowDown/>
@@ -148,7 +196,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">IAR</div>
                         </div>
                     </div>
-                    <SidebarDropdown :active="true" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
+                    <SidebarDropdown :active="false" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
                         <Inbox/>
                         <span class="flex-1 ml-3 text-left whitespace-nowrap">Reiceving</span>
                         <ArrowDown/>
@@ -171,7 +219,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">RIS</div>
                         </div>
                     </div>
-                    <SidebarDropdown :active="true" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
+                    <SidebarDropdown :active="false" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
                         <ArrowRight/>
                         <span class="flex-1 ml-3 text-left whitespace-nowrap">Releasing</span>
                         <ArrowDown/>

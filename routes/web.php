@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\ItemClassController;
+use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,13 @@ Route::middleware('auth')->prefix('items')->group(function () {
     Route::post('/save', [ItemClassController::class, 'store'])->name('item.store');
     Route::post('/update', [ItemClassController::class, 'update'])->name('item.update');
     Route::post('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
+});
+
+Route::middleware('auth')->prefix('offices')->group(function () {
+    Route::get('/', [OfficeController::class, 'index'])->name('office.display.active');
+    Route::post('/save', [OfficeController::class, 'store'])->name('office.store');
+    Route::post('/update', [OfficeController::class, 'update'])->name('office.update');
+    Route::post('/deactivate', [OfficeController::class, 'deactivate'])->name('office.deactivate');
 });
 
 require __DIR__.'/auth.php';
