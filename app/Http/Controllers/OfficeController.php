@@ -13,9 +13,18 @@ class OfficeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request): Response
     {
-        $offices = Office::with('creator')
+        $search = $request->input('search');
+        $offices = Office::query()
+        ->when($search, function ($query, $search) {
+            $query->where(function($q) use ($search) {
+                $q->where('office_code', 'like', '%' . $search . '%')
+                  ->orWhere('office_name', 'like', '%' . $search . '%')
+                  ->orWhere('office_head', 'like', '%' . $search . '%');
+            });
+        })
+        ->with('creator')
         ->where('office_status', 'active')
         ->orderBy('office_name')
         ->paginate(10)
@@ -29,7 +38,7 @@ class OfficeController extends Controller
             'addedBy' => $office->creator->name,
         ]);
 
-        return Inertia::render('Office/Index', ['offices' => $offices, 'authUserId' => Auth::id()]);
+        return Inertia::render('Office/Index', ['offices' => $offices, 'filters' => $request->only(['search']), 'authUserId' => Auth::id()]);
     }
 
 

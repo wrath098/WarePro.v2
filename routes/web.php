@@ -5,6 +5,7 @@ use App\Http\Controllers\FundController;
 use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -49,6 +50,11 @@ Route::middleware('auth')->prefix('offices')->group(function () {
     Route::post('/save', [OfficeController::class, 'store'])->name('office.store');
     Route::post('/update', [OfficeController::class, 'update'])->name('office.update');
     Route::post('/deactivate', [OfficeController::class, 'deactivate'])->name('office.deactivate');
+});
+
+Route::middleware('auth')->prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
+    Route::post('/save', [ProductController::class, 'store'])->name('product.store');
 });
 
 require __DIR__.'/auth.php';
