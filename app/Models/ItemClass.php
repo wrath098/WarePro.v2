@@ -43,4 +43,9 @@ class ItemClass extends Model
     {
         return $this->belongsTo(Category::class, 'cat_id');
     }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'item_id');
+    }
 }

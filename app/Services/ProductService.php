@@ -8,6 +8,16 @@ use App\Models\ItemClass;
 
 class ProductService 
 {
+
+    public function generateStockNo($id)
+    {
+        $itemClass = ItemClass::findOrFail($id); 
+        $latestProduct  = $itemClass->products()->orderBy('prod_newNo', 'desc')->first();
+        $latestNo = $latestProduct ? $latestProduct->prod_newNo : 0;
+        $controlNo = $latestNo + 1;
+        return str_pad($controlNo, 2, '0', STR_PAD_LEFT);
+    }
+
     public function getActiveFunds()
     {
         return Fund::where('fund_status', 'active')->orderBy('fund_name')->get();

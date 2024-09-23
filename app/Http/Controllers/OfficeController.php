@@ -23,7 +23,7 @@ class OfficeController extends Controller
                   ->orWhere('office_name', 'like', '%' . $search . '%')
                   ->orWhere('office_head', 'like', '%' . $search . '%');
             });
-        })
+        }, function ($query) {})
         ->with('creator')
         ->where('office_status', 'active')
         ->orderBy('office_name')

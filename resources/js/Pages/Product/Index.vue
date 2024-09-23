@@ -23,6 +23,18 @@
         selectedCategory: '',
         itemId: '',
         prodDesc: '',
+        prodPrice: '',
+        prodUnit: '',
+        prodRemarks: '',
+        prodOldCOde: '',
+        createdBy: props.authUserId || '',
+    });
+
+    const edit = reactive({
+        selectedCategory: '',
+        itemId: '',
+        prodDesc: '',
+        prodPrice: '',
         prodUnit: '',
         prodRemarks: '',
         prodOldCOde: '',
@@ -31,8 +43,10 @@
 
     const filteredItems = ref([]);
     const modalState = ref(null);
+    const years = generateYears();
 
     const isAddModalOpen = computed(() => modalState.value === 'add');
+    const isEditModalOpen = computed(() => modalState.value === 'edit');
 
     const onCategoryChange = () => {
         const category = props.categories.find(cat => cat.id === create.selectedCategory);
@@ -48,6 +62,16 @@
         modalState.value = null;
     }
 
+    const openEditModal = (product) => {
+        edit.selectedCategory = product.catId;
+        edit.itemId = product.itemId;
+        edit.prodDesc = product.desc;
+        edit.prodPrice = product.head;
+        edit.prodUnit = product.position;
+        edit.prodRemarks = product.position;
+        edit.prodOldCOde = product.position;
+        modalState.value = 'edit';
+    };
 
     const submitForm = (url, data) => {
         Inertia.post(url, data, {
@@ -59,20 +83,31 @@
     };
 
     const submit = () => submitForm('products/save', create);
+    const submitEdit = () => submitForm('products/update', create);
 
     let search = ref(props.filters.search);
 
     watch(search, debounce(function (value) {
+        console.log(value);
         router.get('products', { search: value }, {
             preserveState: true,
             preserveScroll:true,
             replace:true
         });
     }, 500));
+
+    function generateYears() {
+        const currentYear = new Date().getFullYear() + 5;
+        const years = [];
+        for (let i = currentYear; i >= currentYear - 10; i--) {
+            years.push(i);
+        }
+        return years;
+    }
 </script>
 
 <template>
-    <Head title="Office" />
+    <Head title="Products" />
     <div>
     <Sidebar/>
     <AuthenticatedLayout>
@@ -127,7 +162,7 @@
                                         Price
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
-                                        Status
+                                        Item Class
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
                                         Remarks
@@ -138,46 +173,52 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- <tr v-for="(office, index) in offices.data" :key="office.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
+                                <tr v-for="(product, index) in products.data" :key="product.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
                                     <td scope="row" class="py-2 text-center text-sm">
                                         {{  index+1 }}
                                     </td>
                                     <td scope="row" class="py-2 text-center text-sm">
-                                        {{  office.code }}
+                                        {{  product.newNo }}
+                                    </td>
+                                    <td class="py-2 text-center text-sm">
+                                        {{ product.oldNo }}
                                     </td>
                                     <td class="py-2">
-                                        {{ office.name }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ office.head }}
+                                        {{ product.desc }}
                                     </td>
                                     <td class="py-2 text-center">
-                                        {{ office.position }}
+                                        {{ product.unit }}
                                     </td>
                                     <td class="py-2 text-center">
-                                        {{ office.addedBy }}
+                                        
                                     </td>
                                     <td class="py-2 text-center">
-                                        <EditButton @click="openEditModal(office)">
+                                        {{ product.itemName }}
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        {{ product.remarks }}
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        <EditButton @click="openEditModal(product)">
                                             <svg class="w-5 h-5 text-white hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                                 <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
                                                 <path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/>
                                             </svg>
                                             
                                         </EditButton>
-                                        <RemoveButton @click="openDeactivateModal(office)">
+                                        <RemoveButton>
                                             <svg class="w-5 h-5 text-white hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                                 <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm5.757-1a1 1 0 1 0 0 2h8.486a1 1 0 1 0 0-2H7.757Z" clip-rule="evenodd"/>
                                             </svg>
                                         </RemoveButton>
                                     </td>
-                                </tr> -->
+                                </tr>
                             </tbody>
                         </table>
                     </div>
-                    <!-- <div class="flex justify-center p-5">
-                        <Pagination :links="offices.links" />
-                    </div> -->
+                    <div class="flex justify-center p-5">
+                        <Pagination :links="products.links" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -191,31 +232,139 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Office</h3>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Creat New Product</h3>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details for the new Office you wish to add.</p>
+                                <p class="text-sm text-gray-500"> Enter the details for the new Product you wish to add.</p>
+                                <div class="mt-5">
+                                    <p class="text-sm text-gray-500">Choose Category | Item Class</p>
+                                    <select v-model="create.selectedCategory" @change="onCategoryChange" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                        <option value="" disabled>Please choose the category applicable to the product</option>
+                                        <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                                            {{ category.name }}
+                                        </option>
+                                    </select>
+
+                                    <select v-model="create.itemId" v-if="filteredItems.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                        <option value="" disabled>Please choose an item applicable to the product</option>
+                                        <option v-for="item in filteredItems" :key="item.id" :value="item.id">
+                                            {{ item.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="mt-5">
+                                    <p class="text-sm text-gray-500"> Product Information</p>
+                                    <input type="text" v-model="create.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Ex. 500ml/bottle, 70% Ethyl" required>
+                                    <input type="text" v-model="create.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
+                                    <select v-model="create.prodUnit" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                        <option disabled value="">Select Unit Of Measure</option>
+                                        <option value="Book">Book</option>
+                                        <option value="Bottle">Bottle</option>
+                                        <option value="Box">Box</option>
+                                        <option value="Bundle">Bundle</option>
+                                        <option value="Cannister">Cannister</option>
+                                        <option value="Gallon">Gallon</option>
+                                        <option value="Kilo">Kilo</option>
+                                        <option value="Meter">Meter</option>
+                                        <option value="Pad">Pad</option>
+                                        <option value="Pack">Pack</option>
+                                        <option value="Pair">Pair</option>
+                                        <option value="Pc">Pc</option>
+                                        <option value="Pouch">Pouch</option>
+                                        <option value="Ream">Ream</option>
+                                        <option value="Roll">Roll</option>
+                                        <option value="Set">Set</option>
+                                        <option value="Tube">Tube</option>
+                                        <option value="Unit">Unit</option>
+                                        <option value="Yard">Yard</option>
+                                    </select>
+                                    <select v-model="create.prodRemarks" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                        <option disabled value="">Select the Product Year</option>
+                                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                    </select>
+                                    <input type="text" v-model="create.prodOldCOde" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Old Stock No: Ex. 1001 | 1002 | 1003 | etc.">
+                                    <input type="hidden" v-model="create.createdBy">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton>
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Confirm 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isEditModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitEdit">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Edit Product</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500"> Enter the details for product you wish to modify.</p>
                                 <div class="mt-5">
                                     <p class="text-sm text-gray-500"> Category | Item Class</p>
                                     <select v-model="create.selectedCategory" @change="onCategoryChange" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                         <option value="" disabled>Choose the category applicable</option>
                                         <option v-for="category in props.categories" :key="category.id" :value="category.id">
-                                            {{ category.cat_name }}
+                                            {{ category.name }}
                                         </option>
                                     </select>
 
                                     <select v-model="create.itemId" v-if="filteredItems.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                         <option value="" disabled>Please choose an item</option>
                                         <option v-for="item in filteredItems" :key="item.id" :value="item.id">
-                                            {{ item.item_name }}
+                                            {{ item.name }}
                                         </option>
                                     </select>
                                 </div>
                                 <div class="mt-5">
                                     <p class="text-sm text-gray-500"> Product Information</p>
-                                    <input type="text" v-model="create.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. PGSO | PASSO | PACCO | etc.">
-                                    <input type="text" v-model="create.prodUnit" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Provincial General Services Office" required>
-                                    <input type="text" v-model="create.prodRemarks" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Head of Office : Ex. Jennifer G. Bahod">
-                                    <input type="text" v-model="create.prodOldCOde" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Position of Head : Ex. PGS Officer">
+                                    <input type="text" v-model="create.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Ex. 500ml/bottle, 70% Ethyl" required>
+                                    <input type="text" v-model="create.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
+                                    <select v-model="create.prodUnit" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                        <option disabled value="">Select Unit Of Measure</option>
+                                        <option value="Book">Book</option>
+                                        <option value="Bottle">Bottle</option>
+                                        <option value="Box">Box</option>
+                                        <option value="Bundle">Bundle</option>
+                                        <option value="Cannister">Cannister</option>
+                                        <option value="Gallon">Gallon</option>
+                                        <option value="Kilo">Kilo</option>
+                                        <option value="Meter">Meter</option>
+                                        <option value="Pad">Pad</option>
+                                        <option value="Pack">Pack</option>
+                                        <option value="Pair">Pair</option>
+                                        <option value="Pc">Pc</option>
+                                        <option value="Pouch">Pouch</option>
+                                        <option value="Ream">Ream</option>
+                                        <option value="Roll">Roll</option>
+                                        <option value="Set">Set</option>
+                                        <option value="Tube">Tube</option>
+                                        <option value="Unit">Unit</option>
+                                        <option value="Yard">Yard</option>
+                                    </select>
+                                    <select v-model="create.prodRemarks" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                        <option disabled value="">Select the Product Year</option>
+                                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                    </select>
+                                    <input type="text" v-model="create.prodOldCOde" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Old Stock No: Ex. 1001 | 1002 | 1003 | etc.">
                                     <input type="hidden" v-model="create.createdBy">
                                 </div>
                             </div>

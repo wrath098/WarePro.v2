@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\ItemClass;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
@@ -27,7 +26,7 @@ class ItemClassController extends Controller
         $queryItem = ItemClass::query()
         ->when($request->input('search'), function ($query, $search){
             $query->where('item_name', 'like', '%' . $search . '%');
-        })
+        }, function ($query) {})
         ->with('category', 'creator')
         ->where('item_status', 'active')
         ->orderBy('cat_id', 'asc')

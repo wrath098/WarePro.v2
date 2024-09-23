@@ -4,24 +4,75 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductPrice;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
-        $category = Category::with('items')->where('cat_status', 'active')->get();
-        $products = Product::all();
+        $search = $request->input('search');
+        $activeCategories  = Category::with('items')
+            ->where('cat_status', 'active')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->cat_name,
+                    'items' => $category->items->map(function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'name' => $item->item_name,
+                        ];
+                    }),
+                ];
+        });
+    
+        $products = Product::query()
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('prod_newNo', 'like', '%' . $search . '%')
+                      ->orWhere('prod_desc', 'like', '%' . $search . '%')
+                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%');
+                });
+            }, function ($query) {})
+            ->with('itemClass')
+            ->where('prod_status', 'active')
+            ->orderBy('item_id', 'asc')
+            ->orderBy('prod_desc', 'asc')
+            ->paginate(10)
+            ->through(fn($product) => [
+                'id' => $product->id,
+                'newNo' => $product->prod_newNo,
+                'desc' => $product->prod_desc,
+                'unit' => $product->prod_unit,
+                'remarks' => $product->prod_remarks,
+                'status' => $product->prod_status,
+                'price' => '',
+                'oldNo' => $product->prod_oldNo,
+                'catId' => $product->itemClass ? $product->itemClass->cat_id : null,
+                'itemId' => $product->itemClass ? $product->itemClass->id : null,
+                'itemName' => $product->itemClass ? $product->itemClass->item_name : null,
+            ]);
+
 
         return Inertia::render('Product/Index', [
-            'product' => $products, 
-            'categories' => $category,
+            'products' => $products, 
+            'categories' => $activeCategories ,
             'filters' => $request->only(['search']), 
             'authUserId' => Auth::id()
         ]);
@@ -32,37 +83,47 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->input());
-    }
+        $validatedData = $request->validate([
+            'selectedCategory' => 'required|integer',
+            'itemId' => 'required|integer',
+            'prodPrice' => 'required|numeric',
+            'prodDesc' => 'required|string',
+            'prodUnit' => 'required|string',
+            'prodRemarks' => 'required|integer',
+            'prodOldCOde' => 'nullable|string',
+            'createdBy' => 'nullable|integer',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Product $product)
-    {
-        //
-    }
+        try {            
+            return DB::transaction(function () use ($validatedData) {
+                $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
-    {
-        //
+               $product = Product::create([
+                    'prod_newNo' => $controlNo,
+                    'prod_desc' => $validatedData['prodDesc'],
+                    'prod_unit' => $validatedData['prodUnit'],
+                    'prod_remarks' => $validatedData['prodRemarks'],
+                    'prod_remarks' => $validatedData['prodRemarks'],
+                    'prod_oldNo' => $validatedData['prodOldCOde'],
+                    'item_id' => $validatedData['itemId'],
+                    'created_by' => $validatedData['createdBy'],
+                ]);
+
+                ProductPrice::create([
+                    'prod_price' => $validatedData['prodPrice'],
+                    'prod_id' => $product->id,
+                ]);
+                return redirect()->route('product.display.active')->with(['message' => 'New Product has been successfully added.']);
+            });
+        } catch (\Exception $e) {
+            return redirect()->route('product.display.active')->with(['error' => 'An error occurred while adding the product.']);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Product $product)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Product $product)
     {
         //
     }
