@@ -9,6 +9,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,7 +48,10 @@ class ProductController extends Controller
                 $query->where(function($q) use ($search) {
                     $q->where('prod_newNo', 'like', '%' . $search . '%')
                       ->orWhere('prod_desc', 'like', '%' . $search . '%')
-                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%');
+                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%')
+                      ->orWhereHas('itemClass', function ($q) use ($search) {
+                            $q->where('item_name', 'like', '%' . $search . '%');
+                        });
                 });
             }, function ($query) {})
             ->with('itemClass')
@@ -62,11 +66,11 @@ class ProductController extends Controller
                 'unit' => $product->prod_unit,
                 'remarks' => $product->prod_remarks,
                 'status' => $product->prod_status,
-                'price' => '',
+                'price' => $this->productService->getLatestPrice($product->id),
                 'oldNo' => $product->prod_oldNo,
-                'catId' => $product->itemClass ? $product->itemClass->cat_id : null,
-                'itemId' => $product->itemClass ? $product->itemClass->id : null,
-                'itemName' => $product->itemClass ? $product->itemClass->item_name : null,
+                'catId' => optional($product->itemClass)->cat_id,
+                'itemId' => optional($product->itemClass)->id,
+                'itemName' => optional($product->itemClass)->item_name,
             ]);
 
 
@@ -90,10 +94,10 @@ class ProductController extends Controller
             'prodDesc' => 'required|string',
             'prodUnit' => 'required|string',
             'prodRemarks' => 'required|integer',
-            'prodOldCOde' => 'nullable|string',
+            'prodOldCode' => 'nullable|string',
             'createdBy' => 'nullable|integer',
         ]);
-
+        dd($validatedData);
         try {            
             return DB::transaction(function () use ($validatedData) {
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
@@ -104,7 +108,7 @@ class ProductController extends Controller
                     'prod_unit' => $validatedData['prodUnit'],
                     'prod_remarks' => $validatedData['prodRemarks'],
                     'prod_remarks' => $validatedData['prodRemarks'],
-                    'prod_oldNo' => $validatedData['prodOldCOde'],
+                    'prod_oldNo' => $validatedData['prodOldCode'],
                     'item_id' => $validatedData['itemId'],
                     'created_by' => $validatedData['createdBy'],
                 ]);
@@ -116,6 +120,7 @@ class ProductController extends Controller
                 return redirect()->route('product.display.active')->with(['message' => 'New Product has been successfully added.']);
             });
         } catch (\Exception $e) {
+            Log::error('Product update failed: ' . $e->getMessage());
             return redirect()->route('product.display.active')->with(['error' => 'An error occurred while adding the product.']);
         }
     }
@@ -123,8 +128,99 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'prodId' => 'required|integer',
+            'prodDesc' => 'required|string',
+            'prodPrice' => 'required|numeric',
+            'updatedBy' => 'required|integer',
+        ]);
+        dd($validatedData);
+        try {            
+            return DB::transaction(function () use ($validatedData) {
+                $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
+
+                $product = Product::findOrFail($validatedData['prodId']);
+                $product->update(['prod_desc' => $validatedData['prodDesc']]);
+
+                if($latestPrice != $validatedData['prodPrice']) {
+                    ProductPrice::create([
+                        'prod_price' => $validatedData['prodPrice'],
+                        'prod_id' => $validatedData['prodId'],
+                    ]);
+                }
+                return redirect()->route('product.display.active')->with(['message' => 'Product has been updated successfully.']);
+            });
+        } catch (\Exception $e) {
+            Log::error('Product update failed: ' . $e->getMessage());
+            return redirect()->route('product.display.active')->with(['error' => 'An error occurred while updating the product.']);
+        }
     }
+
+    public function moveAndModify(Request $request)
+    {
+        $validatedData = $request->validate([
+            'prodId' => 'required|integer',
+            'selectedCategory' => 'required|integer',
+            'itemId' => 'required|integer',
+            'prodPrice' => 'required|numeric',
+            'prodDesc' => 'required|string',
+            'prodUnit' => 'required|string',
+            'prodRemarks' => 'required|integer',
+            'prodOldCode' => 'nullable|string',
+            'updatedBy' => 'nullable|integer',
+        ]);
+        dd($validatedData);
+
+        try {            
+            return DB::transaction(function () use ($validatedData) {
+                $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
+
+                $product = Product::findOrFail($validatedData['prodId']);
+                $product->update(['updated_by' => $validatedData['updatedBy'], 'prod_status' => 'deactivated']);
+
+                $product = Product::create([
+                        'prod_newNo' => $controlNo,
+                        'prod_desc' => $validatedData['prodDesc'],
+                        'prod_unit' => $validatedData['prodUnit'],
+                        'prod_remarks' => $validatedData['prodRemarks'],
+                        'prod_remarks' => $validatedData['prodRemarks'],
+                        'prod_oldNo' => $validatedData['prodOldCode'],
+                        'item_id' => $validatedData['itemId'],
+                        'created_by' => $validatedData['updatedBy'],
+                    ]);
+
+                ProductPrice::create([
+                    'prod_price' => $validatedData['prodPrice'],
+                    'prod_id' => $product->id,
+                ]);
+                return redirect()->route('product.display.active')->with(['message' => 'Product has been updated successfully.']);
+            });
+        } catch (\Exception $e) {
+            Log::error('Product update failed: ' . $e->getMessage());
+            return redirect()->route('product.display.active')->with(['error' => 'An error occurred while adding the product.']);
+        }
+    }
+
+    public function deactivate(Request $request)
+    {
+        $validatedData = $request->validate([
+            'prodId' => 'required|integer',
+            'updatedBy' => 'nullable|integer',
+        ]);
+        
+        dd($validatedData);
+        try {
+            $product = Product::findOrFail($validatedData['prodId']);
+            $product->update([
+                'updated_by' => $validatedData['updatedBy'], 
+                'prod_status' => 'deactivated'
+            ]);
+            return redirect()->route('product.display.active')->with(['message' => 'Product has been remove successfully.']);
+        } catch (\Exception $e) {
+            return redirect()->route('product.display.active')->with(['error' => 'An error occurred while adding the product.']);
+        }
+    }
+    
 }

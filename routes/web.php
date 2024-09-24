@@ -56,6 +56,8 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
     Route::post('/save', [ProductController::class, 'store'])->name('product.store');
     Route::post('/update', [ProductController::class, 'update'])->name('product.update');
+    Route::post('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
+    Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
 });
 
 require __DIR__.'/auth.php';

@@ -48,6 +48,6 @@ class Product extends Model
 
     public function prices(): HasMany
     {
-        return $this->hasMany(ProductPrice::class,'prod_id');
+        return $this->hasMany(ProductPrice::class, 'prod_id');
     }
 }
