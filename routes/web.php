@@ -6,6 +6,7 @@ use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Pdf\ProductListActiveController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -54,10 +55,15 @@ Route::middleware('auth')->prefix('offices')->group(function () {
 
 Route::middleware('auth')->prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
+    Route::get('/product-price-list', [ProductController::class, 'showPriceList'])->name('product.display.active.pricelist');
     Route::post('/save', [ProductController::class, 'store'])->name('product.store');
     Route::post('/update', [ProductController::class, 'update'])->name('product.update');
     Route::post('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
     Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
+});
+
+Route::middleware('auth')->prefix('pdf')->group(function () {
+    Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
 });
 
 require __DIR__.'/auth.php';

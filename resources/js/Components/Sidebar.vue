@@ -76,10 +76,10 @@
                     </SidebarDropdown>
                 </li>
                 <li>
-                    <SidebarDropdown :active="route().current('product.display.active')">
-                            <Files :class="{'text-white': route().current('product.display.active')}" />
+                    <SidebarDropdown :active="route().current('product.display.active') || route().current('product.display.active.pricelist')">
+                            <Files :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist')" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Products</span>
-                            <ArrowDown :class="{'text-white': false}" />
+                            <ArrowDown :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist')" />
                         <template #dropdown-items>
                             <li>
                                 <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
@@ -88,8 +88,8 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
+                                <SubSidebarLink :href="route('product.display.active.pricelist')" :active="route().current('product.display.active.pricelist')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active.pricelist')}"/>
                                     Prices
                                 </SubSidebarLink>
                             </li>

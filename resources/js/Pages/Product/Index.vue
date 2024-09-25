@@ -11,6 +11,9 @@
     import Pagination from '@/Components/Pagination.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import { debounce } from 'lodash';
+    import PrintButton from '@/Components/Buttons/PrintButton.vue';
+    import AddButton from '@/Components/Buttons/AddButton.vue';
+    import ModifyButton from '@/Components/Buttons/ModifyButton.vue';
     
     const props = defineProps({
         products: Object,
@@ -80,7 +83,7 @@
         edit.prodPrice = product.price;
         edit.prodUnit = product.unit;
         edit.prodRemarks = product.remarks;
-        edit.prodOldCOde = product.oldNo;
+        edit.prodOldCode = product.oldNo;
         modalState.value = 'modify';
     };
 
@@ -125,7 +128,7 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-3">Offices</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-3">Products</h2>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
                 {{ $page.props.flash.message }}
             </div>
@@ -139,12 +142,15 @@
                 <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="relative overflow-x-auto">
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-between pb-4">
-                            <button @click="showModal('add')" class="flex items-center text-white bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 hover:bg-gradient-to-br font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
-                                <span class="mr-2">Add New Product</span>
-                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                    <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4.243a1 1 0 1 0-2 0V11H7.757a1 1 0 1 0 0 2H11v3.243a1 1 0 1 0 2 0V13h3.243a1 1 0 1 0 0-2H13V7.757Z" clip-rule="evenodd"/>
-                                </svg>
-                            </button>
+                            <div class="flex mb:flex-col">
+                                <AddButton @click="showModal('add')">
+                                    <span class="mr-2">Add New Product</span>
+                                </AddButton>
+                                <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank">
+                                    <span class="mr-2">Print</span>
+                                </PrintButton>
+                            </div>
+                            
                             <label for="search" class="sr-only">Search</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
@@ -213,22 +219,9 @@
                                         {{ product.remarks }}
                                     </td>
                                     <td class="py-2 text-center">
-                                        <EditButton @click="openEditModal(product)" >
-                                            <svg class="w-5 h-5 text-white hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                                <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
-                                                <path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/>
-                                            </svg>
-                                        </EditButton>
-                                        <EditButton @click="openModifyModal(product)" class="bg-blue-500 hover:bg-blue-100">
-                                            <svg class="w-5 h-5 text-white hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16h13M4 16l4-4m-4 4 4 4M20 8H7m13 0-4 4m4-4-4-4"/>
-                                            </svg>
-                                        </EditButton>
-                                        <RemoveButton @click="openDeactivateModal(product)">
-                                            <svg class="w-5 h-5 text-white hover:text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm5.757-1a1 1 0 1 0 0 2h8.486a1 1 0 1 0 0-2H7.757Z" clip-rule="evenodd"/>
-                                            </svg>
-                                        </RemoveButton>
+                                        <EditButton @click="openEditModal(product)" tooltip="Edit"/>
+                                        <ModifyButton @click="openModifyModal(product)" tooltip="Modify"/>
+                                        <RemoveButton @click="openDeactivateModal(product)" tooltip="Remove"/>
                                     </td>
                                 </tr>
                             </tbody>

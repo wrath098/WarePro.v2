@@ -97,7 +97,7 @@ class ProductController extends Controller
             'prodOldCode' => 'nullable|string',
             'createdBy' => 'nullable|integer',
         ]);
-        dd($validatedData);
+
         try {            
             return DB::transaction(function () use ($validatedData) {
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
@@ -136,7 +136,7 @@ class ProductController extends Controller
             'prodPrice' => 'required|numeric',
             'updatedBy' => 'required|integer',
         ]);
-        dd($validatedData);
+
         try {            
             return DB::transaction(function () use ($validatedData) {
                 $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
@@ -171,7 +171,6 @@ class ProductController extends Controller
             'prodOldCode' => 'nullable|string',
             'updatedBy' => 'nullable|integer',
         ]);
-        dd($validatedData);
 
         try {            
             return DB::transaction(function () use ($validatedData) {
@@ -203,6 +202,64 @@ class ProductController extends Controller
         }
     }
 
+    public function showPriceList(Request $request)
+    {
+        $search = $request->input('search');
+        $activeCategories  = Category::with('items')
+            ->where('cat_status', 'active')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->cat_name,
+                    'items' => $category->items->map(function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'name' => $item->item_name,
+                        ];
+                    }),
+                ];
+        });
+    
+        $products = Product::query()
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('prod_newNo', 'like', '%' . $search . '%')
+                      ->orWhere('prod_desc', 'like', '%' . $search . '%')
+                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%')
+                      ->orWhereHas('itemClass', function ($q) use ($search) {
+                            $q->where('item_name', 'like', '%' . $search . '%');
+                        });
+                });
+            }, function ($query) {})
+            ->with('itemClass')
+            ->where('prod_status', 'active')
+            ->orderBy('item_id', 'asc')
+            ->orderBy('prod_desc', 'asc')
+            ->paginate(10)
+            ->through(fn($product) => [
+                'id' => $product->id,
+                'newNo' => $product->prod_newNo,
+                'desc' => $product->prod_desc,
+                'unit' => $product->prod_unit,
+                'remarks' => $product->prod_remarks,
+                'status' => $product->prod_status,
+                'price' => $this->productService->getLatestPrice($product->id),
+                'oldNo' => $product->prod_oldNo,
+                'catId' => optional($product->itemClass)->cat_id,
+                'itemId' => optional($product->itemClass)->id,
+                'itemName' => optional($product->itemClass)->item_name,
+            ]);
+
+
+        return Inertia::render('Product/PriceList', [
+            'products' => $products, 
+            'categories' => $activeCategories ,
+            'filters' => $request->only(['search']), 
+            'authUserId' => Auth::id()
+        ]);
+    }
+
     public function deactivate(Request $request)
     {
         $validatedData = $request->validate([
@@ -210,7 +267,6 @@ class ProductController extends Controller
             'updatedBy' => 'nullable|integer',
         ]);
         
-        dd($validatedData);
         try {
             $product = Product::findOrFail($validatedData['prodId']);
             $product->update([
@@ -219,8 +275,8 @@ class ProductController extends Controller
             ]);
             return redirect()->route('product.display.active')->with(['message' => 'Product has been remove successfully.']);
         } catch (\Exception $e) {
+            Log::error('Product update failed: ' . $e->getMessage());
             return redirect()->route('product.display.active')->with(['error' => 'An error occurred while adding the product.']);
         }
     }
-    
 }
