@@ -53,6 +53,18 @@ class ProductService
         ->paginate(10);
     }
 
+    public function getCategoryName($id)
+    {
+        $categoryName = Category::findOrFail($id);
+        return $categoryName ? $categoryName->cat_name : null;
+    }
+
+    public function getItemName($id)
+    {
+        $itemName = ItemClass::findOrFail($id);
+        return $itemName ? $itemName->item_name : null;
+    }
+
     public function getLatestPrice($id)
     {
         $product = Product::findOrFail($id);
@@ -63,7 +75,7 @@ class ProductService
     public function getFiveLatestPrice($id)
     {
         $product = Product::findOrFail($id);
-        $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
+        $priceResult = $product->prices()->orderBy('created_at', 'desc')->limit(5)->get();
         return $priceResult->prod_price ?? null;
     }
 

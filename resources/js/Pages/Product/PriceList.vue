@@ -17,20 +17,11 @@
     
     const props = defineProps({
         products: Object,
-        categories: Object,
         filters:Object,
         authUserId: Number,
     });
 
-    let search = ref(props.filters.search);
-
-    watch(search, debounce(function (value) {
-        router.get('product.display.active.pricelist', { search: value }, {
-            preserveState: true,
-            preserveScroll:true,
-            replace:true
-        });
-    }, 500));
+    let search = ref('');
 </script>
 
 <template>
@@ -126,9 +117,6 @@
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="flex justify-center p-5">
-                        <Pagination :links="products.links" />
                     </div>
                 </div>
             </div>

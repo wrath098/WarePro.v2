@@ -205,56 +205,34 @@ class ProductController extends Controller
     public function showPriceList(Request $request)
     {
         $search = $request->input('search');
-        $activeCategories  = Category::with('items')
-            ->where('cat_status', 'active')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->cat_name,
-                    'items' => $category->items->map(function ($item) {
-                        return [
-                            'id' => $item->id,
-                            'name' => $item->item_name,
-                        ];
-                    }),
-                ];
-        });
     
-        $products = Product::query()
-            ->when($search, function ($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('prod_newNo', 'like', '%' . $search . '%')
-                      ->orWhere('prod_desc', 'like', '%' . $search . '%')
-                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%')
-                      ->orWhereHas('itemClass', function ($q) use ($search) {
-                            $q->where('item_name', 'like', '%' . $search . '%');
-                        });
-                });
-            }, function ($query) {})
-            ->with('itemClass')
-            ->where('prod_status', 'active')
-            ->orderBy('item_id', 'asc')
-            ->orderBy('prod_desc', 'asc')
-            ->paginate(10)
-            ->through(fn($product) => [
-                'id' => $product->id,
-                'newNo' => $product->prod_newNo,
-                'desc' => $product->prod_desc,
-                'unit' => $product->prod_unit,
-                'remarks' => $product->prod_remarks,
-                'status' => $product->prod_status,
-                'price' => $this->productService->getLatestPrice($product->id),
-                'oldNo' => $product->prod_oldNo,
-                'catId' => optional($product->itemClass)->cat_id,
-                'itemId' => optional($product->itemClass)->id,
-                'itemName' => optional($product->itemClass)->item_name,
-            ]);
-
+        $products = Product::with(['prices' => function ($query) {
+            $query->orderBy('created_at', 'desc')->limit(5);
+        }])
+        ->where('prod_status', 'active')
+        ->orderBy('item_id', 'asc')
+        ->orderBy('prod_desc', 'asc')
+        ->get();
+    
+        $products = $products->map(fn($product) => [
+            'id' => $product->id,
+            'newNo' => $product->prod_newNo,
+            'desc' => $product->prod_desc,
+            'unit' => $product->prod_unit,
+            'remarks' => $product->prod_remarks,
+            'status' => $product->prod_status,
+            'price' => $product->prices->map(fn($price) => [
+                'id' => $price->id,
+                'price' => $price->prod_price,
+            ])->toArray(),
+            'oldNo' => $product->prod_oldNo,
+            'itemName' => $this->productService->getItemName($product->item_id),
+        ]);
+        
+            return response()->json(['products' => $products]);
 
         return Inertia::render('Product/PriceList', [
             'products' => $products, 
-            'categories' => $activeCategories ,
             'filters' => $request->only(['search']), 
             'authUserId' => Auth::id()
         ]);
