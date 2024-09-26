@@ -1,27 +1,26 @@
 <script setup>
     import { Head, router} from '@inertiajs/vue3';
-    import { ref, reactive, computed, watch } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { ref, watch } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
-    import Modal from '@/Components/Modal.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import Pagination from '@/Components/Pagination.vue';
-    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import { debounce } from 'lodash';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';
-    import AddButton from '@/Components/Buttons/AddButton.vue';
-    import ModifyButton from '@/Components/Buttons/ModifyButton.vue';
     
     const props = defineProps({
         products: Object,
-        filters:Object,
-        authUserId: Number,
+        filters: Object,
     });
 
-    let search = ref('');
+    let search = ref(props.filters.search);
+
+    watch(search, debounce(function (value) {
+        router.get('product-price-list', { search: value }, {
+            preserveState: true,
+            preserveScroll:true,
+            replace:true
+        });
+    }, 500));
 </script>
 
 <template>
@@ -61,7 +60,7 @@
                         <table class="w-full text-left rtl:text-right text-gray-900 ">
                             <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
+                                    <th scope="col" class="px-6 py-3 w-4">
                                         No#
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
@@ -79,11 +78,8 @@
                                     <th scope="col" class="px-6 py-3 w-1/12">
                                         Unit Of Measure
                                     </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Price
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Remarks
+                                    <th v-for="(price, index) in products.data[0]?.price" :key="index" class="px-6 py-3 w-1/12">
+                                        <span>Price </span>( {{ index+1 }} )
                                     </th>
                                 </tr>
                             </thead>
@@ -95,8 +91,8 @@
                                     <td scope="row" class="py-2 text-center text-sm">
                                         {{  product.newNo }}
                                     </td>
-                                    <td class="py-2 text-center text-sm">
-                                        {{ product.oldNo }}
+                                    <td scope="row" class="py-2 text-center text-sm">
+                                        {{  product.oldNo }}
                                     </td>
                                     <td class="py-2">
                                         {{ product.itemName }}
@@ -107,16 +103,15 @@
                                     <td class="py-2 text-center">
                                         {{ product.unit }}
                                     </td>
-                                    <td class="py-2 text-right">
-                                        {{ product.price }}
-                                    </td>
-                                    
-                                    <td class="py-2 text-center">
-                                        {{ product.remarks }}
+                                    <td v-for="(price, index) in product.price" :key="index" class="py-2 text-right">
+                                        {{ price.price || '-' }}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="flex justify-center p-5">
+                        <Pagination :links="products.links" />
                     </div>
                 </div>
             </div>

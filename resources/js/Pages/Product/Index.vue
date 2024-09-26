@@ -18,7 +18,7 @@
     const props = defineProps({
         products: Object,
         categories: Object,
-        filters:Object,
+        filters: Object,
         authUserId: Number,
     });
 
@@ -273,6 +273,7 @@
                                         <option value="Box">Box</option>
                                         <option value="Bundle">Bundle</option>
                                         <option value="Cannister">Cannister</option>
+                                        <option value="Cart">Cart</option>
                                         <option value="Gallon">Gallon</option>
                                         <option value="Kilo">Kilo</option>
                                         <option value="Meter">Meter</option>
@@ -398,6 +399,7 @@
                                         <option value="Box">Box</option>
                                         <option value="Bundle">Bundle</option>
                                         <option value="Cannister">Cannister</option>
+                                        <option value="Cart">Cart</option>
                                         <option value="Gallon">Gallon</option>
                                         <option value="Kilo">Kilo</option>
                                         <option value="Meter">Meter</option>

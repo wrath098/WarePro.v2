@@ -206,15 +206,25 @@ class ProductController extends Controller
     {
         $search = $request->input('search');
     
-        $products = Product::with(['prices' => function ($query) {
-            $query->orderBy('created_at', 'desc')->limit(5);
-        }])
-        ->where('prod_status', 'active')
-        ->orderBy('item_id', 'asc')
-        ->orderBy('prod_desc', 'asc')
-        ->get();
-    
-        $products = $products->map(fn($product) => [
+        $products = Product::query()
+            ->when($search, function ($query, $search) {
+                $query->where(function($q) use ($search){
+                    $q->where('prod_newNo', 'like', '%' . $search . '%')
+                      ->orWhere('prod_desc', 'like', '%' . $search . '%')
+                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%')
+                      ->orWhereHas('itemClass', function ($q) use ($search) {
+                            $q->where('item_name', 'like', '%' . $search . '%');
+                        });
+                });
+            }, function ($query) {})
+            ->with(['itemClass', 'prices' => function ($query) {
+                $query->orderBy('created_at', 'desc')->limit(5);
+            }])
+            ->where('prod_status', 'active')
+            ->orderBy('item_id', 'asc')
+            ->orderBy('prod_desc', 'asc')
+            ->paginate(10)
+            ->through(fn($product) => [
             'id' => $product->id,
             'newNo' => $product->prod_newNo,
             'desc' => $product->prod_desc,
@@ -224,17 +234,15 @@ class ProductController extends Controller
             'price' => $product->prices->map(fn($price) => [
                 'id' => $price->id,
                 'price' => $price->prod_price,
+                'createdAt' => $price->created_at,
             ])->toArray(),
             'oldNo' => $product->prod_oldNo,
             'itemName' => $this->productService->getItemName($product->item_id),
         ]);
         
-            return response()->json(['products' => $products]);
-
         return Inertia::render('Product/PriceList', [
-            'products' => $products, 
-            'filters' => $request->only(['search']), 
-            'authUserId' => Auth::id()
+            'products' => $products,
+            'filters' => $request->only('search')
         ]);
     }
 

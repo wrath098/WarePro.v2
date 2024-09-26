@@ -75,7 +75,6 @@
     let search = ref(props.filters.search);
 
     watch(search, debounce(function (value) {
-        console.log(value);
         router.get('items', { search: value }, {
             preserveState: true,
             preserveScroll:true,
