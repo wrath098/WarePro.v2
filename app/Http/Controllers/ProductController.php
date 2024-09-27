@@ -231,11 +231,11 @@ class ProductController extends Controller
             'unit' => $product->prod_unit,
             'remarks' => $product->prod_remarks,
             'status' => $product->prod_status,
-            'price' => $product->prices->map(fn($price) => [
-                'id' => $price->id,
-                'price' => $price->prod_price,
-                'createdAt' => $price->created_at,
-            ])->toArray(),
+            'price' => array_pad(
+                        $product->prices->pluck('prod_price')->toArray(),
+                        5,
+                        0.0
+                    ),
             'oldNo' => $product->prod_oldNo,
             'itemName' => $this->productService->getItemName($product->item_id),
         ]);

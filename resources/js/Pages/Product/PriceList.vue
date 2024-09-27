@@ -44,7 +44,7 @@
                     <div class="relative overflow-x-auto">
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-between pb-4">
                             <div class="flex mb:flex-col">
-                                <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank">
+                                <PrintButton :href="route('generatePdf.PriceActiveList')" target="_blank">
                                     <span class="mr-2">Print</span>
                                 </PrintButton>
                             </div>
@@ -60,7 +60,7 @@
                         <table class="w-full text-left rtl:text-right text-gray-900 ">
                             <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 w-4">
+                                    <th scope="col" class="px-6 py-3 w-1/12">
                                         No#
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
@@ -103,8 +103,8 @@
                                     <td class="py-2 text-center">
                                         {{ product.unit }}
                                     </td>
-                                    <td v-for="(price, index) in product.price" :key="index" class="py-2 text-right">
-                                        {{ price.price || '-' }}
+                                    <td v-for="price in product.price" :key="price" class="py-2 text-right">
+                                        {{ price != 0 ? price : '-' }}
                                     </td>
                                 </tr>
                             </tbody>

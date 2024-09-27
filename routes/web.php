@@ -6,6 +6,7 @@ use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +65,7 @@ Route::middleware('auth')->prefix('products')->group(function () {
 
 Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
+    Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
 });
 
 require __DIR__.'/auth.php';

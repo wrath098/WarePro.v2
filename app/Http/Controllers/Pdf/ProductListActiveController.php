@@ -23,11 +23,11 @@ class ProductListActiveController extends Controller
         $logoPath = public_path('build/img/benguet_logo.png');
         $pilipinasPath = public_path('build/img/Bagong_Pilipinas_logo.png');
 
-        $pdf->SetCreator(''); #PDF_CREATOR
-        $pdf->SetAuthor(''); #PDF_DEVELOPER
-        $pdf->SetTitle('Product List');
-        $pdf->SetSubject('Master List');
-        $pdf->SetKeywords('Benguet, WarePro');
+        $pdf->SetCreator(SYSTEM_GENERATOR);
+        $pdf->SetAuthor(SYSTEM_DEVELOPER);
+        $pdf->SetTitle('Product Master List');
+        $pdf->SetSubject('Product List');
+        $pdf->SetKeywords('Benguet, WarePro, Product, List');
         
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(true);
@@ -37,8 +37,8 @@ class ProductListActiveController extends Controller
 
         $pdf->AddPage();
 
-        $pdf->Image($logoPath, 37, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
-        $pdf->Image($pilipinasPath, 150, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
+        $pdf->Image($logoPath, 47, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
+        $pdf->Image($pilipinasPath, 140, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
 
         $html = '
             <div style="line-height: 0.01;">
@@ -72,9 +72,9 @@ class ProductListActiveController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="25px">No.</th>
+                    <th width="40px">Old Stock No.</th>
                     <th width="63px">New Stock No.</th>
-                    <th width="58px">Old Stock No.</th>
-                    <th width="250px">Item Description</th>
+                    <th width="268px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Price</th>
                 </tr>';
@@ -106,9 +106,9 @@ class ProductListActiveController extends Controller
                                     $formattedPrice = number_format($price, 2, '.', ',');
                                     $text .= '<tr style="font-size: 9px;">
                                                 <th width="25px">' . $count . '</th>
+                                                <th width="40px" style="text-align: center;">' . $product->prod_oldNo . '</th>
                                                 <th width="63px">' . $product->prod_newNo . '</th>
-                                                <th width="58px">' . $product->prod_oldNo . '</th>
-                                                <th width="250px">' . '(' . $item->item_name . ') ' . $product->prod_desc . '</th>
+                                                <th width="268px">' . '(' . $item->item_name . ') ' . $product->prod_desc . '</th>
                                                 <th width="60px">' . $product->prod_unit . '</th>
                                                 <th width="63px" style="text-align: right;">' . $formattedPrice . '</th>
                                               </tr>';
