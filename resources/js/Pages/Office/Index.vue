@@ -94,7 +94,11 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-3">Offices</h2>
+            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+                <ol class="flex space-x-2">
+                    <li class="text-green-700" aria-current="page">Offices</li> 
+                </ol>
+            </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
                 {{ $page.props.flash.message }}
             </div>

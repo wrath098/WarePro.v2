@@ -50,7 +50,6 @@ const submit = () => {
                     class="mt-1 block w-full"
                     v-model="form.email"
                     required
-                    autofocus
                     autocomplete="username"
                 />
 

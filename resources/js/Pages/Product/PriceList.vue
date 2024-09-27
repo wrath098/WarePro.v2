@@ -29,7 +29,12 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-3">Products</h2>
+            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+                <ol class="flex space-x-2">
+                    <li><a :href="route('product.display.active')" class="after:content-['/'] after:ml-2 text-gray-600 hover:text-green-700">Products</a></li>
+                    <li class="text-green-700" aria-current="page">Price List</li> 
+                </ol>
+            </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
                 {{ $page.props.flash.message }}
             </div>
