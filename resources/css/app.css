@@ -4,7 +4,7 @@
 
 @font-face {
     font-family: 'Oswald';
-    src: url('../../public/build/font/Oswald-Regular.ttf') format('truetype');
+    src: url('../../public/assets/font/Oswald-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
