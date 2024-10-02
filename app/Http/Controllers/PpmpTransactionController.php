@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\PpmpTransaction;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PpmpTransactionController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): Response
     {
-        //
+        return Inertia::render('Ppmp/Import');
     }
 
     /**

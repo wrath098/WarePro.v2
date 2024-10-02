@@ -15,6 +15,8 @@
     import Import from '@/Components/Svgs/Import.vue';
     import ClipboardList from '@/Components/Svgs/ClipboardList.vue';
     import ArrowHeadRight from './Svgs/ArrowHeadRight.vue';
+    import Column from '@/Components/Svgs/Column.vue';
+    import Add from '@/Components/Svgs/Add.vue';
 </script>
 
 <template>
@@ -76,10 +78,10 @@
                     </SidebarDropdown>
                 </li>
                 <li>
-                    <SidebarDropdown :active="route().current('product.display.active') || route().current('product.display.active.pricelist')">
-                            <Files :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist')" />
+                    <SidebarDropdown :active="route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')">
+                            <Column :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Products</span>
-                            <ArrowDown :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist')" />
+                            <ArrowDown :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')" />
                         <template #dropdown-items>
                             <li>
                                 <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
@@ -99,6 +101,12 @@
                                     Inventory
                                 </SubSidebarLink>
                             </li>
+                            <li>
+                                <SubSidebarLink :href="route('product.unmodified.list')" :active="route().current('product.unmodified.list')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('product.unmodified.list')}"/>
+                                    Unmodified
+                                </SubSidebarLink>
+                            </li>
                         </template>
                     </SidebarDropdown>
                 </li>
@@ -108,9 +116,9 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">PPMP</div>
                         </div>
                     </div>
-                    <SidebarLink :href="'https://localhost'" :active="false">
-                        <Import/>
-                        <span class="ml-3">Upload</span>
+                    <SidebarLink :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index')">
+                        <Add :class="{ 'text-white' : route().current('import.ppmp.index')}"/>
+                        <span class="ml-3">Create</span>
                     </SidebarLink>
                 </li>
                 <li>

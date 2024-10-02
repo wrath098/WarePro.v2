@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('year')->nullable();
             $table->unsignedBigInteger('prod_id')->nullable();
+            $table->text('status')->default('active');
             $table->foreign('prod_id')->references('id')->on('products');
             $table->timestamps();
         });

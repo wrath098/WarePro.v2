@@ -39,7 +39,7 @@ class FundController extends Controller
             'fundDesc' => 'nullable|string|max:255',
             'createdBy' => 'nullable|integer',
         ]);
-
+        
         try {
             DB::transaction(function () use ($validation) {
                 Fund::create([
@@ -48,6 +48,7 @@ class FundController extends Controller
                     'created_by' => $validation['createdBy'],
                 ]);
             });
+        
             return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster created successfully']);
         } catch (\Exception $e) {
             return redirect()->route('fund.display.all')->with(['error' => 'Failed to create Fund Cluster']);

@@ -20,8 +20,8 @@ class PriceListActiveController extends Controller
     {
         $pdf = new MyPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
 
-        $logoPath = public_path('build/img/benguet_logo.png');
-        $pilipinasPath = public_path('build/img/Bagong_Pilipinas_logo.png');
+        $logoPath = public_path('assets/images/benguet_logo.png');
+        $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);

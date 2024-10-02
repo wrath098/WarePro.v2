@@ -4,6 +4,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\PpmpTransactionController;
+use App\Http\Controllers\ProductPpmpExceptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
@@ -61,6 +63,13 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::post('/update', [ProductController::class, 'update'])->name('product.update');
     Route::post('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
     Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
+    Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');
+    Route::post('/store-unmodified-product', [ProductPpmpExceptionController::class, 'store'])->name('store.unmodified.product');
+    Route::post('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
+});
+
+Route::middleware('auth')->prefix('ppmp')->group(function () {
+    Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

@@ -23,17 +23,18 @@ class PpmpTransaction extends Model
         'office_id',
     ];
 
-    public function officeParticulars(): HasMany
+    public function requestee(): BelongsTo
+    {
+        return $this->belongsTo(Office::class, 'office_id');
+    }
+
+    public function particulars(): HasMany
     {
         return $this->hasMany(PpmpParticular::class, 'trans_id');
     }
-    public function consolidatedParticular(): HasMany
-    {
-        return $this->hasMany(PpmpConsolidated::class, 'office_id');
-    }
 
-    public function owner(): BelongsTo
+    public function consolidated(): HasMany
     {
-        return $this->belongsTo(Office::class, 'office_id');
+        return $this->hasMany(PpmpConsolidated::class, 'trans_id');
     }
 }
