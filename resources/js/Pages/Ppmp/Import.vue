@@ -2,7 +2,40 @@
 import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Sidebar from '@/Components/Sidebar.vue';
+import { ref } from 'vue';
 
+    const files = ref([]);
+    const fileInput = ref(null);
+
+    const create = ref([]);
+
+    const onFileChange = (event) => {
+        const selectedFiles = Array.from(event.target.files);
+        files.value.push(...selectedFiles);
+        if (selectedFiles.length > 0) {
+            files.value = [selectedFiles[0]];
+        }
+    };
+
+    const onDragOver = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    const onDrop = (event) => {
+        event.preventDefault();
+        const droppedFiles = Array.from(event.dataTransfer.files);
+        files.value.push(...droppedFiles);
+        if (droppedFiles.length > 0) {
+            files.value = [droppedFiles[0]];
+        }
+    };
+    const years = generateYears();
+
+    function generateYears() {
+        const currentYear = new Date().getFullYear() + 2;
+        return Array.from({ length: 3 }, (_, i) => currentYear - i);
+    }
 </script>
 
 <template>
@@ -27,27 +60,50 @@ import Sidebar from '@/Components/Sidebar.vue';
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex items-center justify-center">
-                        <!-- Author: FormBold Team -->
-                        <div class="mx-1 w-2/5 bg-white">
-                            <form class="py-4 px-9">
-                                <div class="mb-5">
-                                    <label for="email" class="mb-3 block text-base font-medium text-[#07074D]">
-                                        Send files to this email:
+                    <div class="flex flex-col md:flex-row items-center justify-center">
+                        <div class="mx-2 w-full md:w-2/5 bg-white p-4 rounded-md shadow">
+                            <form class="space-y-5">
+                                <div>
+                                    <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
+                                        PPMP Type:
                                     </label>
-                                    <input type="email" name="email" id="email" placeholder="example@domain.com"
-                                        class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" />
+                                    <select id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
+                                        <option disabled selected>Please choose PPMP Type</option>
+                                        <option value="individual">Individual</option>
+                                        <option value="contingency">Contingency</option>
+                                    </select>
                                 </div>
 
-                                <div class="mb-6 pt-4">
+                                <div>
+                                    <label for="basedPrice" class="mb-1 block text-base font-medium text-[#07074D]">
+                                        Based Price:
+                                        <span class="text-sm text-[#8f9091]">Percentage to apply to the latest price</span>
+                                    </label>
+                                    <input type="number" id="basedPrice" placeholder="Ex. 15 = 15% || 50 = 50%"
+                                        class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" />
+                                </div>
+
+                                <div>
+                                    <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
+                                        PPMP for CY:
+                                    </label>
+                                    <select id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                        <option disabled selected>Please choose year</option>
+                                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="pt-4">
                                     <label class="mb-5 block text-xl font-semibold text-[#07074D]">
                                         Upload File
                                     </label>
 
-                                    <div class="mb-8">
-                                        <input type="file" name="file" id="file" class="sr-only" />
-                                        <label for="file"
-                                            class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center">
+                                    <div class="mb-8 bg-gray-100 hover:bg-gray-300">
+                                        <input type="file" ref="fileInput" @change="onFileChange" multiple name="file" id="file" class="sr-only" />
+                                        <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer"
+                                            @dragover="onDragOver"
+                                            @drop="onDrop"
+                                        >
                                             <div>
                                                 <span class="mb-2 block text-xl font-semibold text-[#07074D]">
                                                     Drop files here
@@ -55,70 +111,34 @@ import Sidebar from '@/Components/Sidebar.vue';
                                                 <span class="mb-2 block text-base font-medium text-[#6B7280]">
                                                     Or
                                                 </span>
-                                                <span
-                                                    class="inline-flex rounded border border-[#e0e0e0] py-2 px-7 text-base font-medium text-[#07074D]">
+                                                <span class="inline-flex rounded border hover:bg-gray-100 py-2 px-7 text-base font-medium text-[#07074D]">
                                                     Browse
                                                 </span>
                                             </div>
                                         </label>
                                     </div>
 
-                                    <div class="mb-5 rounded-md bg-[#F5F7FB] py-4 px-8">
-                                        <div class="flex items-center justify-between">
-                                            <span class="truncate pr-3 text-base font-medium text-[#07074D]">
-                                                banner-design.png
-                                            </span>
-                                            <button class="text-[#07074D]">
-                                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                                        d="M0.279337 0.279338C0.651787 -0.0931121 1.25565 -0.0931121 1.6281 0.279338L9.72066 8.3719C10.0931 8.74435 10.0931 9.34821 9.72066 9.72066C9.34821 10.0931 8.74435 10.0931 8.3719 9.72066L0.279337 1.6281C-0.0931125 1.25565 -0.0931125 0.651788 0.279337 0.279338Z"
-                                                        fill="currentColor" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                                        d="M0.279337 9.72066C-0.0931125 9.34821 -0.0931125 8.74435 0.279337 8.3719L8.3719 0.279338C8.74435 -0.0931127 9.34821 -0.0931123 9.72066 0.279338C10.0931 0.651787 10.0931 1.25565 9.72066 1.6281L1.6281 9.72066C1.25565 10.0931 0.651787 10.0931 0.279337 9.72066Z"
-                                                        fill="currentColor" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="rounded-md bg-[#F5F7FB] py-4 px-8">
-                                        <div class="flex items-center justify-between">
-                                            <span class="truncate pr-3 text-base font-medium text-[#07074D]">
-                                                banner-design.png
-                                            </span>
-                                            <button class="text-[#07074D]">
-                                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                                        d="M0.279337 0.279338C0.651787 -0.0931121 1.25565 -0.0931121 1.6281 0.279338L9.72066 8.3719C10.0931 8.74435 10.0931 9.34821 9.72066 9.72066C9.34821 10.0931 8.74435 10.0931 8.3719 9.72066L0.279337 1.6281C-0.0931125 1.25565 -0.0931125 0.651788 0.279337 0.279338Z"
-                                                        fill="currentColor" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                                        d="M0.279337 9.72066C-0.0931125 9.34821 -0.0931125 8.74435 0.279337 8.3719L8.3719 0.279338C8.74435 -0.0931127 9.34821 -0.0931123 9.72066 0.279338C10.0931 0.651787 10.0931 1.25565 9.72066 1.6281L1.6281 9.72066C1.25565 10.0931 0.651787 10.0931 0.279337 9.72066Z"
-                                                        fill="currentColor" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="relative mt-5 h-[6px] w-full rounded-lg bg-[#E2E5EF]">
-                                            <div class="absolute left-0 right-0 h-full w-[75%] rounded-lg bg-[#6A64F1]"></div>
-                                        </div>
+                                    <div v-if="files.length">
+                                        <h4 class="text-lg font-semibold">Selected Files:</h4>
+                                        <ul class="mt-2">
+                                            <li v-for="file in files" :key="file.name" class="text-[#07074D]">
+                                                {{ file.name }}
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
 
                                 <div>
                                     <button
-                                        class="hover:shadow-form w-full rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none">
-                                        Send File
+                                        class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none">
+                                        Create PPMP
                                     </button>
                                 </div>
                             </form>
                         </div>
 
-                        <div class="mx-1 w-3/5 bg-white">
-                        sadsa
-                        sad
-                        sdsad
-                        asdsa
+                        <div class="mx-2 w-full md:w-3/5 bg-white p-4 rounded-md shadow">
+                            <p class="text-base">Additional content goes here.</p>
                         </div>
                     </div>
                 </div>
@@ -128,3 +148,16 @@ import Sidebar from '@/Components/Sidebar.vue';
     </div>
 </template>
  
+<style scoped>
+.upload-area {
+    border: 2px dashed #007BFF;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+.upload-area:hover {
+    border-color: #08396d;
+}
+</style>

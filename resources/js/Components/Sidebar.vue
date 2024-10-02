@@ -79,9 +79,9 @@
                 </li>
                 <li>
                     <SidebarDropdown :active="route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')">
-                            <Column :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')" />
+                            <Column :class="{'text-white': route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Products</span>
-                            <ArrowDown :class="{'text-white': route().current('product.display.active')} || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')" />
+                            <ArrowDown :class="{'text-white': route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')}" />
                         <template #dropdown-items>
                             <li>
                                 <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">

@@ -4,16 +4,13 @@
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import Pagination from '@/Components/Pagination.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import { debounce } from 'lodash';
-    import PrintButton from '@/Components/Buttons/PrintButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
-    import ModifyButton from '@/Components/Buttons/ModifyButton.vue';
 
     const props = defineProps({
         products: Object,
