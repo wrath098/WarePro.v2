@@ -1,20 +1,38 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Sidebar from '@/Components/Sidebar.vue';
-import { ref } from 'vue';
+    import { Head, router } from '@inertiajs/vue3';
+    import { reactive, ref } from 'vue';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+    import Sidebar from '@/Components/Sidebar.vue';
 
-    const files = ref([]);
+    const props = defineProps({
+        offices: Object,
+    });
+
+    const file = ref([]);
     const fileInput = ref(null);
 
-    const create = ref([]);
+    const create = reactive({
+        ppmpType: '',
+        basePrice: '',
+        ppmpYear: '',
+        office: '',
+    });
 
     const onFileChange = (event) => {
-        const selectedFiles = Array.from(event.target.files);
-        files.value.push(...selectedFiles);
-        if (selectedFiles.length > 0) {
-            files.value = [selectedFiles[0]];
+        const selectedFile = event.target.files[0];
+        if (selectedFile) {
+            file.value = selectedFile;
         }
+        console.log("Selected files:", selectedFile);
+    };
+
+    const onDrop = (event) => {
+        event.preventDefault();
+        const droppedFile = event.dataTransfer.files[0];
+        if (droppedFile) {
+            file.value = droppedFile;
+        }
+        console.log("Dropped files:", droppedFile);
     };
 
     const onDragOver = (event) => {
@@ -22,20 +40,31 @@ import { ref } from 'vue';
         event.stopPropagation();
     };
 
-    const onDrop = (event) => {
-        event.preventDefault();
-        const droppedFiles = Array.from(event.dataTransfer.files);
-        files.value.push(...droppedFiles);
-        if (droppedFiles.length > 0) {
-            files.value = [droppedFiles[0]];
-        }
-    };
     const years = generateYears();
-
     function generateYears() {
         const currentYear = new Date().getFullYear() + 2;
         return Array.from({ length: 3 }, (_, i) => currentYear - i);
     }
+
+    const submit = () => {
+        if (!file.value) {
+            alert('Please select a file first!');
+            return;
+        }
+
+        const formData = new FormData();
+            formData.append('ppmpType', create.ppmpType);
+            formData.append('basePrice', create.basePrice);
+            formData.append('ppmpYear', create.ppmpYear);
+            formData.append('office', create.office);
+            formData.append('file', file.value);
+
+        router.post('ppmp/create', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    };
 </script>
 
 <template>
@@ -62,12 +91,12 @@ import { ref } from 'vue';
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex flex-col md:flex-row items-center justify-center">
                         <div class="mx-2 w-full md:w-2/5 bg-white p-4 rounded-md shadow">
-                            <form class="space-y-5">
+                            <form @submit.prevent="submit" class="space-y-5">
                                 <div>
                                     <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
                                         PPMP Type:
                                     </label>
-                                    <select id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
+                                    <select v-model="create.ppmpType" id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
                                         <option disabled selected>Please choose PPMP Type</option>
                                         <option value="individual">Individual</option>
                                         <option value="contingency">Contingency</option>
@@ -79,7 +108,7 @@ import { ref } from 'vue';
                                         Based Price:
                                         <span class="text-sm text-[#8f9091]">Percentage to apply to the latest price</span>
                                     </label>
-                                    <input type="number" id="basedPrice" placeholder="Ex. 15 = 15% || 50 = 50%"
+                                    <input v-model="create.basePrice" type="number" id="basedPrice" placeholder="Ex. 15 = 15% || 50 = 50%"
                                         class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" />
                                 </div>
 
@@ -87,9 +116,19 @@ import { ref } from 'vue';
                                     <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
                                         PPMP for CY:
                                     </label>
-                                    <select id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                    <select v-model="create.ppmpYear" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
                                         <option disabled selected>Please choose year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
+                                        Office
+                                    </label>
+                                    <select v-model="create.office" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                        <option disabled selected>Please choose year</option>
+                                        <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.office_name }}</option>
                                     </select>
                                 </div>
 
@@ -98,30 +137,27 @@ import { ref } from 'vue';
                                         Upload File
                                     </label>
 
-                                    <div class="mb-8 bg-gray-100 hover:bg-gray-300">
-                                        <input type="file" ref="fileInput" @change="onFileChange" multiple name="file" id="file" class="sr-only" />
-                                        <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer"
-                                            @dragover="onDragOver"
-                                            @drop="onDrop"
-                                        >
-                                            <div>
-                                                <span class="mb-2 block text-xl font-semibold text-[#07074D]">
-                                                    Drop files here
+                                    <div class="mb-8 bg-gray-100 hover:bg-gray-300" @dragover.prevent @drop="onDrop">
+                                        <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".xls,.xlsx"/>
+                                        <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
+                                            <div class="cursor-pointer">
+                                                <span class="mb-2 block text-base font-semibold text-[#071a4d]">
+                                                    Drop an Excel file here or click to upload
                                                 </span>
                                                 <span class="mb-2 block text-base font-medium text-[#6B7280]">
                                                     Or
                                                 </span>
-                                                <span class="inline-flex rounded border hover:bg-gray-100 py-2 px-7 text-base font-medium text-[#07074D]">
+                                                <span class="inline-flex rounded border bg-blue-600 text-gray-100 hover:bg-gray-100 hover:text-[#071a4d] py-2 px-7 text-base font-medium">
                                                     Browse
                                                 </span>
                                             </div>
                                         </label>
                                     </div>
 
-                                    <div v-if="files.length">
+                                    <div v-if="file">
                                         <h4 class="text-lg font-semibold">Selected Files:</h4>
                                         <ul class="mt-2">
-                                            <li v-for="file in files" :key="file.name" class="text-[#07074D]">
+                                            <li class="text-[#07074D]">
                                                 {{ file.name }}
                                             </li>
                                         </ul>

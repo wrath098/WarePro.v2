@@ -70,6 +70,7 @@ Route::middleware('auth')->prefix('products')->group(function () {
 
 Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
+    Route::post('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

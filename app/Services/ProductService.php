@@ -72,11 +72,18 @@ class ProductService
         return $priceResult->prod_price ?? null;
     }
 
+    public function getLatestPriceId($id)
+    {
+        $product = Product::findOrFail($id);
+        $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
+        return $priceResult->prod_price ?? null;
+    }
+
     public function getFiveLatestPrice($id)
     {
         $product = Product::findOrFail($id);
         $priceResult = $product->prices()->orderBy('created_at', 'desc')->limit(5)->get();
-        return $priceResult->prod_price ?? null;
+        return $priceResult->id ?? null;
     }
 
     public function validateCategoryExistence($fundId, $code, $name)
@@ -86,6 +93,26 @@ class ProductService
             ->where('cat_name', $name)
             ->first();
         return $category;
+    }
+
+    public function validateProduct($id)
+    {
+        $column = preg_match("/^\d{4}$/", $id) ? 'prod_oldNo' : 
+                (preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $id) ? 'prod_newNo' : null);
+
+        if($column) {
+            $product = Product::where($column, $id)
+                        ->where('prod_status', 'active')
+                        ->first();
+
+            if ($product) {
+                return [
+                    'prodId' => $product->id,
+                    'priceId' => $this->getLatestPriceId($product->id),
+                ];
+            }
+        }
+        return false;
     }
 
     public function getActiveProduct_FundModel()

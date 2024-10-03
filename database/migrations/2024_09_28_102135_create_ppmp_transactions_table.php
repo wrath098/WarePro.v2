@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('ppmp_transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('ppmp_code', 10)->nullable();
+            $table->string('ppmp_code', 20)->nullable();
             $table->string('ppmp_type');
             $table->decimal('price_adjustment', 5, 2)->nullable();
             $table->decimal('qty_adjustment', 5, 2)->nullable();
