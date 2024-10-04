@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Fund;
 use App\Models\ItemClass;
+use App\Models\Office;
+use App\Models\PpmpTransaction;
 use App\Models\Product;
 
 class ProductService 
@@ -51,6 +53,25 @@ class ProductService
         ->orderBy('cat_id', 'asc')
         ->orderBy('item_name', 'asc')
         ->paginate(10);
+    }
+
+    public function getActiveProduct_FundModel()
+    {
+        $funds = Fund::with([
+            'categories' => function ($query) {
+                $query->where('cat_status', 'active')->select('id', 'fund_id', 'cat_code', 'cat_name');
+            },
+            'categories.items' => function ($query) {
+                $query->where('item_status', 'active')->select('id', 'cat_id', 'item_code', 'item_name');
+            },
+            'categories.items.products' => function ($query) {
+                $query->where('prod_status', 'active')->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+            }
+        ])
+        ->where('fund_status', 'active')
+        ->get(['id', 'fund_name']);
+
+        return $funds;
     }
 
     public function getCategoryName($id)
@@ -115,22 +136,5 @@ class ProductService
         return false;
     }
 
-    public function getActiveProduct_FundModel()
-    {
-        $funds = Fund::with([
-            'categories' => function ($query) {
-                $query->where('cat_status', 'active')->select('id', 'fund_id', 'cat_code', 'cat_name');
-            },
-            'categories.items' => function ($query) {
-                $query->where('item_status', 'active')->select('id', 'cat_id', 'item_code', 'item_name');
-            },
-            'categories.items.products' => function ($query) {
-                $query->where('prod_status', 'active')->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
-            }
-        ])
-        ->where('fund_status', 'active')
-        ->get(['id', 'fund_name']);
-
-        return $funds;
-    }
+    
 }

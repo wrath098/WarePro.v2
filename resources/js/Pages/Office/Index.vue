@@ -15,7 +15,7 @@
 
     const props = defineProps({
         offices: Object,
-        filters:Object,
+        filters: Object,
         authUserId: Number,
     });
 

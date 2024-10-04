@@ -1,11 +1,17 @@
 <script setup>
     import { Head, router } from '@inertiajs/vue3';
-    import { reactive, ref } from 'vue';
+    import { reactive, ref, watch } from 'vue';
+    import { debounce } from 'lodash';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
+    import EditButton from '@/Components/Buttons/EditButton.vue';
+    import Pagination from '@/Components/Pagination.vue';
+import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
 
     const props = defineProps({
+        officePpmps: Object,
         offices: Object,
+        filters: Object,
     });
 
     const file = ref([]);
@@ -35,11 +41,6 @@
         console.log("Dropped files:", droppedFile);
     };
 
-    const onDragOver = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-    };
-
     const years = generateYears();
     function generateYears() {
         const currentYear = new Date().getFullYear() + 2;
@@ -65,6 +66,16 @@
             },
         });
     };
+
+    let search = ref(props.filters.search);
+
+    watch(search, debounce(function (value) {
+        router.get('ppmp', { search: value }, {
+            preserveState: true,
+            preserveScroll:true,
+            replace:true
+        });
+    }, 500));
 </script>
 
 <template>
@@ -89,15 +100,15 @@
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex flex-col md:flex-row items-center justify-center">
-                        <div class="mx-2 w-full md:w-2/5 bg-white p-4 rounded-md shadow">
+                    <div class="flex flex-col md:flex-row items-start justify-center">
+                        <div class="mx-2 w-full md:w-3/12 bg-white p-4 rounded-md shadow">
                             <form @submit.prevent="submit" class="space-y-5">
                                 <div>
                                     <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
                                         PPMP Type:
                                     </label>
                                     <select v-model="create.ppmpType" id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
-                                        <option disabled selected>Please choose PPMP Type</option>
+                                        <option value="" selected>Please choose PPMP Type</option>
                                         <option value="individual">Individual</option>
                                         <option value="contingency">Contingency</option>
                                     </select>
@@ -116,8 +127,8 @@
                                     <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
                                         PPMP for CY:
                                     </label>
-                                    <select v-model="create.ppmpYear" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                        <option disabled selected>Please choose year</option>
+                                    <select v-model="create.ppmpYear" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                        <option value="" selected>Please choose year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                     </select>
                                 </div>
@@ -127,7 +138,7 @@
                                         Office
                                     </label>
                                     <select v-model="create.office" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                        <option disabled selected>Please choose year</option>
+                                        <option value="" selected>Please choose the office</option>
                                         <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.office_name }}</option>
                                     </select>
                                 </div>
@@ -137,17 +148,17 @@
                                         Upload File
                                     </label>
 
-                                    <div class="mb-8 bg-gray-100 hover:bg-gray-300" @dragover.prevent @drop="onDrop">
+                                    <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
                                         <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".xls,.xlsx"/>
                                         <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
                                             <div class="cursor-pointer">
-                                                <span class="mb-2 block text-base font-semibold text-[#071a4d]">
+                                                <span class="mb-2 block text-base font-semibold text-[#545557]">
                                                     Drop an Excel file here or click to upload
                                                 </span>
                                                 <span class="mb-2 block text-base font-medium text-[#6B7280]">
                                                     Or
                                                 </span>
-                                                <span class="inline-flex rounded border bg-blue-600 text-gray-100 hover:bg-gray-100 hover:text-[#071a4d] py-2 px-7 text-base font-medium">
+                                                <span class="inline-flex rounded border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 text-gray-400 hover:bg-gray-100 hover:text-[#1f2024] py-2 px-7 text-base font-medium">
                                                     Browse
                                                 </span>
                                             </div>
@@ -173,8 +184,70 @@
                             </form>
                         </div>
 
-                        <div class="mx-2 w-full md:w-3/5 bg-white p-4 rounded-md shadow">
-                            <p class="text-base">Additional content goes here.</p>
+                        <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
+                            <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
+                                <div class="relative overflow-x-auto md:overflow-hidden">
+                                    <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end pb-4">
+                                        <label for="search" class="sr-only">Search</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
+                                                <svg class="w-5 h-5 text-indigo-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                                            </div>
+                                            <input v-model="search" type="text" id="search" class="block p-2 ps-10 text-sm text-gray-900 border border-indigo-600 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 " placeholder="Search for Item Names">
+                                        </div>
+                                    </div>
+                                    <table class="w-full text-left rtl:text-right text-gray-900">
+                                        <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 w-1/6">
+                                                    No#
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">
+                                                    Office Code
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-2/6">
+                                                    PPMP No.
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">
+                                                    PPMP Type
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">
+                                                    Based Price
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">
+                                                    Action/s
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(ppmp, index) in officePpmps.data" :key="ppmp.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
+                                                <td scope="row" class="py-2 text-center text-sm">
+                                                    {{  index+1 }}
+                                                </td>
+                                                <td class="py-2">
+                                                    {{ ppmp.officeCode }}
+                                                </td>
+                                                <td scope="row" class="py-2 text-center text-sm">
+                                                    {{  ppmp.ppmpCode }}
+                                                </td>
+                                                <td class="py-2 text-center">
+                                                    {{ ppmp.ppmpType }}
+                                                </td>
+                                                <td class="py-2 text-center">
+                                                    {{ ppmp.basedPrice }}
+                                                </td>
+                                                <td class="py-2 text-center">
+                                                    <EditButton @click="openEditModal(office)" tooltip="Edit"/>
+                                                    <RemoveButton @click="openDeactivateModal(office)" tooltip="Remove"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="flex justify-center p-5">
+                                    <Pagination :links="officePpmps.links" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

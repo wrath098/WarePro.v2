@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Office;
+use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
@@ -27,10 +28,43 @@ class PpmpTransactionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {   
+        $currentYear = date('Y');
+        $search = $request->input('search');
+
+        $officePpmpExist = PpmpTransaction::query()
+            ->with('requestee')
+            ->where(function($query) use ($currentYear) {
+                $query->where(function($query) {
+                    $query->where('ppmp_type', 'individual')
+                        ->orWhere('ppmp_type', 'contingency');
+                })
+                ->where('ppmp_status', 'draft')
+                ->whereYear('created_at', $currentYear);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('ppmp_code', 'like', '%' . $search . '%')
+                    ->orWhereHas('requestee', function ($q) use ($search) {
+                        $q->where('office_code', 'like', '%' . $search . '%');
+                    });
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->through(fn($ppmp) => [
+                'id' => $ppmp->id,
+                'ppmpCode' => $ppmp->ppmp_code,
+                'ppmpType' => ucfirst($ppmp->ppmp_type),
+                'basedPrice' => $ppmp->price_adjustment,
+                'officeId' => $ppmp->office_id,
+                'officeCode' => $ppmp->requestee->office_code,
+            ]);
+
         $office = Office::where('office_status', 'active')->get();
-        return Inertia::render('Ppmp/Import', ['offices' => $office]);
+
+        return Inertia::render('Ppmp/Import', ['officePpmps' =>  $officePpmpExist, 'filters' => $request->only(['search']), 'offices' => $office]);
     }
 
     /**
@@ -40,75 +74,37 @@ class PpmpTransactionController extends Controller
     {
         $validatedData = $request->validate([
             'ppmpType' => 'required|string',
-            'basePrice' => 'required|numeric',
+            'basePrice' => 'nullable|numeric',
             'ppmpYear' => 'required|integer',
             'office' => 'required|integer',
-            'file' => 'required|file|mimes:xls,xlsx',
+            'file' => 'nullable|file|mimes:xls,xlsx',
         ]);
+        $validatedData['ppmpStatus'] = 'draft';
 
         try {
-            $startRow = 1;
-            $currentRow = 0;
-            $productInExcel = [];
 
-            DB::transaction(function () use (&$currentRow, $startRow, &$productInExcel, $validatedData, $request) {
-                if (!$request->hasFile('file')) {
-                    return null;
-                }
+            if ($this->validatePpmp($validatedData)) {
+                return response()->json(['error' => 'Office PPMP already exists!'], 400);
+            }
 
-                $fileInfo = $request->file('file');
-                $filePath = $fileInfo->storeAs('uploads', $fileInfo->getClientOriginalName());
-                $fullPath = storage_path('app/' . $filePath);
+            $createPpmp = $this->createPpmpTransaction($validatedData);
 
-                (new FastExcel)->import($fullPath, 
-                    function ($line) use (&$currentRow, $startRow, $validatedData, &$productInExcel){
+            DB::transaction(function () use ($createPpmp, $request) {
+                if ($request->hasFile('file')) {
+                    $filePath = $this->handleFileUpload($request->file('file'));
     
-                        if ($currentRow < $startRow) {
-                            $currentRow++;
-                            return null;
-                        }
+                    (new FastExcel)->import($filePath, function ($line) use ($createPpmp) {
+                        return $this->processImportedLine($line, $createPpmp->id);
+                    });
     
-                        $newStock = $line['New_Stock_No'] ?? null;
-                        $code = $line['Old_Sotck_No'] ?? null;
-                        $janQty = $line['Jan'] ?? null;
-                        $mayQty = $line['May'] ?? null;
-                        $totalQuantity = intval($janQty ) + intval($mayQty);
-    
-                        # New Stock Pattern Comparison
-                        # !preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock) 
-                        if (!preg_match("/^\d{4}$/", $code) || $totalQuantity === 0) {
-                            return null;
-                        }
-    
-                        $id = $newStock != null ? $newStock : $code;
-                        $onlist = $this->productService->validateProduct($id);
-                        if(!$onlist) {
-                            return null;
-                        }
-    
-                        $productInExcel[] = [
-                            'ppmpCode' => date('YmdHis'),
-                            'ppmpType' => $validatedData['ppmpType'],
-                            'priceAdjustment' => ($validatedData['basePrice'] / 100) + 1,
-                            'remarks'=> $validatedData['ppmpYear'],
-                            'office'=> $validatedData['office'],
-                            'janQty' => $janQty,
-                            'mayQty' => $mayQty,
-                            'prodId' => $onlist['prodId'],
-                            'priceId' => $onlist['priceId'],
-                        ];
-
-                        $currentRow++;
-                })->chunk(250);
-
-                if (Storage::exists($filePath)) {
-                    Storage::delete($filePath); 
+                    Storage::delete($filePath);
                 }
             });
-            return response()->json($productInExcel);
+
+            return response()->json(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
         } catch (\Exception $e) {
-            Log::error('File upload error: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to process the file: ' . $e->getMessage()], 500);
+            Log::error('File create ppmp error: ' . $e->getMessage());
+            return response()->json(['message' => 'PPMP creation was failed. Please contact your system administrator'], 500);
         }
     }
 
@@ -142,5 +138,61 @@ class PpmpTransactionController extends Controller
     public function destroy(PpmpTransaction $ppmpTransaction)
     {
         //
+    }
+
+    private function createPpmpTransaction(array $validatedData)
+    {
+        return PpmpTransaction::create([
+            'ppmp_code' => now()->format('YmdHis'),
+            'ppmp_type' => $validatedData['ppmpType'],
+            'price_adjustment' => $validatedData['basePrice'] ? ($validatedData['basePrice'] / 100) + 1 : 1,
+            'ppmp_remarks'=> $validatedData['ppmpYear'],
+            'office_id'=> $validatedData['office'],
+        ]);
+    }
+    
+    private function handleFileUpload($file)
+    {
+        return $file->storeAs('uploads', $file->getClientOriginalName());
+    }
+
+    private function processImportedLine($line, $ppmpId)
+    {
+        $newStock = $line['New_Stock_No'] ?? null;
+        $code = $line['Old_Sotck_No'] ?? null;
+        $janQty = $line['Jan'] ?? 0;
+        $mayQty = $line['May'] ?? 0;
+        $totalQuantity = intval($janQty) + intval($mayQty);
+
+        # New Stock Pattern Comparison
+        # !preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock) 
+        if (!preg_match("/^\d{4}$/", $code) || $totalQuantity === 0) {
+            return null;
+        }
+
+        $id = $newStock ?? $code;
+        $isProductValid = $this->productService->validateProduct($id);
+        if (!$isProductValid) {
+            return null;
+        }
+
+        PpmpParticular::create([
+            'qty_first' => $janQty,
+            'qty_second' => $mayQty,
+            'prod_id' => $isProductValid['prodId'],
+            'price_id' => $isProductValid['priceId'],
+            'trans_id' => $ppmpId,
+        ]);
+    }
+
+    private function validatePpmp(array $validatedData)
+    {
+        $officePpmpExist = PpmpTransaction::where('ppmp_type', $validatedData['ppmpType'])
+            ->where('office_id', $validatedData['office'])
+            ->where('ppmp_status', $validatedData['ppmpStatus'])
+            ->where('ppmp_remarks', (string) $validatedData['ppmpYear'])
+            ->exists();
+
+        return $officePpmpExist;
     }
 }
