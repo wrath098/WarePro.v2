@@ -70,7 +70,9 @@ Route::middleware('auth')->prefix('products')->group(function () {
 
 Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
+    Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
     Route::post('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
+    Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

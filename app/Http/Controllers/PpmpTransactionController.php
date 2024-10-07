@@ -25,9 +25,7 @@ class PpmpTransactionController extends Controller
     {
         $this->productService = $productService;
     }
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index(Request $request): Response
     {   
         $currentYear = date('Y');
@@ -67,9 +65,6 @@ class PpmpTransactionController extends Controller
         return Inertia::render('Ppmp/Import', ['officePpmps' =>  $officePpmpExist, 'filters' => $request->only(['search']), 'offices' => $office]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -92,8 +87,17 @@ class PpmpTransactionController extends Controller
             DB::transaction(function () use ($createPpmp, $request) {
                 if ($request->hasFile('file')) {
                     $filePath = $this->handleFileUpload($request->file('file'));
-    
-                    (new FastExcel)->import($filePath, function ($line) use ($createPpmp) {
+                    $fullPath = storage_path('app/' . $filePath);
+                    
+                    $startRow = 0;
+                    $currentRow = 0;
+                    (new FastExcel)->import($fullPath, function ($line) use ($createPpmp, &$currentRow, $startRow) {
+                        $currentRow++;
+
+                        if ($currentRow < $startRow) {
+                            return null;
+                        }
+
                         return $this->processImportedLine($line, $createPpmp->id);
                     });
     
@@ -108,12 +112,10 @@ class PpmpTransactionController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(PpmpTransaction $ppmpTransaction)
+    public function showIndividualPpmp(PpmpTransaction $ppmpTransaction)
     {
-        //
+        $ppmpTransaction->load('particulars', 'requestee');
+        return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction]);
     }
 
     /**
@@ -135,9 +137,20 @@ class PpmpTransactionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PpmpTransaction $ppmpTransaction)
+    public function destroy(Request $request)
     {
-        //
+        try {
+            $ppmpTransaction = PpmpTransaction::with('particulars')->where('id', $request->input('ppmpId'))->first();
+            if ($ppmpTransaction) {
+                $ppmpTransaction->delete();
+                return response()->json(['message' => 'PPMP deletion was successful.'], 200);
+            } else {
+                return response()->json(['message' => 'PPMP not found.'], 404);
+            }
+        } catch (\Exception $e) {
+            Log::error('File delete ppmp error: ' . $e->getMessage());
+            return response()->json(['message' => 'PPMP deletion failed. Please contact your system administrator'], 500);
+        }
     }
 
     private function createPpmpTransaction(array $validatedData)
@@ -170,7 +183,7 @@ class PpmpTransactionController extends Controller
             return null;
         }
 
-        $id = $newStock ?? $code;
+        $id = $newStock ?  $newStock : $code;
         $isProductValid = $this->productService->validateProduct($id);
         if (!$isProductValid) {
             return null;

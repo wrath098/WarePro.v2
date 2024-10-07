@@ -1,12 +1,16 @@
 <script setup>
     import { Head, router } from '@inertiajs/vue3';
-    import { reactive, ref, watch } from 'vue';
+    import { reactive, ref, watch, computed } from 'vue';
     import { debounce } from 'lodash';
+    import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
     import Pagination from '@/Components/Pagination.vue';
-import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import ViewButton from '@/Components/Buttons/ViewButton.vue';
+    import Modal from '@/Components/Modal.vue';
+    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import DangerButton from '@/Components/Buttons/DangerButton.vue';
 
     const props = defineProps({
         officePpmps: Object,
@@ -14,8 +18,24 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
         filters: Object,
     });
 
+    const edit = reactive({
+        ppmpId: '',
+    });
+
+    const modalState = ref(null);
     const file = ref([]);
     const fileInput = ref(null);
+
+    const isDropPpmpModalOpen = computed(() => modalState.value === 'drop');
+
+    const closeModal = () => {
+        modalState.value = null;
+    }
+
+    const openDropPpmpModal = (ppmp) => {
+        edit.ppmpId = ppmp.id;
+        modalState.value = 'drop';
+    };
 
     const create = reactive({
         ppmpType: '',
@@ -29,7 +49,6 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
         if (selectedFile) {
             file.value = selectedFile;
         }
-        console.log("Selected files:", selectedFile);
     };
 
     const onDrop = (event) => {
@@ -38,7 +57,6 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
         if (droppedFile) {
             file.value = droppedFile;
         }
-        console.log("Dropped files:", droppedFile);
     };
 
     const years = generateYears();
@@ -76,6 +94,17 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
             replace:true
         });
     }, 500));
+
+    const submitForm = (url, data) => {
+        Inertia.post(url, data, {
+            onSuccess: () => closeModal(),
+            onError: (errors) => {
+                console.error(`Form submission failed for ${url}`, errors);
+            },
+        });
+    };
+
+    const submitDropPpmp = () => submitForm('ppmp/drop', edit);
 </script>
 
 <template>
@@ -117,7 +146,7 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                                 <div>
                                     <label for="basedPrice" class="mb-1 block text-base font-medium text-[#07074D]">
                                         Based Price:
-                                        <span class="text-sm text-[#8f9091]">Percentage to apply to the latest price</span>
+                                        <span class="text-sm text-[#8f9091]">For ABC Price</span>
                                     </label>
                                     <input v-model="create.basePrice" type="number" id="basedPrice" placeholder="Ex. 15 = 15% || 50 = 50%"
                                         class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" />
@@ -153,7 +182,7 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                                         <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
                                             <div class="cursor-pointer">
                                                 <span class="mb-2 block text-base font-semibold text-[#545557]">
-                                                    Drop an Excel file here or click to upload
+                                                    Drop an Excel file here
                                                 </span>
                                                 <span class="mb-2 block text-base font-medium text-[#6B7280]">
                                                     Or
@@ -205,7 +234,7 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                                                 <th scope="col" class="px-6 py-3 w-1/6">
                                                     Office Code
                                                 </th>
-                                                <th scope="col" class="px-6 py-3 w-2/6">
+                                                <th scope="col" class="px-6 py-3 w-1/6">
                                                     PPMP No.
                                                 </th>
                                                 <th scope="col" class="px-6 py-3 w-1/6">
@@ -214,7 +243,7 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                                                 <th scope="col" class="px-6 py-3 w-1/6">
                                                     Based Price
                                                 </th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">
+                                                <th scope="col" class="px-6 py-3 w-2/6">
                                                     Action/s
                                                 </th>
                                             </tr>
@@ -237,8 +266,8 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                                                     {{ ppmp.basedPrice }}
                                                 </td>
                                                 <td class="py-2 text-center">
-                                                    <EditButton @click="openEditModal(office)" tooltip="Edit"/>
-                                                    <RemoveButton @click="openDeactivateModal(office)" tooltip="Remove"/>
+                                                    <ViewButton :href="route('indiv.ppmp.show', { ppmpTransaction: ppmp.id })" tooltip="View"/>
+                                                    <RemoveButton @click="openDropPpmpModal(ppmp)" tooltip="Remove"/>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -253,6 +282,38 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                 </div>
             </div>
         </div>
+        <Modal :show="isDropPpmpModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitDropPpmp">
+                <input type="hidden" v-model="edit.ppmpId">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Drop PPMP?</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton>
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </Modal>
     </AuthenticatedLayout>
     </div>
 </template>

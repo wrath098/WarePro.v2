@@ -100,6 +100,13 @@ class ProductService
         return $priceResult->prod_price ?? null;
     }
 
+    public function getLatestPriceIdentification($id)
+    {
+        $product = Product::findOrFail($id);
+        $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
+        return $priceResult->id ?? null;
+    }
+
     public function getFiveLatestPrice($id)
     {
         $product = Product::findOrFail($id);
@@ -129,7 +136,7 @@ class ProductService
             if ($product) {
                 return [
                     'prodId' => $product->id,
-                    'priceId' => $this->getLatestPriceId($product->id),
+                    'priceId' => $this->getLatestPriceIdentification($product->id),
                 ];
             }
         }
