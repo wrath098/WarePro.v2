@@ -65,9 +65,6 @@ const openDropModal = (category) => {
 const submitForm = (url, data) => {
     Inertia.post(url, data, {
         onSuccess: () => closeModal(),
-        onError: (errors) => {
-            console.error(`Form submission failed for ${url}`, errors);
-        },
     });
 };
 
@@ -143,11 +140,11 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                                 </div>
                             </li>
                             <button @click="showModal('add')" class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
-                                <span class="text-xl text-gray-900">
-                                    <svg class="w-6 h-6 text-indigo-900 transition duration-75" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <span class="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
+                                    <svg class="w-6 h-6 text-indigo-900 transition duration-75 ml-10" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M3 12h18"/>
                                     </svg>
-                                    Add
+                                    New Category
                                 </span>
                             </button>
                         </ul>
@@ -167,7 +164,7 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Category</h3>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details for the new category you wish to add.</p>
+                                <p class="text-sm text-gray-500"> Enter the details for the new Ctegory you wish to add.</p>
                                 <input type="hidden" v-model="form.createdBy">
                                 <input type="text" v-model="form.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
                                 <input type="number" v-model="form.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required>
@@ -250,11 +247,11 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                 <div class="bg-gray-100 h-auto">
                     <div class="bg-white p-6  md:mx-auto">
                         <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
                         </svg>
 
                         <div class="text-center">
-                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Are you sure!</h3>
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Move to Trash!</h3>
                             <p class="text-gray-600 my-2">Confirming this action will remove the selected Category into the list.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">

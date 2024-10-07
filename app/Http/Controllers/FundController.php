@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -51,6 +52,7 @@ class FundController extends Controller
         
             return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster created successfully']);
         } catch (\Exception $e) {
+            Log::error('Creation of Fund Cluster error: ' . $e->getMessage());
             return redirect()->route('fund.display.all')->with(['error' => 'Failed to create Fund Cluster']);
         }
     }
@@ -79,6 +81,7 @@ class FundController extends Controller
             });
             return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster updated successfully.']);
         } catch (\Exception $e) {
+            Log::error('Updateing of Fund Cluster error: ' . $e->getMessage());
             return redirect()->route('fund.display.all')->with(['error' => 'Failed to update the fund cluster.']);
         }
     }
@@ -104,7 +107,8 @@ class FundController extends Controller
             });
             return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster deactivated successfully.']);
         } catch (\Exception $e) {
-            return redirect()->route('fund.display.all')->with(['error' => 'Failed to deactivate the fund cluster.']);
+            Log::error('Deletion of Fund Cluster error: ' . $e->getMessage());
+            return redirect()->route('fund.display.all')->with(['error' => 'Failed to move the fund cluster to trash.']);
         }
     }
 }

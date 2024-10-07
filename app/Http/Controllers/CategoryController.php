@@ -7,6 +7,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -77,6 +78,7 @@ class CategoryController extends Controller
                 return redirect()->route('category.display.active')->with(['message' => 'New Category was created successfully']);
             }
         } catch (\Exception $e) {
+            Log::error('Failed to create category: ' . $e->getMessage());
             return redirect()->route('category.display.active')->with(['error' => 'Failed to create New Category']);
         }
     }
@@ -124,6 +126,7 @@ class CategoryController extends Controller
                 return redirect()->route('category.display.active')->with(['message' => 'Category was updated successfully.']);
             });
         } catch (\Exception $e) {
+            Log::error('Failed to update the category: ' . $e->getMessage());
             return redirect()->route('category.display.active')->with(['error' => 'Failed to update the category.']);
         }
     }
@@ -142,6 +145,7 @@ class CategoryController extends Controller
 
             return redirect()->route('category.display.active')->with(['message' => 'Category was remove successfully.']);
         } catch (\Exception $e) {
+            Log::error('Failed to remove the category: ' . $e->getMessage());
             return redirect()->route('category.display.active')->with(['error' => 'Failed to remove the category.']);
         }
     }
