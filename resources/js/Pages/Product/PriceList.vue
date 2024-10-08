@@ -50,7 +50,7 @@
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-between pb-4">
                             <div class="flex mb:flex-col">
                                 <PrintButton :href="route('generatePdf.PriceActiveList')" target="_blank">
-                                    <span class="mr-2">Print</span>
+                                    <span class="mr-2">Print List</span>
                                 </PrintButton>
                             </div>
                             

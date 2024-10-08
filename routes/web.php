@@ -22,6 +22,8 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -61,7 +63,7 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::get('/product-price-list', [ProductController::class, 'showPriceList'])->name('product.display.active.pricelist');
     Route::post('/save', [ProductController::class, 'store'])->name('product.store');
     Route::post('/update', [ProductController::class, 'update'])->name('product.update');
-    Route::post('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
+    Route::put('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
     Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
     Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');
     Route::post('/store-unmodified-product', [ProductPpmpExceptionController::class, 'store'])->name('store.unmodified.product');

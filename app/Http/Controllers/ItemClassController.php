@@ -50,7 +50,12 @@ class ItemClassController extends Controller
             'name' => $category->cat_name
         ]);
 
-        return Inertia::render('Item/Index', ['itemClasses' => $itemClass, 'filters' => $request->only(['search']), 'categories' => $categories, 'authUserId' => Auth::id()]);
+        return Inertia::render('Item/Index', [
+            'itemClasses' => $itemClass,
+            'filters' => $request->only(['search']),
+            'categories' => $categories,
+            'authUserId' => Auth::id()
+        ]);
     }
 
     /**
@@ -77,7 +82,9 @@ class ItemClassController extends Controller
                                     ->exists();
 
             if($itemExists) {
-                return redirect()->route('item.display.active')->with(['error' => 'Item code is already taken within the selected Category.']);
+                return redirect()->route('item.display.active')
+                    ->with(['error' => 'Item code is already taken within the selected Category.'])
+                    ->setStatusCode(500);
             } 
 
             ItemClass::create([
@@ -87,10 +94,15 @@ class ItemClassController extends Controller
                 'created_by' => $createdBy,
             ]);
 
-            return redirect()->route('item.display.active')->with(['message' => 'New Item Class has been successfully added']);
+            return redirect()->route('item.display.active')
+                ->with(['message' => 'New Item Class has been successfully added'])
+                ->setStatusCode(200);
             
         } catch (\Exception $e) {
-            return redirect()->route('item.display.active')->with(['error' => 'An error occurred while adding the new item class.']);
+            Log::error('Creation of Item Class: ' . $e->getMessage());
+            return redirect()->route('item.display.active')
+                ->with(['error' => 'An error occurred while adding the new item class.'])
+                ->setStatusCode(500);
         }
     }
 
@@ -113,9 +125,14 @@ class ItemClassController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
-            return redirect()->route('item.display.active')->with(['message' => 'Item Class name was updated successfully.']);
+            return redirect()->route('item.display.active')
+                ->with(['message' => 'Item Class name was updated successfully.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
-            return redirect()->route('item.display.active')->with(['error' => 'An error occurred while adding the new item class.']);
+            Log::error('Update of Item Class: ' . $e->getMessage());
+            return redirect()->route('item.display.active')
+                ->with(['error' => 'An error occurred while adding the new item class.'])
+                ->setStatusCode(500);
         }
     }
 
@@ -134,9 +151,14 @@ class ItemClassController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
-            return redirect()->route('item.display.active')->with(['message' => 'Item Class name was updated successfully.']);
+            return redirect()->route('item.display.active')
+                ->with(['message' => 'Item Class name was updated successfully.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
-            return redirect()->route('item.display.active')->with(['error' => 'An error occurred while adding the new item class.']);
+            Log::error('Deletion of Item Class: ' . $e->getMessage());
+            return redirect()->route('item.display.active')
+                ->with(['error' => 'An error occurred while adding the new item class.'])
+                ->setStatusCode(500);
         }
     }
 }

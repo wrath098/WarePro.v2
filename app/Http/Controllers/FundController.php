@@ -79,10 +79,14 @@ class FundController extends Controller
                     'updated_by' => $validation['updatedBy'],
                 ])->save();
             });
-            return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster updated successfully.']);
+            return redirect()->route('fund.display.all')
+                ->with(['message' => 'Fund Cluster updated successfully.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
             Log::error('Updateing of Fund Cluster error: ' . $e->getMessage());
-            return redirect()->route('fund.display.all')->with(['error' => 'Failed to update the fund cluster.']);
+            return redirect()->route('fund.display.all')
+                ->with(['error' => 'Failed to update the fund cluster.'])
+                ->setStatusCode(500);
         }
     }
 
@@ -105,10 +109,14 @@ class FundController extends Controller
                     'updated_by' => $validation['updatedBy'],
                 ])->save();
             });
-            return redirect()->route('fund.display.all')->with(['message' => 'Fund Cluster deactivated successfully.']);
+            return redirect()->route('fund.display.all')
+                ->with(['message' => 'Fund Cluster deactivated successfully.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
             Log::error('Deletion of Fund Cluster error: ' . $e->getMessage());
-            return redirect()->route('fund.display.all')->with(['error' => 'Failed to move the fund cluster to trash.']);
+            return redirect()->route('fund.display.all')
+                ->with(['error' => 'Failed to move the fund cluster to trash.'])
+                ->setStatusCode(500);
         }
     }
 }

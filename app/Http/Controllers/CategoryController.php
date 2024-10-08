@@ -43,8 +43,8 @@ class CategoryController extends Controller
                 'code' => $category->cat_code,
                 'name' => $category->cat_name,
                 'status' => $category->cat_status,
-                'fundId' => $category->funder->id,
-                'fundName' => $category->funder->fund_name,
+                'fundId' => $category->funder->id ?? '',
+                'fundName' => $category->funder->fund_name ?? '',
                 'creatorName' => $category->creator->name,
             ];
         });
@@ -66,7 +66,9 @@ class CategoryController extends Controller
             $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catCode, $catName);
 
             if($existingCategory) {
-                return redirect()->route('category.display.active')->with(['error' => 'Category is already exist. If not on the list below, Please verify this to your system administrator.']);
+                return redirect()->route('category.display.active')
+                    ->with(['error' => 'Category is already exist. If not on the list below, Please verify this to your system administrator.'])
+                    ->setStatusCode(500);
             } else {
                 Category::create([
                     'fund_id' => $fundId,
@@ -75,11 +77,15 @@ class CategoryController extends Controller
                     'created_by' => $createdBy,
                 ]);
 
-                return redirect()->route('category.display.active')->with(['message' => 'New Category was created successfully']);
+                return redirect()->route('category.display.active')
+                    ->with(['message' => 'New Category was created successfully'])
+                    ->setStatusCode(200);
             }
         } catch (\Exception $e) {
             Log::error('Failed to create category: ' . $e->getMessage());
-            return redirect()->route('category.display.active')->with(['error' => 'Failed to create New Category']);
+            return redirect()->route('category.display.active')
+                ->with(['error' => 'Failed to create New Category'])
+                ->setStatusCode(500);
         }
     }
 
@@ -123,11 +129,15 @@ class CategoryController extends Controller
                 } else {
                     $category->update(['cat_name' => $catName, 'updated_by' => $updater]);
                 }
-                return redirect()->route('category.display.active')->with(['message' => 'Category was updated successfully.']);
+                return redirect()->route('category.display.active')
+                    ->with(['message' => 'Category was updated successfully.'])
+                    ->setStatusCode(200);
             });
         } catch (\Exception $e) {
             Log::error('Failed to update the category: ' . $e->getMessage());
-            return redirect()->route('category.display.active')->with(['error' => 'Failed to update the category.']);
+            return redirect()->route('category.display.active')
+                ->with(['error' => 'Failed to update the category.'])
+                ->setStatusCode(500);
         }
     }
 
@@ -143,10 +153,14 @@ class CategoryController extends Controller
                 'updated_by' => $updatedBy,
             ])->save();
 
-            return redirect()->route('category.display.active')->with(['message' => 'Category was remove successfully.']);
+            return redirect()->route('category.display.active')
+                ->with(['message' => 'Category was remove successfully.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
             Log::error('Failed to remove the category: ' . $e->getMessage());
-            return redirect()->route('category.display.active')->with(['error' => 'Failed to remove the category.']);
+            return redirect()->route('category.display.active')
+                ->with(['error' => 'Failed to remove the category.'])
+                ->setStatusCode(500);
         }
     }
 }

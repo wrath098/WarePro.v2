@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -64,9 +65,14 @@ class OfficeController extends Controller
                 'created_by' => $validatedData['createdBy'],
             ]);
 
-            return redirect()->route('office.display.active')->with(['message' => 'New office has been successfully added.']);
+            return redirect()->route('office.display.active')
+                ->with(['message' => 'New office has been successfully added.'])
+                ->setStatusCode(200);
         }catch (\Exception $e) {
-            return redirect()->route('office.display.active')->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.']);
+            Log::error('Creation of Office: ' . $e->getMessage());
+            return redirect()->route('office.display.active')
+                ->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.'])
+                ->setStatusCode(500);
         }
     }
 
@@ -96,9 +102,14 @@ class OfficeController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
-            return redirect()->route('office.display.active')->with(['message' => 'Office has been successfully updated.']);
+            return redirect()->route('office.display.active')
+                ->with(['message' => 'Office has been successfully updated.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
-            return redirect()->route('office.display.active')->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.']);
+            Log::error('Update of Office: ' . $e->getMessage());
+            return redirect()->route('office.display.active')
+                ->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.'])
+                ->setStatusCode(500);
         }
     }
 
@@ -116,9 +127,14 @@ class OfficeController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
-            return redirect()->route('item.display.active')->with(['message' => 'Office was successfully removed.']);
+            return redirect()->route('item.display.active')
+                ->with(['message' => 'Office was successfully removed.'])
+                ->setStatusCode(200);
         } catch (\Exception $e) {
-            return redirect()->route('item.display.active')->with(['error' => 'An error occurred while removing the office. Please contact your administrator.']);
+            Log::error('Deletion of Office: ' . $e->getMessage());
+            return redirect()->route('item.display.active')
+            ->with(['error' => 'An error occurred while removing the office. Please contact your administrator.'])
+            ->setStatusCode(500);
         }
     }
 }

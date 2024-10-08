@@ -86,6 +86,15 @@ class ProductService
         return $itemName ? $itemName->item_name : null;
     }
 
+    public function getItemId(int $catId, int $itemCode)
+    {
+        $itemId = ItemClass::where('cat_id', $catId)
+                ->where('item_code', $itemCode)
+                ->first();
+
+        return $itemId ? $itemId->id : null;
+    }
+
     public function getLatestPrice($id)
     {
         $product = Product::findOrFail($id);
