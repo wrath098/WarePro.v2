@@ -123,6 +123,27 @@ class ProductService
         return $priceResult->id ?? null;
     }
 
+    public function getProductName($id)
+    {
+        $product = Product::findOrFail($id);
+        $productName = $product->prod_desc;
+        return $productName ?? null;
+    }
+
+    public function getProductUnit($id)
+    {
+        $product = Product::findOrFail($id);
+        $productUnit = $product->prod_unit;
+        return $productUnit ?? null;
+    }
+
+    public function getProductCode($id)
+    {
+        $product = Product::findOrFail($id);
+        $productCode = $product->prod_newNo;
+        return $productCode ?? null;
+    }
+
     public function validateCategoryExistence($fundId, $code, $name)
     {
         $category = Category::where('fund_id', $fundId)

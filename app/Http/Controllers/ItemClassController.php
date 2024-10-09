@@ -82,9 +82,8 @@ class ItemClassController extends Controller
                                     ->exists();
 
             if($itemExists) {
-                return redirect()->route('item.display.active')
-                    ->with(['error' => 'Item code is already taken within the selected Category.'])
-                    ->setStatusCode(500);
+                return redirect()->back()
+                    ->with(['error' => 'Item code is already taken within the selected Category.']);
             } 
 
             ItemClass::create([
@@ -94,15 +93,13 @@ class ItemClassController extends Controller
                 'created_by' => $createdBy,
             ]);
 
-            return redirect()->route('item.display.active')
-                ->with(['message' => 'New Item Class has been successfully added'])
-                ->setStatusCode(200);
+            return redirect()->back()
+                ->with(['message' => 'New Item Class has been successfully added']);
             
         } catch (\Exception $e) {
             Log::error('Creation of Item Class: ' . $e->getMessage());
-            return redirect()->route('item.display.active')
-                ->with(['error' => 'An error occurred while adding the new item class.'])
-                ->setStatusCode(500);
+            return redirect()
+                ->with(['error' => 'An error occurred while adding the new item class.']);
         }
     }
 
@@ -125,14 +122,12 @@ class ItemClassController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
-            return redirect()->route('item.display.active')
-                ->with(['message' => 'Item Class name was updated successfully.'])
-                ->setStatusCode(200);
+            return redirect()->back()
+                ->with(['message' => 'Item Class name was updated successfully.']);
         } catch (\Exception $e) {
             Log::error('Update of Item Class: ' . $e->getMessage());
-            return redirect()->route('item.display.active')
-                ->with(['error' => 'An error occurred while adding the new item class.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'An error occurred while adding the new item class.']);
         }
     }
 
@@ -151,14 +146,12 @@ class ItemClassController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
-            return redirect()->route('item.display.active')
-                ->with(['message' => 'Item Class name was updated successfully.'])
-                ->setStatusCode(200);
+            return redirect()->back()
+                ->with(['message' => 'Item Class name was updated successfully.']);
         } catch (\Exception $e) {
             Log::error('Deletion of Item Class: ' . $e->getMessage());
-            return redirect()->route('item.display.active')
-                ->with(['error' => 'An error occurred while adding the new item class.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'An error occurred while adding the new item class.']);
         }
     }
 }

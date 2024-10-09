@@ -62,7 +62,11 @@ class PpmpTransactionController extends Controller
 
         $office = Office::where('office_status', 'active')->get();
 
-        return Inertia::render('Ppmp/Import', ['officePpmps' =>  $officePpmpExist, 'filters' => $request->only(['search']), 'offices' => $office]);
+        return Inertia::render('Ppmp/Import', [
+            'officePpmps' =>  $officePpmpExist, 
+            'filters' => $request->only(['search']), 
+            'offices' => $office
+        ]);
     }
 
     public function store(Request $request)
@@ -79,7 +83,7 @@ class PpmpTransactionController extends Controller
         try {
 
             if ($this->validatePpmp($validatedData)) {
-                return response()->json(['error' => 'Office PPMP already exists!'], 400);
+                return redirect()->back()->with(['error' => 'Office PPMP already exists!']);
             }
 
             $createPpmp = $this->createPpmpTransaction($validatedData);
@@ -104,18 +108,30 @@ class PpmpTransactionController extends Controller
                     Storage::delete($filePath);
                 }
             });
-
-            return response()->json(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
+            return redirect()->back()
+                ->with(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
         } catch (\Exception $e) {
             Log::error('File create ppmp error: ' . $e->getMessage());
-            return response()->json(['message' => 'PPMP creation was failed. Please contact your system administrator'], 500);
+            return redirect()->back()
+                ->with(['error' => 'PPMP creation was failed. Please contact your system administrator.']);
         }
     }
 
     public function showIndividualPpmp(PpmpTransaction $ppmpTransaction)
     {
         $ppmpTransaction->load('particulars', 'requestee');
-        return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction]);
+
+        $ppmpParticulars = $ppmpTransaction->particulars->map(fn($particular) => [
+            'id' => $particular->id,
+            'firstQty' => $particular->qty_first,
+            'secondQty' => $particular->qty_second,
+            'prodCode' => $this->productService->getProductCode($particular->prod_id),
+            'prodName' => $this->productService->getProductName($particular->prod_id),
+            'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+        ])->sortBy('prodCode');
+
+        return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars]);
     }
 
     /**
@@ -143,13 +159,16 @@ class PpmpTransactionController extends Controller
             $ppmpTransaction = PpmpTransaction::with('particulars')->where('id', $request->input('ppmpId'))->first();
             if ($ppmpTransaction) {
                 $ppmpTransaction->delete();
-                return response()->json(['message' => 'PPMP deletion was successful.'], 200);
+                return redirect()->back()
+                    ->with(['message' => 'PPMP deletion was successful.']);
             } else {
-                return response()->json(['message' => 'PPMP not found.'], 404);
+                return redirect()->back()
+                    ->with(['error' => 'PPMP not found.']);
             }
         } catch (\Exception $e) {
             Log::error('File delete ppmp error: ' . $e->getMessage());
-            return response()->json(['message' => 'PPMP deletion failed. Please contact your system administrator'], 500);
+            return redirect()->back()
+                ->with(['error' => 'PPMP deletion failed. Please contact your system administrator']);
         }
     }
 
@@ -173,8 +192,8 @@ class PpmpTransactionController extends Controller
     {
         $newStock = $line['New_Stock_No'] ?? null;
         $code = $line['Old_Sotck_No'] ?? null;
-        $janQty = $line['Jan'] ?? 0;
-        $mayQty = $line['May'] ?? 0;
+        $janQty = is_numeric($line['Jan']) ? $line['Jan'] : 0;
+        $mayQty = is_numeric($line['May']) ? $line['May'] : 0;
         $totalQuantity = intval($janQty) + intval($mayQty);
 
         # New Stock Pattern Comparison
@@ -185,6 +204,7 @@ class PpmpTransactionController extends Controller
 
         $id = $newStock ?  $newStock : $code;
         $isProductValid = $this->productService->validateProduct($id);
+
         if (!$isProductValid) {
             return null;
         }

@@ -1,5 +1,5 @@
 <script setup>
-    import { Head, router } from '@inertiajs/vue3';
+    import { Head, router, usePage } from '@inertiajs/vue3';
     import { reactive, ref, watch, computed } from 'vue';
     import { debounce } from 'lodash';
     import { Inertia } from '@inertiajs/inertia';
@@ -11,10 +11,31 @@
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
+    import AddButton from '@/Components/Buttons/AddButton.vue';
 
     const props = defineProps({
         ppmp: Object,
+        ppmpParticulars: Object,
     });
+
+    const modalState = ref(null);
+    const showModal = (modalType) => { modalState.value = modalType; }
+    const closeModal = () => { modalState.value = null; }
+    const isAddPPModalOpen = computed(() => modalState.value === 'add');
+
+    
+    const autoCompleteQuery = ref('');
+    const autoCompleteResult = ref([]);
+    const fetchAutoCompleteResult = async () => {
+        if (autoCompleteQuery.value.length > 8) {
+            const response = await router.get('/autocomplete-product', { autoCompleteQuery: autoCompleteQuery.value}, { preserveState: false });
+            autoCompleteResult.value = response.data;
+            console.log(autoCompleteResult);
+        } else {
+            autoCompleteResult.value = [];
+            console.log(autoCompleteResult);
+        }
+    };
 </script>
 
 <template>
@@ -72,7 +93,10 @@
                         <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
                             <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end pb-4">
+                                    <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-between pb-4">
+                                        <AddButton @click="showModal('add')">
+                                                <span class="mr-2">Add Particular</span>
+                                        </AddButton>
                                         <label for="search" class="sr-only">Search</label>
                                         <div class="relative">
                                             <div class="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
@@ -86,6 +110,9 @@
                                             <tr>
                                                 <th scope="col" class="px-6 py-3 w-1/12">
                                                     No#
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">
+                                                    Price
                                                 </th>
                                                 <th scope="col" class="px-6 py-3 w-4/12">
                                                     Description
@@ -102,30 +129,33 @@
                                                 <th scope="col" class="px-6 py-3 w-1/12">
                                                     Price
                                                 </th>
-                                                <th scope="col" class="px-6 py-3 w-2/6">
+                                                <th scope="col" class="px-6 py-3 w-1/12">
                                                     Action/s
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="(particular, index) in ppmp.particulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
+                                            <tr v-for="(particular, index) in ppmpParticulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
                                                 <td scope="row" class="py-2 text-center text-sm">
-                                                    {{  index+1 }}
+                                                    {{  ++index }}
+                                                </td>
+                                                <td scope="row" class="py-2 text-center text-sm">
+                                                    {{  particular.prodCode }}
                                                 </td>
                                                 <td class="py-2">
-                                                    {{ particular.prod_id }}
+                                                    {{ particular.prodName }}
                                                 </td>
                                                 <td scope="row" class="py-2 text-center text-sm">
-                                                    {{  particular.qty_first }}
+                                                    {{  particular.firstQty }}
                                                 </td>
                                                 <td class="py-2 text-center">
-                                                    {{ particular.qty_second }}
+                                                    {{ particular.secondQty }}
                                                 </td>
                                                 <td class="py-2 text-center">
-                                                    {{ particular.price_id }}
+                                                    {{ particular.prodUnit }}
                                                 </td>
                                                 <td class="py-2 text-center">
-                                                    {{ particular.price_id }}
+                                                    {{ particular.prodPrice }}
                                                 </td>
                                                 <td class="py-2 text-center">
                                                     <ViewButton :href="route('indiv.ppmp.show', { ppmpTransaction: ppmp.id })" tooltip="View"/>
@@ -144,6 +174,43 @@
                 </div>
             </div>
         </div>
+        <Modal :show="isAddPPModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submit">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Additional Particular</h3>
+                            <p class="text-sm text-gray-500"> Enter the details for the add Product/Particular you wish to add.</p>
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-500"> Product No: </p>
+                                <input type="text" v-model="autoCompleteQuery" @input="fetchAutoCompleteResult" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01">
+                            </div>
+                            <p>{{ autoCompleteResult }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton>
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Confirm 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal>
     </AuthenticatedLayout>
     </div>
 </template>

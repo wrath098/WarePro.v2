@@ -121,16 +121,22 @@ class ProductController extends Controller
                     'prod_price' => $validatedData['prodPrice'],
                     'prod_id' => $product->id,
                 ]);
-                return redirect()->route('product.display.active')
-                    ->with(['message' => 'New Product has been successfully added.'])
-                    ->setStatusCode(200);
+                return redirect()->back()
+                    ->with(['message' => 'New Product has been successfully added.']);
             });
         } catch (\Exception $e) {
             Log::error('Product update failed: ' . $e->getMessage());
-            return redirect()->route('product.display.active')
-                ->with(['error' => 'Creation of new product failed.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'Creation of new product failed.']);
         }
+    }
+
+    public function showAutoComplete(Request $request)
+    {
+        $query = $request->input('autoCompleteQuery');
+        $result = Product::where('name', 'LIKE', "%{query}%")->get();
+
+        return response()->json($result);
     }
 
     /**
@@ -158,15 +164,13 @@ class ProductController extends Controller
                         'prod_id' => $validatedData['prodId'],
                     ]);
                 }
-                return redirect()->route('product.display.active')
-                    ->with(['message' => 'Product has been updated successfully.'])
-                    ->setStatusCode(200);
+                return redirect()->back()
+                    ->with(['message' => 'Product has been updated successfully.']);
             });
         } catch (\Exception $e) {
             Log::error('Product update failed: ' . $e->getMessage());
-            return redirect()->route('product.display.active')
-                ->with(['error' => 'An error occurred while updating the product.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'An error occurred while updating the product.']);
         }
     }
 
@@ -206,15 +210,13 @@ class ProductController extends Controller
                     'prod_price' => $validatedData['prodPrice'],
                     'prod_id' => $product->id,
                 ]);
-                return redirect()->route('product.display.active')
-                    ->with(['message' => 'Product has been updated successfully.'])
-                    ->setStatusCode(200);
+                return redirect()->back()
+                    ->with(['message' => 'Product has been updated successfully.']);
             });
         } catch (\Exception $e) {
             Log::error('Product update failed: ' . $e->getMessage());
-            return redirect()->route('product.display.active')
-                ->with(['error' => 'Modifying the product failed.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'Modifying the product failed.']);
         }
     }
 
@@ -275,74 +277,73 @@ class ProductController extends Controller
                 'updated_by' => $validatedData['updatedBy'], 
                 'prod_status' => 'deactivated'
             ]);
-            return redirect()->route('product.display.active')
-                ->with(['message' => 'Product has been remove successfully.'])
-                ->setStatusCode(200);
+            return redirect()->back()
+                ->with(['message' => 'Product has been remove successfully.']);
         } catch (\Exception $e) {
             Log::error('Product update failed: ' . $e->getMessage());
-            return redirect()->route('product.display.active')
-                ->with(['error' => 'Moving the product to trash failed.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'Moving the product to trash failed.']);
         }
     }
 
-    public function importProduct()
-    {
-        $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';
-            $filename = 'Book13.xlsx';
-            $destinationPath = 'uploads/' . $filename;
+    #FOR AUTOMATIC UPLOAD OF PRODUCTS ONLY
+    // public function importProduct()
+    // {
+    //     $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';
+    //         $filename = 'Book13.xlsx';
+    //         $destinationPath = 'uploads/' . $filename;
 
-            Storage::disk('local')->put($destinationPath, File::get($sourcePath));
-            $fullPath = storage_path('app/' . $destinationPath);
+    //         Storage::disk('local')->put($destinationPath, File::get($sourcePath));
+    //         $fullPath = storage_path('app/' . $destinationPath);
 
-            $startRow = 0;
-            $currentRow = 0;
-            $products = [];
-            $duplicates = [];
+    //         $startRow = 0;
+    //         $currentRow = 0;
+    //         $products = [];
+    //         $duplicates = [];
 
-        try {
+    //     try {
             
-            (new FastExcel)->import($fullPath, function ($line) use ($startRow, &$currentRow, &$products, &$duplicates){
-                $currentRow++;
+    //         (new FastExcel)->import($fullPath, function ($line) use ($startRow, &$currentRow, &$products, &$duplicates){
+    //             $currentRow++;
 
-                if ($currentRow < $startRow) {
-                    return null;
-                }
+    //             if ($currentRow < $startRow) {
+    //                 return null;
+    //             }
 
-                if(!preg_match("/^\d{4}$/", $line['Code'])) {
-                    return null;
-                }
+    //             if(!preg_match("/^\d{4}$/", $line['Code'])) {
+    //                 return null;
+    //             }
 
 
-                $itemId = $this->productService->getItemId((int)$line['Cat'], (int)$line['Item']);
-                $controlNo = $this->productService->generateStockNo($itemId);
+    //             $itemId = $this->productService->getItemId((int)$line['Cat'], (int)$line['Item']);
+    //             $controlNo = $this->productService->generateStockNo($itemId);
 
-                $product = Product::create([
-                    'prod_newNo' => $controlNo,
-                    'prod_desc' => $line['Desc'] ?? 'No Description',
-                    'prod_unit' => ucfirst($line['Unit']),
-                    'prod_remarks' => 2025,
-                    'prod_oldNo' => $line['Code'],
-                    'item_id' => $itemId,
-                    'created_by' => Auth::id()
-                ]);
+    //             $product = Product::create([
+    //                 'prod_newNo' => $controlNo,
+    //                 'prod_desc' => $line['Desc'] ?? 'No Description',
+    //                 'prod_unit' => ucfirst($line['Unit']),
+    //                 'prod_remarks' => 2025,
+    //                 'prod_oldNo' => $line['Code'],
+    //                 'item_id' => $itemId,
+    //                 'created_by' => Auth::id()
+    //             ]);
 
-                if($product)
-                {
-                    ProductPrice::create([
-                        'prod_price' => $line['Price'] ? (float)$line['Price'] : 0,
-                        'prod_id' => $product->id,
-                    ]);
-                } else {
-                    return response()->json(['error' => 'Uploading in error in line ' . $line['Code']]);
-                }
+    //             if($product)
+    //             {
+    //                 ProductPrice::create([
+    //                     'prod_price' => $line['Price'] ? (float)$line['Price'] : 0,
+    //                     'prod_id' => $product->id,
+    //                 ]);
+    //             } else {
+    //                 return response()->json(['error' => 'Uploading in error in line ' . $line['Code']]);
+    //             }
 
-            });
+    //         });
 
-            return response()->json(['products' => $products, 'duplicates' => $duplicates, 'count' => $currentRow]);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json(['error', 'Error importing data: ' . $e->getMessage()]);
-        }
-    }
+    //         return response()->json(['products' => $products, 'duplicates' => $duplicates, 'count' => $currentRow]);
+    //     } catch (\Exception $e) {
+    //         Log::error($e->getMessage());
+    //         return response()->json(['error', 'Error importing data: ' . $e->getMessage()]);
+    //     }
+    // }
 }

@@ -84,35 +84,30 @@ class ProductPpmpExceptionController extends Controller
             
             if($validateList) {
                 $validateList->update(['status'=> 'active']);
-                return redirect()->route('product.unmodified.list')
-                    ->with(['error' => 'Product Code is already exist on list!'])
-                    ->setStatusCode(500);
+                return redirect()->back()
+                    ->with(['error' => 'Product Code is already exist on list!']);
             }
 
             if ($validateProduct && $validateProduct->count() > 1) {
-                return redirect()->route('product.unmodified.list')
-                    ->with(['error' => 'Product Code has been used by more than products. Please check your product list!'])
-                    ->setStatusCode(500);
+                return redirect()->back()
+                    ->with(['error' => 'Product Code has been used by more than products. Please check your product list!']);
             } else if ( $validateProduct && $validateProduct->count() === 1) {
                 ProductPpmpException::create([
                     'year' => $validatedData['prodYear'],
                     'prod_id' => $validateProduct->first()->id,
                     ]);
 
-                    return redirect()->route('product.unmodified.list')
-                    ->with(['message' => 'Product has been added to the Unmodified successfully!'])
-                    ->setStatusCode(200);
+                    return redirect()->back()
+                    ->with(['message' => 'Product has been added to the Unmodified successfully!']);
             } else {
-                return redirect()->route('product.unmodified.list')
-                    ->with(['error' => 'Product Code does not exist.'])
-                    ->setStatusCode(404);
+                return redirect()->back()
+                    ->with(['error' => 'Product Code does not exist.']);
             }
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return redirect()->route('product.unmodified.list')
-                ->with(['error' => 'An unexpected error occurred.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'Product Code does not exist.']);
         }
     }
 
@@ -123,14 +118,12 @@ class ProductPpmpExceptionController extends Controller
 
             $productExempt->update(['status' => 'deactivate']);
 
-            return redirect()->route('product.unmodified.list')
-                ->with(['message' => 'Product has been moved to trash successfully!'])
-                ->setStatusCode(200);
+            return redirect()->back()
+                ->with(['message' => 'Product has been moved to trash successfully!']);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return redirect()->route('product.unmodified.list')
-                ->with(['error' => 'An unexpected error occurred.'])
-                ->setStatusCode(500);
+            return redirect()->back()
+                ->with(['error' => 'An unexpected error occurred.']);
         }
     }
 }
