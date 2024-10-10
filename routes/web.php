@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\PpmpParticularController;
 use App\Http\Controllers\PpmpTransactionController;
 use App\Http\Controllers\ProductPpmpExceptionController;
 use App\Http\Controllers\ProfileController;
@@ -76,6 +77,9 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
     Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
+    Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
+    Route::put('/individual-ppmp/edit', [PpmpParticularController::class, 'update'])->name('indiv.particular.update');
+    Route::delete('/individual-ppmp/delete', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

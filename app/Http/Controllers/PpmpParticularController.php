@@ -3,63 +3,109 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpParticular;
+use App\Models\Product;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PpmpParticularController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $productService;
+
+    public function __construct(ProductService $productService)
     {
-        //
+        $this->productService = $productService;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        try {
+            $validatedData = $request->validate([
+                'transId' => 'required|integer',
+                'prodCode' => 'required|string|max:20',
+                'firstQty' => 'required|integer|min:1',
+                'secondQty' => 'nullable|integer|min:0',
+            ], [
+                'transId.required' => 'Please provide a transaction ID.',
+                'firstQty.min' => 'First quantity must be at least 1.',
+            ]);
+
+            $productExist = Product::where('prod_newNo', $validatedData['prodCode'])
+                ->where('prod_status', 'active')->first();
+            if (!$productExist) {
+                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list.']);
+            }
+
+            $particularExist = PpmpParticular::where('trans_id', $validatedData['transId'])
+                ->where('prod_id', $productExist->id)->first();
+            if ($particularExist) {
+                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list.']);
+            } else {
+                PpmpParticular::create([
+                    'qty_first' => $validatedData['firstQty'],
+                    'qty_second' => $validatedData['secondQty'],
+                    'prod_id' => $productExist->id,
+                    'price_id' => $this->productService->getLatestPriceId($productExist->id),
+                    'trans_id' => $validatedData['transId'],
+                ]);
+
+                return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully added!']);
+            }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(PpmpParticular $ppmpParticular)
+    public function update(Request $request)
     {
-        //
+        try {
+            $validatedData = $request->validate([
+                'partId' => 'required|integer',
+                'prodCode' => 'required|string|max:20',
+                'prodDesc' => 'nullable|string',
+                'firstQty' => 'required|integer|min:1',
+                'secondQty' => 'nullable|integer|min:0',
+            ], [
+                'partId.required' => 'Please provide a Particular ID.',
+                'firstQty.min' => 'First quantity must be at least 1.',
+            ]);
+
+            $particularExist = PpmpParticular::findOrFail($validatedData['partId']);
+            $particularExist->update([
+                'qty_first' => $validatedData['firstQty'],
+                'qty_second' => $validatedData['secondQty']
+            ]);
+
+            return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully updated!']);
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PpmpParticular $ppmpParticular)
+    public function delete(Request $request)
     {
-        //
-    }
+        dd($request->toArray());
+        try {
+            $validatedData = $request->validate([
+                'partId' => 'required|integer',
+            ], [
+                'partId.required' => 'Please provide a Particular ID.',
+            ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, PpmpParticular $ppmpParticular)
-    {
-        //
-    }
+            $particularExist = PpmpParticular::findOrFail($validatedData['partId']);
+            $particularExist->update([
+                'qty_first' => $validatedData['firstQty'],
+                'qty_second' => $validatedData['secondQty']
+            ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PpmpParticular $ppmpParticular)
-    {
-        //
+            return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully updated!']);
+            
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
     }
 }
