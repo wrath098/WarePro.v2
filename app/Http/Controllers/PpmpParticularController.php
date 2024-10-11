@@ -43,9 +43,9 @@ class PpmpParticularController extends Controller
             } else {
                 PpmpParticular::create([
                     'qty_first' => $validatedData['firstQty'],
-                    'qty_second' => $validatedData['secondQty'],
+                    'qty_second' => $validatedData['secondQty'] ? $validatedData['secondQty'] : 0,
                     'prod_id' => $productExist->id,
-                    'price_id' => $this->productService->getLatestPriceId($productExist->id),
+                    'price_id' => $this->productService->getLatestPrice($productExist->id),
                     'trans_id' => $validatedData['transId'],
                 ]);
 

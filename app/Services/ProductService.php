@@ -8,6 +8,7 @@ use App\Models\ItemClass;
 use App\Models\Office;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
+use App\Models\ProductPrice;
 
 class ProductService 
 {
@@ -104,8 +105,7 @@ class ProductService
 
     public function getLatestPriceId($id)
     {
-        $product = Product::findOrFail($id);
-        $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
+        $priceResult = ProductPrice::findOrFail($id);
         return $priceResult->prod_price ?? null;
     }
 
@@ -127,21 +127,21 @@ class ProductService
     {
         $product = Product::findOrFail($id);
         $productName = $product->prod_desc;
-        return $productName ?? null;
+        return $productName ?? '';
     }
 
     public function getProductUnit($id)
     {
         $product = Product::findOrFail($id);
         $productUnit = $product->prod_unit;
-        return $productUnit ?? null;
+        return $productUnit ?? '';
     }
 
     public function getProductCode($id)
     {
         $product = Product::findOrFail($id);
         $productCode = $product->prod_newNo;
-        return $productCode ?? null;
+        return $productCode ?? '';
     }
 
     public function validateCategoryExistence($fundId, $code, $name)

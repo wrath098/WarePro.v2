@@ -120,7 +120,7 @@ class PpmpTransactionController extends Controller
     public function showIndividualPpmp(PpmpTransaction $ppmpTransaction)
     {
         $ppmpTransaction->load('particulars', 'requestee');
-
+        
         $ppmpParticulars = $ppmpTransaction->particulars->map(fn($particular) => [
             'id' => $particular->id,
             'firstQty' => $particular->qty_first,
@@ -128,26 +128,15 @@ class PpmpTransactionController extends Controller
             'prodCode' => $this->productService->getProductCode($particular->prod_id),
             'prodName' => $this->productService->getProductName($particular->prod_id),
             'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+            'prodPrice' => number_format(round($this->productService->getLatestPriceId($particular->price_id) * $ppmpTransaction->price_adjustment), 2, '.', ','),
         ])->sortBy('prodCode');
 
+        $ppmpTransaction['totalItems'] = $ppmpParticulars->count();
+        $overallPrice = $ppmpParticulars->sum(fn($particular) => (($particular['firstQty'] + $particular['secondQty']) * $particular['prodPrice']));
+
+        $ppmpTransaction['formattedOverallPrice'] = number_format(round($overallPrice, 2), 2, '.', ',');
+
         return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PpmpTransaction $ppmpTransaction)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, PpmpTransaction $ppmpTransaction)
-    {
-        //
     }
 
     /**

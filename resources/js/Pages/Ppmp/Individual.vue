@@ -137,7 +137,17 @@
                             <div class="mb-4">
                                 <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
                                 <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_remarks }}</p>
-                            </div>                            
+                            </div>       
+                            
+                            <div class="mb-4">
+                                <label for="totalItems" class="block text-sm font-medium text-[#07074D] mb-1">Total Items Listed:</label>
+                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalItems }}</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Total Amount:</label>
+                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.formattedOverallPrice }}</p>
+                            </div>
                         </div>
 
                         <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
@@ -204,7 +214,7 @@
                                                 <td scope="row" class="py-2 text-center">
                                                     {{ particular.prodUnit }}
                                                 </td>
-                                                <td scope="row" class="py-2 text-center">
+                                                <td scope="row" class="py-2 text-right">
                                                     {{ particular.prodPrice }}
                                                 </td>
                                                 <td scope="row" class="py-2 text-center">

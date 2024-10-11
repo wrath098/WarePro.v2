@@ -28,7 +28,7 @@ const props = defineProps({
 <style scoped>
 .tooltip {
     bottom: 70%;
-    left: 100%;
+    left: 65%;
     transform: translateX(-50%);
     margin-bottom: 0.5rem;
     opacity: 0;
