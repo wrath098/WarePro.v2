@@ -41,7 +41,7 @@
     });
 
     const dropParticular = reactive({
-        partId: '',
+        pId: '',
     });
 
     const openEditPpmpModal = (particular) => {
@@ -54,7 +54,7 @@
     }
 
     const openDropPpmpModal = (particular) => {
-        dropParticular.partId = particular.id;
+        dropParticular.pId = particular.id;
         modalState.value = 'drop';
     }
 
@@ -82,7 +82,10 @@
 
     const submitAdd = () => submitForm('post', 'create', addParticular);
     const submitEdit = () => submitForm('put', 'edit', editParticular);
-    const submitDrop = () => submitForm('delete', 'delete', dropParticular);
+    const submitDrop = () => {
+        const ppmpParticular = dropParticular.pId;
+        submitForm('delete', `delete/${ppmpParticular}`, null)
+    };
 </script>
 
 <template>
@@ -159,7 +162,7 @@
                                                     No#
                                                 </th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">
-                                                    Price
+                                                    Stock No.
                                                 </th>
                                                 <th scope="col" class="xl:block hidden px-6 py-3 w-4/12">
                                                     Description
@@ -183,28 +186,28 @@
                                         </thead>
                                         <tbody>
                                             <tr v-for="(particular, index) in ppmpParticulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                                <td scope="row" class="py-2 text-center text-sm">
+                                                <td scope="row" class="py-2 text-center">
                                                     {{  ++index }}
                                                 </td>
-                                                <td scope="row" class="py-2 text-center text-sm">
+                                                <td scope="row" class="py-2 text-center">
                                                     {{  particular.prodCode }}
                                                 </td>
-                                                <td class="md:block hidden py-2">
+                                                <td class="xl:block hidden py-2">
                                                     {{ particular.prodName }}
                                                 </td>
-                                                <td scope="row" class="py-2 text-center text-sm">
+                                                <td scope="row" class="py-2 text-center">
                                                     {{  particular.firstQty }}
                                                 </td>
-                                                <td class="py-2 text-center">
+                                                <td scope="row" class="py-2 text-center">
                                                     {{ particular.secondQty }}
                                                 </td>
-                                                <td class="py-2 text-center">
+                                                <td scope="row" class="py-2 text-center">
                                                     {{ particular.prodUnit }}
                                                 </td>
-                                                <td class="py-2 text-center">
+                                                <td scope="row" class="py-2 text-center">
                                                     {{ particular.prodPrice }}
                                                 </td>
-                                                <td class="py-2 text-center">
+                                                <td scope="row" class="py-2 text-center">
                                                     <EditButton @click="openEditPpmpModal(particular)" tooltip="Edit"/>
                                                     <RemoveButton @click="openDropPpmpModal(particular)" tooltip="Remove"/>
                                                 </td>
@@ -317,7 +320,6 @@
         </Modal>
         <Modal :show="isDropPPModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitDrop">
-                <input type="hidden" v-model="dropParticular.partId">
                 <div class="bg-gray-100 h-auto">
                     <div class="bg-white p-6  md:mx-auto">
                         <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">

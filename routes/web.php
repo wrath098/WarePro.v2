@@ -79,7 +79,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
     Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
     Route::put('/individual-ppmp/edit', [PpmpParticularController::class, 'update'])->name('indiv.particular.update');
-    Route::delete('/individual-ppmp/delete', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
+    Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

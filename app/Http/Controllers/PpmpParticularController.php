@@ -85,27 +85,14 @@ class PpmpParticularController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function delete(PpmpParticular $ppmpParticular)
     {
-        dd($request->toArray());
         try {
-            $validatedData = $request->validate([
-                'partId' => 'required|integer',
-            ], [
-                'partId.required' => 'Please provide a Particular ID.',
-            ]);
-
-            $particularExist = PpmpParticular::findOrFail($validatedData['partId']);
-            $particularExist->update([
-                'qty_first' => $validatedData['firstQty'],
-                'qty_second' => $validatedData['secondQty']
-            ]);
-
-            return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully updated!']);
-            
+            $ppmpParticular->delete();
+            return redirect()->back()->with(['message' => 'Product has been successfully deleted!']);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            return redirect()->back()->with(['error' => 'Failed to delete the particular.']);
         }
     }
 }
