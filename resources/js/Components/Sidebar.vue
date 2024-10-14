@@ -122,25 +122,25 @@
                     </SidebarLink>
                 </li>
                 <li>
-                    <SidebarDropdown :active="false">
+                    <SidebarDropdown :active="route().current('indiv.ppmp.draft')">
                             <ClipboardList :class="{'text-white': false}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Individaual</span>
                             <ArrowDown :class="{'text-white': false}" />
                         <template #dropdown-items>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
+                                <SubSidebarLink :href="route('indiv.ppmp.draft', { type: 'individual' , status: 'draft'})" :active="route().current('indiv.ppmp.draft')">
                                     <ArrowHeadRight :class="{ 'text-white' : false}"/>
                                     Draft
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
+                                <SubSidebarLink :href="route('indiv.ppmp.draft', { type: 'individual' , status: 'initial'})" :active="route().current('indiv.ppmp.draft')">
                                     <ArrowHeadRight :class="{ 'text-white' : false}"/>
                                     Initial
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
+                                <SubSidebarLink :href="route('indiv.ppmp.draft', { type: 'individual' , status: 'final'})" :active="route().current('indiv.ppmp.draft')">
                                     <ArrowHeadRight :class="{ 'text-white' : false}"/>
                                     Fainal
                                 </SubSidebarLink>

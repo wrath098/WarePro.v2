@@ -17,12 +17,18 @@ class PpmpParticular extends Model
         'qty_second',
         'prod_id',
         'price_id',
-        'trans_id',
+        'trans_indiv',
+        'trans_conso',
         'remarks',
     ];
 
     public function transaction(): BelongsTo
     {
-        return $this->belongsTo(PpmpTransaction::class, 'trans_id');
+        return $this->belongsTo(PpmpTransaction::class, 'trans_indiv');
+    }
+
+    public function trans_consolidated(): BelongsTo
+    {
+        return $this->belongsTo(PpmpTransaction::class, 'trans_conso');
     }
 }

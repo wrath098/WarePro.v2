@@ -65,7 +65,7 @@ class PpmpTransactionController extends Controller
         return Inertia::render('Ppmp/Import', [
             'officePpmps' =>  $officePpmpExist, 
             'filters' => $request->only(['search']), 
-            'offices' => $office
+            'offices' => $office,
         ]);
     }
 
@@ -132,11 +132,25 @@ class PpmpTransactionController extends Controller
         ])->sortBy('prodCode');
 
         $ppmpTransaction['totalItems'] = $ppmpParticulars->count();
-        $overallPrice = $ppmpParticulars->sum(fn($particular) => (($particular['firstQty'] + $particular['secondQty']) * $particular['prodPrice']));
+        $overallPrice = $ppmpParticulars->sum(fn($particular) => (($particular['firstQty'] + $particular['secondQty']) * (int) $particular['prodPrice']));
 
         $ppmpTransaction['formattedOverallPrice'] = number_format(round($overallPrice, 2), 2, '.', ',');
 
         return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars]);
+    }
+
+    public function showIndividualPpmp_Draft(Request $request): Response
+    {
+        $ppmpTransactions = PpmpTransaction::with('requestee', 'updater')
+            ->where('ppmp_type', $request->type)
+            ->where('ppmp_status', $request->status)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $request['status'] = ucfirst($request['status']);
+        $request['type'] = ucfirst($request['type']);
+
+        return Inertia::render('Ppmp/PpmpList', ['ppmpTransaction' =>  $ppmpTransactions, 'ppmp' =>  $request]);
     }
 
     /**
@@ -203,13 +217,13 @@ class PpmpTransactionController extends Controller
             'qty_second' => $mayQty,
             'prod_id' => $isProductValid['prodId'],
             'price_id' => $isProductValid['priceId'],
-            'trans_id' => $ppmpId,
+            'trans_indiv' => $ppmpId,
         ]);
     }
 
     private function validatePpmp(array $validatedData)
     {
-        $officePpmpExist = PpmpTransaction::where('ppmp_type', $validatedData['ppmpType'])
+        $officePpmpExist = PpmpTransaction::where('ppmp_type', 'individual')
             ->where('office_id', $validatedData['office'])
             ->where('ppmp_status', $validatedData['ppmpStatus'])
             ->where('ppmp_remarks', (string) $validatedData['ppmpYear'])

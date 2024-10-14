@@ -17,10 +17,12 @@ return new class extends Migration
             $table->integer('qty_second')->default(0);
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('price_id')->nullable();
-            $table->unsignedBigInteger('trans_id')->nullable();
+            $table->unsignedBigInteger('trans_indiv')->nullable();
+            $table->unsignedBigInteger('trans_conso')->nullable();
             $table->foreign('prod_id')->references('id')->on('products');
             $table->foreign('price_id')->references('id')->on('product_prices');
-            $table->foreign('trans_id')->references('id')->on('ppmp_transactions');
+            $table->foreign('trans_indiv')->references('id')->on('ppmp_transactions');
+            $table->foreign('trans_conso')->references('id')->on('ppmp_transactions');
             $table->string('remarks')->nullable();
             $table->timestamps();
         });

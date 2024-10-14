@@ -36,7 +36,7 @@ class PpmpParticularController extends Controller
                 return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list.']);
             }
 
-            $particularExist = PpmpParticular::where('trans_id', $validatedData['transId'])
+            $particularExist = PpmpParticular::where('trans_indiv', $validatedData['transId'])
                 ->where('prod_id', $productExist->id)->first();
             if ($particularExist) {
                 return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list.']);
@@ -45,15 +45,15 @@ class PpmpParticularController extends Controller
                     'qty_first' => $validatedData['firstQty'],
                     'qty_second' => $validatedData['secondQty'] ? $validatedData['secondQty'] : 0,
                     'prod_id' => $productExist->id,
-                    'price_id' => $this->productService->getLatestPrice($productExist->id),
-                    'trans_id' => $validatedData['transId'],
+                    'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
+                    'trans_indiv' => $validatedData['transId'],
                 ]);
 
                 return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully added!']);
             }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            return redirect()->back()->with(['error' => 'Adding Product Item failed!']);
         }
     }
 

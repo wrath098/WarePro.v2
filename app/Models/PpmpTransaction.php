@@ -21,7 +21,24 @@ class PpmpTransaction extends Model
         'ppmp_status',
         'ppmp_remarks',
         'office_id',
+        'created_by',
+        'updated_by',
     ];
+
+    protected $casts = [
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+    ];
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 
     public function requestee(): BelongsTo
     {
@@ -30,11 +47,6 @@ class PpmpTransaction extends Model
 
     public function particulars(): HasMany
     {
-        return $this->hasMany(PpmpParticular::class, 'trans_id');
-    }
-
-    public function consolidated(): HasMany
-    {
-        return $this->hasMany(PpmpConsolidated::class, 'trans_id');
+        return $this->hasMany(PpmpParticular::class, 'trans_indiv');
     }
 }

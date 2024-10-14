@@ -20,6 +20,10 @@ return new class extends Migration
             $table->string('ppmp_status', 20)->default('draft');
             $table->string('ppmp_remarks', 10)->nullable();
             $table->unsignedBigInteger('office_id')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->foreign('created_by')->references('id')->on('users');
+            $table->foreign('updated_by')->references('id')->on('users');
             $table->foreign('office_id')->references('id')->on('offices');
             $table->timestamps();
         });

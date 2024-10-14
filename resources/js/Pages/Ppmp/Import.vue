@@ -148,7 +148,7 @@
                                         Based Price:
                                         <span class="text-sm text-[#8f9091]">For ABC Price</span>
                                     </label>
-                                    <input v-model="create.basePrice" type="number" id="basedPrice" placeholder="Ex. 15 = 15% || 50 = 50%"
+                                    <input v-model="create.basePrice" type="number" id="basedPrice" placeholder="Ex. 1=1% | 2=2%, etc...."
                                         class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" />
                                 </div>
 
