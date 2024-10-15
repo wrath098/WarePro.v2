@@ -14,10 +14,27 @@
     import { debounce } from 'lodash';
 
     const props = defineProps({
+        data: Object,
         offices: Object,
         filters: Object,
         authUserId: Number,
     });
+
+    const columns = [
+        { data: 'id'},
+        { data: 'code'},
+        { data: 'name'},
+        { data: 'head'},
+        { data: 'position'},
+        { data: 'status'},
+        { data: 'addedBy'},
+        {
+        data: null, // No data source
+        render: function (data, type, row) {
+            return `<button class="px-4 py-2 bg-blue-500 text-white rounded" onclick="handleButtonClick(${row.id})">Action</button>`;
+        }
+    }
+    ];
 
     const create = reactive({
         offCode: '',
@@ -179,6 +196,21 @@
                     </div>
                 </div>
             </div>
+            <div class="p-6 text-gray-900">
+                        <DataTable
+                            :options="options"
+                            :data="data"
+                            :columns="columns"
+                        >
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                        </DataTable>
+                    </div>
         </div>
         <Modal :show="isAddModalOpen" @close="closeModal"> 
             <form @submit.prevent="submit">

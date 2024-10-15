@@ -39,7 +39,23 @@ class OfficeController extends Controller
             'addedBy' => $office->creator->name,
         ]);
 
-        return Inertia::render('Office/Index', ['offices' => $offices, 'filters' => $request->only(['search']), 'authUserId' => Auth::id()]);
+        $data = Office::with('creator')
+            ->where('office_status', 'active')
+            ->orderBy('office_name')
+            ->get()
+            ->map(function ($office) {
+                return [
+                    'id' => $office->id,
+                    'code' => $office->office_code,
+                    'name' => $office->office_name,
+                    'head' => $office->office_head,
+                    'position' => $office->position_head,
+                    'status' => $office->office_status,
+                    'addedBy' => optional($office->creator)->name ?? 'N/A',
+                ];
+            });
+
+        return Inertia::render('Office/Index', ['data' => $data, 'offices' => $offices, 'filters' => $request->only(['search']), 'authUserId' => Auth::id()]);
     }
 
 
