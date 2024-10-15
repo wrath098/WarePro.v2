@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-
-class PpmpParticular extends Model
+class PpmpConsolidated extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'ppmp_particulars';
+    protected $table = 'ppmp_consolidateds';
 
     protected $fillable = [
         'qty_first',

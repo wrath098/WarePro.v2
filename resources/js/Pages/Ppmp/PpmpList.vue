@@ -88,7 +88,7 @@
                                         {{ transaction.ppmp_remarks  }}
                                     </td>
                                     <td class="py-2 text-center">
-                                        {{ transaction.updater  }}
+                                        {{ transaction.updater.name  }}
                                     </td>
                                     <!-- <td class="py-2 text-center">
                                         <EditButton @click="openEditModal(office)" tooltip="Edit"/>

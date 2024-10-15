@@ -18,13 +18,15 @@ return new class extends Migration
             $table->decimal('price_adjustment', 5, 2)->nullable();
             $table->decimal('qty_adjustment', 5, 2)->nullable();
             $table->string('ppmp_status', 20)->default('draft');
-            $table->string('ppmp_remarks', 10)->nullable();
+            $table->integer('ppmp_version')->unsigned()->default(1);
+            $table->string('ppmp_year', 10)->nullable();
             $table->unsignedBigInteger('office_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('updated_by')->references('id')->on('users');
             $table->foreign('office_id')->references('id')->on('offices');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

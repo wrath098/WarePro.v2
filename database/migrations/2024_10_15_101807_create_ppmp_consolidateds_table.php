@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ppmp_particulars', function (Blueprint $table) {
+        Schema::create('ppmp_consolidateds', function (Blueprint $table) {
             $table->id();
             $table->integer('qty_first')->default(0);
             $table->integer('qty_second')->default(0);
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ppmp_particulars');
+        Schema::dropIfExists('ppmp_consolidateds');
     }
 };

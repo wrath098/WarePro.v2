@@ -16,6 +16,7 @@
     const props = defineProps({
         ppmp: Object,
         ppmpParticulars: Object,
+        user: Number,
     });
 
     const modalState = ref(null);
@@ -30,6 +31,7 @@
         prodCode: '',
         firstQty: '',
         secondQty: '',
+        user: props.user,
     });
 
     const editParticular = reactive({
@@ -38,10 +40,12 @@
         prodDesc: '',
         firstQty: '',
         secondQty: '',
+        user: props.user,
     });
 
     const dropParticular = reactive({
         pId: '',
+        user: props.user,
     });
 
     const openEditPpmpModal = (particular) => {

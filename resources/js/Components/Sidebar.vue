@@ -122,27 +122,27 @@
                     </SidebarLink>
                 </li>
                 <li>
-                    <SidebarDropdown :active="route().current('indiv.ppmp.draft')">
+                    <SidebarDropdown :active="route().current('indiv.ppmp.type')">
                             <ClipboardList :class="{'text-white': false}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Individaual</span>
                             <ArrowDown :class="{'text-white': false}" />
                         <template #dropdown-items>
                             <li>
-                                <SubSidebarLink :href="route('indiv.ppmp.draft', { type: 'individual' , status: 'draft'})" :active="route().current('indiv.ppmp.draft')">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
+                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'draft'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'})">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'})}"/>
                                     Draft
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="route('indiv.ppmp.draft', { type: 'individual' , status: 'initial'})" :active="route().current('indiv.ppmp.draft')">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
+                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'initial'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'initial'})">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'initial'})}"/>
                                     Initial
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="route('indiv.ppmp.draft', { type: 'individual' , status: 'final'})" :active="route().current('indiv.ppmp.draft')">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
-                                    Fainal
+                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'final'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})}"/>
+                                    Final
                                 </SubSidebarLink>
                             </li>
                         </template>
@@ -155,7 +155,7 @@
                             <ArrowDown :class="{'text-white': false}" />
                         <template #dropdown-items>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
+                                <SubSidebarLink :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'draft'})" :active="false">
                                     <ArrowHeadRight :class="{ 'text-white' : false}"/>
                                     Draft
                                 </SubSidebarLink>

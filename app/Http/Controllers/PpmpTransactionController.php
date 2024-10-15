@@ -7,6 +7,7 @@ use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -66,6 +67,7 @@ class PpmpTransactionController extends Controller
             'officePpmps' =>  $officePpmpExist, 
             'filters' => $request->only(['search']), 
             'offices' => $office,
+            'user' => Auth::id(),
         ]);
     }
 
@@ -73,11 +75,13 @@ class PpmpTransactionController extends Controller
     {
         $validatedData = $request->validate([
             'ppmpType' => 'required|string',
-            'basePrice' => 'nullable|numeric',
             'ppmpYear' => 'required|integer',
             'office' => 'required|integer',
+            'user' => 'required|integer',
             'file' => 'nullable|file|mimes:xls,xlsx',
         ]);
+        $validatedData['basePrice'] = 1;
+        $validatedData['qtyAdjust'] = 1;
         $validatedData['ppmpStatus'] = 'draft';
 
         try {
@@ -117,6 +121,51 @@ class PpmpTransactionController extends Controller
         }
     }
 
+    public function storeConsolidated(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'ppmpYear' => 'required|string',
+                'priceAdjust' => 'nullable|integer',
+                'qtyAdjust' => 'nullable|integer|max:100',
+            ], [
+                'qtyAdjust.max' => 'The maximum allowed quantity adjustment is 100.',
+            ]);
+
+            $validatedData['ppmpType'] = 'individual';
+            $validatedData['ppmpStatus'] = 'draft';
+
+            $latestVersion = PpmpTransaction::select('ppmp_version')
+                ->where('ppmp_type', $validatedData['ppmpType'])
+                ->where('ppmp_year', $validatedData['ppmpYear'])
+                ->where('ppmp_status', $validatedData['ppmpStatus'])
+                ->orderBy('ppmp_version', 'desc')
+                ->first();
+
+            if (is_null($latestVersion)) {
+                return redirect()->back()->with(['error' => 'No existing PPMP records found for the given criteria.']);
+            }
+    
+            $latestVersionNumber = $latestVersion->ppmp_version;
+
+            $ppmpParticulars = PpmpTransaction::with('particulars')
+                ->where('ppmp_type', $validatedData['ppmpType'])
+                ->where('ppmp_year', $validatedData['ppmpYear'])
+                ->where('ppmp_status', $validatedData['ppmpStatus'])
+                ->where('ppmp_version', $latestVersionNumber)
+                ->get();
+
+            dd($ppmpParticulars->toArray());
+
+            
+
+        } catch(\Exception $e) {
+            Log::error('File create consolidated ppmp error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with(['error' => 'Consolidated PPMP creation was failed. Please contact your system administrator.']);
+        }
+    }
+
     public function showIndividualPpmp(PpmpTransaction $ppmpTransaction)
     {
         $ppmpTransaction->load('particulars', 'requestee');
@@ -136,10 +185,10 @@ class PpmpTransactionController extends Controller
 
         $ppmpTransaction['formattedOverallPrice'] = number_format(round($overallPrice, 2), 2, '.', ',');
 
-        return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars]);
+        return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars, 'user' => Auth::id(),]);
     }
 
-    public function showIndividualPpmp_Draft(Request $request): Response
+    public function showIndividualPpmp_Type(Request $request): Response
     {
         $ppmpTransactions = PpmpTransaction::with('requestee', 'updater')
             ->where('ppmp_type', $request->type)
@@ -151,6 +200,27 @@ class PpmpTransactionController extends Controller
         $request['type'] = ucfirst($request['type']);
 
         return Inertia::render('Ppmp/PpmpList', ['ppmpTransaction' =>  $ppmpTransactions, 'ppmp' =>  $request]);
+    }
+
+    public function showConsolidatedPpmp_Type(Request $request): Response
+    {
+
+        $years = PpmpTransaction::select('ppmp_year')
+            ->where('ppmp_type', 'individual')
+            ->where('ppmp_status', $request->status)
+            ->groupBy('ppmp_year')
+            ->get();
+
+        $transactions = PpmpTransaction::with('updater')
+            ->where('ppmp_type', $request->type)
+            ->where('ppmp_status', $request->status)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // $request['status'] = ucfirst($request['status']);
+        // $request['type'] = ucfirst($request['type']);
+
+        return Inertia::render('Ppmp/ConsolidatedPpmpList', ['transactions' => $transactions, 'years' => $years]);
     }
 
     /**
@@ -180,9 +250,12 @@ class PpmpTransactionController extends Controller
         return PpmpTransaction::create([
             'ppmp_code' => now()->format('YmdHis'),
             'ppmp_type' => $validatedData['ppmpType'],
-            'price_adjustment' => $validatedData['basePrice'] ? ($validatedData['basePrice'] / 100) + 1 : 1,
-            'ppmp_remarks'=> $validatedData['ppmpYear'],
+            'price_adjustment' => $validatedData['basePrice'],
+            'qty_adjustment' => $validatedData['qtyAdjust'],
+            'ppmp_year'=> $validatedData['ppmpYear'],
             'office_id'=> $validatedData['office'],
+            'created_by'=> $validatedData['user'],
+            'updated_by'=> $validatedData['user'],
         ]);
     }
     
@@ -217,7 +290,7 @@ class PpmpTransactionController extends Controller
             'qty_second' => $mayQty,
             'prod_id' => $isProductValid['prodId'],
             'price_id' => $isProductValid['priceId'],
-            'trans_indiv' => $ppmpId,
+            'trans_id' => $ppmpId,
         ]);
     }
 
@@ -226,7 +299,7 @@ class PpmpTransactionController extends Controller
         $officePpmpExist = PpmpTransaction::where('ppmp_type', 'individual')
             ->where('office_id', $validatedData['office'])
             ->where('ppmp_status', $validatedData['ppmpStatus'])
-            ->where('ppmp_remarks', (string) $validatedData['ppmpYear'])
+            ->where('ppmp_year', (string) $validatedData['ppmpYear'])
             ->exists();
 
         return $officePpmpExist;

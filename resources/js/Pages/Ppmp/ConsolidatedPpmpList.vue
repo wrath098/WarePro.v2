@@ -13,100 +13,23 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
 
     const props = defineProps({
-        officePpmps: Object,
-        offices: Object,
-        filters: Object,
-        user: Number,
+        years: Object,
     });
 
-    const edit = reactive({
-        ppmpId: '',
-        user: props.user,
-    });
-
-    const modalState = ref(null);
-    const file = ref([]);
-    const fileInput = ref(null);
-
-    const isDropPpmpModalOpen = computed(() => modalState.value === 'drop');
-
-    const closeModal = () => {
-        modalState.value = null;
-    }
-
-    const openDropPpmpModal = (ppmp) => {
-        edit.ppmpId = ppmp.id;
-        modalState.value = 'drop';
-    };
-
-    const create = reactive({
-        ppmpType: '',
+    const consolidate = reactive({
         ppmpYear: '',
-        office: '',
-        createdBy: props.user,
+        priceAdjust: '',
+        qtyAdjust: '',
     });
 
-    const onFileChange = (event) => {
-        const selectedFile = event.target.files[0];
-        if (selectedFile) {
-            file.value = selectedFile;
-        }
-    };
-
-    const onDrop = (event) => {
-        event.preventDefault();
-        const droppedFile = event.dataTransfer.files[0];
-        if (droppedFile) {
-            file.value = droppedFile;
-        }
-    };
-
-    const years = generateYears();
-    function generateYears() {
-        const currentYear = new Date().getFullYear() + 2;
-        return Array.from({ length: 3 }, (_, i) => currentYear - i);
-    }
-
-    const submit = () => {
-        if (!file.value) {
-            alert('Please select a file first!');
-            return;
-        }
-
-        const formData = new FormData();
-            formData.append('ppmpType', create.ppmpType);
-            formData.append('ppmpYear', create.ppmpYear);
-            formData.append('office', create.office);
-            formData.append('user', create.createdBy);
-            formData.append('file', file.value);
-
-        router.post('ppmp/create', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        })
-    };
-
-    let search = ref(props.filters.search);
-
-    watch(search, debounce(function (value) {
-        router.get('ppmp', { search: value }, {
-            preserveState: true,
-            preserveScroll:true,
-            replace:true
-        });
-    }, 500));
-
-    const submitForm = (url, data) => {
-        Inertia.post(url, data, {
+    const submitConsolidate = () => {
+        Inertia.post('create-consolidated', consolidate, {
             onSuccess: () => closeModal(),
             onError: (errors) => {
-                console.error(`Form submission failed for ${url}`, errors);
+                console.log(errors);
             },
         });
     };
-
-    const submitDropPpmp = () => submitForm('ppmp/drop', edit);
 </script>
 
 <template>
@@ -133,19 +56,38 @@
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex flex-col md:flex-row items-start justify-center">
                         <div class="mx-2 w-full md:w-3/12 bg-white p-4 rounded-md shadow">
-                            <form @submit.prevent="submit" class="space-y-5">
+                            <form @submit.prevent="submitConsolidate" class="space-y-5">
+                                <h4>Consolidate PPMP</h4>
                                 <div>
                                     <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
-                                        PPMP Type:
+                                        Year:
                                     </label>
-                                    <select v-model="create.ppmpType" id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
-                                        <option value="" selected>Please choose PPMP Type</option>
-                                        <option value="individual">Individual</option>
-                                        <option value="contingency">Contingency</option>
+                                    <select v-model="consolidate.ppmpYear" id="ppmpYear" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
+                                        <option value="" selected>Please choose the desired year</option>
+                                        <option v-for="year in years" :key="year.ppmp_year" :value="year.ppmp_year">{{ year.ppmp_year }}</option>
                                     </select>
                                 </div>
 
                                 <div>
+                                    <label for="basedPrice" class="mb-1 block text-base font-medium text-[#07074D]">
+                                        Price Adjustment:
+                                        <span class="text-sm text-[#8f9091]">Default value is 100%</span>
+                                    </label>
+                                    <input v-model="consolidate.priceAdjust" type="number" id="priceAdjust" placeholder="Ex. 1=101% | 2=102%, etc...."
+                                        class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" />
+                                </div>
+
+                                <div>
+                                    <label for="basedPrice" class="mb-1 block text-base font-medium text-[#07074D]">
+                                        Quantity Adjustment:
+                                        <span class="text-sm text-[#8f9091]">Default value is 0%</span>
+                                    </label>
+                                    <input v-model="consolidate.qtyAdjust"  type="number" id="qtyAdjust" placeholder="Value: 1%-100%"
+                                        class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" />
+                                </div>
+
+
+                                <!-- <div>
                                     <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
                                         PPMP for CY:
                                     </label>
@@ -153,9 +95,9 @@
                                         <option value="" selected>Please choose year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                     </select>
-                                </div>
+                                </div> -->
 
-                                <div>
+                                <!-- <div>
                                     <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
                                         Office
                                     </label>
@@ -163,44 +105,12 @@
                                         <option value="" selected>Please choose the office</option>
                                         <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.office_name }}</option>
                                     </select>
-                                </div>
-
-                                <div class="pt-4">
-                                    <label class="mb-5 block text-xl font-semibold text-[#07074D]">
-                                        Upload File
-                                    </label>
-
-                                    <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
-                                        <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".xls,.xlsx"/>
-                                        <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
-                                            <div class="cursor-pointer">
-                                                <span class="mb-2 block text-base font-semibold text-[#545557]">
-                                                    Drop an Excel file here
-                                                </span>
-                                                <span class="mb-2 block text-base font-medium text-[#6B7280]">
-                                                    Or
-                                                </span>
-                                                <span class="inline-flex rounded border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 text-gray-400 hover:bg-gray-100 hover:text-[#1f2024] py-2 px-7 text-base font-medium">
-                                                    Browse
-                                                </span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div v-if="file">
-                                        <h4 class="text-lg font-semibold">Selected Files:</h4>
-                                        <ul class="mt-2">
-                                            <li class="text-[#07074D]">
-                                                {{ file.name }}
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                </div> -->
 
                                 <div>
                                     <button
                                         class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none">
-                                        Create PPMP
+                                        Consolidate
                                     </button>
                                 </div>
                             </form>
@@ -211,12 +121,12 @@
                                 <div class="relative overflow-x-auto md:overflow-hidden">
                                     <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end pb-4">
                                         <label for="search" class="sr-only">Search</label>
-                                        <div class="relative">
+                                        <!-- <div class="relative">
                                             <div class="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
                                                 <svg class="w-5 h-5 text-indigo-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                                             </div>
                                             <input v-model="search" type="text" id="search" class="block p-2 ps-10 text-sm text-gray-900 border border-indigo-600 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 " placeholder="Search for Item Names">
-                                        </div>
+                                        </div> -->
                                     </div>
                                     <table class="w-full text-left rtl:text-right text-gray-900">
                                         <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
@@ -241,7 +151,7 @@
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <!-- <tbody>
                                             <tr v-for="(ppmp, index) in officePpmps.data" :key="ppmp.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
                                                 <td scope="row" class="py-2 text-center text-sm">
                                                     {{  index+1 }}
@@ -263,64 +173,18 @@
                                                     <RemoveButton @click="openDropPpmpModal(ppmp)" tooltip="Remove"/>
                                                 </td>
                                             </tr>
-                                        </tbody>
+                                        </tbody> -->
                                     </table>
                                 </div>
-                                <div class="flex justify-center p-5">
+                                <!-- <div class="flex justify-center p-5">
                                     <Pagination :links="officePpmps.links" />
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <Modal :show="isDropPpmpModalOpen" @close="closeModal"> 
-            <form @submit.prevent="submitDropPpmp">
-                <input type="hidden" v-model="edit.ppmpId">
-                <div class="bg-gray-100 h-auto">
-                    <div class="bg-white p-6  md:mx-auto">
-                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
-                        </svg>
-                        <div class="text-center">
-                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Drop PPMP?</h3>
-                            <p class="text-gray-600 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
-                            <p> Please confirm if you wish to proceed.  </p>
-                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
-                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                    </svg>
-                                    Confirm 
-                                </SuccessButton>
-
-                                <DangerButton @click="closeModal"> 
-                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                    </svg>
-                                    Cancel
-                                </DangerButton>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </Modal>
     </AuthenticatedLayout>
     </div>
 </template>
- 
-<style scoped>
-.upload-area {
-    border: 2px dashed #007BFF;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-}
-.upload-area:hover {
-    border-color: #08396d;
-}
-</style>

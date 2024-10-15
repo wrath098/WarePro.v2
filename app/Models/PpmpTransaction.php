@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PpmpTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'ppmp_transactions';
 
@@ -19,7 +20,8 @@ class PpmpTransaction extends Model
         'price_adjustment',
         'qty_adjustment',
         'ppmp_status',
-        'ppmp_remarks',
+        'ppmp_version',
+        'ppmp_year',
         'office_id',
         'created_by',
         'updated_by',
@@ -47,6 +49,11 @@ class PpmpTransaction extends Model
 
     public function particulars(): HasMany
     {
-        return $this->hasMany(PpmpParticular::class, 'trans_indiv');
+        return $this->hasMany(PpmpParticular::class, 'trans_id');
+    }
+
+    public function consolidated(): HasMany
+    {
+        return $this->hasMany(PpmpConsolidated::class, 'trans_id');
     }
 }

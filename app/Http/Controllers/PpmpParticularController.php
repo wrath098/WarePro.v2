@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpParticular;
+use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class PpmpParticularController extends Controller
@@ -25,10 +27,11 @@ class PpmpParticularController extends Controller
                 'prodCode' => 'required|string|max:20',
                 'firstQty' => 'required|integer|min:1',
                 'secondQty' => 'nullable|integer|min:0',
+                'user' => 'nullable|integer',
             ], [
                 'transId.required' => 'Please provide a transaction ID.',
                 'firstQty.min' => 'First quantity must be at least 1.',
-            ]);
+            ]);  
 
             $productExist = Product::where('prod_newNo', $validatedData['prodCode'])
                 ->where('prod_status', 'active')->first();
@@ -36,7 +39,7 @@ class PpmpParticularController extends Controller
                 return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list.']);
             }
 
-            $particularExist = PpmpParticular::where('trans_indiv', $validatedData['transId'])
+            $particularExist = PpmpParticular::where('trans_id', $validatedData['transId'])
                 ->where('prod_id', $productExist->id)->first();
             if ($particularExist) {
                 return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list.']);
@@ -46,8 +49,11 @@ class PpmpParticularController extends Controller
                     'qty_second' => $validatedData['secondQty'] ? $validatedData['secondQty'] : 0,
                     'prod_id' => $productExist->id,
                     'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
-                    'trans_indiv' => $validatedData['transId'],
+                    'trans_id' => $validatedData['transId'],
                 ]);
+
+                $transId = PpmpTransaction::findOrFail($validatedData['transId']);
+                $transId->update(['updated_by' => $validatedData['user']]);
 
                 return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully added!']);
             }
@@ -66,6 +72,7 @@ class PpmpParticularController extends Controller
                 'prodDesc' => 'nullable|string',
                 'firstQty' => 'required|integer|min:1',
                 'secondQty' => 'nullable|integer|min:0',
+                'user' => 'nullable|integer',
             ], [
                 'partId.required' => 'Please provide a Particular ID.',
                 'firstQty.min' => 'First quantity must be at least 1.',
@@ -77,6 +84,9 @@ class PpmpParticularController extends Controller
                 'qty_second' => $validatedData['secondQty']
             ]);
 
+            $transId = PpmpTransaction::findOrFail($particularExist['trans_id']);
+            $transId->update(['updated_by' => $validatedData['user']]);
+
             return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully updated!']);
 
         } catch (\Exception $e) {
@@ -85,10 +95,16 @@ class PpmpParticularController extends Controller
         }
     }
 
-    public function delete(PpmpParticular $ppmpParticular)
+    public function delete(Request $request, PpmpParticular $ppmpParticular)
     {
         try {
+
+            $user = Auth::id();
+            $transId = PpmpTransaction::findOrFail($ppmpParticular['trans_id']);
+            $transId->update(['updated_by' => $user]);
+
             $ppmpParticular->delete();
+
             return redirect()->back()->with(['message' => 'Product has been successfully deleted!']);
         } catch (\Exception $e) {
             Log::error($e->getMessage());

@@ -75,8 +75,10 @@ Route::middleware('auth')->prefix('products')->group(function () {
 Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
     Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
-    Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Draft'])->name('indiv.ppmp.draft');
+    Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
+    Route::get('/consolidated-ppmp-list', [PpmpTransactionController::class, 'showConsolidatedPpmp_Type'])->name('conso.ppmp.type');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
+    Route::any('/create-consolidated', [PpmpTransactionController::class, 'storeConsolidated'])->name('consolidated.ppmp.store');
     Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
     Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
     Route::put('/individual-ppmp/edit', [PpmpParticularController::class, 'update'])->name('indiv.particular.update');
