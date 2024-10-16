@@ -140,7 +140,7 @@
                             
                             <div class="mb-4">
                                 <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_remarks }}</p>
+                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_year }}</p>
                             </div>       
                             
                             <div class="mb-4">
