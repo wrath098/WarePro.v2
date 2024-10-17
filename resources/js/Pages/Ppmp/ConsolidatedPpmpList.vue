@@ -4,13 +4,31 @@
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-import ViewButton from '@/Components/Buttons/ViewButton.vue';
-import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import ViewButton from '@/Components/Buttons/ViewButton.vue';
+    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import Modal from '@/Components/Modal.vue';
 
     const props = defineProps({
         transactions: Object,
         years: Object,
     });
+
+    const errorMessage = ref('');
+    const showModal = ref(false);
+
+    const confirmRecreate = () => {
+        showModal.value = true;
+    };
+
+    const cancelRecreate = () => {
+        errorMessage.value = '';
+    };
+
+    const recreateData = () => {
+        // Logic to recreate the PPMP goes here
+        showModal.value = false; // Close the modal
+        // You can make an API call here to recreate the data
+    };
 
     const consolidate = reactive({
         ppmpYear: '',
@@ -24,9 +42,9 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     const filteredItems = ref([]);
     const onCategoryChange = (context) => {
     const year = props.years.find(year => year.ppmp_year === context.ppmpYear);
-    filteredItems.value = year ? year.versions : [];
-    consolidate.ppmpVersion = '';
-};
+        filteredItems.value = year ? year.versions : [];
+        consolidate.ppmpVersion = '';
+    };
 
     const submitConsolidate = () => {
         Inertia.post('create-consolidated', consolidate, {
@@ -54,7 +72,6 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
             </div>
             <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
                 {{ $page.props.flash.error }}
-                {{ props.transactions }}
             </div>
         </template>
 
@@ -114,12 +131,12 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                         <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
                             <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <div class="p-6 text-gray-900">
+                                    <div class="p-6 text-gray-900 text-center">
                                         <DataTable class="w-full text-gray-900 display">
                                             <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                                 <tr class="text-center">
                                                     <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                    <th scope="col" class="px-6 py-3 w-3/12">Transaction No.</th>
+                                                    <th scope="col" class="px-6 py-3 w-2/12">Transaction No.</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">PPMP Year</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">Version</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">Price Adjustment</th>
@@ -133,7 +150,7 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                                                     <td class="px-6 py-3">{{ index + 1 }}</td>
                                                     <td class="px-6 py-3">{{ transaction.code }}</td>
                                                     <td class="px-6 py-3">{{ transaction.ppmpYear }}</td>
-                                                    <td class="px-6 py-3">{{ transaction.version }}</td>
+                                                    <td class="px-6 py-3">v.{{ transaction.version }}</td>
                                                     <td class="px-6 py-3">{{ transaction.priceAdjust }}</td>
                                                     <td class="px-6 py-3">{{ transaction.qtyAdjust }}</td>
                                                     <td class="px-6 py-3">{{ transaction.updatedBy }}</td>
@@ -151,6 +168,28 @@ import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
                     </div>
                 </div>
             </div>
+        </div>
+        <div>
+        <!-- Display error message if it exists -->
+        <div v-if="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+            <button @click="confirmRecreate">Recreate</button>
+            <button @click="cancelRecreate">Cancel</button>
+            </div>
+            
+            <!-- Confirmation Modal -->
+            <Modal v-if="showModal" @close="showModal = false">
+            <template #header>
+                <h3>Confirm Recreation</h3>
+            </template>
+            <template #body>
+                <p>Are you sure you want to recreate the consolidated data?</p>
+            </template>
+            <template #footer>
+                <button @click="recreateData">Yes, recreate</button>
+                <button @click="showModal = false">No, cancel</button>
+            </template>
+            </Modal>
         </div>
     </AuthenticatedLayout>
     </div>

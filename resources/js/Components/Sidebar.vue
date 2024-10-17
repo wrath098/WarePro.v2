@@ -134,12 +134,6 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'initial'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'initial'})">
-                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'initial'})}"/>
-                                    Initial
-                                </SubSidebarLink>
-                            </li>
-                            <li>
                                 <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'final'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})}"/>
                                     Final
@@ -163,13 +157,7 @@
                             <li>
                                 <SubSidebarLink :href="'https://localhost'" :active="false">
                                     <ArrowHeadRight :class="{ 'text-white' : false}"/>
-                                    Initial
-                                </SubSidebarLink>
-                            </li>
-                            <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
-                                    Fainal
+                                    Final
                                 </SubSidebarLink>
                             </li>
                         </template>

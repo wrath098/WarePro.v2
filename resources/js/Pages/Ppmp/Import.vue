@@ -1,11 +1,9 @@
 <script setup>
     import { Head, router } from '@inertiajs/vue3';
-    import { reactive, ref, watch, computed } from 'vue';
-    import { debounce } from 'lodash';
+    import { reactive, ref, computed } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import Pagination from '@/Components/Pagination.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Modal from '@/Components/Modal.vue';
@@ -15,7 +13,6 @@
     const props = defineProps({
         officePpmps: Object,
         offices: Object,
-        filters: Object,
         user: Number,
     });
 
@@ -86,16 +83,6 @@
             },
         })
     };
-
-    let search = ref(props.filters.search);
-
-    watch(search, debounce(function (value) {
-        router.get('ppmp', { search: value }, {
-            preserveState: true,
-            preserveScroll:true,
-            replace:true
-        });
-    }, 500));
 
     const submitForm = (url, data) => {
         Inertia.post(url, data, {
@@ -209,65 +196,31 @@
                         <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
                             <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end pb-4">
-                                        <label for="search" class="sr-only">Search</label>
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
-                                                <svg class="w-5 h-5 text-indigo-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
-                                            </div>
-                                            <input v-model="search" type="text" id="search" class="block p-2 ps-10 text-sm text-gray-900 border border-indigo-600 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 " placeholder="Search for Item Names">
-                                        </div>
-                                    </div>
-                                    <table class="w-full text-left rtl:text-right text-gray-900">
-                                        <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
+                                    <DataTable class="w-full text-gray-900 display">
+                                        <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                             <tr>
-                                                <th scope="col" class="px-6 py-3 w-1/6">
-                                                    No#
-                                                </th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">
-                                                    Office Code
-                                                </th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">
-                                                    PPMP No.
-                                                </th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">
-                                                    PPMP Type
-                                                </th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">
-                                                    Based Price
-                                                </th>
-                                                <th scope="col" class="px-6 py-3 w-2/6">
-                                                    Action/s
-                                                </th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">No#</th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">Office Code</th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">PPMP No.</th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">PPMP Type</th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">Price Adjustment</th>
+                                                <th scope="col" class="px-6 py-3 w-1/6">Action/s</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="(ppmp, index) in officePpmps.data" :key="ppmp.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                                <td scope="row" class="py-2 text-center text-sm">
-                                                    {{  index+1 }}
-                                                </td>
-                                                <td class="py-2">
-                                                    {{ ppmp.officeCode }}
-                                                </td>
-                                                <td scope="row" class="py-2 text-center text-sm">
-                                                    {{  ppmp.ppmpCode }}
-                                                </td>
-                                                <td class="py-2 text-center">
-                                                    {{ ppmp.ppmpType }}
-                                                </td>
-                                                <td class="py-2 text-center">
-                                                    {{ ppmp.basedPrice }}
-                                                </td>
-                                                <td class="py-2 text-center">
+                                            <tr v-for="(ppmp, index) in officePpmps" :key="ppmp.id">
+                                                <td class="px-6 py-3">{{ index + 1 }}</td>
+                                                <td class="px-6 py-3">{{ ppmp.officeCode }}</td>
+                                                <td class="px-6 py-3">{{ ppmp.ppmpCode }}</td>
+                                                <td class="px-6 py-3">{{ ppmp.ppmpType }}</td>
+                                                <td class="px-6 py-3">{{ ppmp.basedPrice }}</td>
+                                                <td class="px-6 py-3">
                                                     <ViewButton :href="route('indiv.ppmp.show', { ppmpTransaction: ppmp.id })" tooltip="View"/>
-                                                    <RemoveButton @click="openDropPpmpModal(ppmp)" tooltip="Remove"/>
+                                                    <RemoveButton @click="openDropPpmpModal(ppmp)" tooltip="Trash"/>
                                                 </td>
                                             </tr>
                                         </tbody>
-                                    </table>
-                                </div>
-                                <div class="flex justify-center p-5">
-                                    <Pagination :links="officePpmps.links" />
+                                    </DataTable>
                                 </div>
                             </div>
                         </div>

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Office;
+use App\Models\PpmpConsolidated;
 use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
+use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,10 +32,8 @@ class PpmpTransactionController extends Controller
     public function index(Request $request): Response
     {   
         $currentYear = date('Y');
-        $search = $request->input('search');
 
-        $officePpmpExist = PpmpTransaction::query()
-            ->with('requestee')
+        $officePpmpExist = PpmpTransaction::with('requestee')
             ->where(function($query) use ($currentYear) {
                 $query->where(function($query) {
                     $query->where('ppmp_type', 'individual')
@@ -42,30 +42,23 @@ class PpmpTransactionController extends Controller
                 ->where('ppmp_status', 'draft')
                 ->whereYear('created_at', $currentYear);
             })
-            ->when($search, function ($query) use ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('ppmp_code', 'like', '%' . $search . '%')
-                    ->orWhereHas('requestee', function ($q) use ($search) {
-                        $q->where('office_code', 'like', '%' . $search . '%');
-                    });
-                });
-            })
             ->orderBy('created_at', 'desc')
-            ->paginate(20)
-            ->through(fn($ppmp) => [
-                'id' => $ppmp->id,
-                'ppmpCode' => $ppmp->ppmp_code,
-                'ppmpType' => ucfirst($ppmp->ppmp_type),
-                'basedPrice' => $ppmp->price_adjustment,
-                'officeId' => $ppmp->office_id,
-                'officeCode' => $ppmp->requestee->office_code,
-            ]);
-
+            ->get()
+            ->map(function ($ppmp) {
+                return [
+                    'id' => $ppmp->id,
+                    'ppmpCode' => $ppmp->ppmp_code,
+                    'ppmpType' => ucfirst($ppmp->ppmp_type),
+                    'basedPrice' => $ppmp->price_adjustment,
+                    'officeId' => $ppmp->office_id,
+                    'officeCode' => $ppmp->requestee->office_code
+                ];
+        });
+        
         $office = Office::where('office_status', 'active')->get();
 
         return Inertia::render('Ppmp/Import', [
             'officePpmps' =>  $officePpmpExist, 
-            'filters' => $request->only(['search']), 
             'offices' => $office,
             'user' => Auth::id(),
         ]);
@@ -112,7 +105,7 @@ class PpmpTransactionController extends Controller
                     Storage::delete($filePath);
                 }
             });
-            return redirect()->back()
+            return redirect()->route('import.ppmp.index')
                 ->with(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
         } catch (\Exception $e) {
             Log::error('File create ppmp error: ' . $e->getMessage());
@@ -141,13 +134,101 @@ class PpmpTransactionController extends Controller
             $ppmpExist = $this->validateConsoPpmp($validatedData);
 
             if($ppmpExist) {
-                return response()->json(['error' => 'Generation of consolidated data failed. A consolidation data already exist with transaction No. ' . $ppmpExist->ppmp_code]);
+                return redirect()->back()->with([
+                    'error' => 'Generation of consolidated data failed. A consolidation data already exist with transaction No. ' . $ppmpExist->ppmp_code
+                ]);
             }
 
             $validatedData['ppmpType'] = 'consolidated';
             $createPpmp = $this->createPpmpTransaction($validatedData);
 
-            return response()->json(['message' => 'Consolidated PPMP created successfully.', 'data' => $createPpmp], 201);
+            $ppmpIndiv = PpmpTransaction::with('particulars')
+                ->where('ppmp_year', $validatedData['ppmpYear'])
+                ->where('ppmp_type', 'individual')
+                ->where('ppmp_status', 'draft')
+                ->where('ppmp_version', $validatedData['ppmpVersion'])
+                ->get();
+
+            if($ppmpIndiv->price_adjustment != $validatedData['basePrice'] || $ppmpIndiv->qty_adjustment != $validatedData['qtyAdjust']) {
+                foreach ($ppmpIndiv as $ppmp) {
+
+                    $newIndivTransaction =  PpmpTransaction::create([
+                        'ppmp_code' => now()->format('YmdHis'),
+                        'ppmp_type' => $ppmp->ppmp_type,
+                        'price_adjustment' => $ppmp->price_adjustment,
+                        'qty_adjustment' => $ppmp->qty_adjustment,
+                        'ppmp_year' => $ppmp->ppmp_year,
+                        'ppmp_version' => ((int) $validatedData['ppmpVersion'] + 1),
+                        'office_id' => $ppmp->office_id,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+
+                    foreach ($ppmp->particulars as $particular) {
+                        PpmpParticular::create([
+                            'qty_first' => $particular->qty_first,
+                            'qty_second' => $particular->qty_second,
+                            'prod_id' => $particular->prod_id,
+                            'price_id' => $this->productService->getLatestPriceIdentification($particular->prod_id),
+                            'trans_id' => $newIndivTransaction->id,
+                        ]);
+
+                        $validateItem = PpmpConsolidated::where('prod_id', $particular->prod_id)
+                            ->where('trans_id', $createPpmp->id)->first();
+
+                        if($validateItem) {
+                            $firstQty = (int) $validateItem->qty_first + (int) $particular->qty_first;
+                            $secondQty = (int) $validateItem->qty_second + (int) $particular->qty_second;
+                            $validateItem->update(['qty_first' => $firstQty, 'qty_second' => $secondQty]);
+                        } else {
+                            PpmpConsolidated::create([
+                                'qty_first' => $particular->qty_first,
+                                'qty_second' => $particular->qty_second,
+                                'prod_id' => $particular->prod_id,
+                                'price_id' => $this->productService->getLatestPriceIdentification($particular->prod_id),
+                                'trans_id' => $createPpmp->id,
+                            ]);
+                        }
+                    }
+                }
+            }
+            else {
+                foreach ($ppmpIndiv as $ppmp) {
+
+                    $updateIndivTransaction =  PpmpTransaction::findOrFail($ppmpIndiv->id);
+                    $updateIndivTransaction->update([
+                        'updated_by' => Auth::id(),
+                    ]);
+
+                    foreach ($ppmp->particulars as $particular) {
+
+                        $updateIndivParticular=  PpmpParticular::findOrFail($particular->id);
+                        $updateIndivParticular->update([
+                            'price_id' => $this->productService->getLatestPriceIdentification($particular->prod_id),
+                        ]);
+
+                        $validateItem = PpmpConsolidated::where('prod_id', $particular->prod_id)
+                            ->where('trans_id', $createPpmp->id)->first();
+
+                        if($validateItem) {
+                            $firstQty = (int) $validateItem->qty_first + (int) $particular->qty_first;
+                            $secondQty = (int) $validateItem->qty_second + (int) $particular->qty_second;
+                            $validateItem->update(['qty_first' => $firstQty, 'qty_second' => $secondQty]);
+                        } else {
+                            PpmpConsolidated::create([
+                                'qty_first' => $particular->qty_first,
+                                'qty_second' => $particular->qty_second,
+                                'prod_id' => $particular->prod_id,
+                                'price_id' => $this->productService->getLatestPriceIdentification($particular->prod_id),
+                                'trans_id' => $createPpmp->id,
+                            ]);
+                        }
+                    }
+                }
+            }
+            return redirect()->back()->with([
+                'message' => 'Consolidated PPMP created successfully.'
+            ]);
 
         } catch(\Exception $e) {
             Log::error('Error creating consolidated PPMP: ' . $e->getMessage(), [
@@ -221,17 +302,17 @@ class PpmpTransactionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-            $transactions = $transactions->map(function ($transaction) {
-                return [
-                    'id' => $transaction->id,
-                    'code' => $transaction->ppmp_code,
-                    'ppmpYear' => $transaction->ppmp_year,
-                    'priceAdjust' => (float) $transaction->price_adjustment ?? 0,
-                    'qtyAdjust' => (float) $transaction->qty_adjustment ?? 0,
-                    'version' => $transaction->ppmp_version ?? 'N/A',
-                    'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
-                ];
-            });
+        $transactions = $transactions->map(function ($transaction) {
+            return [
+                'id' => $transaction->id,
+                'code' => $transaction->ppmp_code,
+                'ppmpYear' => $transaction->ppmp_year,
+                'priceAdjust' => (float) $transaction->price_adjustment ?? 0,
+                'qtyAdjust' => (float) $transaction->qty_adjustment ?? 0,
+                'version' => $transaction->ppmp_version ?? 'N/A',
+                'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
+            ];
+        });
 
         return Inertia::render('Ppmp/ConsolidatedPpmpList', ['transactions' => $transactions, 'years' => $years]);
     }
@@ -265,10 +346,10 @@ class PpmpTransactionController extends Controller
             'ppmp_type' => $validatedData['ppmpType'],
             'price_adjustment' => $validatedData['basePrice'],
             'qty_adjustment' => $validatedData['qtyAdjust'],
-            'ppmp_year'=> $validatedData['ppmpYear'],
-            'office_id'=> $validatedData['office'],
-            'created_by'=> $validatedData['user'],
-            'updated_by'=> $validatedData['user'],
+            'ppmp_year' => $validatedData['ppmpYear'],
+            'office_id' => $validatedData['office'],
+            'created_by' => $validatedData['user'],
+            'updated_by' => $validatedData['user'],
         ]);
     }
     
