@@ -40,6 +40,7 @@ class PpmpTransactionController extends Controller
                         ->orWhere('ppmp_type', 'contingency');
                 })
                 ->where('ppmp_status', 'draft')
+                ->where('ppmp_version', 1)
                 ->whereYear('created_at', $currentYear);
             })
             ->orderBy('created_at', 'desc')
@@ -55,7 +56,14 @@ class PpmpTransactionController extends Controller
                 ];
         });
         
-        $office = Office::where('office_status', 'active')->get();
+        $office = Office::where('office_status', 'active')
+            ->get()
+            ->map(function ($office) {
+                return [
+                    'id' => $office->id,
+                    'name' => $office->office_name,
+                ];
+            });
 
         return Inertia::render('Ppmp/Import', [
             'officePpmps' =>  $officePpmpExist, 
@@ -73,9 +81,6 @@ class PpmpTransactionController extends Controller
             'user' => 'required|integer',
             'file' => 'nullable|file|mimes:xls,xlsx',
         ]);
-        $validatedData['basePrice'] = 1;
-        $validatedData['qtyAdjust'] = 1;
-        $validatedData['ppmpStatus'] = 'draft';
 
         try {
 
@@ -390,10 +395,10 @@ class PpmpTransactionController extends Controller
 
     private function validateIndivPpmp(array $validatedData)
     {
-        $officePpmpExist = PpmpTransaction::where('ppmp_type', 'individual')
+        $officePpmpExist = PpmpTransaction::where('ppmp_year', (string) $validatedData['ppmpYear'])
             ->where('office_id', $validatedData['office'])
-            ->where('ppmp_status', $validatedData['ppmpStatus'])
-            ->where('ppmp_year', (string) $validatedData['ppmpYear'])
+            ->where('ppmp_type', 'individual')
+            ->where('ppmp_status', 'draft')
             ->exists();
 
         return $officePpmpExist;

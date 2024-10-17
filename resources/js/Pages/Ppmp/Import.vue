@@ -148,7 +148,7 @@
                                     </label>
                                     <select v-model="create.office" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                         <option value="" selected>Please choose the office</option>
-                                        <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.office_name }}</option>
+                                        <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.name }}</option>
                                     </select>
                                 </div>
 
