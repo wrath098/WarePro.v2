@@ -13,23 +13,6 @@
         years: Object,
     });
 
-    const errorMessage = ref('');
-    const showModal = ref(false);
-
-    const confirmRecreate = () => {
-        showModal.value = true;
-    };
-
-    const cancelRecreate = () => {
-        errorMessage.value = '';
-    };
-
-    const recreateData = () => {
-        // Logic to recreate the PPMP goes here
-        showModal.value = false; // Close the modal
-        // You can make an API call here to recreate the data
-    };
-
     const consolidate = reactive({
         ppmpYear: '',
         basePrice: 100,
@@ -168,28 +151,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div>
-        <!-- Display error message if it exists -->
-        <div v-if="errorMessage" class="alert alert-danger">
-            {{ errorMessage }}
-            <button @click="confirmRecreate">Recreate</button>
-            <button @click="cancelRecreate">Cancel</button>
-            </div>
-            
-            <!-- Confirmation Modal -->
-            <Modal v-if="showModal" @close="showModal = false">
-            <template #header>
-                <h3>Confirm Recreation</h3>
-            </template>
-            <template #body>
-                <p>Are you sure you want to recreate the consolidated data?</p>
-            </template>
-            <template #footer>
-                <button @click="recreateData">Yes, recreate</button>
-                <button @click="showModal = false">No, cancel</button>
-            </template>
-            </Modal>
         </div>
     </AuthenticatedLayout>
     </div>
