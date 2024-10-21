@@ -124,7 +124,7 @@
                 <li>
                     <SidebarDropdown :active="route().current('indiv.ppmp.type')">
                             <ClipboardList :class="{'text-white': false}" />
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Individaual</span>
+                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Individual</span>
                             <ArrowDown :class="{'text-white': false}" />
                         <template #dropdown-items>
                             <li>

@@ -17,17 +17,9 @@
         ppmpYear: '',
         basePrice: 100,
         qtyAdjust: 100,
-        ppmpVersion: '',
         ppmpType: 'individual',
         ppmpStatus: 'draft',
     });
-
-    const filteredItems = ref([]);
-    const onCategoryChange = (context) => {
-    const year = props.years.find(year => year.ppmp_year === context.ppmpYear);
-        filteredItems.value = year ? year.versions : [];
-        consolidate.ppmpVersion = '';
-    };
 
     const submitConsolidate = () => {
         Inertia.post('create-consolidated', consolidate, {
@@ -67,19 +59,12 @@
                                 <h4>Consolidate PPMP</h4>
                                 <div>
                                     <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
-                                        Select Year and Version
+                                        Choose Year
                                     </label>
                                     <select v-model="consolidate.ppmpYear" @change="onCategoryChange(consolidate)" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
                                         <option value="" disabled>Select Year</option>
                                         <option v-for="year in props.years" :key="year.ppmp_year" :value="year.ppmp_year">
                                             {{ year.ppmp_year }}
-                                        </option>
-                                    </select>
-
-                                    <select v-model="consolidate.ppmpVersion" v-if="filteredItems.length" class="mt-2 pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
-                                        <option value="" disabled>Select Version</option>
-                                        <option v-for="version in filteredItems" :key="version.ppmp_version" :value="version.ppmp_version">
-                                            v. {{ version.ppmp_version }}
                                         </option>
                                     </select>
                                 </div>
@@ -138,7 +123,7 @@
                                                     <td class="px-6 py-3">{{ transaction.qtyAdjust }}</td>
                                                     <td class="px-6 py-3">{{ transaction.updatedBy }}</td>
                                                     <td class="px-6 py-3">
-                                                        <ViewButton :href="''" tooltip="View"/>
+                                                        <ViewButton :href="route('conso.ppmp.show', { ppmpTransaction: transaction.id })" tooltip="View"/>
                                                         <RemoveButton @click="''" tooltip="Trash"/>
                                                     </td>
                                                 </tr>

@@ -75,6 +75,7 @@ Route::middleware('auth')->prefix('products')->group(function () {
 Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
     Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
+    Route::get('/consolidated-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showConsolidatedPpmp'])->name('conso.ppmp.show');
     Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
     Route::get('/consolidated-ppmp-list', [PpmpTransactionController::class, 'showConsolidatedPpmp_Type'])->name('conso.ppmp.type');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');

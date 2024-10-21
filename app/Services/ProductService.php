@@ -8,6 +8,7 @@ use App\Models\ItemClass;
 use App\Models\Office;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
+use App\Models\ProductPpmpException;
 use App\Models\ProductPrice;
 
 class ProductService 
@@ -151,6 +152,14 @@ class ProductService
             ->where('cat_name', $name)
             ->first();
         return $category;
+    }
+
+    public function validateProductExcemption($prodId)
+    {
+        $exist = ProductPpmpException::where('prod_id', $prodId)
+            ->where('status', 'active')
+            ->exists();
+        return $exist;
     }
 
     public function validateProduct($id)
