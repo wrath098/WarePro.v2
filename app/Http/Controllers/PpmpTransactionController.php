@@ -201,17 +201,20 @@ class PpmpTransactionController extends Controller
             })->groupBy('prod_id')->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
                 $prodPrice = (float) $this->productService->getLatestPriceId($items->first()->prod_id) * $ppmpTransaction->price_adjustment;
                 $prodPrice = ($prodPrice <= 4) ? floor($prodPrice * 2) / 2 : ceil($prodPrice);
-                $exemption = $this->productService->validateProductExcemption($items->first()->prod_id);
-                $qtyFirst = $items->sum('qty_first');
-                $qtySecond = $items->sum('qty_second');
+                $exemption = $this->productService->validateProductExcemption($items->first()->prod_id, $ppmpTransaction->ppmp_year);
+                $qtyFirst = (int) $items->sum('qty_first');
+                $qtySecond = (int) $items->sum('qty_second');
 
-                $firstAmount = $exemption 
-                    ? floor(($qtyFirst * $ppmpTransaction->qty_adjustment) * $prodPrice)
-                    : $qtyFirst * $prodPrice;
+                $adjustedFirstQty = !$exemption && $qtyFirst != 1
+                    ? floor(($qtyFirst * (float) $ppmpTransaction->qty_adjustment))
+                    : $qtyFirst;
 
-                $secondAmount = $exemption 
-                    ? floor(($qtySecond * $ppmpTransaction->qty_adjustment)) * $prodPrice
-                    : $qtySecond * $prodPrice;
+                $adjustedSecondQty = !$exemption && $qtyFirst != 1
+                    ? floor(($qtySecond * (float) $ppmpTransaction->qty_adjustment))
+                    : $qtySecond;
+
+                $firstAmount = $adjustedFirstQty * $prodPrice;
+                $secondAmount = $adjustedSecondQty * $prodPrice;
 
                 $totalAmount += $firstAmount + $secondAmount;
 
@@ -221,8 +224,8 @@ class PpmpTransactionController extends Controller
                     'prodName' => $this->productService->getProductName($items->first()->prod_id),
                     'prodUnit' => $this->productService->getProductUnit($items->first()->prod_id),
                     'prodPrice' => number_format($prodPrice, 2, '.', ','),
-                    'qtyFirst' => $qtyFirst,
-                    'qtySecond' => $qtySecond,
+                    'qtyFirst' => $adjustedFirstQty,
+                    'qtySecond' => $adjustedSecondQty,
                 ];
             });
 

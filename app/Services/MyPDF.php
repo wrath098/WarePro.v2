@@ -15,7 +15,7 @@ class MyPDF extends TCPDF
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 
-        $footerText = date('F j, Y') . ' | PGSO-WarePro';
+        $footerText = date('F j, Y') . '| PGSO-WarePro | CG';
 
         $this->Cell(0, 10, $pageNumber, 0, 0, 'C');
         $this->Cell(0, 10, $footerText, 0, 0, 'R');

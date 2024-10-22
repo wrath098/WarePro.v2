@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CapitalOutlay;
 use App\Models\Category;
 use App\Models\Fund;
 use App\Models\ItemClass;
@@ -145,6 +146,15 @@ class ProductService
         return $productCode ?? '';
     }
 
+    public function getCapitalOutlay($year, $fundId)
+    {
+        $capital = CapitalOutlay::where('year', $year)
+        ->where('fund_id', $fundId)
+        ->first();
+        $amount = $capital->amount;
+        return $amount ?? null;
+    }
+
     public function validateCategoryExistence($fundId, $code, $name)
     {
         $category = Category::where('fund_id', $fundId)
@@ -154,9 +164,10 @@ class ProductService
         return $category;
     }
 
-    public function validateProductExcemption($prodId)
+    public function validateProductExcemption($prodId, $year)
     {
         $exist = ProductPpmpException::where('prod_id', $prodId)
+            ->where('year', $year)
             ->where('status', 'active')
             ->exists();
         return $exist;
@@ -181,6 +192,4 @@ class ProductService
         }
         return false;
     }
-
-    
 }
