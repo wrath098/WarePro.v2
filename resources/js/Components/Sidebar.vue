@@ -134,9 +134,9 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'final'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})">
+                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'approved'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})}"/>
-                                    Final
+                                    Approved
                                 </SubSidebarLink>
                             </li>
                         </template>
@@ -155,9 +155,9 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
+                                <SubSidebarLink :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'})" :active="false">
                                     <ArrowHeadRight :class="{ 'text-white' : false}"/>
-                                    Final
+                                    Approved
                                 </SubSidebarLink>
                             </li>
                         </template>
@@ -169,7 +169,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Purchase Request</div>
                         </div>
                     </div>
-                    <SidebarLink :href="'https://localhost'" :active="false">
+                    <SidebarLink :href="route('pr.display.transactions')" :active="false">
                         <Bag/>
                         <span class="ml-3">Purchase Request</span>
                     </SidebarLink>

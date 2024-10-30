@@ -184,7 +184,7 @@
                                 <div class="mt-5">
                                     <p class="text-sm text-gray-500"> Product Information</p>
                                     <select v-model="create.prodYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                        <option disabled value="">Select the Product Year</option>
+                                        <option disabled value="">Select the Ppmp Year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                     </select>
                                 </div>

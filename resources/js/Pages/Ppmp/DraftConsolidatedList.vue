@@ -9,6 +9,7 @@
     import Modal from '@/Components/Modal.vue';
 
     const props = defineProps({
+        ppmp: Object,
         transactions: Object,
         years: Object,
     });
@@ -39,7 +40,9 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Project Procurement and Manangement Plan</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-gray-600 hover:text-green-700">Project Procurement and Manangement Plan</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">{{ props.ppmp.type }}</li> 
+                    <li class="text-green-700" aria-current="page">{{ props.ppmp.status }}</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
@@ -96,8 +99,8 @@
                             </form>
                         </div>
 
-                        <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="mx-2 w-full md:w-9/12 bg-white rounded-md shadow mt-5 md:mt-0">
+                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
                                     <div class="p-6 text-gray-900 text-center">
                                         <DataTable class="w-full text-gray-900 display">

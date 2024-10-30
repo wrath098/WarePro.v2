@@ -75,7 +75,7 @@ class FundController extends Controller
 
                 $fund->fill([
                     'fund_name' => $validation['fundName'],
-                    'description' => $validation['fundName'],
+                    'description' => $validation['fundDesc'],
                     'updated_by' => $validation['updatedBy'],
                 ])->save();
             });

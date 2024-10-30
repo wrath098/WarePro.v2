@@ -2,8 +2,8 @@
     import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-import EditButton from '@/Components/Buttons/EditButton.vue';
-import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import EditButton from '@/Components/Buttons/EditButton.vue';
+    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     
     const props = defineProps({
         ppmpTransaction: Object,

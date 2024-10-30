@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Fund;
 use App\Models\ItemClass;
 use App\Models\Office;
+use App\Models\PpmpConsolidated;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Models\ProductPpmpException;
@@ -77,6 +78,18 @@ class ProductService
         return $funds;
     }
 
+    public function getAllProduct_FundModel()
+    {
+        $funds = Fund::with([
+            'categories:id,fund_id,cat_code,cat_name',
+            'categories.items:id,cat_id,item_code,item_name',
+            'categories.items.products:id,item_id,prod_newNo,prod_desc,prod_unit,prod_oldNo',
+        ])
+        ->get(['id', 'fund_name']);
+
+        return $funds;
+    }
+
     public function getCategoryName($id)
     {
         $categoryName = Category::findOrFail($id);
@@ -114,7 +127,7 @@ class ProductService
     public function getLatestPriceIdentification($id)
     {
         $product = Product::findOrFail($id);
-        $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
+        $priceResult = $product->prices()->orderBy('created_at', 'desc')->limit(1);
         return $priceResult->id ?? null;
     }
 
@@ -144,6 +157,14 @@ class ProductService
         $product = Product::findOrFail($id);
         $productCode = $product->prod_newNo;
         return $productCode ?? '';
+    }
+
+    public function getProductInConso($prodId, $transId) {
+        $product = PpmpConsolidated::where('prod_id', $prodId)
+        ->where('trans_id', $transId)
+        ->first();
+
+        return $product ?? null;
     }
 
     public function getCapitalOutlay($year, $fundId)

@@ -269,7 +269,7 @@
                                 <div class="mt-5">
                                     <p class="text-sm text-gray-500"> Product Information</p>
                                     <input type="text" v-model="create.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Ex. 500ml/bottle, 70% Ethyl" required>
-                                    <input type="text" v-model="create.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
+                                    <input type="number" v-model="create.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
                                     <select v-model="create.prodUnit" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                         <option disabled value="">Select Unit Of Measure</option>
                                         <option value="Book">Book</option>
@@ -339,7 +339,7 @@
                                     <p class="text-sm text-gray-500"> Product Information</p>
                                     <input type="hidden" v-model="edit.prodId">
                                     <input type="text" v-model="edit.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Ex. 500ml/bottle, 70% Ethyl" required>
-                                    <input type="text" v-model="edit.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
+                                    <input type="number" v-model="edit.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
                                     <input type="hidden" v-model="edit.updatedBy">
                                 </div>
                             </div>

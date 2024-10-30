@@ -1,17 +1,18 @@
 <script setup>
     import { Head, router, usePage } from '@inertiajs/vue3';
-    import { reactive, ref, watch, computed } from 'vue';
-    import { debounce } from 'lodash';
+    import { reactive, ref, computed } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import Pagination from '@/Components/Pagination.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
+    import AddIcon from '@/Components/Buttons/AddIcon.vue';
+    import PrintIcon from '@/Components/Buttons/PrintIcon.vue';
 
     const props = defineProps({
         ppmp: Object,
@@ -115,53 +116,62 @@
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="mx-2 w-full md:w-3/12 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <h2 class="text-lg font-semibold text-[#07074D] mb-4">PPMP Information</h2>
-
-                            <div class="mb-4">
-                                <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Requestee:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.requestee.office_name }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">No.:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_code }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="ppmpType" class="block text-sm font-medium text-[#07074D] mb-1">Type:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_type }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Price:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.price_adjustment }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_year }}</p>
-                            </div>       
-                            
-                            <div class="mb-4">
-                                <label for="totalItems" class="block text-sm font-medium text-[#07074D] mb-1">Total Items Listed:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalItems }}</p>
+                        <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex-1 flex items-start justify-between bg-indigo-600 p-2 rounded-t-xl mb-2">
+                                <div class="flex flex-col gap-1">
+                                    <h2 class="text-lg justify-center font-semibold text-[#ededee] mb-4">PPMP Information</h2>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="rounded-full">
+                                        <PrintIcon :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" class="bg-gray-50" ></PrintIcon>
+                                    </div>
+                                    <div class="rounded-full">
+                                        <AddIcon @click="showModal('add')" class="bg-gray-50"></AddIcon>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="mb-4">
-                                <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Total Amount:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.formattedOverallPrice }}</p>
+                            <div class="mx-2">                               
+                                <div class="mb-4 px-2">
+                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Requestee:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.requestee.office_name }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">No.:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_code }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="ppmpType" class="block text-sm font-medium text-[#07074D] mb-1">Type:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_type }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Price:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.price_adjustment }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_year }}</p>
+                                </div>       
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="totalItems" class="block text-sm font-medium text-[#07074D] mb-1">Total Items Listed:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalItems }}</p>
+                                </div>
+
+                                <div class="mb-4 px-2">
+                                    <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Total Amount:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.formattedOverallPrice }}</p>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
+                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <div class="flex w-full space-y-2 sm:space-y-0 justify-center sm:justify-start">
-                                        <AddButton @click="showModal('add')">
-                                                <span class="mr-2">Add Particular</span>
-                                        </AddButton>
-                                    </div>
                                     <DataTable class="w-full text-gray-900 display">
                                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                             <tr class="text-center">

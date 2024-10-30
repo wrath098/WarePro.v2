@@ -10,8 +10,10 @@ use App\Http\Controllers\ProductPpmpExceptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
+use App\Http\Controllers\Pdf\IndividualPpmpController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
+use App\Http\Controllers\PrTransactionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -77,6 +79,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
     Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
     Route::get('/consolidated-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showConsolidatedPpmp'])->name('conso.ppmp.show');
+    Route::post('/proceed-to-approved/{ppmpTransaction}', [PpmpTransactionController::class, 'storeAsFinal'])->name('proceed.to.final.ppmp');
     Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
     Route::get('/consolidated-ppmp-list', [PpmpTransactionController::class, 'showConsolidatedPpmp_Type'])->name('conso.ppmp.type');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
@@ -87,10 +90,15 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 });
 
+Route::middleware('auth')->prefix('Pr')->group(function () {
+    Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
+});
+
 Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
     Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
     Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
+    Route::get('/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
 });
 
 require __DIR__.'/auth.php';

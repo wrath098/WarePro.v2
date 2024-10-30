@@ -12,18 +12,29 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
-import PrintButton from '@/Components/Buttons/PrintButton.vue';
-import Dropdown from '@/Components/Dropdown.vue';
+    import PrintButton from '@/Components/Buttons/PrintButton.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
 
     const props = defineProps({
         ppmp: Object,
         user: Number,
     });
 
+    const form = reactive({
+        conId: props.ppmp.id,
+        user: props.user,
+    });
+
     const modalState = ref(null);
     const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
     const isConfirmModalOpen = computed(() => modalState.value === 'add');
+
+    const submit = () => {
+        Inertia.post(`../proceed-to-approved/${form.conId}`, form, {
+            onSuccess: () => closeModal(),
+        });
+    };
 </script>
 
 <template>
@@ -75,7 +86,7 @@ import Dropdown from '@/Components/Dropdown.vue';
                                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                                     <path d="m12,7V.46c.913.346,1.753.879,2.465,1.59l3.484,3.486c.712.711,1.245,1.551,1.591,2.464h-6.54c-.552,0-1-.449-1-1Zm-3.416,12h-3.584c-.552,0-1-.448-1-1s.448-1,1-1h3.07c-.041-.328-.07-.66-.07-1s.022-.672.063-1h-3.063c-.552,0-1-.448-1-1s.448-1,1-1h3.593c.296-.728.699-1.398,1.185-2h-4.778c-.552,0-1-.448-1-1s.448-1,1-1h5.774c-.479-.531-.774-1.23-.774-2V.024c-.161-.011-.322-.024-.485-.024h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h10c.114,0,.221-.026.333-.034-3.066-.254-5.641-2.234-6.749-4.966Zm12.327.497c.939-1.319,1.365-3.028.96-4.843-.494-2.211-2.277-3.996-4.49-4.481-4.365-.956-8.163,2.843-7.208,7.208.485,2.213,2.27,3.996,4.481,4.49,1.816.406,3.525-.021,4.843-.96l2.796,2.796c.39.39,1.024.39,1.414,0h0c.39-.39.39-1.024,0-1.414l-2.796-2.796Zm-4.135-1.033l-.004.004c-.744.744-2.058.746-2.823-.019l-1.515-1.575c-.372-.387-.372-.999,0-1.386h0c.393-.409,1.047-.409,1.44,0l1.495,1.553,2.9-2.971c.392-.402,1.038-.402,1.43,0h0c.38.388.38,1.009,0,1.397l-2.925,2.997Z"/>
                                                 </svg>
-                                                <span class="ml-2">Confirm as Final</span>   
+                                                <span class="ml-2">Proceed as Final/Approve</span>   
                                             </button>
                                         </template>
                                     </Dropdown>
@@ -141,6 +152,7 @@ import Dropdown from '@/Components/Dropdown.vue';
                                                 <th scope="col" class="px-6 py-3 w-1/12">May (Qty)</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Unit</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Price</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -152,6 +164,7 @@ import Dropdown from '@/Components/Dropdown.vue';
                                                 <td class="px-6 py-3">{{ particular.qtySecond }}</td>
                                                 <td class="px-6 py-3">{{ particular.prodUnit }}</td>
                                                 <td class="px-6 py-3">{{ particular.prodPrice }}</td>
+                                                <td class="px-6 py-3">{{ particular.totalAmount }}</td>
                                             </tr>
                                         </tbody>
                                     </DataTable>
@@ -164,7 +177,7 @@ import Dropdown from '@/Components/Dropdown.vue';
         </div>
     </AuthenticatedLayout>
     <Modal :show="isConfirmModalOpen" @close="closeModal"> 
-        <form @submit.prevent="submitDrop">
+        <form @submit.prevent="submit">
             <div class="bg-gray-100 h-auto">
                 <div class="bg-white p-6  md:mx-auto">
                     <svg class="text-indigo-700 w-16 h-16 mx-auto my-6" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512" fill="currentColor">
@@ -188,7 +201,7 @@ import Dropdown from '@/Components/Dropdown.vue';
                                 </svg>
                                 Cancel
                             </DangerButton>
-                        </div>
+                        </div> 
                     </div>
                 </div>
             </div>
