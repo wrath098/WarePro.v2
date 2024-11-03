@@ -119,6 +119,60 @@ class PpmpTransactionController extends Controller
         }
     }
 
+    public function storeCopy(Request $request)
+    { 
+        try {
+            $percentage = (float)$request->input('qtyAdjust') / 100;
+            $transactions = PpmpTransaction::where('ppmp_year', $request->input('selectedYear'))
+                ->where('ppmp_type', $request->input('selectedType'))
+                ->where('ppmp_status', 'draft')
+                ->where('ppmp_version', 1)
+                ->get();
+
+            $version = PpmpTransaction::select('ppmp_version')
+                ->where('ppmp_year', $request->input('selectedYear'))
+                ->where('ppmp_type', $request->input('selectedType'))
+                ->where('ppmp_status', 'draft')
+                ->groupBy('ppmp_version')
+                ->orderBy('ppmp_version', 'desc')
+                ->first();
+
+            $ppmpExist = PpmpTransaction::where('ppmp_year', $request->input('selectedYear'))
+                ->where('ppmp_type', $request->input('selectedType'))
+                ->where('ppmp_status', 'draft')
+                ->where('qty_adjustment', $percentage )
+                ->exists();
+
+            if($ppmpExist) {
+                return redirect()->back()->with([
+                    'error' => 'A copy of Individual PPMP with ' . (float)$request->input('qtyAdjust') . '% quantity adjustment already exist!'
+                ]);
+            }
+
+            foreach ($transactions as $transaction) {
+                $newPpmp_Individual = [
+                    'ppmpType' => $transaction->ppmp_type,
+                    'ppmpYear' => $transaction->ppmp_year,
+                    'office' => $transaction->office_id,
+                    'user' => Auth::id(),
+                ];
+                $createTransaction = $this->createPpmpTransaction($newPpmp_Individual);
+                $createTransaction->update([
+                    'qty_adjustment' => $percentage,
+                    'ppmp_version' => $version ? (int)$version->ppmp_version + 1 : 2,
+                ]);
+            }
+
+            return redirect()->route('indiv.ppmp.type', ['type' => 'individual' , 'status' => 'draft'])
+                ->with(['message' => 'Make a copy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
+
+        } catch (\Exception $e) {
+            Log::error('Make a copy for PPMP error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with(['error' => 'Make a copy of the PPMP failed. Please contact your system administrator.']);
+        }
+    }
+
     public function storeConsolidated(Request $request)
     {
         try {
@@ -243,9 +297,9 @@ class PpmpTransactionController extends Controller
         ])->sortBy('prodCode');
 
         $ppmpTransaction['totalItems'] = $ppmpParticulars->count();
-        $overallPrice = $ppmpParticulars->sum(fn($particular) => (($particular['firstQty'] + $particular['secondQty']) * (int) $particular['prodPrice']));
+        $grandTotal = $ppmpParticulars->sum(fn($particular) => (((int) $particular['firstQty'] + (int) $particular['secondQty']) * (float) $particular['prodPrice']));
 
-        $ppmpTransaction['formattedOverallPrice'] = number_format(round($overallPrice, 2), 2, '.', ',');
+        $ppmpTransaction['formattedOverallPrice'] = number_format($grandTotal, 2, '.', ',');
 
         return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars, 'user' => Auth::id(),]);
     }
@@ -308,6 +362,29 @@ class PpmpTransactionController extends Controller
 
     public function showIndividualPpmp_Type(Request $request): Response
     {
+
+        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_version')
+            ->where(function($query) {
+                $query->where('ppmp_type', 'emergency')
+                      ->orWhere('ppmp_type', 'individual');
+            })
+            ->where('ppmp_status', 'draft')
+            ->get();
+        
+        $result = $transactions->groupBy('ppmp_type')->map(function ($group) {
+            $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
+                return [
+                    'ppmp_year' => $yearGroup->first()->ppmp_year,
+                    //'versions' => $yearGroup->pluck('ppmp_version')->unique()
+                ];
+            })->values()->all();
+        
+            return [
+                'ppmp_type' => $group->first()->ppmp_type,
+                'years' => $years
+            ];
+        })->values()->all();
+        
         $ppmpTransactions = PpmpTransaction::with('requestee', 'updater')
             ->where('ppmp_type', $request->type)
             ->where('ppmp_status', $request->status)
@@ -317,7 +394,7 @@ class PpmpTransactionController extends Controller
         $request['status'] = ucfirst($request['status']);
         $request['type'] = ucfirst($request['type']);
 
-        return Inertia::render('Ppmp/PpmpList', ['ppmpTransaction' =>  $ppmpTransactions, 'ppmp' =>  $request]);
+        return Inertia::render('Ppmp/PpmpList', ['ppmpTransaction' =>  $ppmpTransactions, 'ppmp' =>  $request, 'types' => $result]);
     }
 
     public function showConsolidatedPpmp_Type(Request $request): Response

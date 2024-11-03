@@ -59,13 +59,13 @@
                     <div class="flex flex-col md:flex-row items-start justify-center">
                         <div class="mx-2 w-full md:w-3/12 bg-white p-4 rounded-md shadow">
                             <form @submit.prevent="submitConsolidate" class="space-y-5">
-                                <h4>Consolidate PPMP</h4>
+                                <h4>Generate Consolidated PPMP</h4>
                                 <div>
                                     <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
                                         Choose Year
                                     </label>
                                     <select v-model="consolidate.ppmpYear" @change="onCategoryChange(consolidate)" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
-                                        <option value="" disabled>Select Year</option>
+                                        <option value="" disabled>Select a Year</option>
                                         <option v-for="year in props.years" :key="year.ppmp_year" :value="year.ppmp_year">
                                             {{ year.ppmp_year }}
                                         </option>
@@ -84,7 +84,7 @@
                                 <div>
                                     <label for="basedPrice" class="mb-1 block text-base font-medium text-[#07074D]">
                                         Quantity Adjustment:
-                                        <span class="text-sm text-[#8f9091]">Value: 50%-100%</span>
+                                        <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span>
                                     </label>
                                     <input v-model="consolidate.qtyAdjust"  type="number" id="qtyAdjust" placeholder="Value: 50%-100%"
                                         class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md" min="50" max="100"/>
@@ -93,7 +93,7 @@
                                 <div>
                                     <button
                                         class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none">
-                                        Consolidate
+                                        Generate
                                     </button>
                                 </div>
                             </form>
