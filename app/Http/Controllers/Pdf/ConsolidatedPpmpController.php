@@ -142,25 +142,22 @@ class ConsolidatedPpmpController extends Controller
                 ->where('ppmp_year', $ppmpTransaction->ppmp_year)
                 ->where('ppmp_type', 'individual')
                 ->where('ppmp_status', $ppmpTransaction->ppmp_status)
-                ->where('ppmp_version', 1)
+                ->where('ppmp_version', $ppmpTransaction->ppmp_version)
                 ->get();
 
             $groupParticulars = $consolidate->flatMap(function ($transaction) {
                 return $transaction->particulars;
             })->groupBy('prod_id')->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
-                $prodPrice = (float) $this->productService->getLatestPrice($items->first()->prod_id) * $ppmpTransaction->price_adjustment;
+                $prodPrice = (float)$this->productService->getLatestPrice($items->first()->prod_id) * $ppmpTransaction->price_adjustment;
                 $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
-                $exemption = $this->productService->validateProductExcemption($items->first()->prod_id, $ppmpTransaction->ppmp_year);
+                
                 $qtyFirst = (int) $items->sum('qty_first');
                 $qtySecond = (int) $items->sum('qty_second');
 
-                $adjustedFirstQty = !$exemption && $qtyFirst >= 1
-                    ? floor(($qtyFirst * (float) $ppmpTransaction->qty_adjustment))
-                    : $qtyFirst;
+                $firstAmount = $qtyFirst * $prodPrice;
+                $secondAmount = $qtySecond * $prodPrice;
 
-                $adjustedSecondQty = !$exemption && $qtyFirst >= 1
-                    ? floor(($qtySecond * (float) $ppmpTransaction->qty_adjustment))
-                    : $qtySecond;
+                $totalAmount += $firstAmount + $secondAmount;
 
                 return [
                     'prodId' => $items->first()->prod_id,
@@ -168,8 +165,8 @@ class ConsolidatedPpmpController extends Controller
                     'prodName' => $this->productService->getProductName($items->first()->prod_id),
                     'prodUnit' => $this->productService->getProductUnit($items->first()->prod_id),
                     'prodPrice' => $prodPrice,
-                    'qtyFirst' => $adjustedFirstQty,
-                    'qtySecond' => $adjustedSecondQty,
+                    'qtyFirst' => $qtyFirst,
+                    'qtySecond' => $qtySecond,
                 ];
             });
 

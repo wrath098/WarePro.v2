@@ -20,19 +20,7 @@ class IndividualPpmpController extends Controller
     public function generatePdf_IndividualPpmp(PpmpTransaction $ppmp)
     {
         $ppmp->load('particulars', 'requestee');
-        
-        if((int)$ppmp->ppmp_version != 1) {
-            $versions = PpmpTransaction::with('particulars')
-                ->where('ppmp_year', $ppmp->ppmp_year)
-                    ->where('ppmp_type', $ppmp->ppmp_type)
-                    ->where('ppmp_status', 'draft')
-                    ->where('office_id', $ppmp->office_id)
-                    ->where('ppmp_version', 1)
-                    ->first();
-            $totalQtySecond = $versions->particulars()->sum('qty_second');
-        } else {
-            $totalQtySecond = $ppmp->particulars()->sum('qty_second');
-        }
+        $totalQtySecond = $ppmp->particulars()->sum('qty_second');
 
         if ($ppmp->ppmp_status == 'final') {
             $ppmp->ppmp_status = 'Approved';
@@ -163,40 +151,15 @@ class IndividualPpmpController extends Controller
     protected function tableContent($ppmp, $totalQtySecond)
     {
         $text = '';
-        if((int)$ppmp->ppmp_version != 1) {
-            $versions = PpmpTransaction::with('particulars')
-                ->where('ppmp_year', $ppmp->ppmp_year)
-                    ->where('ppmp_type', $ppmp->ppmp_type)
-                    ->where('ppmp_status', 'draft')
-                    ->where('office_id', $ppmp->office_id)
-                    ->where('ppmp_version', 1)
-                    ->first();
-
-            $ppmpParticulars = $versions->particulars->map(function ($particular) use ($ppmp) { 
-                $modifiedProduct = $this->productService->validateProductExcemption($particular->prod_id, $ppmp->ppmp_year);
-                $modifiedQtyFirst = !$modifiedProduct && $particular->qty_first > 1  ? floor((int)$particular->qty_first * (float)$ppmp->qty_adjustment) : $particular->qty_first;
-                $modifiedQtySecond = !$modifiedProduct && $particular->qty_second > 1 ? floor((int)$particular->qty_second * (float)$ppmp->qty_adjustment): $particular->qty_second;
-                return [
-                    'id' => $particular->id,
-                    'qtyFirst' => $modifiedQtyFirst,
-                    'qtySecond' => $modifiedQtySecond,
-                    'prodCode' => $this->productService->getProductCode($particular->prod_id),
-                    'prodName' => $this->productService->getProductName($particular->prod_id),
-                    'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-                    'prodPrice' => $this->productService->getLatestPriceId($particular->price_id)
-                ];
-            });
-        } else {
-            $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
-                'id' => $particular->id,
-                'qtyFirst' => $particular->qty_first,
-                'qtySecond' => $particular->qty_second,
-                'prodCode' => $this->productService->getProductCode($particular->prod_id),
-                'prodName' => $this->productService->getProductName($particular->prod_id),
-                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
-            ]);
-        }
+        $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
+            'id' => $particular->id,
+            'qtyFirst' => $particular->qty_first,
+            'qtySecond' => $particular->qty_second,
+            'prodCode' => $this->productService->getProductCode($particular->prod_id),
+            'prodName' => $this->productService->getProductName($particular->prod_id),
+            'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+        ]);
 
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
         $funds = $this->productService->getAllProduct_FundModel();
