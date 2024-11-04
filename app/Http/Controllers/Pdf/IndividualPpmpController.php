@@ -20,11 +20,23 @@ class IndividualPpmpController extends Controller
     public function generatePdf_IndividualPpmp(PpmpTransaction $ppmp)
     {
         $ppmp->load('particulars', 'requestee');
-        $totalQtySecond = $ppmp->particulars()->sum('qty_second');
+        
+        if((int)$ppmp->ppmp_version != 1) {
+            $versions = PpmpTransaction::with('particulars')
+                ->where('ppmp_year', $ppmp->ppmp_year)
+                    ->where('ppmp_type', $ppmp->ppmp_type)
+                    ->where('ppmp_status', 'draft')
+                    ->where('office_id', $ppmp->office_id)
+                    ->where('ppmp_version', 1)
+                    ->first();
+            $totalQtySecond = $versions->particulars()->sum('qty_second');
+        } else {
+            $totalQtySecond = $ppmp->particulars()->sum('qty_second');
+        }
 
         if ($ppmp->ppmp_status == 'final') {
             $ppmp->ppmp_status = 'Approved';
-        }       
+        }
         
         $pdf = new MyPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
         $logoPath = public_path('assets/images/benguet_logo.png');
@@ -78,33 +90,7 @@ class IndividualPpmpController extends Controller
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
 
-        $table2 = '
-            <p style="font-size: 10px; line-height: 0.0001;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
-            <br><br>
-            <div></div>
-            <table>
-                <thead>
-                    <tr style="font-size: 11px;">
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Prepared By:</th>
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Reviewed By:</th>
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Approved By:</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td width="100%"><br><br></td></tr>
-                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
-                        <td width="293px">AILEEN G. RAMOS</td>
-                        <td width="293px">ELIZABETH C. TININGGAL</td>
-                        <td width="293px">JENNIFER G. BAHOD</td>
-                    </tr>
-                    <tr style="font-size: 11px; text-align:center;">
-                        <td width="293px">Administrative Officer IV</td>
-                        <td width="293px">Administrative Officer V</td>
-                        <td width="293px">Provincial General Services Officer</td>
-                    </tr>
-                </tbody>
-            </table>
-            ';     
+        $table2 = '<p style="font-size: 10px; line-height: 0.0001;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>';     
         $pdf->writeHTML($table2, true, false, true, false, '');
 
         $pdf->Output('cPPMP-' . strtoupper($ppmp->ppmp_status) . '-' . $ppmp->ppmp_status . '.pdf', 'I');
@@ -177,15 +163,41 @@ class IndividualPpmpController extends Controller
     protected function tableContent($ppmp, $totalQtySecond)
     {
         $text = '';
-        $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
-            'id' => $particular->id,
-            'qtyFirst' => $particular->qty_first,
-            'qtySecond' => $particular->qty_second,
-            'prodCode' => $this->productService->getProductCode($particular->prod_id),
-            'prodName' => $this->productService->getProductName($particular->prod_id),
-            'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
-        ]);
+        if((int)$ppmp->ppmp_version != 1) {
+            $versions = PpmpTransaction::with('particulars')
+                ->where('ppmp_year', $ppmp->ppmp_year)
+                    ->where('ppmp_type', $ppmp->ppmp_type)
+                    ->where('ppmp_status', 'draft')
+                    ->where('office_id', $ppmp->office_id)
+                    ->where('ppmp_version', 1)
+                    ->first();
+
+            $ppmpParticulars = $versions->particulars->map(function ($particular) use ($ppmp) { 
+                $modifiedProduct = $this->productService->validateProductExcemption($particular->prod_id, $ppmp->ppmp_year);
+                $modifiedQtyFirst = !$modifiedProduct && $particular->qty_first > 1  ? floor((int)$particular->qty_first * (float)$ppmp->qty_adjustment) : $particular->qty_first;
+                $modifiedQtySecond = !$modifiedProduct && $particular->qty_second > 1 ? floor((int)$particular->qty_second * (float)$ppmp->qty_adjustment): $particular->qty_second;
+                return [
+                    'id' => $particular->id,
+                    'qtyFirst' => $modifiedQtyFirst,
+                    'qtySecond' => $modifiedQtySecond,
+                    'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                    'prodName' => $this->productService->getProductName($particular->prod_id),
+                    'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                    'prodPrice' => $this->productService->getLatestPriceId($particular->price_id)
+                ];
+            });
+        } else {
+            $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
+                'id' => $particular->id,
+                'qtyFirst' => $particular->qty_first,
+                'qtySecond' => $particular->qty_second,
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+            ]);
+        }
+
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
         $funds = $this->productService->getAllProduct_FundModel();
 
