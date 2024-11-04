@@ -176,38 +176,40 @@ class PpmpTransactionController extends Controller
     public function storeConsolidated(Request $request)
     {
         try {
-            $validatedData = $request->validate([
-                'ppmpYear' => 'required|string',
-                'basePrice' => 'required|integer|min:100|max:120',
-                'qtyAdjust' => 'required|integer|min:50|max:100',
-                'ppmpType' => 'required|string',
-                'ppmpStatus' => 'required|string',
-            ]);
-    
-            $validatedData['basePrice'] = $validatedData['basePrice'] / 100;
-            $validatedData['qtyAdjust'] = $validatedData['qtyAdjust'] / 100;
-            $validatedData['office'] = null;
-            $validatedData['user'] = Auth::id();
-    
-            if ($this->validateConsoPpmp($validatedData)) {
+            $ppmp = PpmpTransaction::where('ppmp_year', $request->selectedYear)
+                ->where('ppmp_type', $request->selectedType)
+                ->where('ppmp_version', $request->selectedVersion)
+                ->where('ppmp_status', 'draft')
+                ->firstOrFail();
+            
+            $data = [
+                'ppmpType' => 'consolidated',
+                'ppmpYear' => $ppmp->ppmp_year,
+                'ppmpStatus' => $ppmp->ppmp_status, 
+                'basePrice' => $ppmp->price_adjustment, 
+                'qtyAdjust' => $ppmp->qty_adjustment,
+                'version' => $ppmp->ppmp_version,
+                'office' => null,
+                'user' => Auth::id(),
+            ];
+            
+            $existingConsoPpmp = $this->validateConsoPpmp($data);
+            if ($existingConsoPpmp) {
                 return redirect()->back()->with([
-                    'error' => 'Consolidated details already exist! Please check Transaction No.' . $this->validateConsoPpmp($validatedData)->ppmp_code
+                    'error' => 'Consolidated details already exist! Please check Transaction No.' . $this->validateConsoPpmp($data)->ppmp_code
                 ]);
             }
 
-            $validatedData['ppmpType'] = 'consolidated';
-            $ppmpConsoVersion = (int) $this->getConsoVersion($validatedData) + 1;
-
-            DB::transaction(function () use ($validatedData, $ppmpConsoVersion) {
-                $createConsolidation = $this->createPpmpTransaction($validatedData);
+            DB::transaction(function () use ($data) {
+                $createConsolidation = $this->createPpmpTransaction($data);
                 $createConsolidation->update([
-                    'price_adjustment' => $validatedData['basePrice'],
-                    'qty_adjustment' => $validatedData['qtyAdjust'],
-                    'ppmp_version' => $ppmpConsoVersion,
+                    'price_adjustment' => $data['basePrice'],
+                    'qty_adjustment' => $data['qtyAdjust'],
+                    'ppmp_version' => $data['version'],
                 ]);
             });
     
-            return redirect()->back()->with(['message', 'Consolidated has been generated successfully!']);
+            return redirect()->back()->with(['message' => 'Consolidated has been generated successfully!']);
         } catch (\Exception $e) {
             Log::error('Consolidation error: ' . $e->getMessage());
             return redirect()->back()
@@ -310,19 +312,20 @@ class PpmpTransactionController extends Controller
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
 
         if ($ppmpTransaction->ppmp_status == 'draft') {
-            $consolidate = PpmpTransaction::with('particulars')
+            $originalPPmp = PpmpTransaction::with('particulars')
                 ->where('ppmp_year', $ppmpTransaction->ppmp_year)
                 ->where('ppmp_type', 'individual')
                 ->where('ppmp_status', $ppmpTransaction->ppmp_status)
                 ->where('ppmp_version', 1)
                 ->get();
 
-            $groupParticulars = $consolidate->flatMap(function ($transaction) {
+            $groupParticulars = $originalPPmp->flatMap(function ($transaction) {
                 return $transaction->particulars;
             })->groupBy('prod_id')->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
-                $prodPrice = (float) $this->productService->getLatestPrice($items->first()->prod_id) * $ppmpTransaction->price_adjustment;
+                $prodPrice = (float)$this->productService->getLatestPrice($items->first()->prod_id) * $ppmpTransaction->price_adjustment;
                 $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
                 $exemption = $this->productService->validateProductExcemption($items->first()->prod_id, $ppmpTransaction->ppmp_year);
+                
                 $qtyFirst = (int) $items->sum('qty_first');
                 $qtySecond = (int) $items->sum('qty_second');
 
@@ -362,7 +365,6 @@ class PpmpTransactionController extends Controller
 
     public function showIndividualPpmp_Type(Request $request): Response
     {
-
         $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_version')
             ->where(function($query) {
                 $query->where('ppmp_type', 'emergency')
@@ -399,22 +401,24 @@ class PpmpTransactionController extends Controller
 
     public function showConsolidatedPpmp_Type(Request $request): Response
     {
-        $years = PpmpTransaction::select('ppmp_year')
+        $individualList = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_version')
             ->where('ppmp_type', 'individual')
             ->where('ppmp_status', 'draft')
-            ->groupBy('ppmp_year')
             ->get();
 
-        foreach($years as $year) {
-            $versions = PpmpTransaction::select('ppmp_version')
-                ->where('ppmp_year', $year->ppmp_year)
-                ->where('ppmp_type', 'individual')
-                ->where('ppmp_status', 'draft')
-                ->groupBy('ppmp_version')
-                ->get();
-
-            $year->versions = $versions; 
-        }
+        $result = $individualList->groupBy('ppmp_type')->map(function ($group) {
+                $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
+                    return [
+                        'ppmp_year' => $yearGroup->first()->ppmp_year,
+                        'versions' => $yearGroup->pluck('ppmp_version')->unique()
+                    ];
+                })->values()->all();
+            
+                return [
+                    'ppmp_type' => $group->first()->ppmp_type,
+                    'years' => $years
+                ];
+            })->values()->all();
         
         $transactions = PpmpTransaction::with('updater')
             ->where('ppmp_type', $request->type)
@@ -427,8 +431,8 @@ class PpmpTransactionController extends Controller
                 'id' => $transaction->id,
                 'code' => $transaction->ppmp_code,
                 'ppmpYear' => $transaction->ppmp_year,
-                'priceAdjust' => (float) $transaction->price_adjustment ?? 0,
-                'qtyAdjust' => (float) $transaction->qty_adjustment ?? 0,
+                'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
+                'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
                 'version' => $transaction->ppmp_version ?? 'N/A',
                 'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
             ];
@@ -436,7 +440,7 @@ class PpmpTransactionController extends Controller
 
         $request['status'] = ucfirst($request['status']);
         $request['type'] = ucfirst($request['type']);
-        return Inertia::render('Ppmp/DraftConsolidatedList', ['ppmp' => $request, 'transactions' => $transactions, 'years' => $years]);
+        return Inertia::render('Ppmp/DraftConsolidatedList', ['ppmp' => $request, 'transactions' => $transactions, 'individualList' => $result]);
     }
 
     public function destroy(Request $request)
