@@ -109,9 +109,11 @@
                                                     <td class="px-6 py-3">{{ transaction.priceAdjust }}</td>
                                                     <td class="px-6 py-3">{{ transaction.qtyAdjust }}</td>
                                                     <td class="px-6 py-3">{{ transaction.updatedBy }}</td>
-                                                    <td class="px-6 py-3">
+                                                    <td class="px-6 py-3" v-if="props.ppmp.status == 'Draft'">
                                                         <ViewButton :href="route('conso.ppmp.show', { ppmpTransaction: transaction.id })" tooltip="View"/>
                                                         <RemoveButton @click="''" tooltip="Trash"/>
+                                                    </td>
+                                                    <td class="px-6 py-3" v-if="props.ppmp.status == 'Approved'">
                                                     </td>
                                                 </tr>
                                             </tbody>

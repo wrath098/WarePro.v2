@@ -127,7 +127,7 @@ class ProductService
     public function getLatestPriceIdentification($id)
     {
         $product = Product::findOrFail($id);
-        $priceResult = $product->prices()->orderBy('created_at', 'desc')->limit(1);
+        $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
         return $priceResult->id ?? null;
     }
 

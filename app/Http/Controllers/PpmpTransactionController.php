@@ -248,37 +248,29 @@ class PpmpTransactionController extends Controller
                 ->where('ppmp_status', $ppmpTransaction->ppmp_status)
                 ->where('ppmp_version', $ppmpTransaction->ppmp_version)
                 ->get();
-
+                        
             DB::transaction(function () use ($transactions, $ppmpTransaction, $userId) {
                 $transactionId = $ppmpTransaction->id;
+                $groupParticulars = $transactions->flatMap(function ($transaction) {
+                    return $transaction->particulars;
+                })->groupBy('prod_id')->map(function ($items) use ($transactionId) {
+                    $prodPrice = $this->productService->getLatestPriceIdentification($items->first()->prod_id);
+                    
+                    $qtyFirst = (int) $items->sum('qty_first');
+                    $qtySecond = (int) $items->sum('qty_second');
+
+                    PpmpConsolidated::create([
+                        'qty_first' => $qtyFirst,
+                        'qty_second' => $qtySecond,
+                        'prod_id' => $items->first()->prod_id,
+                        'price_id' => $prodPrice,
+                        'trans_id' => $transactionId,
+                    ]);
+                });
+
                 foreach ($transactions as $transaction) {
                     $updateTransaction = PpmpTransaction::findOrFail($transaction->id);
                     $updateTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
-
-                    foreach ($transaction->particulars as $particular) {
-                        $priceId = $this->productService->getLatestPriceIdentification($particular->prod_id);
-                        dd($this->productService->getLatestPriceIdentification($particular->prod_id));
-                        $updateParticular = PpmpParticular::findOrFail($particular->id);
-                        $updateParticular->update(['price_id'=> $priceId]);
-
-                        $isProductExist = $this->productService->getProductInConso($particular->prod_id, $transactionId);
-
-                        if ($isProductExist) {
-                            $toUpdate = PpmpConsolidated::findOrFail($isProductExist->id);
-                            $qtyFirst = (int) $isProductExist->qty_first + (int) $particular->qty_first;
-                            $qtySecond = (int) $isProductExist->qty_second + (int) $particular->qty_second;
-
-                            $toUpdate->update(['qty_first' => $qtyFirst, 'qty_second' => $qtySecond]);
-                        } else {
-                            PpmpConsolidated::create([
-                                'qty_first' => $particular->qty_first,
-                                'qty_second' => $particular->qty_second,
-                                'prod_id' => $particular->prod_id,
-                                'price_id' => $priceId,
-                                'trans_id' => $transactionId,
-                            ]);
-                        }
-                    }
                 }
                 $ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
             });
