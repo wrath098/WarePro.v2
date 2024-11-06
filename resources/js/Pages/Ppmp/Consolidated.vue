@@ -1,18 +1,12 @@
 <script setup>
-    import { Head, router, usePage } from '@inertiajs/vue3';
+    import { Head} from '@inertiajs/vue3';
     import { reactive, ref, watch, computed } from 'vue';
-    import { debounce } from 'lodash';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import Pagination from '@/Components/Pagination.vue';
-    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import AddButton from '@/Components/Buttons/AddButton.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
-    import PrintButton from '@/Components/Buttons/PrintButton.vue';
     import Dropdown from '@/Components/Dropdown.vue';
 
     const props = defineProps({
