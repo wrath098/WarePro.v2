@@ -238,6 +238,10 @@ class ConsolidatedPpmpController extends Controller
                                     }  
                                 }         
                             }
+                            $recapitulation[$fund->fund_name][] =  [
+                                'name' => sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name,
+                                'total' => $catTotal,
+                            ];
                         }
                         $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
                                 <td width="375px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
@@ -259,12 +263,6 @@ class ConsolidatedPpmpController extends Controller
                         $fundFirstTotal += $catFirstTotal; 
                         $fundSecondTotal += $catSecondTotal;
                         $fundTotal += $catTotal;
-                        
-                        $recapitulation[$fund->fund_name][] =  [
-                            'name' => sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name,
-                            'total' => $fundTotal,
-                        ];
-
                     }
                     $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
                                 <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
@@ -341,17 +339,37 @@ class ConsolidatedPpmpController extends Controller
                         </td>
                     </tr>';
             
-            $text .= '<tr style="font-size: 10px; font-weight:bold;">
+            $text .= '<tr style="font-size: 9px; font-weight:bold;">
                         <td width="100%" style="line-height: 2; border:1px solid black;">Recapitulation</td>
                    </tr>';
 
-            foreach ($recapitulation as $expenses =>$fund) {
-                $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                        <td colspan="2" width="250px"></td>
-                        <td width="80%" style="line-height: 2; border:1px solid black;">'. $expenses .'</td>
+            $overAllAmount = 0;
+            foreach ($recapitulation as $expenses => $fund) {
+                $text .= '<tr style="font-size: 9px; font-weight:bold;">
+                        <td width="100%"> <span style="color:white;">&nbsp</span> - '. $expenses .'</td>
                    </tr>';
+                
+                $allAmount = 0;
+                foreach ($fund as $cat) {
+                    $allAmount += $cat['total'];
+                    $text .= '<tr style="font-size: 9px; font-weight:bold;">
+                        <td width="375px"> <span style="color:white;">&nbsp&nbsp</span>'. $cat['name'] .'</td>
+                        <td width="90px" style="text-align:right;">'. number_format($cat['total'], 2, '.', ',') .'</td>
+                        <td width="414px"></td>
+                    </tr>';
+                }
+                $text .= '<tr style="font-size: 9px; font-weight:bold;">
+                        <td width="375px"><span style="color:white;">&nbsp</span> - Total</td>
+                        <td width="90px" style="text-align:right;">'. number_format($allAmount, 2, '.', ',') .'</td>
+                        <td width="414px"></td>
+                    </tr>';
+                $overAllAmount += $allAmount;
             }
-dd($recapitulation);
+            $text .= '<tr style="font-size: 9px; font-weight:bold;">
+                        <td width="375px" style="text-align:right;">Grand Total</td>
+                        <td width="90px" style="text-align:right;">'. number_format($overAllAmount, 2, '.', ',') .'</td>
+                        <td width="414px"></td>
+                    </tr>';
             
             return $text;
         }
