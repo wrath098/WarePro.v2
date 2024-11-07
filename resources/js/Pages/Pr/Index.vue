@@ -24,7 +24,6 @@
 
     const submitForm = (url, data) => {
         router.post(url, data, {
-            onSuccess: () => closeModal(),
             onError: (errors) => {
                 console.error(`Form submission failed for ${url}`, errors);
             },
