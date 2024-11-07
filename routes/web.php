@@ -9,6 +9,7 @@ use App\Http\Controllers\PpmpTransactionController;
 use App\Http\Controllers\ProductPpmpExceptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\IndividualPpmpController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
@@ -91,14 +92,16 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 });
 
-Route::middleware('auth')->prefix('Pr')->group(function () {
+Route::middleware('auth')->prefix('pr')->group(function () {
     Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
+    Route::post('/create-pr', [PrTransactionController::class, 'store'])->name('pr.store.transactions');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
     Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
     Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
+    Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
     Route::get('/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
 });
 

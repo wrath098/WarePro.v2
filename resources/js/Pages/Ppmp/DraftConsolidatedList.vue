@@ -10,7 +10,7 @@
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
-
+    import Print from '@/Components/Buttons/Print.vue';
 
 
     const props = defineProps({
@@ -114,6 +114,7 @@
                                                         <RemoveButton @click="''" tooltip="Trash"/>
                                                     </td>
                                                     <td class="px-6 py-3" v-if="props.ppmp.status == 'Approved'">
+                                                        <Print :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: transaction.id})" tooltip="Print"></Print>
                                                     </td>
                                                 </tr>
                                             </tbody>

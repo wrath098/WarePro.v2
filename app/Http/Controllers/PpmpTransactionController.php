@@ -238,22 +238,36 @@ class PpmpTransactionController extends Controller
 
     public function storeAsFinal(Request $request, PpmpTransaction $ppmpTransaction)
     {
+        $year = $ppmpTransaction->ppmp_year;
         $type = $ppmpTransaction->ppmp_type;
         $status = $ppmpTransaction->ppmp_status;
+        $version = $ppmpTransaction->ppmp_version;
+
+        $transactions = PpmpTransaction::where('ppmp_year', $year)
+                ->where('ppmp_type', $type)
+                ->where('ppmp_status', 'approved')
+                ->first();
+
+        if ($transactions) {
+            return redirect()->back()->with([
+                'error' => 'Approved PPMP already exist! Transaction No.' . $transactions->ppmp_code
+            ]);
+        }
+
         try {
             $userId = $request->user;
             $transactions = PpmpTransaction::with('particulars')
-                ->where('ppmp_year', $ppmpTransaction->ppmp_year)
+                ->where('ppmp_year', $year)
                 ->where('ppmp_type', 'individual')
-                ->where('ppmp_status', $ppmpTransaction->ppmp_status)
-                ->where('ppmp_version', $ppmpTransaction->ppmp_version)
+                ->where('ppmp_status', $status)
+                ->where('ppmp_version', $version)
                 ->get();
                         
             DB::transaction(function () use ($transactions, $ppmpTransaction, $userId) {
-                $transactionId = $ppmpTransaction->id;
+                $consoTransId = $ppmpTransaction->id;
                 $groupParticulars = $transactions->flatMap(function ($transaction) {
                     return $transaction->particulars;
-                })->groupBy('prod_id')->map(function ($items) use ($transactionId) {
+                })->groupBy('prod_id')->map(function ($items) use ($consoTransId) {
                     $prodPrice = $this->productService->getLatestPriceIdentification($items->first()->prod_id);
                     
                     $qtyFirst = (int) $items->sum('qty_first');
@@ -264,7 +278,7 @@ class PpmpTransactionController extends Controller
                         'qty_second' => $qtySecond,
                         'prod_id' => $items->first()->prod_id,
                         'price_id' => $prodPrice,
-                        'trans_id' => $transactionId,
+                        'trans_id' => $consoTransId,
                     ]);
                 });
 

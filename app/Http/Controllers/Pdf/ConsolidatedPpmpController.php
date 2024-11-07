@@ -68,7 +68,6 @@ class ConsolidatedPpmpController extends Controller
         $pdf->writeHTML($table, true, false, true, false, '');
 
         $table2 = '
-            <p style="font-size: 10px; line-height: 0.0001;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
             <br><br>
             <div></div>
             <table>
@@ -337,9 +336,13 @@ class ConsolidatedPpmpController extends Controller
                             <p style="font-size: 10px; line-height: 0.4;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
                             <br>
                         </td>
-                    </tr>';
+                    </tr>
+                    <tr>
+                        <td width="100%" style="line-height: 0.00001; border:1px solid black;"></td>
+                    </tr>
+                    ';
             
-            $text .= '<tr style="font-size: 9px; font-weight:bold;">
+            $text .= '<tr style="font-size: 10px; font-weight:bold;">
                         <td width="100%" style="line-height: 2; border:1px solid black;">Recapitulation</td>
                    </tr>';
 
