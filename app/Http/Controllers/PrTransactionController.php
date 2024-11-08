@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpTransaction;
+use App\Models\PrParticular;
 use App\Models\PrTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -48,8 +51,13 @@ class PrTransactionController extends Controller
             ];
         })->values()->all();
 
+        $pendingPr = PrTransaction::with('ppmpController', 'updater')
+            ->where('pr_status', 'draft')
+            ->get();
+
         return Inertia::render('Pr/Index', [
             'toPr' =>  $resulToPr,
+            'pendingPr' => $pendingPr,
         ]);
     }
 
@@ -58,58 +66,75 @@ class PrTransactionController extends Controller
      */
     public function store(Request $request)
     {   
+        DB::beginTransaction();
+
         try {
-        $ppmpTransactions = PpmpTransaction::with('particulars')
-            ->where('ppmp_status', 'approved')
-            ->where('ppmp_type', 'individual')
-            ->where('ppmp_year', $request->selectedYear)
-            ->get();
+            $ppmpTransactions = PpmpTransaction::with('particulars')
+                ->where('ppmp_status', 'approved')
+                ->where('ppmp_type', 'individual')
+                ->where('ppmp_year', $request->selectedYear)
+                ->get();
 
-        $priceAdjustment = $ppmpTransactions->first()->price_adjustment;
-        $semester = $request->semester;
-        $qtyAdjustment = (int) $request->qtyAdjust / 100;
+            $consoTransaction = PpmpTransaction::where('ppmp_status', 'approved')
+                ->where('ppmp_type', $request->selectedType)
+                ->where('ppmp_year', $request->selectedYear)
+                ->first();
 
-        $groupParticulars = $ppmpTransactions->flatMap(function ($transaction) {
-            return $transaction->particulars;
-        })->groupBy('prod_id')->map(function ($items) use ($priceAdjustment, $semester, $qtyAdjustment){
-            $prodPrice = (float)$this->productService->getLatestPriceId($items->first()->price_id) * $priceAdjustment;
-            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            $priceAdjustment = $ppmpTransactions->first()->price_adjustment;
+            $semester = $request->semester;
+            $qtyAdjustment = $request->qtyAdjust / 100;
+            $userId = Auth::id();
 
-            $modifiedItems = $items->map(function ($particular) use ($semester, $priceAdjustment, $qtyAdjustment) {
-                $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $particular->transaction->ppmp_year);
-                $qty = $semester == 'qty_first' ? (int) $particular->qty_first : (int) $particular->qty_second;
-        
-                $modifiedQtyFirst = !$isExempted && $particular->qty_first > 1
-                                    ? floor($qty * $qtyAdjustment)
-                                    : $qty;
-        
-                $particular->modifiedQuantity = $modifiedQtyFirst;
-        
-                return $particular;
+            $createPrTransact = PrTransaction::create([
+                'pr_no' => now()->format('YmdHis'),
+                'semester' => $semester,
+                'qty_adjustment' => $qtyAdjustment,
+                'trans_id' => $consoTransaction->id,
+                'created_by' => $userId,
+                'updated_by' => $userId,
+            ]);
+
+            $groupParticulars = $ppmpTransactions->flatMap(function ($transaction) {
+                return $transaction->particulars;
+            })->groupBy('prod_id')->map(function ($items) use ($priceAdjustment, $semester, $qtyAdjustment, $createPrTransact, $userId){
+                $prodPrice = (float)$this->productService->getLatestPriceId($items->first()->price_id) * $priceAdjustment;
+                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+
+                $modifiedItems = $items->map(function ($particular) use ($semester, $priceAdjustment, $qtyAdjustment, $createPrTransact, $userId) {
+                    $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $particular->transaction->ppmp_year);
+                    $qty = $semester == 'qty_first' ? (int) $particular->qty_first : (int) $particular->qty_second;
+            
+                    $modifiedQtyFirst = !$isExempted && $particular->qty_first > 1
+                                        ? floor($qty * $qtyAdjustment)
+                                        : $qty;
+            
+                    $particular->modifiedQuantity = $modifiedQtyFirst;
+            
+                    return $particular;
+                });
+                $toPr = $items->sum('modifiedQuantity');
+
+                if ($toPr > 0) {
+                    PrParticular::create([
+                        'prod_id' => $items->first()->prod_id,
+                        'unitPrice' => (float)$prodPrice,
+                        'unitMeasure' => $this->productService->getProductUnit($items->first()->prod_id),
+                        'qty' => (int)$toPr,
+                        'revised_specs' => $this->productService->getProductName($items->first()->prod_id),
+                        'pr_id' => $createPrTransact->id,
+                        'updated_by' => $userId,
+                    ]);
+                }
             });
-            $toPr = $items->sum('modifiedQuantity');
-            return [
-                'prodId' => $items->first()->prod_id,
-                'prodCode' => $this->productService->getProductCode($items->first()->prod_id),
-                'prodName' => $this->productService->getProductName($items->first()->prod_id),
-                'prodUnit' => $this->productService->getProductUnit($items->first()->prod_id),
-                'prodPrice' => $prodPrice,
-                'qtyFirst' => $items->sum('qty_first'),
-                'qtySecond' => $items->sum('qty_second'),
-                'itemQty' => $toPr,
-            ];
-        });
 
-        $sortedParticulars = $groupParticulars->sortBy('prodCode');
-        dd($sortedParticulars->toArray());
-    } catch (\Exception $e)
-    {
-        Log::error($e->getMessage());
+            DB::commit();
+            return response()->json(['message' => 'Successfully Created.'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'An error occurred while processing your request.'], 500);
+        }
     }
-
-    }
-    // "semester" => "qty_first"
-    // "qtyAdjust" => 75
 
     /**
      * Display the specified resource.
@@ -143,3 +168,15 @@ class PrTransactionController extends Controller
         //
     }
 }
+//to be used for print on pdf | store function
+                // return [
+                //     'prodId' => $items->first()->prod_id,
+                //     'prodCode' => $this->productService->getProductCode($items->first()->prod_id),
+                //     'prodName' => $this->productService->getProductName($items->first()->prod_id),
+                //     'prodUnit' => $this->productService->getProductUnit($items->first()->prod_id),
+                //     'prodPrice' => $prodPrice,
+                //     'qtyFirst' => $items->sum('qty_first'),
+                //     'qtySecond' => $items->sum('qty_second'),
+                //     'itemQty' => $toPr,
+                // ];
+                // return null;

@@ -14,11 +14,16 @@ return new class extends Migration
         Schema::create('pr_particulars', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('prod_id')->nullable();
+            $table->decimal('unitPrice', 10, 2)->nullable();
+            $table->string('unitMeasure')->nullable();
             $table->integer('qty')->default(0);
             $table->text('revised_specs', 2000)->nullable();
             $table->string('status')->default('Pending'); //values: Pending|Partial|Complete
+            $table->string('remarks')->nullable();
             $table->unsignedBigInteger('pr_id')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('pr_id')->references('id')->on('pr_transactions');
+            $table->foreign('updated_by')->references('id')->on('users');
             $table->softDeletes();
             $table->timestamps();
         });

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('pr_transactions', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('pr_no')->nullable();
+            $table->string('semester')->nullable();
             $table->decimal('qty_adjustment', 5, 2)->default(1.00);
             $table->string('pr_status')->default('draft');
             $table->unsignedBigInteger('trans_id')->nullable();

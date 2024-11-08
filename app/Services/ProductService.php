@@ -90,6 +90,17 @@ class ProductService
         return $funds;
     }
 
+    public function getAllProduct_Category()
+    {
+        $categories = Category::with([
+            'items:id,cat_id,item_code,item_name',
+            'items.products:id,item_id,prod_newNo,prod_desc,prod_unit,prod_oldNo',
+        ])
+        ->get(['id', 'cat_code', 'cat_name']);
+
+        return $categories;
+    }
+
     public function getCategoryName($id)
     {
         $categoryName = Category::findOrFail($id);

@@ -15,14 +15,27 @@ class PrParticular extends Model
 
     protected $fillable = [
         'prod_id',
+        'unitPrice',
+        'unitMeasure',
         'qty',
         'revised_specs',
         'status',
         'pr_id',
+        'remarks',
+        'updated_by',
+    ];
+
+    protected $cast = [
+        'updated_by' => 'integer',
     ];
 
     public function purchaseRequest(): BelongsTo
     {
         return $this->belongsTo(PrTransaction::class, 'pr_id');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

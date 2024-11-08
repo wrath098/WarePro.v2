@@ -155,7 +155,7 @@ class ApprovedConsolidatedPpmpController extends Controller
         });
 
         $sortedParticulars = $consolidate->sortBy('prodCode');
-        $funds = $this->productService->getActiveProduct_FundModel();
+        $funds = $this->productService->getAllProduct_FundModel();
 
         foreach ($funds as $fund) {
             if ($fund->categories->isNotEmpty()) {
@@ -333,7 +333,7 @@ class ApprovedConsolidatedPpmpController extends Controller
         $overAllAmount = 0;
         foreach ($recapitulation as $expenses => $fund) {
             $text .= '<tr style="font-size: 9px; font-weight:bold;">
-                    <td width="100%" style="border:1px solid #000;"> <span style="color:#fff;">&nbsp</span> - '. $expenses .'</td>
+                    <td width="100%" style="border:1px solid #000;"> <span style="color:#fff;">&nbsp</span> '. $expenses .'</td>
                 </tr>';
             
             $allAmount = 0;

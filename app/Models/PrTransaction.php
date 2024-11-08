@@ -16,6 +16,7 @@ class PrTransaction extends Model
 
     protected $fillable = [
         'pr_no',
+        'semester',
         'qty_adjustment',
         'pr_status',
         'trans_id',
@@ -38,8 +39,13 @@ class PrTransaction extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function ppmpController(): BelongsTo
+    {
+        return $this->belongsTo(PpmpTransaction::class, 'trans_id');
+    }
+
     public function particulars(): HasMany
     {
-        return $this->hasMany(PrTransaction::class, 'pr_id');
+        return $this->hasMany(PrParticular::class, 'pr_id');
     }
 }

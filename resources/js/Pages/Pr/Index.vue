@@ -3,9 +3,11 @@
     import { reactive, ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
+    import Print from '@/Components/Buttons/Print.vue';
 
     const props = defineProps({
-        toPr: Object
+        toPr: Object,
+        pendingPr: Object
     });
 
     const filteredYear = ref([]);
@@ -109,14 +111,26 @@
                                     <DataTable class="w-full text-gray-900 display">
                                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                             <tr>
-                                                <th scope="col" class="px-6 py-3 w-1/6">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">Office Code</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">PPMP No.</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">PPMP Type</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">Price Adjustment</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">Action/s</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Pr No.</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">PPMP No.</th>
+                                                <th scope="col" class="px-6 py-3 w-4/12">Description</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Created / Update By</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Action/s</th>
                                             </tr>
                                         </thead>
+                                        <tbody>
+                                                <tr v-for="(transaction, index) in pendingPr" :key="transaction.id">
+                                                    <td class="px-6 py-3">{{ index + 1 }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.pr_no }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.ppmp_controller.ppmp_code }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.qty_adjustment }}% of {{ transaction.semester }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.updater.name }}</td>
+                                                    <td class="px-6 py-3">
+                                                        <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: transaction.id})" tooltip="Print"></Print>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
                                         <tbody>
                                         </tbody>
                                     </DataTable>
