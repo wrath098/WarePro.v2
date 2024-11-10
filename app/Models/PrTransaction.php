@@ -44,7 +44,7 @@ class PrTransaction extends Model
         return $this->belongsTo(PpmpTransaction::class, 'trans_id');
     }
 
-    public function particulars(): HasMany
+    public function prParticulars(): HasMany
     {
         return $this->hasMany(PrParticular::class, 'pr_id');
     }

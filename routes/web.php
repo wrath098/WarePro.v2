@@ -9,6 +9,7 @@ use App\Http\Controllers\PpmpTransactionController;
 use App\Http\Controllers\ProductPpmpExceptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PrParticularController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\IndividualPpmpController;
@@ -96,6 +97,9 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
 Route::middleware('auth')->prefix('pr')->group(function () {
     Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
     Route::post('/create-pr', [PrTransactionController::class, 'store'])->name('pr.store.transactions');
+    Route::get('/show-pr-particular/{prTransaction}', [PrTransactionController::class, 'showParticulars'])->name('pr.show.particular');
+    Route::put('/particular/update', [PrParticularController::class, 'update'])->name('pr.particular.update');
+    Route::delete('/particular/trash/{prParticular}', [PrParticularController::class, 'moveToTrash'])->name('pr.particular.movetotrash');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

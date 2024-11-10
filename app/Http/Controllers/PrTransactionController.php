@@ -52,8 +52,17 @@ class PrTransactionController extends Controller
         })->values()->all();
 
         $pendingPr = PrTransaction::with('ppmpController', 'updater')
-            ->where('pr_status', 'draft')
-            ->get();
+            ->where('pr_status', 'pending')
+            ->get()
+            ->map(function ($pr) {
+                if($pr->semester == 'qty_first') {
+                    $pr->semester = 'First Semester';
+                } else {
+                    $pr->semester = 'Second Semester';
+                }
+                $pr->qty_adjustment = $pr->qty_adjustment * 100;
+                return $pr;
+            });
 
         return Inertia::render('Pr/Index', [
             'toPr' =>  $resulToPr,
@@ -139,9 +148,30 @@ class PrTransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(PrTransaction $prTransaction)
+    public function showParticulars(PrTransaction $prTransaction)
     {
-        //
+        $prTransaction->load('prParticulars', 'ppmpController', 'updater');
+
+        if($prTransaction->semester == 'qty_first') {
+            $prTransaction->semester = 'First Semester';
+        } else {
+            $prTransaction->semester = 'Second Semester';
+        }
+        $prTransaction->qty_adjustment = $prTransaction->qty_adjustment * 100;
+
+        $reformatParticular = $prTransaction->prParticulars->map(function ($particular) {
+            $particular->prodCode = $this->productService->getProductCode($particular->prod_id);
+            return $particular;
+        });
+
+        $prTransaction['totalItems'] = $reformatParticular->count();
+        $grandTotal = $reformatParticular->sum(fn($particular) => ((float) $particular->unitPrice * $particular->qty));
+
+        $prTransaction['formattedOverallPrice'] = number_format($grandTotal, 2, '.', ',');
+        return Inertia::render('Pr/PendingParticular', [
+            'pr' =>  $prTransaction,
+            'particulars' => $reformatParticular,
+        ]);
     }
 
     /**

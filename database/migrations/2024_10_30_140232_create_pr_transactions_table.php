@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('pr_no')->nullable();
             $table->string('semester')->nullable();
             $table->decimal('qty_adjustment', 5, 2)->default(1.00);
-            $table->string('pr_status')->default('draft');
+            $table->string('pr_status')->default('pending');
             $table->unsignedBigInteger('trans_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

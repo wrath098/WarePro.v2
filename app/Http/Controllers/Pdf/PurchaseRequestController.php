@@ -128,7 +128,7 @@ class PurchaseRequestController extends Controller
 
         $grandTotal = 0;
         $index = 0;
-        $particulars = $pr->particulars()->get();
+        $particulars = $pr->prParticulars()->get();
 
         $filteredParticular = $particulars->map(function($particular) {
             $totalCost = $particular->qty * (float)$particular->unitPrice;

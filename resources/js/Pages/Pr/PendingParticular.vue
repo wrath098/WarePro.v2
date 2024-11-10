@@ -1,0 +1,351 @@
+<script setup>
+    import { Head, router, usePage } from '@inertiajs/vue3';
+    import { reactive, ref, computed } from 'vue';
+    import { Inertia } from '@inertiajs/inertia';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+    import Sidebar from '@/Components/Sidebar.vue';
+    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import Modal from '@/Components/Modal.vue';
+    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import DangerButton from '@/Components/Buttons/DangerButton.vue';
+    import AddButton from '@/Components/Buttons/AddButton.vue';
+    import EditButton from '@/Components/Buttons/EditButton.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
+    import AddIcon from '@/Components/Buttons/AddIcon.vue';
+    import PrintIcon from '@/Components/Buttons/PrintIcon.vue';
+
+    const props = defineProps({
+        pr: Object,
+        particulars: Object,
+    });
+
+    const modalState = ref(null);
+    const showModal = (modalType) => { modalState.value = modalType; }
+    const closeModal = () => { modalState.value = null; }
+    const isEditPPModalOpen = computed(() => modalState.value === 'edit');
+    const isDropPrModalOpen = computed(() => modalState.value === 'drop');
+    // const isAddPPModalOpen = computed(() => modalState.value === 'add');
+
+    const editParticular = reactive({
+        partId: '',
+        prodId:'',
+        prodCode: '',
+        prodDesc: '',
+        prodPrice:'',
+        prodMeasure: '',
+        prodQty: '',
+    });
+
+    const openEditPpmpModal = (particular) => {
+        editParticular.partId = particular.id;
+        editParticular.prodId = particular.prod_id;
+        editParticular.prodCode = particular.prodCode;
+        editParticular.prodDesc = particular.revised_specs;
+        editParticular.prodPrice = particular.unitPrice;
+        editParticular.prodMeasure = particular.unitMeasure;
+        editParticular.prodQty = particular.qty;
+        modalState.value = 'edit';
+    }
+
+    const dropParticular = reactive({
+        pId: '',
+        user: props.user,
+    });
+
+    const openDropPpmpModal = (particular) => {
+        dropParticular.pId = particular.id;
+        modalState.value = 'drop';
+    }
+
+    const submitForm = (action, url, data) => {
+        let method;
+
+        switch (action) {
+            case 'post':
+                method = 'post';
+                break;
+            case 'put':
+                method = 'put';
+                break;
+            case 'delete':
+                method = 'delete';
+                break;
+            default:
+                throw new Error('Invalid action specified');
+        }
+
+        Inertia[method](url, data, {
+            onSuccess: () => closeModal(),
+        });
+    };
+
+    // const submitAdd = () => submitForm('post', 'create', addParticular);
+    const submitEdit = () => submitForm('put', '../particular/update', editParticular);
+    const submitDrop = () => {
+        const prParticular = dropParticular.pId;
+        submitForm('delete', `../particular/trash/${prParticular}`, null)
+    };
+</script>
+
+<template>
+    <Head title="PPMP" />
+    <div>
+    <Sidebar/>
+    <AuthenticatedLayout>
+        <template #header>
+            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+                <ol class="flex space-x-2">
+                    <li class="text-green-700" aria-current="page">Purchase Request</li> 
+                </ol>
+            </nav>
+            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+                {{ $page.props.flash.message }}
+            </div>
+            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+                {{ $page.props.flash.error }}
+            </div>
+        </template>
+
+        <div class="py-8">
+            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
+                <div class="overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="flex flex-col md:flex-row items-start justify-center">
+                        <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex-1 flex items-start justify-between bg-indigo-600 p-2 rounded-t-xl mb-2">
+                                <div class="flex flex-col gap-1">
+                                    <h2 class="text-lg justify-center font-semibold text-[#ededee] mb-4">PPMP Information</h2>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="rounded-full">
+                                        <PrintIcon :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id})" target="_blank" class="bg-gray-50" ></PrintIcon>
+                                    </div>
+                                    <div class="rounded-full">
+                                        <AddIcon class="bg-gray-50"></AddIcon>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mx-2">                               
+                                <div class="mb-4 px-2">
+                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">PR No.:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_no }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">PPMP No.:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.ppmp_controller.ppmp_code }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="ppmpType" class="block text-sm font-medium text-[#07074D] mb-1">Description:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.qty_adjustment }}% of {{  pr.semester }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Price:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_status }}</p>
+                                </div>
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.updater.name }}</p>
+                                </div>       
+                                
+                                <div class="mb-4 px-2">
+                                    <label for="totalItems" class="block text-sm font-medium text-[#07074D] mb-1">Total Items Listed:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.totalItems }}</p>
+                                </div>
+
+                                <div class="mb-4 px-2">
+                                    <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Total Amount:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.formattedOverallPrice }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
+                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                                <div class="relative overflow-x-auto md:overflow-hidden">
+                                    <DataTable class="w-full text-gray-900 display">
+                                        <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
+                                            <tr class="text-center">
+                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Stock No.</th>
+                                                <th scope="col" class="px-6 py-3 w-3/12">Description</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Unit of Measure</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Quantity</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Price</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Total Amount</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(particular, index) in particulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
+                                                <td class="px-6 py-3">{{ ++index }}</td>
+                                                <td class="px-6 py-3">{{ particular.prodCode }}</td>
+                                                <td class="px-6 py-3">{{ particular.revised_specs }}</td>
+                                                <td class="px-6 py-3">{{ particular.unitMeasure }}</td>
+                                                <td class="px-6 py-3">{{ particular.qty }}</td>
+                                                <td class="px-6 py-3">{{ particular.unitPrice }}</td>
+                                                <td class="px-6 py-3">{{ particular.qty * particular.unitPrice }}</td>
+                                                <td class="px-6 py-3 text-center">
+                                                    <EditButton @click="openEditPpmpModal(particular)" tooltip="Edit"/>
+                                                    <RemoveButton @click="openDropPpmpModal(particular)" tooltip="Remove"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </DataTable>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- <Modal :show="isAddPPModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitAdd">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Additional Particular</h3>
+                            <p class="text-sm text-gray-500"> Enter the details for the add Product/Particular you wish to add.</p>
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-500"> Product No: </p>
+                                <input v-model="addParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" required>
+                            </div>
+                            <div class="mt-5">
+                                <p class="text-sm text-gray-500"> Quantity: </p>
+                                <input v-model="addParticular.firstQty" type="number" id="firstQty" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="First Semester" required>
+                                <input v-model="addParticular.secondQty" type="number" id="secondQty" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Second Semester">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton>
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Confirm 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal> -->
+        <Modal :show="isEditPPModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitEdit">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update Quantity</h3>
+                            <p class="text-sm text-gray-500"> Enter the quantity you want to update on the input field.</p>
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-500"> Product Information: </p>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
+                                        <span class="text-gray-600 text-sm font-semibold">Code: </span>
+                                    </div>
+                                    <input v-model="editParticular.prodCode" type="text" id="code" class="mt-2 pl-20 p-2.5 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" readonly>
+                                </div>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
+                                        <span class="text-gray-600 text-sm font-semibold">Description: </span>
+                                    </div>
+                                    <textarea v-model="editParticular.prodDesc" type="text" id="description" class="pl-20 p-2.5 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500"></textarea>
+                                </div>
+                                <div class="md:flex">
+                                    <div class="relative mt-1 md:w-1/2 md:mr-1">
+                                        <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
+                                            <span class="text-gray-600 text-sm font-semibold">Unit: </span>
+                                        </div>
+                                        <input v-model="editParticular.prodMeasure" type="text" id="unit" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                    </div>
+                                    <div class="relative mt-1 md:w-1/2 md:ml-1">
+                                        <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
+                                            <span class="text-gray-600 text-sm font-semibold">Price: </span>
+                                        </div>
+                                        <input v-model="editParticular.prodPrice" type="number" id="price" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-5">
+                                <p class="text-sm text-gray-500"> Quantity: </p>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
+                                        <span class="text-gray-600 text-sm font-semibold">1st Qty: </span>
+                                    </div>
+                                    <input v-model="editParticular.prodQty" type="number" id="quantity" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton>
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Confirm 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isDropPrModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitDrop">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
+                        </svg>
+
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Move to Trash!</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton>
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </Modal>
+    </AuthenticatedLayout>
+    </div>
+</template>
+ 

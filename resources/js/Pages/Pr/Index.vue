@@ -4,6 +4,7 @@
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import Print from '@/Components/Buttons/Print.vue';
+    import ViewButton from '@/Components/Buttons/ViewButton.vue';
 
     const props = defineProps({
         toPr: Object,
@@ -15,7 +16,7 @@
         selectedType: '',
         selectedYear: '',
         semester: '',
-        qtyAdjust: '',
+        qtyAdjust: 70,
     });
 
     const onTypeChange = (context) => {
@@ -94,7 +95,8 @@
                                         max="100"
                                         placeholder="Enter from 50 to 100"
                                         class="w-full rounded-md border border-[#e0e0e0] bg-white py-2 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                                    />
+                                        readonly
+                                        />
                                 </div>
 
                                 <div>
@@ -114,9 +116,9 @@
                                                 <th scope="col" class="px-6 py-3 w-1/12">No#</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">Pr No.</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">PPMP No.</th>
-                                                <th scope="col" class="px-6 py-3 w-4/12">Description</th>
+                                                <th scope="col" class="px-6 py-3 w-3/12">Description</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">Created / Update By</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Action/s</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -127,6 +129,7 @@
                                                     <td class="px-6 py-3">{{ transaction.qty_adjustment }}% of {{ transaction.semester }}</td>
                                                     <td class="px-6 py-3">{{ transaction.updater.name }}</td>
                                                     <td class="px-6 py-3">
+                                                        <ViewButton :href="route('pr.show.particular', { prTransaction: transaction.id})" tooltip="View"></ViewButton>
                                                         <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: transaction.id})" tooltip="Print"></Print>
                                                     </td>
                                                 </tr>
