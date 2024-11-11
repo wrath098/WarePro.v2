@@ -168,7 +168,7 @@ class PurchaseRequestController extends Controller
                                         <td width="50px">' . $particular['prodCode'] . '</td>
                                         <td width="40px">' . $particular['prodUnit']. '</td>
                                         <td width="240px" style="text-align: left;">('. $item->item_name .') ' . $particular['prodName'] . '</td>
-                                        <td width="39px" style="text-align: right;">' . $particular['qty'] . '</td>
+                                        <td width="39px" style="text-align: right;">' . number_format($particular['qty'], 0, '.', ',') . '</td>
                                         <td width="50px" style="text-align: right;">' . $particular['prodPrice'] . '</td>
                                         <td width="70px" style="text-align: right;">' . number_format($particular['totalCost'], 2, '.', ',') . '</td>
                                     </tr>';
@@ -188,6 +188,51 @@ class PurchaseRequestController extends Controller
                         <td width="360px"><b>GRAND TOTAL</b></td>
                         <td width="159px"><u>' . number_format($grandTotal, 2, '.', ',') . '</u></td>
                     </tr>';
+        $text .= '<tr style="font-size: 9px; font-weight:bold;">
+                    <td width="100%" style="border:1px solid #000;"><span style="color:white;">&nbsp</span>Purpose: </td>
+                </tr>
+                <tr style="font-size: 9px; font-weight:bold;">
+                    <td width="100%" height="30px" style="text-align:center;"><br/>Office supplies for common use.</td>
+                </tr>';
+        $text .= '<tr style="font-size:9px">
+                    <td width="80px" style="border:1px solid #000; border-bottom:1px solid #fff;"></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff;">Requested by:</td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff;">Cash Available: </td>
+                    <td width="159px" style="border:1px solid #000; border-bottom:1px solid #fff;">Approved by:</td>
+                </tr>
+                
+                <tr style="font-size: 9px;">
+                    <td width="80px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                    <td width="159px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                </tr>
+                <tr style="font-size: 9px; font-weight:bold;">
+                    <td width="80px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"><b>Signature</b></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                    <td width="159px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"></td>
+                </tr>
+                <tr style="font-size: 9px; font-weight:bold;">
+                    <td width="80px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff;"><b>Printed Name</b></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; text-align:center;">JENNIFFER G. BAHOD</td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; text-align:center;">IMELDA I. MACANES</td>
+                    <td width="159px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; text-align:center;">MELCHOR D. DICLAS, M.D.</td>
+                </tr>
+                <tr style="font-size: 8px;">
+                    <td width="80px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; font-size: 9px;"><b>Designation</b></td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; text-align:center;">Provincial General Services Officer</td>
+                    <td width="140px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; text-align:center;">Provincial Treasurer</td>
+                    <td width="159px" style="border:1px solid #000; border-bottom:1px solid #fff; border-top:1px solid #fff; text-align:center;">Provincial Governor</td>
+                </tr>
+                <tr style="font-size: 9px; font-weight:bold;">
+                    <td width="80px" style="border:1px solid #000; border-top:1px solid #fff; font-size: 9px;"><b>Date</b></td>
+                    <td width="140px" style="border:1px solid #000; border-top:1px solid #fff; text-align:center;"></td>
+                    <td width="140px" style="border:1px solid #000; border-top:1px solid #fff; text-align:center;"></td>
+                    <td width="159px" style="border:1px solid #000; border-top:1px solid #fff; text-align:center;"></td>
+                </tr>
+
+                ';
         
         return $text;
     }
