@@ -74,46 +74,39 @@ class PrTransactionController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {   
+    { 
         DB::beginTransaction();
+        Log::info($request->all());
 
         try {
-            $ppmpTransactions = PpmpTransaction::with('particulars')
-                ->where('ppmp_status', 'approved')
-                ->where('ppmp_type', 'individual')
-                ->where('ppmp_year', $request->selectedYear)
-                ->get();
-
-            $consoTransaction = PpmpTransaction::where('ppmp_status', 'approved')
-                ->where('ppmp_type', $request->selectedType)
-                ->where('ppmp_year', $request->selectedYear)
-                ->first();
+            $ppmpTransactions = $this->getIndividualWithItems($request->selectedYear);
+            $consoTransaction = $this->getConsolidatedTransactionDetails($request);
 
             $priceAdjustment = $ppmpTransactions->first()->price_adjustment;
             $semester = $request->semester;
             $qtyAdjustment = $request->qtyAdjust / 100;
             $userId = Auth::id();
 
-            $createPrTransact = PrTransaction::create([
-                'pr_no' => now()->format('YmdHis'),
+            $purchaseRequestInformation = [
                 'semester' => $semester,
                 'qty_adjustment' => $qtyAdjustment,
                 'trans_id' => $consoTransaction->id,
-                'created_by' => $userId,
-                'updated_by' => $userId,
-            ]);
+                'user' => $userId,
+            ];
 
-            $groupParticulars = $ppmpTransactions->flatMap(function ($transaction) {
+            $createPrTransact = $this->createNewPurchaseRequest($purchaseRequestInformation);
+    
+            $groupParticulars = $ppmpTransactions->flatMap(function ($transaction) use ($consoTransaction) {
                 return $transaction->particulars;
-            })->groupBy('prod_id')->map(function ($items) use ($priceAdjustment, $semester, $qtyAdjustment, $createPrTransact, $userId){
+            })->groupBy('prod_id')->map(function ($items) use ($consoTransaction, $priceAdjustment, $semester, $qtyAdjustment, $createPrTransact, $userId){
                 $prodPrice = (float)$this->productService->getLatestPriceId($items->first()->price_id) * $priceAdjustment;
                 $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
 
                 $modifiedItems = $items->map(function ($particular) use ($semester, $priceAdjustment, $qtyAdjustment, $createPrTransact, $userId) {
                     $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $particular->transaction->ppmp_year);
-                    $qty = $semester == 'qty_first' ? (int) $particular->qty_first : (int) $particular->qty_second;
+                    $qty = $semester === 'qty_first' ? (int) $particular->qty_first : (int) $particular->qty_second;
             
-                    $modifiedQtyFirst = !$isExempted && $particular->qty_first > 1
+                    $modifiedQtyFirst = !$isExempted && $qty > 1
                                         ? floor($qty * $qtyAdjustment)
                                         : $qty;
             
@@ -121,14 +114,18 @@ class PrTransactionController extends Controller
             
                     return $particular;
                 });
-                $toPr = $items->sum('modifiedQuantity');
+                $productQtyForPr = $items->sum('modifiedQuantity');
+                $totalQuantityOnPurchases = $this->getAllProductQuantityFromPurchaseRequest($consoTransaction, $items->first()->prod_id);
+                $totalQuantityAvailableToPurchase = $this->getAllProductQuantityFromPpmp($consoTransaction, $items->first()->prod_id);
 
-                if ($toPr > 0) {
+                $calcAvailability = $totalQuantityAvailableToPurchase - $totalQuantityOnPurchases;
+
+                if ($productQtyForPr > 0 && $productQtyForPr <= $calcAvailability) {
                     PrParticular::create([
                         'prod_id' => $items->first()->prod_id,
                         'unitPrice' => (float)$prodPrice,
                         'unitMeasure' => $this->productService->getProductUnit($items->first()->prod_id),
-                        'qty' => (int)$toPr,
+                        'qty' => (int)$productQtyForPr,
                         'revised_specs' => $this->productService->getProductName($items->first()->prod_id),
                         'pr_id' => $createPrTransact->id,
                         'updated_by' => $userId,
@@ -145,9 +142,6 @@ class PrTransactionController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function showParticulars(PrTransaction $prTransaction)
     {
         $prTransaction->load('prParticulars', 'ppmpController', 'updater');
@@ -174,39 +168,87 @@ class PrTransactionController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(PrTransaction $prTransaction)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, PrTransaction $prTransaction)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(PrTransaction $prTransaction)
     {
         //
     }
+
+    private function getIndividualWithItems($year) {
+        $results = PpmpTransaction::with('particulars')
+                ->where('ppmp_status', 'approved')
+                ->where('ppmp_type', 'individual')
+                ->where('ppmp_year', $year)
+                ->get();
+        return $results ?? '';
+    }
+
+    private function getConsolidatedTransactionDetails($request) {
+        $result = PpmpTransaction::where('ppmp_status', 'approved')
+                ->where('ppmp_type', $request->selectedType)
+                ->where('ppmp_year', $request->selectedYear)
+                ->first();
+
+        return $result ?? '';
+    }
+
+    private function createNewPurchaseRequest($request) {
+        return PrTransaction::create([
+            'pr_no' => now()->format('YmdHis'),
+            'semester' => $request['semester'],
+            'qty_adjustment' => $request['qty_adjustment'],
+            'trans_id' => $request['trans_id'],
+            'created_by' => $request['user'],
+            'updated_by' => $request['user'],
+        ]);
+    }
+
+    private function getAllProductQuantityFromPurchaseRequest($ppmpTransaction, $id) {
+        $ppmpTransaction->load(['purchaseRequests.prParticulars' => function($query) use ($id) {
+            $query->where('prod_id', $id)
+                ->whereIn('status', ['Pending', 'Partial', 'Completed']);
+        }]);
+
+        $quantities = $ppmpTransaction->purchaseRequests->flatMap(function ($purchaseRequest) {
+            return $purchaseRequest->prParticulars->pluck('qty');
+        })->sum();
+
+        return $quantities;
+    }
+
+    private function getAllProductQuantityFromPpmp($ppmpTransaction, $id) {
+        $officeRequests = PpmpTransaction::with(['particulars' => function($query) use ($id) {
+                    $query->where('prod_id', $id);
+                }])
+                ->where('ppmp_status', 'approved')
+                ->where('ppmp_type', 'individual')
+                ->where('ppmp_year', $ppmpTransaction->ppmp_year)
+                ->get();
+
+        $quantities = $officeRequests->flatMap(function ($offices) use ($ppmpTransaction) {
+            return $offices->particulars->map(function ($particular) use ($ppmpTransaction) {
+                $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $ppmpTransaction->ppmp_year);
+                $firstQty = !$isExempted && $particular->qty_first > 1
+                            ? floor($particular->qty_first * 0.70)
+                            : $particular->qty_first;
+                $secondQty = !$isExempted && $particular->qty_second > 1
+                            ? floor($particular->qty_second * 0.70)
+                            : $particular->qty_second;
+                return [$firstQty, $secondQty];
+            });
+        });
+
+        $totalQuantity = $quantities->flatten()->sum();
+
+        return $totalQuantity;
+    }
 }
-//to be used for print on pdf | store function
-                // return [
-                //     'prodId' => $items->first()->prod_id,
-                //     'prodCode' => $this->productService->getProductCode($items->first()->prod_id),
-                //     'prodName' => $this->productService->getProductName($items->first()->prod_id),
-                //     'prodUnit' => $this->productService->getProductUnit($items->first()->prod_id),
-                //     'prodPrice' => $prodPrice,
-                //     'qtyFirst' => $items->sum('qty_first'),
-                //     'qtySecond' => $items->sum('qty_second'),
-                //     'itemQty' => $toPr,
-                // ];
-                // return null;

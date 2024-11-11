@@ -56,4 +56,9 @@ class PpmpTransaction extends Model
     {
         return $this->hasMany(PpmpConsolidated::class, 'trans_id');
     }
+
+    public function purchaseRequests(): HasMany
+    {
+        return $this->hasMany(PrTransaction::class, 'trans_id');
+    }
 }
