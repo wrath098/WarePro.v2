@@ -52,7 +52,7 @@ class ApprovedConsolidatedPpmpController extends Controller
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>PROJECT PROCUREMENT MANAGEMENT PLAN '. $ppmp->ppmp_year.'</h4>
                     <h5>OFFICE & JANITORIAL SUPPLIES</h5>
-                    <h6>'. ucfirst($ppmp->ppmp_status) .'</h6>
+                    <h6></h6>
                 </div>
             </div>
             <br>

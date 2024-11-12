@@ -173,7 +173,12 @@
                         <Bag/>
                         <span class="ml-3">Purchase Request</span>
                     </SidebarLink>
+                    <SidebarLink :href="route('pr.form.step1')" :active="false">
+                        <Bag/>
+                        <span class="ml-3">Create</span>
+                    </SidebarLink>
                 </li>
+                
                 <li>
                     <div class="px-5 pt-2">
                         <div class="flex flex-row items-center">
