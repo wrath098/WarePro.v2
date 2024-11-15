@@ -211,20 +211,36 @@ class PpmpTransactionController extends Controller
                 'office' => null,
                 'user' => Auth::id(),
             ];
-            
+
             $existingConsoPpmp = $this->validateConsoPpmp($data);
-            if ($existingConsoPpmp) {
-                return redirect()->back()->with([
-                    'error' => 'Consolidated details already exist! Please check Transaction No.' . $this->validateConsoPpmp($data)->ppmp_code
-                ]);
-            }
+            $data['newVersion'] = $existingConsoPpmp ? $existingConsoPpmp->ppmp_version + 1 : 1;
 
             DB::transaction(function () use ($data) {
-                $createConsolidation = $this->createPpmpTransaction($data);
+                $createConsolidation = $this->createPpmpTransaction($data);                
+                $individualPpmp = $this->getIndividualPpmpTransactionsWithParticulars($data);
+                $groupParticulars = $individualPpmp->flatMap(function ($transaction) {
+                    return $transaction->particulars;
+                })->groupBy('prod_id')->map(function ($items) use ($createConsolidation, $data) {
+                    $prodPrice = $this->productService->getLatestPriceIdentification($items->first()->prod_id);
+                    
+                    $qtyFirst = (int) $items->sum('qty_first');
+                    $qtySecond = (int) $items->sum('qty_second');
+
+                    PpmpConsolidated::create([
+                        'qty_first' => $qtyFirst,
+                        'qty_second' => $qtySecond,
+                        'prod_id' => $items->first()->prod_id,
+                        'price_id' => $prodPrice,
+                        'trans_id' => $createConsolidation->id,
+                        'created_by' => $data['user'],
+                        'updated_by' => $data['user'],
+                    ]);
+
+                });
                 $createConsolidation->update([
                     'price_adjustment' => $data['basePrice'],
                     'qty_adjustment' => $data['qtyAdjust'],
-                    'ppmp_version' => $data['version'],
+                    'ppmp_version' => $data['newVersion'],
                 ]);
             });
     
@@ -320,73 +336,36 @@ class PpmpTransactionController extends Controller
 
     public function showConsolidatedPpmp(PpmpTransaction $ppmpTransaction) {
         $totalAmount = 0;
-        $ppmpTransaction->load('updater');
+        $ppmpTransaction->load('updater', 'consolidated');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
 
-        if ($ppmpTransaction->ppmp_status == 'draft') {
-            $individualPppmp = PpmpTransaction::with('particulars')
-                ->where('ppmp_year', $ppmpTransaction->ppmp_year)
-                ->where('ppmp_type', 'individual')
-                ->where('ppmp_status', $ppmpTransaction->ppmp_status)
-                ->where('ppmp_version', $ppmpTransaction->ppmp_version)
-                ->get();
-
-            $groupParticulars = $individualPppmp->flatMap(function ($transaction) {
-                return $transaction->particulars;
-            })->groupBy('prod_id')->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
-                $prodPrice = (float)$this->productService->getLatestPrice($items->first()->prod_id) * $ppmpTransaction->price_adjustment;
-                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
-                
-                $qtyFirst = (int) $items->sum('qty_first');
-                $qtySecond = (int) $items->sum('qty_second');
-
-                $firstAmount = $qtyFirst * $prodPrice;
-                $secondAmount = $qtySecond * $prodPrice;
-
-                $totalAmount += $firstAmount + $secondAmount;
-
-                return [
-                    'prodId' => $items->first()->prod_id,
-                    'prodCode' => $this->productService->getProductCode($items->first()->prod_id),
-                    'prodName' => $this->productService->getProductName($items->first()->prod_id),
-                    'prodUnit' => $this->productService->getProductUnit($items->first()->prod_id),
-                    'prodPrice' => number_format($prodPrice, 2,'.','.'),
-                    'qtyFirst' => $qtyFirst,
-                    'qtySecond' => $qtySecond,
-                ];
-            });
-
-            $sortedParticulars = $groupParticulars->sortBy('prodCode');
-
-            $ppmpTransaction->transactions = $sortedParticulars->values();
-            $ppmpTransaction->totalItems = $sortedParticulars->count();
-            $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
-
-            return Inertia::render('Ppmp/Consolidated', ['ppmp' =>  $ppmpTransaction, 'user' => Auth::id(),]);
-        }
-
-        $consolidatedPpmp = $ppmpTransaction->consolidated->map(function ($particular) use ($ppmpTransaction) {
-            $prodPrice = (float)$this->productService->getLatestPriceId($particular->price_id) * $ppmpTransaction->price_adjustment;
+        $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
+            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
             $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            
+            $firstAmount = $items->qty_first * $prodPrice;
+            $secondAmount = $items->qty_second * $prodPrice;
+
+            $qty = $items->qty_first + $items->qty_second;
+            $amount = $firstAmount + $secondAmount;
+            $totalAmount += $amount;
 
             return [
-                'prodId' => $particular->prod_id,
-                'prodCode' => $this->productService->getProductCode($particular->prod_id),
-                'prodName' => $this->productService->getProductName($particular->prod_id),
-                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'pId' => $items->id, 
+                'prodId' => $items->prod_id,
+                'prodCode' => $this->productService->getProductCode($items->prod_id),
+                'prodName' => $this->productService->getProductName($items->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($items->prod_id),
                 'prodPrice' => number_format($prodPrice, 2,'.','.'),
-                'qtyFirst' => $particular->qty_first,
-                'qtySecond' => $particular->qty_second,
+                'qtyFirst' => number_format($items->qty_first, 0, '.', ','),
+                'qtySecond' => number_format($items->qty_second, 0, '.', ','),
+                'totalQty' => number_format($qty, 0, '.', ','),
+                'amount' => number_format($amount, 2, '.', ','),
             ];
         });
-        
-        $totalAmount = $consolidatedPpmp->reduce(function ($carry, $item) {
-            $price = (float)str_replace(',', '', $item['prodPrice']);
-            $totalQty = $item['qtyFirst'] + $item['qtySecond'];
-            return $carry + ($price * $totalQty);
-        }, 0);
 
-        $sortedParticulars = $consolidatedPpmp->sortBy('prodCode');
+        $sortedParticulars = $groupParticulars->sortBy('prodCode');
+
         $ppmpTransaction->transactions = $sortedParticulars->values();
         $ppmpTransaction->totalItems = $sortedParticulars->count();
         $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
@@ -465,6 +444,7 @@ class PpmpTransactionController extends Controller
                 'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
                 'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
                 'version' => $transaction->ppmp_version ?? 'N/A',
+                'createdAt' => $transaction->created_at->format('Y-m-d H:i:s'),
                 'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
             ];
         });
@@ -556,12 +536,21 @@ class PpmpTransactionController extends Controller
         $ppmpExist = PpmpTransaction::where('ppmp_type', 'consolidated')
             ->where('ppmp_year', $validatedData['ppmpYear'])
             ->where('ppmp_status', $validatedData['ppmpStatus'])
-            ->where('price_adjustment', $validatedData['basePrice'])
-            ->where('qty_adjustment', $validatedData['qtyAdjust'])
             ->orderBy('created_at', 'desc')
             ->first();
 
         return $ppmpExist;
+    }
+
+    private function getIndividualPpmpTransactionsWithParticulars($request) {
+        $transactions = PpmpTransaction::with('particulars')
+        ->where('ppmp_year', $request['ppmpYear'])
+        ->where('ppmp_type', 'individual')
+        ->where('ppmp_status', $request['ppmpStatus'])
+        ->where('ppmp_version', $request['version'])
+        ->get();
+
+        return $transactions;
     }
 
     private function getConsoVersion(array $validatedData)

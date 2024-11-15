@@ -18,9 +18,13 @@ return new class extends Migration
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('price_id')->nullable();
             $table->unsignedBigInteger('trans_id')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('prod_id')->references('id')->on('products');
             $table->foreign('price_id')->references('id')->on('product_prices');
             $table->foreign('trans_id')->references('id')->on('ppmp_transactions');
+            $table->foreign('created_by')->references('id')->on('users');
+            $table->foreign('updated_by')->references('id')->on('users');
             $table->softDeletes();
             $table->timestamps();
         });

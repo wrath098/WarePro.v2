@@ -19,8 +19,15 @@ class PpmpConsolidated extends Model
         'prod_id',
         'price_id',
         'trans_id',
+        'created_by', 
+        'updated_by',
     ];
 
+    protected $casts = [
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+    ];
+    
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(PpmpTransaction::class, 'trans_id');

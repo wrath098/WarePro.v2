@@ -91,12 +91,13 @@
                                             <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                                 <tr class="text-center">
                                                     <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                    <th scope="col" class="px-6 py-3 w-2/12">Transaction No.</th>
+                                                    <th scope="col" class="px-6 py-3 w-1/12">Transaction No.</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">PPMP Year</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">Version</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">Price Adjustment</th>
                                                     <th scope="col" class="px-6 py-3 w-1/12">Quantity Adjustment</th>
                                                     <th scope="col" class="px-6 py-3 w-2/12">Created/Updated By</th>
+                                                    <th scope="col" class="px-6 py-3 w-1/12">Date Created/Updated</th>
                                                     <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
                                                 </tr>
                                             </thead>
@@ -106,9 +107,10 @@
                                                     <td class="px-6 py-3">{{ transaction.code }}</td>
                                                     <td class="px-6 py-3">{{ transaction.ppmpYear }}</td>
                                                     <td class="px-6 py-3">v.{{ transaction.version }}</td>
-                                                    <td class="px-6 py-3">{{ transaction.priceAdjust }}</td>
-                                                    <td class="px-6 py-3">{{ transaction.qtyAdjust }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.priceAdjust }}%</td>
+                                                    <td class="px-6 py-3">{{ transaction.qtyAdjust }}%</td>
                                                     <td class="px-6 py-3">{{ transaction.updatedBy }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.createdAt }}</td>
                                                     <td class="px-6 py-3" v-if="props.ppmp.status == 'Draft'">
                                                         <ViewButton :href="route('conso.ppmp.show', { ppmpTransaction: transaction.id })" tooltip="View"/>
                                                         <RemoveButton @click="''" tooltip="Trash"/>

@@ -3,63 +3,45 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpConsolidated;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PpmpConsolidatedController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $productService;
+
+    public function __construct(ProductService $productService)
     {
-        //
+        $this->productService = $productService;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(PpmpConsolidated $ppmpConsolidated)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PpmpConsolidated $ppmpConsolidated)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, PpmpConsolidated $ppmpConsolidated)
     {
-        //
+        try {
+            $ppmpConsolidated->update([
+                'qty_first' => (int)$request->firstQty, 
+                'qty_second' => (int)$request->secondQty,
+                'updated_by' => $request->user,
+            ]);
+            return redirect()->back()->with(['message' => 'Product No. '. $request->prodCode . ' updated successfully!']);
+        } catch(\Exception $e) {
+            return redirect()->back()->with(['error' => 'Product No. '. $request->prodCode . ' updating failed!']);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(PpmpConsolidated $ppmpConsolidated)
     {
-        //
+        $prodCode = $this->productService->getProductCode($ppmpConsolidated->prod_id);
+        try {
+            $ppmpConsolidated->update([
+                'updated_by' => Auth::id(),
+            ]);
+
+            $ppmpConsolidated->delete();
+            return redirect()->back()->with(['message' => 'Product No. '. $prodCode . ' successfully moved to trash!']);
+        } catch(\Exception $e) {
+            return redirect()->back()->with(['error' => 'Product No. '. $prodCode . ' failed to move to trash!']);
+        }
     }
 }

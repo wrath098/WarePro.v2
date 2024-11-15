@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\PpmpConsolidatedController;
 use App\Http\Controllers\PpmpParticularController;
 use App\Http\Controllers\PpmpTransactionController;
 use App\Http\Controllers\ProductPpmpExceptionController;
@@ -92,6 +93,8 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
     Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
     Route::put('/individual-ppmp/edit', [PpmpParticularController::class, 'update'])->name('indiv.particular.update');
+    Route::put('/consolidated-particular/update/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'update'])->name('conso-particular-update');
+    Route::delete('/consolidated-particular/destroy/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'destroy'])->name('conso-particular-update');
     Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 });
 

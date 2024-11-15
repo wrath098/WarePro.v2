@@ -10,10 +10,13 @@
     });
 
     const filteredYear = ref([]);
+    const filteredPpmpList = ref([]);
     const generatePr = reactive({
         selectedType: '',
         selectedYear: '',
+        selectedppmpCode: '',
         semester: '',
+        prDesc:'',
         qtyAdjust: 70,
     });
 
@@ -21,6 +24,13 @@
         const type = props.toPr.find(typ => typ.ppmp_type === context.selectedType);
         filteredYear.value = type ? type.years : [];
         generatePr.selectedYear = '';
+    };
+
+    const onYearChange = (context) => {
+        const type = props.toPr.find(typ => typ.ppmp_type === context.selectedType);
+        const year = type ? type.years.find(yer => yer.ppmp_year === context.selectedYear) : null;
+        filteredPpmpList.value = year ? year.ppmpNo : [];
+        generatePr.selectedppmpCode = '';
     };
 
     const nextStep = () => {
@@ -64,20 +74,34 @@
                                                 </option>
                                             </select>
 
-                                            <select v-model="generatePr.selectedYear" v-if="filteredYear.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                            <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" v-if="filteredYear.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                                 <option value="" disabled>Please choose the PPMP Year</option>
                                                 <option v-for="year in filteredYear" :key="year.ppmp_year" :value="year.ppmp_year">
                                                     {{ year.ppmp_year }}
                                                 </option>
-                                            </select>  
+                                            </select>
+                                            
+                                            <select v-model="generatePr.selectedppmpCode" v-if="filteredPpmpList.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                                <option value="" disabled>Please choose the Consolidated PPMP</option>
+                                                <option v-for="code in filteredPpmpList" :key="code" :value="code">
+                                                    {{ code }}
+                                                </option>
+                                            </select>
                                         </div>
 
                                         <div v-if="generatePr.selectedType == 'consolidated'" class="mt-5" >
-                                            <select v-model="generatePr.semester" class="mb-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                            <select v-model="generatePr.semester" class="mb-1 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                                 <option value="" disabled>Select Semester</option>
                                                 <option value="qty_first">1st</option>
                                                 <option value="qty_second">2nd</option>
                                             </select> 
+
+                                            <select v-model="generatePr.prDesc" class="mb-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                                <option value="" disabled>Purchase Request Description</option>
+                                                <option value="nc">Non-Contract</option>
+                                                <option value="dc">Direct Contract</option>
+                                                <option value="psdbm">PS-DBM</option>
+                                            </select>  
 
                                             <p class="text-sm text-gray-500"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span></p>
                                             <input 

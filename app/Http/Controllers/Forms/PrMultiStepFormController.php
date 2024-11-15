@@ -23,24 +23,23 @@ class PrMultiStepFormController extends Controller
 
     public function stepOne(): Response
     {
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year')
+        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code')
         ->where(function($query) {
-            $query->where('ppmp_type', 'consolidated')
-                ->where('ppmp_status', 'approved');
+            $query->where('ppmp_type', 'consolidated');
             })
             ->orWhere(function($query) {
                     $query->where('ppmp_type', 'emergency');
                 })
             ->get();
 
-        
         $resulToPr = $transactions->groupBy('ppmp_type')->map(function ($group) {
             $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
                 return [
                     'ppmp_year' => $yearGroup->first()->ppmp_year,
+                    'ppmpNo' => $yearGroup->pluck('ppmp_code')->all(),
                 ];
             })->values()->all();
-        
+            
             return [
                 'ppmp_type' => $group->first()->ppmp_type,
                 'years' => $years
@@ -54,62 +53,33 @@ class PrMultiStepFormController extends Controller
 
     public function stepTwo(Request $request)
     {
-        $availableItems= [];
-        $ppmpTransactions = $this->getIndividualWithItems($request->selectedYear);
-        $consoTransaction = $this->getConsolidatedTransactionDetails($request);
-
-        $priceAdjustment = $ppmpTransactions->first()->price_adjustment;
-        $semester = $request->semester;
-        $qtyAdjustment = $request->qtyAdjust / 100;
-        $userId = Auth::id();
-        $prod_id=1;
-        dd($this->getAllProductQuantityFromPurchaseRequestSemesterBased($consoTransaction, $prod_id, $request->semester)->toArray());
-        $purchaseRequestInformation = [
-            'semester' => $semester,
-            'qty_adjustment' => $qtyAdjustment,
-            'trans_id' => $consoTransaction->id,
-            'user' => $userId,
-        ];
- 
-        $groupParticulars = $ppmpTransactions->flatMap(function ($transaction) {
-            return $transaction->particulars;
-        })->groupBy('prod_id')->map(function ($items) use ($consoTransaction, $priceAdjustment, $semester, $qtyAdjustment){
-            $prodPrice = (float)$this->productService->getLatestPriceId($items->first()->price_id) * $priceAdjustment;
+        dd($request->toArray());
+        $transaction = $this->getConsolidatedTransactionWithParticulars($request->selectedppmpCode);
+        $result = $transaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
+            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
             $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            
+            $firstAmount = $items->qty_first * $prodPrice;
+            $secondAmount = $items->qty_second * $prodPrice;
 
-            $modifiedItems = $items->map(function ($particular) use ($semester, $qtyAdjustment) {
-                $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $particular->transaction->ppmp_year);
-                $qty = $semester === 'qty_first' ? (int) $particular->qty_first : (int) $particular->qty_second;
-        
-                $modifiedQtyFirst = !$isExempted && $qty > 1
-                                    ? floor($qty * $qtyAdjustment)
-                                    : $qty;
-        
-                $particular->modifiedQuantity = $modifiedQtyFirst;
-        
-                return $particular;
-            });
+            $qty = $items->qty_first + $items->qty_second;
+            $amount = $firstAmount + $secondAmount;
+            $totalAmount += $amount;
 
-            $productQtyForPr = $items->sum('modifiedQuantity');
-            $totalQuantityOnPurchases = $this->getAllProductQuantityFromPurchaseRequest($consoTransaction, $items->first()->prod_id);
-            $totalQuantityAvailableToPurchase = $this->getAllProductQuantityFromPpmp($consoTransaction, $items->first()->prod_id);
-
-            $calcAvailability = $totalQuantityAvailableToPurchase - $totalQuantityOnPurchases;
-
-            if($productQtyForPr > 0 && $productQtyForPr <= $calcAvailability) {
-                $availableItems[] = [
-                    'prod_id' => $items->first()->prod_id,
-                    'unitPrice' => (float)$prodPrice,
-                    'unitMeasure' => $this->productService->getProductUnit($items->first()->prod_id),
-                    'qty' => (int)$productQtyForPr,
-                    'revised_specs' => $this->productService->getProductName($items->first()->prod_id),
-                ];
-            }
+            return [
+                'pId' => $items->id, 
+                'prodId' => $items->prod_id,
+                'prodCode' => $this->productService->getProductCode($items->prod_id),
+                'prodName' => $this->productService->getProductName($items->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($items->prod_id),
+                'prodPrice' => number_format($prodPrice, 2,'.','.'),
+                'qtyFirst' => number_format($items->qty_first, 0, '.', ','),
+                'qtySecond' => number_format($items->qty_second, 0, '.', ','),
+                'totalQty' => number_format($qty, 0, '.', ','),
+                'amount' => number_format($amount, 2, '.', ','),
+            ];
         });
-
-        return Inertia::render('Pr/MultiForm/StepTwo', [
-            'data' => $request->all()
-        ]);
+        dd($data->toArray());  
     }
 
     public function stepThree(Request $request)
@@ -139,12 +109,8 @@ class PrMultiStepFormController extends Controller
         return $results ?? '';
     }
 
-    private function getConsolidatedTransactionDetails($request) {
-        $result = PpmpTransaction::where('ppmp_status', 'approved')
-                ->where('ppmp_type', $request->selectedType)
-                ->where('ppmp_year', $request->selectedYear)
-                ->first();
-
+    private function getConsolidatedTransactionWithParticulars($request) {
+        $result = PpmpTransaction::with('consolidated')->where('ppmp_code', $request)->get();
         return $result ?? '';
     }
 

@@ -192,7 +192,7 @@ class ApprovedConsolidatedPpmpController extends Controller
                                             $text .= '<tr style="font-size: 9px; text-align: center;">
                                                 <td width="40px">' . $product->prod_oldNo . '</td>
                                                 <td width="45px">' . $product->prod_newNo . '</td>
-                                                <td width="195px" style="text-align: left;">('. $item->item_name .') ' . $product->prod_desc . '</td>
+                                                <td width="195px" style="text-align: left;">' . $product->prod_desc . '</td>
                                                 <td width="45px">' . $product->prod_unit. '</td>
                                                 <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, '.', ',') . '</td>
                                                 <td width="40px" style="text-align: right;">' . number_format($prodQty, 0, '.', ',') . '</td>

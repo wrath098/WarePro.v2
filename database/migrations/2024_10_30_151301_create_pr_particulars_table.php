@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('unitMeasure')->nullable();
             $table->integer('qty')->default(0);
             $table->text('revised_specs', 2000)->nullable();
-            $table->string('status')->default('Pending'); //values: Pending|Partial|Complete
+            $table->string('status')->default('draft'); //values: draft|Pending|Partial|Complete
             $table->string('remarks')->nullable();
             $table->unsignedBigInteger('pr_id')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
