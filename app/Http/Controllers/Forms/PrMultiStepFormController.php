@@ -53,33 +53,37 @@ class PrMultiStepFormController extends Controller
 
     public function stepTwo(Request $request)
     {
-        dd($request->toArray());
         $transaction = $this->getConsolidatedTransactionWithParticulars($request->selectedppmpCode);
-        $result = $transaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
-            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
-            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
-            
-            $firstAmount = $items->qty_first * $prodPrice;
-            $secondAmount = $items->qty_second * $prodPrice;
+        $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
 
-            $qty = $items->qty_first + $items->qty_second;
-            $amount = $firstAmount + $secondAmount;
-            $totalAmount += $amount;
+        $priceAdjustment = (int)$transaction->price_adjustment;
+        $qtyAdjustment = (float)$request->qtyAdjust / 100;
 
-            return [
-                'pId' => $items->id, 
-                'prodId' => $items->prod_id,
-                'prodCode' => $this->productService->getProductCode($items->prod_id),
-                'prodName' => $this->productService->getProductName($items->prod_id),
-                'prodUnit' => $this->productService->getProductUnit($items->prod_id),
-                'prodPrice' => number_format($prodPrice, 2,'.','.'),
-                'qtyFirst' => number_format($items->qty_first, 0, '.', ','),
-                'qtySecond' => number_format($items->qty_second, 0, '.', ','),
-                'totalQty' => number_format($qty, 0, '.', ','),
-                'amount' => number_format($amount, 2, '.', ','),
-            ];
-        });
-        dd($data->toArray());  
+        if($request->semester == 'qty_first' && $prOnPpmp->isEmpty()){
+            $result = $transaction->consolidated->map(function ($items) use ($transaction, $priceAdjustment, $qtyAdjustment) {
+                $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $priceAdjustment;
+                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+                
+                $qty = $items->qty_first * $qtyAdjustment;
+                $firstAmount = $qty * $prodPrice;
+    
+                return [
+                    'pId' => $items->id, 
+                    'prodId' => $items->prod_id,
+                    'prodCode' => $this->productService->getProductCode($items->prod_id),
+                    'prodName' => $this->productService->getProductName($items->prod_id),
+                    'prodUnit' => $this->productService->getProductUnit($items->prod_id),
+                    'prodPrice' => number_format($prodPrice, 2,'.','.'),
+                    'qty' => number_format($qty, 0, '.', ','),
+                    'amount' => number_format($firstAmount, 2, '.', ','),
+                ];
+            });
+
+            $sortResult = $result->sortBy('prodCode');
+            return Inertia::render('Pr/MultiForm/StepTwo', [
+                'toPr' => $sortResult,
+            ]);
+        }
     }
 
     public function stepThree(Request $request)
@@ -110,8 +114,8 @@ class PrMultiStepFormController extends Controller
     }
 
     private function getConsolidatedTransactionWithParticulars($request) {
-        $result = PpmpTransaction::with('consolidated')->where('ppmp_code', $request)->get();
-        return $result ?? '';
+        $result = PpmpTransaction::with('consolidated')->where('ppmp_code', $request)->first();
+        return $result;
     }
 
     private function createNewPurchaseRequest($request) {
@@ -176,5 +180,14 @@ class PrMultiStepFormController extends Controller
         $totalQuantity = $quantities->flatten()->sum();
 
         return $totalQuantity;
+    }
+
+    private function getAllPrTransactionUnderPpmp($ppmp, $semester)
+    {
+        $ppmpList = PrTransaction::with(['ppmpController' => function ($query) use ($semester) {
+            $query->where('semester', $semester);
+        }])->get();
+
+        return $ppmpList;
     }
 }
