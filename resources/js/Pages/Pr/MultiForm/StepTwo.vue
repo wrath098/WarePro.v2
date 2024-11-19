@@ -1,23 +1,62 @@
 <script setup>
     import { Head } from '@inertiajs/vue3';
     import { Inertia } from '@inertiajs/inertia';
-    import { ref } from 'vue';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';   
     import Sidebar from '@/Components/Sidebar.vue';
-    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
 
     const props = defineProps({
-        toPr: Object,
+        toPr: {
+            type: Object,
+            default: () => ({}),
+        },
     });
 
-    const nextStep = () => {
-        Inertia.get('step-3', selectItems.value);
+    const particularList = computed(() => {
+        return props.toPr ? Object.values(props.toPr) : [];
+    });
+
+    const requestItems = ref([]);
+    const selectedItems = ref([]);
+
+    const handleCheckboxChange = (prodCode, isChecked) => {
+        if (isChecked) {
+            const particular = Object.values(props.toPr).find(item => item.prodCode === prodCode);
+            const exist = requestItems.value.find(item => item.prodCode === prodCode);
+            if (particular && exist == null) {
+                requestItems.value.push(particular);
+            }
+        } else {
+            const index = requestItems.value.findIndex(item => item.prodCode === prodCode);
+            if (index !== -1) {
+                requestItems.value.splice(index, 1);
+            }
+        }
     };
 
-    const goBack = () => {
-        Inertia.get('step-1', form.value);
+    const isAllSelected = computed(() => {
+        return particularList.value.length > 0 && 
+                particularList.value.every(item => 
+                selectedItems.value.some(selectedItem => selectedItem.prodCode === item.prodCode)
+                );
+    });
+
+    const toggleSelectAll = (isChecked) => {
+        if (isChecked) {
+            selectedItems.value = [...particularList.value];
+            selectedItems.value.forEach(particular => {
+                handleCheckboxChange(particular.prodCode, true)
+            });
+        } else {
+            selectedItems.value = [];
+            requestItems.value = [];
+        }
     };
-</script>
+
+    const nextStep = () => {
+        Inertia.post('step-3', requestItems.value);
+    };
+    </script>
 
 <template>
     <Head title="PR" />
@@ -45,6 +84,7 @@
                         </h3>
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div class="relative overflow-x-auto md:overflow-hidden">
+
                                 <form @submit.prevent="nextStep" class="space-y-5 mx-2">
                                     <div class="w-full mx-auto sm:px-6 lg:px-2">
                                         <div class="overflow-hidden shadow-sm sm:rounded-lg">
@@ -56,7 +96,15 @@
                                                                 <DataTable class="w-full text-gray-900 display">
                                                                     <thead class="text-sm text-gray-100 uppercase bg-indigo-600" >
                                                                         <tr class="text-center">
-                                                                            <th scope="col" class="px-6 py-3 w-1/12"></th>
+                                                                            <th scope="col" class="px-6 py-3 w-1/12">
+                                                                                <div class="px-6 py-3">
+                                                                                    <input 
+                                                                                        type="checkbox" 
+                                                                                        :checked="isAllSelected"
+                                                                                        @change="toggleSelectAll($event.target.checked)"
+                                                                                    />
+                                                                                </div>
+                                                                            </th>
                                                                             <th scope="col" class="px-6 py-3 w-1/12">Stock No.</th>
                                                                             <th scope="col" class="px-6 py-3 w-6/12 text-center">Description</th>
                                                                             <th scope="col" class="px-6 py-3 w-1/12">Unit Of Measure</th>
@@ -66,8 +114,15 @@
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                        <tr v-for="particular in Object.values(toPr)" :key="particular">
-                                                                            <td class="px-6 py-3"></td>
+                                                                        <tr v-for="particular in particularList" :key="particular.prodCode">
+                                                                            <td class="px-6 py-3">
+                                                                                <input type="checkbox" 
+                                                                                v-model="selectedItems" 
+                                                                                :value="particular.prodCode"
+                                                                                :checked="selectedItems.some(item => item.prodCode === particular.prodCode)"
+                                                                                @change="handleCheckboxChange(particular.prodCode, $event.target.checked)"
+                                                                                />
+                                                                            </td>
                                                                             <td class="px-6 py-3" >{{ particular.prodCode }}</td>
                                                                             <td class="px-6 py-3 text-left">{{ particular.prodName }}</td>
                                                                             <td class="px-6 py-3">{{ particular.prodUnit }}</td>

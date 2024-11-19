@@ -101,7 +101,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
 Route::middleware('auth')->prefix('pr')->group(function () {
     Route::get('/create/step-1', [PrMultiStepFormController::class, 'stepOne'])->name('pr.form.step1');
     Route::get('/create/step-2', [PrMultiStepFormController::class, 'stepTwo'])->name('pr.form.step2');
-    Route::get('/create/step-3', [PrMultiStepFormController::class, 'stepThree'])->name('pr.form.step3');
+    Route::post('/create/step-3', [PrMultiStepFormController::class, 'stepThree'])->name('pr.form.step3');
     Route::post('/create/submit', [PrMultiStepFormController::class, 'submit'])->name('pr.form.submit');       
     Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
     Route::post('/create-pr', [PrTransactionController::class, 'store'])->name('pr.store.transactions');

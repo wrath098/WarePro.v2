@@ -88,9 +88,7 @@ class PrMultiStepFormController extends Controller
 
     public function stepThree(Request $request)
     {
-        return Inertia::render('Pr/MultiForm/StepThree', [
-            'data' => $request->all()
-        ]);
+        dd($request->toArray());
     }
 
     public function submit(Request $request)
