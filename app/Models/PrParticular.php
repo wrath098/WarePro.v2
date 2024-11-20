@@ -21,6 +21,7 @@ class PrParticular extends Model
         'revised_specs',
         'status',
         'pr_id',
+        'conpar_id',
         'remarks',
         'updated_by',
     ];

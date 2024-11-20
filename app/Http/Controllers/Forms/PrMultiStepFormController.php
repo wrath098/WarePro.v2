@@ -9,6 +9,8 @@ use App\Models\PrTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,7 +55,6 @@ class PrMultiStepFormController extends Controller
 
     public function stepTwo(Request $request)
     {
-        dd($request->toArray());
         $transaction = $this->getConsolidatedTransactionWithParticulars($request->selectedppmpCode);
         $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
 
@@ -106,12 +107,34 @@ class PrMultiStepFormController extends Controller
 
     public function stepThree(Request $request)
     {
-        $selectedItems = $request->input('selectedItems');
-        $prTransactionInfo = $request->input('prTransactionInfo');
+        DB::beginTransaction();
+        try {
+            $selectedItems = $request->input('selectedItems');
+            $prTransactionInfo = $request->input('prTransactionInfo');
 
-        $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
+            $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
 
-        return redirect()->route('pr.form.step1')->with('message', 'Purchase request created successfully!');
+            foreach ($selectedItems as $item) {
+                $particular = [
+                    "pId" => $item['pId'],
+                    "prodId" => $item['prodId'],
+                    "prodName" => $item['prodName'],
+                    "prodUnit" => $item['prodUnit'],
+                    "prodPrice" => (float) $item['prodPrice'],
+                    "qty" => $item['qty'],
+                    "prId" => $createNewPurchaseRequest->id,
+                    "user" => $prTransactionInfo['user'],
+                ];
+                $this->createNewPurchaseRequestParticulars($particular);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'Successfully executed the request.'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'An error occurred while processing your request.'], 500);
+        }
     }
 
     public function submit(Request $request)
@@ -138,6 +161,19 @@ class PrMultiStepFormController extends Controller
             'qty_adjustment' => $request['qty_adjustment'],
             'trans_id' => $request['transId'],
             'created_by' => $request['user'],
+            'updated_by' => $request['user'],
+        ]);
+    }
+
+    private function createNewPurchaseRequestParticulars($request) {
+        return PrParticular::create([
+            'prod_id' => $request['prodId'],
+            'unitPrice' => $request['prodPrice'],
+            'unitMeasure' => $request['prodUnit'],
+            'qty' => $request['qty'],
+            'revised_specs' => $request['prodName'],
+            'pr_id' => $request['prId'],
+            'conpar_id' => $request['pId'],
             'updated_by' => $request['user'],
         ]);
     }
