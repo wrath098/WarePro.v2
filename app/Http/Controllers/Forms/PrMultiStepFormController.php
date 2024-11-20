@@ -53,18 +53,35 @@ class PrMultiStepFormController extends Controller
 
     public function stepTwo(Request $request)
     {
+        dd($request->toArray());
         $transaction = $this->getConsolidatedTransactionWithParticulars($request->selectedppmpCode);
         $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
 
         $priceAdjustment = (int)$transaction->price_adjustment;
         $qtyAdjustment = (float)$request->qtyAdjust / 100;
 
+        $purchaseRequestInfo = [
+            'semester' => $request->semester,
+            'desc' => $request->prDesc,
+            'qty_adjustment' => $request->qtyAdjust,
+            'transId' => $transaction->id,
+            'user' => Auth::id(),
+        ];
+
         if($request->semester == 'qty_first' && $prOnPpmp->isEmpty()){
             $result = $transaction->consolidated->map(function ($items) use ($transaction, $priceAdjustment, $qtyAdjustment) {
+                $qty = 0;
                 $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $priceAdjustment;
                 $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+
+                $productQtyExemption = $this->productService->validateProductExcemption($items->prod_id, $transaction->ppmp_year);
+
+                if($productQtyExemption) {
+                    $qty = $items->qty_first;
+                } else {
+                    $qty = $items->qty_first * $qtyAdjustment;
+                }
                 
-                $qty = $items->qty_first * $qtyAdjustment;
                 $firstAmount = $qty * $prodPrice;
     
                 return [
@@ -82,13 +99,19 @@ class PrMultiStepFormController extends Controller
             $sortResult = $result->sortBy('prodCode');
             return Inertia::render('Pr/MultiForm/StepTwo', [
                 'toPr' => $sortResult,
+                'prInfo' => $purchaseRequestInfo,
             ]);
         }
     }
 
     public function stepThree(Request $request)
     {
-        dd($request->toArray());
+        $selectedItems = $request->input('selectedItems');
+        $prTransactionInfo = $request->input('prTransactionInfo');
+
+        $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
+
+        return redirect()->route('pr.form.step1')->with('message', 'Purchase request created successfully!');
     }
 
     public function submit(Request $request)
@@ -102,15 +125,6 @@ class PrMultiStepFormController extends Controller
         return response()->json(['message', 'Form submitted successfully!']);
     }
 
-    private function getIndividualWithItems($year) {
-        $results = PpmpTransaction::with('particulars')
-                ->where('ppmp_status', 'approved')
-                ->where('ppmp_type', 'individual')
-                ->where('ppmp_year', $year)
-                ->get();
-        return $results ?? '';
-    }
-
     private function getConsolidatedTransactionWithParticulars($request) {
         $result = PpmpTransaction::with('consolidated')->where('ppmp_code', $request)->first();
         return $result;
@@ -120,8 +134,9 @@ class PrMultiStepFormController extends Controller
         return PrTransaction::create([
             'pr_no' => now()->format('YmdHis'),
             'semester' => $request['semester'],
+            'pr_desc' => $request['desc'],
             'qty_adjustment' => $request['qty_adjustment'],
-            'trans_id' => $request['trans_id'],
+            'trans_id' => $request['transId'],
             'created_by' => $request['user'],
             'updated_by' => $request['user'],
         ]);
