@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PpmpConsolidated extends Model
 {
@@ -31,5 +32,10 @@ class PpmpConsolidated extends Model
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(PpmpTransaction::class, 'trans_id');
+    }
+
+    public function purchaseRequest(): HasMany
+    {
+        return $this->hasMany(PrParticular::class, 'conpar_id');
     }
 }

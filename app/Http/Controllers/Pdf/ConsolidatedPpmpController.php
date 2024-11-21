@@ -325,7 +325,7 @@ class ConsolidatedPpmpController extends Controller
                     </td>
                 </tr>
                 <tr>
-                    <td width="100%" style="line-height: 0.00001; border:1px solid black;"></td>
+                    <td width="100%" style="line-height: 15; border:1px solid black; border-left:1px solid white;  border-right:1px solid white;"></td>
                 </tr>
                 ';
         

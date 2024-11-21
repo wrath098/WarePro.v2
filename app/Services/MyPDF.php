@@ -15,9 +15,21 @@ class MyPDF extends TCPDF
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 
-        $footerText = date('F j, Y') . ' | System Generated | PGSO-WarePro';
+        $footerText = date('F j, Y') . ' | CG:System Generated';
 
-        $this->Cell(0, 10, $pageNumber, 0, 0, 'C');
-        $this->Cell(0, 10, $footerText, 0, 0, 'R');
+        $totalWidth = $this->getPageWidth();
+
+        $leftWidth = $totalWidth / 3;
+        $centerWidth = $totalWidth / 3;
+        $rightWidth = $totalWidth / 3.5;
+
+        $this->SetX(10);
+        $this->Cell($leftWidth, 10, $waterMark, 0, 0, 'L');
+
+        $this->SetX($leftWidth);
+        $this->Cell($centerWidth, 10, $pageNumber, 0, 0, 'C');
+
+        $this->SetX($leftWidth + $centerWidth);
+        $this->Cell($rightWidth, 10, $footerText, 0, 0, 'R');
     }
 }

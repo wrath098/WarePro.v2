@@ -22,57 +22,32 @@ class PrTransactionController extends Controller
         $this->productService = $productService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): Response
     {
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year')
-        ->where(function($query) {
-            $query->where('ppmp_type', 'consolidated')
-                ->where('ppmp_status', 'approved');
-            })
-            ->orWhere(function($query) {
-                    $query->where('ppmp_type', 'emergency');
-                })
-            ->get();
-
-        
-        $resulToPr = $transactions->groupBy('ppmp_type')->map(function ($group) {
-            $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
-                return [
-                    'ppmp_year' => $yearGroup->first()->ppmp_year,
-                ];
-            })->values()->all();
-        
-            return [
-                'ppmp_type' => $group->first()->ppmp_type,
-                'years' => $years
-            ];
-        })->values()->all();
-
         $pendingPr = PrTransaction::with('ppmpController', 'updater')
-            ->where('pr_status', 'pending')
+            ->where('pr_status', 'draft')
             ->get()
             ->map(function ($pr) {
-                if($pr->semester == 'qty_first') {
-                    $pr->semester = 'First Semester';
+                $pr->semester = $pr->semester == 'qty_first' ? 'First Semester' : 'Second Semester';
+                if ($pr->pr_desc == 'nc') {
+                    $pr->pr_desc = 'Non-Contract';
+                } elseif ($pr->pr_desc == 'dc') {
+                    $pr->pr_desc = 'Direct Contract';
+                } elseif ($pr->pr_desc == 'psdbm') {
+                    $pr->pr_desc = 'PS-DBM';
                 } else {
-                    $pr->semester = 'Second Semester';
+                    $pr->pr_desc = null;
                 }
+
                 $pr->qty_adjustment = $pr->qty_adjustment * 100;
                 return $pr;
             });
 
         return Inertia::render('Pr/Index', [
-            'toPr' =>  $resulToPr,
             'pendingPr' => $pendingPr,
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     { 
         DB::beginTransaction();
@@ -197,7 +172,6 @@ class PrTransactionController extends Controller
                 ->where('ppmp_type', $request->selectedType)
                 ->where('ppmp_year', $request->selectedYear)
                 ->first();
-
         return $result ?? '';
     }
 

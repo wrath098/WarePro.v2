@@ -91,8 +91,8 @@ class PrMultiStepFormController extends Controller
                     'prodCode' => $this->productService->getProductCode($items->prod_id),
                     'prodName' => $this->productService->getProductName($items->prod_id),
                     'prodUnit' => $this->productService->getProductUnit($items->prod_id),
-                    'prodPrice' => number_format($prodPrice, 2,'.','.'),
-                    'qty' => number_format($qty, 0, '.', ','),
+                    'prodPrice' => $prodPrice,
+                    'qty' => $qty,
                     'amount' => number_format($firstAmount, 2, '.', ','),
                 ];
             });
@@ -121,7 +121,7 @@ class PrMultiStepFormController extends Controller
                     "prodName" => $item['prodName'],
                     "prodUnit" => $item['prodUnit'],
                     "prodPrice" => (float) $item['prodPrice'],
-                    "qty" => $item['qty'],
+                    "qty" => (int)$item['qty'],
                     "prId" => $createNewPurchaseRequest->id,
                     "user" => $prTransactionInfo['user'],
                 ];
@@ -154,6 +154,7 @@ class PrMultiStepFormController extends Controller
     }
 
     private function createNewPurchaseRequest($request) {
+        $request['qty_adjustment'] = (float)$request['qty_adjustment'] / 100;
         return PrTransaction::create([
             'pr_no' => now()->format('YmdHis'),
             'semester' => $request['semester'],

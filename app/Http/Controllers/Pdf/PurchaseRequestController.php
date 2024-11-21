@@ -78,33 +78,6 @@ class PurchaseRequestController extends Controller
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
 
-        // $table2 = '
-        //     <br>
-        //     <table>
-        //         <thead>
-        //             <tr style="font-size: 11px;">
-        //                 <th style="margin-left: 15px;" width="293px" rowspan="3">Prepared By:</th>
-        //                 <th style="margin-left: 15px;" width="293px" rowspan="3">Reviewed By:</th>
-        //                 <th style="margin-left: 15px;" width="293px" rowspan="3">Approved By:</th>
-        //             </tr>
-        //         </thead>
-        //         <tbody>
-        //             <tr><td width="100%"><br><br></td></tr>
-        //             <tr style="font-size: 11px; font-weight:bold; text-align:center;">
-        //                 <td width="293px">AILEEN G. RAMOS</td>
-        //                 <td width="293px">ELIZABETH C. TININGGAL</td>
-        //                 <td width="293px">JENNIFER G. BAHOD</td>
-        //             </tr>
-        //             <tr style="font-size: 11px; text-align:center;">
-        //                 <td width="293px">Administrative Officer IV</td>
-        //                 <td width="293px">Administrative Officer V</td>
-        //                 <td width="293px">Provincial General Services Officer</td>
-        //             </tr>
-        //         </tbody>
-        //     </table>
-        //     ';     
-        // $pdf->writeHTML($table2, true, false, true, false, '');
-
         $pdf->Output('PR.pdf', 'I');
     }
 
@@ -146,11 +119,31 @@ class PurchaseRequestController extends Controller
         $sortedParticulars = $filteredParticular->sortBy('prodCode');
         $categories = $this->productService->getAllProduct_Category();
 
+        $productsOnCategory = $categories->mapWithKeys(function ($category) use ($sortedParticulars) {
+            $totalMatchedItems = 0;
+
+            foreach ($category->items as $item) {
+                foreach ($item->products as $product) {
+                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
+                        return $particular['prodCode'] === $product->prod_newNo;
+                    });
+                    $totalMatchedItems += $matchedParticulars->count();
+                }
+            }
+    
+            return [$category->cat_code => $totalMatchedItems];
+        });
+
         foreach ($categories as $category) {
+            $matchedCount = $productsOnCategory->get($category->cat_code, 0);
+            
             if ($category->items->isNotEmpty()) {
-                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                if($matchedCount  > 0 ) {
+                    $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
                             <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                             </tr>';
+                }
+
                 $totalCatAmount = 0;
                 foreach ($category->items as $item) {
                     if ($item->products->isNotEmpty()) {  
@@ -179,10 +172,12 @@ class PurchaseRequestController extends Controller
                 }
             }
             $grandTotal += $totalCatAmount;
-            $text .= '<tr style="font-size: 9px; text-align: right;">
-                        <td width="360px"><b>Sub Total</b></td>
-                        <td width="159px">' . number_format($totalCatAmount, 2, '.', ',') . '</td>
-                    </tr>';  
+            if($totalCatAmount > 0) {
+                $text .= '<tr style="font-size: 9px; text-align: right;">
+                    <td width="360px"><b>Sub Total</b></td>
+                    <td width="159px">' . number_format($totalCatAmount, 2, '.', ',') . '</td>
+                </tr>';  
+            }
         }
         $text .= '<tr style="font-size: 9px; text-align: right;">
                         <td width="360px"><b>GRAND TOTAL</b></td>
