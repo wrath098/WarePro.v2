@@ -119,13 +119,16 @@ class PrTransactionController extends Controller
 
     public function showParticulars(PrTransaction $prTransaction)
     {
-        $prTransaction->load('prParticulars', 'ppmpController', 'updater');
+        $descriptionMap = [
+            'nc' => 'Non-Contract',
+            'dc' => 'Direct Contract',
+            'psdbm' => 'PS-DBM',
+        ];
 
-        if($prTransaction->semester == 'qty_first') {
-            $prTransaction->semester = 'First Semester';
-        } else {
-            $prTransaction->semester = 'Second Semester';
-        }
+        $prTransaction->load('prParticulars', 'ppmpController', 'updater');
+        $prTransaction->semester = $prTransaction->semester === 'qty_first' ? 'First Semester' : 'Second Semester';        
+        $prTransaction->pr_desc = $descriptionMap[$prTransaction->pr_desc] ?? null;
+
         $prTransaction->qty_adjustment = $prTransaction->qty_adjustment * 100;
 
         $reformatParticular = $prTransaction->prParticulars->map(function ($particular) {
@@ -141,21 +144,6 @@ class PrTransactionController extends Controller
             'pr' =>  $prTransaction,
             'particulars' => $reformatParticular,
         ]);
-    }
-
-    public function edit(PrTransaction $prTransaction)
-    {
-        //
-    }
-
-    public function update(Request $request, PrTransaction $prTransaction)
-    {
-        //
-    }
-
-    public function destroy(PrTransaction $prTransaction)
-    {
-        //
     }
 
     private function getIndividualWithItems($year) {

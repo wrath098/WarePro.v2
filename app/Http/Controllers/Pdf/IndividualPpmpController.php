@@ -163,6 +163,22 @@ class IndividualPpmpController extends Controller
 
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
         $funds = $this->productService->getAllProduct_FundModel();
+        $categories = $this->productService->getAllProduct_Category();
+
+        $productsOnCategory = $categories->mapWithKeys(function ($category) use ($sortedParticulars) {
+            $totalMatchedItems = 0;
+
+            foreach ($category->items as $item) {
+                foreach ($item->products as $product) {
+                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
+                        return $particular['prodCode'] === $product->prod_newNo;
+                    });
+                    $totalMatchedItems += $matchedParticulars->count();
+                }
+            }
+            return [$category->cat_code => $totalMatchedItems];
+        });
+
 
         if ($totalQtySecond != 0) {
             foreach ($funds as $fund) {
@@ -176,11 +192,13 @@ class IndividualPpmpController extends Controller
                 $fundTotal = 0;
     
                     foreach ($fund->categories as $category) {
+                        $matchedCount = $productsOnCategory->get($category->cat_code, 0);
                         if ($category->items->isNotEmpty()) {
-                            $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                                        <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
-                                        </tr>';
-    
+                            if($matchedCount  > 0 ) {
+                                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                                            <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+                                            </tr>';
+                            }
                         $catFirstTotal = 0; 
                         $catSecondTotal = 0;
                         $catTotal = 0;
@@ -231,6 +249,8 @@ class IndividualPpmpController extends Controller
                                 }         
                             }
                         }
+
+                    if ($matchedCount  > 0 ) {
                         $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
                                 <td width="375px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
                                 <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
@@ -246,13 +266,13 @@ class IndividualPpmpController extends Controller
                                 <td width="25px">-</td>
                                 <td width="25px">-</td>
                                 <td width="25px">-</td>
-                            </tr>';
-    
+                            </tr>';}
+                    }
                         $fundFirstTotal += $catFirstTotal; 
                         $fundSecondTotal += $catSecondTotal;
                         $fundTotal += $catTotal;
-                    }
-                    $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                }
+                $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
                                 <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
                                 <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
                                 <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
@@ -268,7 +288,6 @@ class IndividualPpmpController extends Controller
                                 <td width="25px">-</td>
                                 <td width="25px">-</td>
                             </tr>';
-                }
             }
             return $text;
         }
@@ -335,22 +354,24 @@ class IndividualPpmpController extends Controller
                             }         
                         }
                     }
-                    $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="432px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
-                            <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                        </tr>';
+                    if ($catTotal > 0) {
+                        $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                                <td width="432px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                                <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
+                                <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                            </tr>';
+                    }
 
                     $fundFirstTotal += $catFirstTotal; 
                     $fundTotal += $catTotal;

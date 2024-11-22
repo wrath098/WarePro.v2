@@ -160,7 +160,7 @@ class PurchaseRequestController extends Controller
                                         <td width="30px">' . $index . '</td>
                                         <td width="50px">' . $particular['prodCode'] . '</td>
                                         <td width="40px">' . $particular['prodUnit']. '</td>
-                                        <td width="240px" style="text-align: left;">('. $item->item_name .') ' . $particular['prodName'] . '</td>
+                                        <td width="240px" style="text-align: left;">' . $particular['prodName'] . '</td>
                                         <td width="39px" style="text-align: right;">' . number_format($particular['qty'], 0, '.', ',') . '</td>
                                         <td width="50px" style="text-align: right;">' . $particular['prodPrice'] . '</td>
                                         <td width="70px" style="text-align: right;">' . number_format($particular['totalCost'], 2, '.', ',') . '</td>
@@ -173,15 +173,15 @@ class PurchaseRequestController extends Controller
             }
             $grandTotal += $totalCatAmount;
             if($totalCatAmount > 0) {
-                $text .= '<tr style="font-size: 9px; text-align: right;">
+                $text .= '<tr style="font-size: 10px; text-align: right;">
                     <td width="360px"><b>Sub Total</b></td>
-                    <td width="159px">' . number_format($totalCatAmount, 2, '.', ',') . '</td>
+                    <td width="159px"><b>' . number_format($totalCatAmount, 2, '.', ',') . '</b></td>
                 </tr>';  
             }
         }
-        $text .= '<tr style="font-size: 9px; text-align: right;">
+        $text .= '<tr style="font-size: 10px; text-align: right;">
                         <td width="360px"><b>GRAND TOTAL</b></td>
-                        <td width="159px"><u>' . number_format($grandTotal, 2, '.', ',') . '</u></td>
+                        <td width="159px"><b><u>' . number_format($grandTotal, 2, '.', ',') . '</u></b></td>
                     </tr>';
         $text .= '<tr style="font-size: 9px; font-weight:bold;">
                     <td width="100%" style="border:1px solid #000;"><span style="color:white;">&nbsp</span>Purpose: </td>

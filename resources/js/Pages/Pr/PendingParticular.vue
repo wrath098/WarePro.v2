@@ -8,9 +8,7 @@
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import AddButton from '@/Components/Buttons/AddButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
-    import Dropdown from '@/Components/Dropdown.vue';
     import AddIcon from '@/Components/Buttons/AddIcon.vue';
     import PrintIcon from '@/Components/Buttons/PrintIcon.vue';
 
@@ -113,7 +111,7 @@
                         <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
                             <div class="flex-1 flex items-start justify-between bg-indigo-600 p-2 rounded-t-xl mb-2">
                                 <div class="flex flex-col gap-1">
-                                    <h2 class="text-lg justify-center font-semibold text-[#ededee] mb-4">PPMP Information</h2>
+                                    <h2 class="text-lg justify-center font-semibold text-[#ededee] mb-4">Purchase Request Information</h2>
                                 </div>
                                 <div class="flex items-center">
                                     <div class="rounded-full">
@@ -127,27 +125,27 @@
 
                             <div class="mx-2">                               
                                 <div class="mb-4 px-2">
-                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">PR No.:</label>
+                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Purchase Request No.:</label>
                                     <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_no }}</p>
                                 </div>
                                 
                                 <div class="mb-4 px-2">
-                                    <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">PPMP No.:</label>
+                                    <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">Consolidated Project Procurement Management Plan No.:</label>
                                     <p class="text-lg text-gray-800 font-semibold">{{ pr.ppmp_controller.ppmp_code }}</p>
                                 </div>
                                 
                                 <div class="mb-4 px-2">
                                     <label for="ppmpType" class="block text-sm font-medium text-[#07074D] mb-1">Description:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.qty_adjustment }}% of {{  pr.semester }}</p>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ pr.qty_adjustment }}% of {{  pr.semester }} - {{ pr.pr_desc }}</p>
                                 </div>
                                 
                                 <div class="mb-4 px-2">
-                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Price:</label>
+                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Status:</label>
                                     <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_status }}</p>
                                 </div>
                                 
                                 <div class="mb-4 px-2">
-                                    <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
+                                    <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">Create/UpdatedBy:</label>
                                     <p class="text-lg text-gray-800 font-semibold">{{ pr.updater.name }}</p>
                                 </div>       
                                 
