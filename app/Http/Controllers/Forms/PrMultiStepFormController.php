@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Forms;
 
 use App\Http\Controllers\Controller;
+use App\Models\PpmpConsolidated;
 use App\Models\PpmpTransaction;
 use App\Models\PrParticular;
 use App\Models\PrTransaction;
@@ -110,6 +111,7 @@ class PrMultiStepFormController extends Controller
                     'pId' => $particular->id,
                     'prod_id' => $particular->prod_id,
                     'qty' => $particular->qty_first,
+                    'totalQty' => $particular->qty_first + $particular->qty_second, 
                     'prodPrice' => $prodPrice,
                 ];
             });
@@ -129,23 +131,84 @@ class PrMultiStepFormController extends Controller
 
             $result = $basedParticulars->map(function ($group) use ($groupParticulars, $transaction, $qtyAdjustment) {
                 $groupQty = $groupParticulars->get($group['prod_id'], ['qty' => 0])['qty'];
-            
-                $remainingQty = $group['qty'] - $groupQty;
-            
-                if ($remainingQty == 0) {
+                $qty = 0;
+
+                if ($group['qty'] <= 0) {
                     return null;
                 } else {
                     $productQtyExemption = $this->productService->validateProductExcemption($group['prod_id'], $transaction->ppmp_year);
-
-                    if($productQtyExemption && $remainingQty < 2) {
-                        $qty = $remainingQty;
+                    if($productQtyExemption && $group['qty'] < 2) {
+                        $qty = $group['qty'];
                     } else {
-                        $qty = floor($remainingQty * $qtyAdjustment);
+                        $qty = floor($group['qty'] * $qtyAdjustment);
                     }
                 }
 
+                $remainingQty = $qty - $groupQty;
                 $amount = $remainingQty * $group['prodPrice'];
-            
+
+                $productQtyOnPr = $this->getPrUnderPpmpParticular($group['pId']);
+                $overAllAvailableQty = $group['totalQty'] - $productQtyOnPr;
+
+                if ($remainingQty <= 0 || $overAllAvailableQty <= 0) {
+                    return null;
+                }
+
+                return [
+                    'pId' => $group['pId'],
+                    'prodId' => $group['prod_id'],
+                    'prodCode' => $this->productService->getProductCode($group['prod_id']),
+                    'prodName' => $this->productService->getProductName($group['prod_id']),
+                    'prodUnit' => $this->productService->getProductUnit($group['prod_id']),
+                    'prodPrice' => $group['prodPrice'],
+                    'qty' => $remainingQty,
+                    'amount' => number_format($amount, 2, '.', ','),
+                ];
+            })->filter()->values();
+
+
+            $sortResult = $result->sortBy('prodCode');
+
+            return Inertia::render('Pr/MultiForm/StepTwo', [
+                'toPr' => $sortResult,
+                'prInfo' => $purchaseRequestInfo,
+            ]);
+        } else {
+            $basedParticulars = $transaction->consolidated->map(function ($particular) use ($priceAdjustment) {
+                $prodPrice = (float)$this->productService->getLatestPriceId($particular->price_id) * $priceAdjustment;
+                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+                return [
+                    'pId' => $particular->id,
+                    'prod_id' => $particular->prod_id,
+                    'qtyFirst' => $particular->qty_first,
+                    'qtySecond' => $particular->qty_second,
+                    'totalQty' => $particular->qty_first + $particular->qty_second,
+                    'prodPrice' => $prodPrice,
+                ];
+            });
+
+            $result = $basedParticulars->map(function ($group) use  ($transaction, $qtyAdjustment) {
+                $qty = 0;
+                $productQtyExemption = $this->productService->validateProductExcemption($group['prod_id'], $transaction->ppmp_year);
+                $productQtyOnPr = $this->getPrUnderPpmpParticular($group['pId']);
+
+                if ($group['totalQty'] <= 0) {
+                    return null;
+                } else {                    
+                    if($productQtyExemption || $group['totalQty'] < 2) {
+                        $qty = $group['totalQty'];
+                    } else {
+                        $qty = floor($group['qtyFirst'] * $qtyAdjustment) + floor($group['qtySecond'] * $qtyAdjustment);
+                    }
+                }
+
+                $remainingQty = (int) ($qty - $productQtyOnPr);
+                $amount = $remainingQty * $group['prodPrice'];
+                
+                if ($remainingQty <= 0) {
+                    return null;
+                }
+
                 return [
                     'pId' => $group['pId'],
                     'prodId' => $group['prod_id'],
@@ -242,5 +305,18 @@ class PrMultiStepFormController extends Controller
         }]);
 
         return $listOfPr->purchaseRequests;
+    }
+
+    private function getPrUnderPpmpParticular($ppmpParticularId)
+    {
+        $prList = PpmpConsolidated::findOrFail($ppmpParticularId);
+        $pr = $prList->load(['purchaseRequest' => function ($query) {
+            $query->where('status', '!=', 'failed')
+                ->get();
+        }]);
+
+        $qtyOnPr = $pr->purchaseRequest->sum('qty');
+
+        return $qtyOnPr ?? 0;
     }
 }

@@ -199,9 +199,10 @@ class IndividualPpmpController extends Controller
                                             <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                                             </tr>';
                             }
-                        $catFirstTotal = 0; 
-                        $catSecondTotal = 0;
-                        $catTotal = 0;
+
+                            $catFirstTotal = 0; 
+                            $catSecondTotal = 0;
+                            $catTotal = 0;
             
                             foreach ($category->items as $item) {
                                 if ($item->products->isNotEmpty()) {  
@@ -248,6 +249,9 @@ class IndividualPpmpController extends Controller
                                     }  
                                 }         
                             }
+                            $fundFirstTotal += $catFirstTotal; 
+                            $fundSecondTotal += $catSecondTotal;
+                            $fundTotal += $catTotal;
                         }
 
                     if ($matchedCount  > 0 ) {
@@ -268,9 +272,6 @@ class IndividualPpmpController extends Controller
                                 <td width="25px">-</td>
                             </tr>';}
                     }
-                        $fundFirstTotal += $catFirstTotal; 
-                        $fundSecondTotal += $catSecondTotal;
-                        $fundTotal += $catTotal;
                 }
                 $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
                                 <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
@@ -304,10 +305,12 @@ class IndividualPpmpController extends Controller
 
                 foreach ($fund->categories as $category) {
                     if ($category->items->isNotEmpty()) {
-                        $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                                    <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
-                                    </tr>';
-
+                        $matchedCount = $productsOnCategory->get($category->cat_code, 0);
+                        if($matchedCount  > 0 ) {
+                            $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                                <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+                                </tr>';
+                        }
                     $catFirstTotal = 0; 
                     $catSecondTotal = 0;
                     $catTotal = 0;

@@ -39,4 +39,9 @@ class PrParticular extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function ppmpController(): BelongsTo
+    {
+        return $this->belongsTo(PpmpConsolidated::class, 'conpar_id');
+    }
 }

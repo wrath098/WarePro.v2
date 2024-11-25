@@ -65,9 +65,11 @@
                                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                             <tr>
                                                 <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Pr No.</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">PPMP No.</th>
-                                                <th scope="col" class="px-6 py-3 w-3/12">Description</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Pr No.</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">PPMP No.</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Description</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Supplier</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Created At</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">Created / Update By</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
                                             </tr>
@@ -77,7 +79,9 @@
                                                     <td class="px-6 py-3">{{ index + 1 }}</td>
                                                     <td class="px-6 py-3">{{ transaction.pr_no }}</td>
                                                     <td class="px-6 py-3">{{ transaction.ppmp_controller.ppmp_code }}</td>
-                                                    <td class="px-6 py-3">{{ transaction.qty_adjustment }}% of {{ transaction.semester }} - {{ transaction.pr_desc }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.semester }} - {{ transaction.qty_adjustment }}%</td>
+                                                    <td class="px-6 py-3">{{ transaction.pr_desc }}</td>
+                                                    <td class="px-6 py-3">{{ transaction.formatted_created_at }}</td>
                                                     <td class="px-6 py-3">{{ transaction.updater.name }}</td>
                                                     <td class="px-6 py-3">
                                                         <ViewButton :href="route('pr.show.particular', { prTransaction: transaction.id})" tooltip="View"></ViewButton>

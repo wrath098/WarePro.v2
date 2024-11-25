@@ -91,6 +91,14 @@
         }
     };
 
+    const formatDecimal = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    };
+
     const nextStep = () => {
         const requestData = {
             selectedItems: selectedItems.value,
@@ -175,7 +183,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr v-for="particular in sortedParticularList" :key="particular.prodCode">
+                                                <tr v-for="particular in sortedParticularList" :key="particular.prodCode" class="bg-white border-b hover:bg-gray-100">
                                                     <td class="px-6 py-3">
                                                         <input 
                                                             type="checkbox" 
@@ -185,10 +193,10 @@
                                                     </td>
                                                     <td class="px-6 py-3">{{ particular.prodCode }}</td>
                                                     <td class="px-6 py-3 text-left">{{ particular.prodName }}</td>
-                                                    <td class="px-6 py-3">{{ particular.prodUnit }}</td>
-                                                    <td class="px-6 py-3">{{ particular.prodPrice }}</td>
-                                                    <td class="px-6 py-3">{{ particular.qty }}</td>
-                                                    <td class="px-6 py-3">{{ particular.amount }}</td>
+                                                    <td class="px-6 py-3 text-center">{{ particular.prodUnit }}</td>
+                                                    <td class="px-6 py-3 text-right">{{ formatDecimal(particular.prodPrice) }}</td>
+                                                    <td class="px-6 py-3 text-right">{{ particular.qty }}</td>
+                                                    <td class="px-6 py-3 text-right">{{ particular.amount }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
