@@ -37,6 +37,7 @@ class PrTransactionController extends Controller
                 $pr->semester = $pr->semester == 'qty_first' ? 'First Semester' : 'Second Semester';
                 $pr->pr_desc = $descriptionMap[$pr->pr_desc] ?? null;
                 $pr->qty_adjustment = $pr->qty_adjustment * 100;
+                $pr->pr_status = ucfirst($pr->pr_status);
                 $pr->formatted_created_at = $pr->created_at->format('m-d-Y');
                 return $pr;
             });
@@ -59,8 +60,18 @@ class PrTransactionController extends Controller
         $prTransaction->pr_desc = $descriptionMap[$prTransaction->pr_desc] ?? null;
 
         $prTransaction->qty_adjustment = $prTransaction->qty_adjustment * 100;
+        $prTransaction->pr_status = ucfirst($prTransaction->pr_status);
 
         $reformatParticular = $prTransaction->prParticulars->map(function ($particular) {
+            $particular->prodCode = $this->productService->getProductCode($particular->prod_id);
+            return $particular;
+        });
+
+        $trashParticulars = $prTransaction->load(['prParticulars' => function($query) {
+            $query->onlyTrashed();
+        }]);
+
+        $resultTrashedParticular = $trashParticulars->prParticulars->map(function($particular) {
             $particular->prodCode = $this->productService->getProductCode($particular->prod_id);
             return $particular;
         });
@@ -72,6 +83,7 @@ class PrTransactionController extends Controller
         return Inertia::render('Pr/PendingParticular', [
             'pr' =>  $prTransaction,
             'particulars' => $reformatParticular,
+            'trashed' => $resultTrashedParticular,
         ]);
     }
 

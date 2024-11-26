@@ -43,7 +43,9 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Purchase Request</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-green-700">Purchase Request</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">Transactions</li> 
+                    <li class="text-green-700" aria-current="page">Pending Approval</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
@@ -70,7 +72,8 @@
                                                 <th scope="col" class="px-6 py-3 w-2/12">Description</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">Supplier</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Created At</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Created / Update By</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Created / Update By</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Status</th>
                                                 <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
                                             </tr>
                                         </thead>
@@ -83,6 +86,13 @@
                                                     <td class="px-6 py-3">{{ transaction.pr_desc }}</td>
                                                     <td class="px-6 py-3">{{ transaction.formatted_created_at }}</td>
                                                     <td class="px-6 py-3">{{ transaction.updater.name }}</td>
+                                                    <td class="px-6 py-3">
+                                                        <span :class="{
+                                                            'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300': transaction.pr_status === 'Draft',
+                                                            }">
+                                                            {{ transaction.pr_status }}
+                                                        </span>
+                                                    </td>
                                                     <td class="px-6 py-3">
                                                         <ViewButton :href="route('pr.show.particular', { prTransaction: transaction.id})" tooltip="View"></ViewButton>
                                                         <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: transaction.id})" tooltip="Print"></Print>
@@ -102,3 +112,25 @@
     </AuthenticatedLayout>
     </div>
 </template>
+<style scoped>
+    .badge-pending {
+    background-color: yellow;
+    color: black;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    }
+
+    .badge-approved {
+    background-color: green;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    }
+
+    .badge-rejected {
+    background-color: red;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    }
+</style>

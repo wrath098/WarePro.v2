@@ -61,7 +61,7 @@ class PrParticularController extends Controller
                     'revised_specs' => $request->prodDesc,
                     'updated_by' => Auth::id(),
                 ]);
-                return redirect()->back()->with(['message' => 'Successfully updated the particular. Product Code: ' . $request->prodCode . ' - Quantity is already over 70% of the set maximum quantity limit. Maximum Quantity: ' . $maxQty . ' | Available Quantity: ' . $availableQty]);
+                return redirect()->back()->with(['message' => 'Successfully updated the particular. Note: Product Code No. ' . $request->prodCode . ' - Quantity is already over 70% of the set maximum quantity limit. Maximum Quantity: ' . $maxQty . ' | Available Quantity: ' . $availableQty]);
             } else {
                 return redirect()->back()->with(['error' => 'Failed to update the Product Code: ' . $request->prodCode . ' - Maximum quantity has already been reached or your input exceeds the set maximum quantity limit. Maximum Quantity: ' . $maxQty . ' | Available Quantity: ' . $availableQty]);
             }
@@ -85,6 +85,19 @@ class PrParticularController extends Controller
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to move the particular to the trash. Product Code: ' . $prodCode]);
+        }
+    }
+
+    public function restore($prParticular)
+    {
+        $particular = PrParticular::withTrashed()->find($prParticular);
+        $prodCode = $this->productService->getProductCode($particular->prod_id);
+        try {
+            $particular->restore();
+            return redirect()->back()->with(['message' => 'Successfully restored the particular from the trash. Product Code: ' . $prodCode]);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to restore the particular from the trash. Product Code: ' . $prodCode]);
         }
     }
 

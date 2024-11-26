@@ -123,9 +123,9 @@
                 </li>
                 <li>
                     <SidebarDropdown :active="route().current('indiv.ppmp.type')">
-                            <ClipboardList :class="{'text-white': false}" />
+                            <ClipboardList :class="{'text-white': route().current('indiv.ppmp.type')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Individual</span>
-                            <ArrowDown :class="{'text-white': false}" />
+                            <ArrowDown :class="{'text-white': route().current('indiv.ppmp.type')}" />
                         <template #dropdown-items>
                             <li>
                                 <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'draft'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'})">
@@ -143,20 +143,20 @@
                     </SidebarDropdown>
                 </li>
                 <li>
-                    <SidebarDropdown :active="false">
-                            <ClipboardList :class="{'text-white': false}" />
+                    <SidebarDropdown :active="route().current('conso.ppmp.type')">
+                            <ClipboardList :class="{'text-white': route().current('conso.ppmp.type')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated</span>
-                            <ArrowDown :class="{'text-white': false}" />
+                            <ArrowDown :class="{'text-white': route().current('conso.ppmp.type')}" />
                         <template #dropdown-items>
                             <li>
-                                <SubSidebarLink :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'draft'})" :active="false">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
+                                <SubSidebarLink :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'draft'})" :active="route().current('conso.ppmp.type', { type: 'consolidated' , status: 'draft'})">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('conso.ppmp.type', { type: 'consolidated' , status: 'draft'})}"/>
                                     Draft
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'})" :active="false">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
+                                <SubSidebarLink :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'})" :active="route().current('conso.ppmp.type', { type: 'consolidated' , status: 'approved'})">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('conso.ppmp.type', { type: 'consolidated' , status: 'approved'})}"/>
                                     Approved
                                 </SubSidebarLink>
                             </li>
@@ -169,14 +169,31 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Purchase Request</div>
                         </div>
                     </div>
-                    <SidebarLink :href="route('pr.display.transactions')" :active="false">
-                        <Bag/>
-                        <span class="ml-3">Purchase Request</span>
-                    </SidebarLink>
-                    <SidebarLink :href="route('pr.form.step1')" :active="false">
-                        <Bag/>
-                        <span class="ml-3">Create</span>
-                    </SidebarLink>
+                    <SidebarDropdown :active="route().current('pr.form.step1') || route().current('pr.display.transactions')">
+                            <Bag :class="{'text-white': route().current('pr.form.step1') || route().current('pr.display.transactions')}" />
+                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request</span>
+                            <ArrowDown :class="{'text-white': route().current('pr.form.step1') || route().current('pr.display.transactions')}" />
+                        <template #dropdown-items>
+                            <li>
+                                <SubSidebarLink :href="route('pr.form.step1')" :active="route().current('pr.form.step1')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('pr.form.step1')}"/>
+                                    Create
+                                </SubSidebarLink>
+                            </li>
+                            <li>
+                                <SubSidebarLink :href="route('pr.display.transactions')" :active="route().current('pr.display.transactions')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('pr.display.transactions')}"/>
+                                    Pending Approval
+                                </SubSidebarLink>
+                            </li>
+                            <li>
+                                <SubSidebarLink :href="''" :active="false">
+                                    <ArrowHeadRight :class="false"/>
+                                    In Progress
+                                </SubSidebarLink>
+                            </li>
+                        </template>
+                    </SidebarDropdown>
                 </li>
                 
                 <li>

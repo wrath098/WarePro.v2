@@ -115,7 +115,9 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Purchase Request</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-green-700">Purchase Request</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">New</li> 
+                    <li class="text-green-700" aria-current="page">MultiForm - Step Two</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
@@ -204,7 +206,7 @@
 
                                     <div>
                                         <button class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none">
-                                            Next
+                                            Submit
                                         </button>
                                     </div>
                                 </form>

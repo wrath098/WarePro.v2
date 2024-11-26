@@ -101,12 +101,11 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
 Route::middleware('auth')->prefix('pr')->group(function () {
     Route::get('/create/step-1', [PrMultiStepFormController::class, 'stepOne'])->name('pr.form.step1');
     Route::get('/create/step-2', [PrMultiStepFormController::class, 'stepTwo'])->name('pr.form.step2');
-    Route::post('/create/step-3', [PrMultiStepFormController::class, 'stepThree'])->name('pr.form.step3');
     Route::post('/create/submit', [PrMultiStepFormController::class, 'submit'])->name('pr.form.submit');       
     Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
-    Route::post('/create-pr', [PrTransactionController::class, 'store'])->name('pr.store.transactions');
     Route::get('/show-pr-particular/{prTransaction}', [PrTransactionController::class, 'showParticulars'])->name('pr.show.particular');
     Route::put('/particular/update', [PrParticularController::class, 'update'])->name('pr.particular.update');
+    Route::post('/particular/restore/{prParticular}', [PrParticularController::class, 'restore'])->name('pr.particular.restore');
     Route::delete('/particular/trash/{prParticular}', [PrParticularController::class, 'moveToTrash'])->name('pr.particular.movetotrash');
 });
 
