@@ -166,7 +166,7 @@
                 <li>
                     <div class="px-5 pt-2">
                         <div class="flex flex-row items-center">
-                            <div class="text-sm font-light tracking-wide text-gray-500">Purchase Request</div>
+                            <div class="text-sm font-light tracking-wide text-gray-500">Procurement</div>
                         </div>
                     </div>
                     <SidebarDropdown :active="route().current('pr.form.step1') || route().current('pr.display.transactions')">
@@ -202,7 +202,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">IAR</div>
                         </div>
                     </div>
-                    <SidebarLink :href="'https://localhost'" :active="false">
+                    <SidebarLink :href="route('iar')" :active="false">
                         <Inbox/>
                         <span class="ml-3">Receiving</span>
                     </SidebarLink>

@@ -62,6 +62,16 @@ return [
             ]) : [],
         ],
 
+        'pgso-pms' => [
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => '3306',
+            'database' => 'pgso', //pgso-pms
+            'username' => 'root', //pgso
+            'password' => '', //enterpgsodb
+            // Additional configuration options
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

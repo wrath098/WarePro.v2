@@ -13,6 +13,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PrParticularController;
 use App\Http\Controllers\PrTransactionController;
 use App\Http\Controllers\Forms\PrMultiStepFormController;
+use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\IndividualPpmpController;
@@ -107,6 +108,10 @@ Route::middleware('auth')->prefix('pr')->group(function () {
     Route::put('/particular/update', [PrParticularController::class, 'update'])->name('pr.particular.update');
     Route::post('/particular/restore/{prParticular}', [PrParticularController::class, 'restore'])->name('pr.particular.restore');
     Route::delete('/particular/trash/{prParticular}', [PrParticularController::class, 'moveToTrash'])->name('pr.particular.movetotrash');
+});
+
+Route::middleware('auth')->prefix('iar')->group(function () {
+    Route::get('/', [IarTransactionController::class, 'index'])->name('iar');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {
