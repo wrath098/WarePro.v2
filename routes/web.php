@@ -112,6 +112,7 @@ Route::middleware('auth')->prefix('pr')->group(function () {
 
 Route::middleware('auth')->prefix('iar')->group(function () {
     Route::get('/', [IarTransactionController::class, 'index'])->name('iar');
+    Route::get('/particulars', [IarTransactionController::class, 'fetchIarParticular'])->name('iar.particular');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

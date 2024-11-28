@@ -2,6 +2,7 @@
     import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
+import ViewButton from '@/Components/Buttons/ViewButton.vue';
 
     const props = defineProps({
         iar: Object,
@@ -38,6 +39,7 @@
                                 <th>PO No.</th>
                                 <th>Supplier</th>
                                 <th>IAR Date</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -47,6 +49,9 @@
                                 <td>{{ transaction.po_no }}</td>
                                 <td>{{ transaction.name }}</td>
                                 <td>{{ transaction.air_date }}</td>
+                                <td>
+                                    <ViewButton :href="route('iar.particular', { iar: transaction.air_id})" tooltip="View"/>
+                                </td>
                             </tr>
                         </tbody>
                     </DataTable>

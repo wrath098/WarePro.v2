@@ -20,4 +20,19 @@ class IarTransactionController extends Controller
 
         return Inertia::render('Iar/Index', ['iar' => $lists]);
     }
+
+    public function fetchIarParticular(Request $request)
+    {
+        $iarId = $request->input('iar');
+
+        $particulars = DB::connection('pgso-pms')
+                ->table('sdi_air_particulars')
+                ->select('*')
+                ->where('air_id', $iarId)
+                ->get();
+        
+        return response()->json(['data' => $particulars]);
+
+        return Inertia::render('Iar/Particular', ['particulars' => $particulars]);
+    }
 }
