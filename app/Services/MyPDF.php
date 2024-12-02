@@ -15,7 +15,7 @@ class MyPDF extends TCPDF
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 
-        $footerText = date('F j, Y') . ' | CG:System Generated';
+        $footerText = date('F j, Y') . ' | System Generated:CG';
 
         $totalWidth = $this->getPageWidth();
 

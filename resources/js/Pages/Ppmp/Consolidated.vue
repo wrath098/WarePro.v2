@@ -20,6 +20,14 @@
         conId: props.ppmp.id,
         user: props.user,
     });
+    
+    const addParticular  = reactive({
+        transId: props.ppmp.id,
+        prodCode: '',
+        firstQty: '',
+        secondQty: '',
+        user: props.user,
+    });
 
     const editParticular = reactive({
         partId: '',
@@ -38,6 +46,7 @@
     const modalState = ref(null);
     const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
+    const isAddPPModalOpen = computed(() => modalState.value === 'add');
     const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
     const isEditPPModalOpen = computed(() => modalState.value === 'edit');
     const isDropPPModalOpen = computed(() => modalState.value === 'drop');
@@ -78,6 +87,12 @@
         });
     };
 
+    const submitAdd = () => {
+        Inertia.post(`../consolidated-particular/add`, addParticular, {
+            onSuccess: () => closeModal(),
+        });
+    };
+
 </script>
 
 <template>
@@ -88,7 +103,9 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Project Procurement and Manangement Plan</li> 
+                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">Project Procurement and Manangement Plan</li>
+                    <li class="after:content-[':'] after:ml-2 text-green-700" aria-current="page">Transaction No.</li> 
+                    <li class="text-green-700" aria-current="page">{{ ppmp.ppmp_code }}</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
@@ -130,6 +147,13 @@
                                                     <path d="m12,7V.46c.913.346,1.753.879,2.465,1.59l3.484,3.486c.712.711,1.245,1.551,1.591,2.464h-6.54c-.552,0-1-.449-1-1Zm-3.416,12h-3.584c-.552,0-1-.448-1-1s.448-1,1-1h3.07c-.041-.328-.07-.66-.07-1s.022-.672.063-1h-3.063c-.552,0-1-.448-1-1s.448-1,1-1h3.593c.296-.728.699-1.398,1.185-2h-4.778c-.552,0-1-.448-1-1s.448-1,1-1h5.774c-.479-.531-.774-1.23-.774-2V.024c-.161-.011-.322-.024-.485-.024h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h10c.114,0,.221-.026.333-.034-3.066-.254-5.641-2.234-6.749-4.966Zm12.327.497c.939-1.319,1.365-3.028.96-4.843-.494-2.211-2.277-3.996-4.49-4.481-4.365-.956-8.163,2.843-7.208,7.208.485,2.213,2.27,3.996,4.481,4.49,1.816.406,3.525-.021,4.843-.96l2.796,2.796c.39.39,1.024.39,1.414,0h0c.39-.39.39-1.024,0-1.414l-2.796-2.796Zm-4.135-1.033l-.004.004c-.744.744-2.058.746-2.823-.019l-1.515-1.575c-.372-.387-.372-.999,0-1.386h0c.393-.409,1.047-.409,1.44,0l1.495,1.553,2.9-2.971c.392-.402,1.038-.402,1.43,0h0c.38.388.38,1.009,0,1.397l-2.925,2.997Z"/>
                                                 </svg>
                                                 <span class="ml-2">Proceed as Final/Approve</span>   
+                                            </button>
+                                            <button @click="showModal('add')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
+                                                </svg>
+
+                                                <span class="ml-2">Add Particular</span>   
                                             </button>
                                         </template>
                                     </Dropdown>
@@ -226,6 +250,47 @@
             </div>
         </div>
     </AuthenticatedLayout>
+    <Modal :show="isAddPPModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitAdd">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Additional Particular</h3>
+                        <p class="text-sm text-gray-500"> Enter the details for the add Product/Particular you wish to add.</p>
+                        <div class="mt-3">
+                            <p class="text-sm text-gray-500"> Product No: </p>
+                            <input v-model="addParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" required>
+                        </div>
+                        <div class="mt-5">
+                            <p class="text-sm text-gray-500"> Quantity: </p>
+                            <input v-model="addParticular.firstQty" type="number" id="firstQty" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="First Semester" required>
+                            <input v-model="addParticular.secondQty" type="number" id="secondQty" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Second Semester">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <SuccessButton>
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Confirm 
+                </SuccessButton>
+
+                <DangerButton @click="closeModal"> 
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Cancel
+                </DangerButton>
+            </div>
+        </form>
+    </Modal>
     <Modal :show="isEditPPModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitEdit">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">

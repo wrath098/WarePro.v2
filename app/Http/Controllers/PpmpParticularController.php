@@ -26,12 +26,11 @@ class PpmpParticularController extends Controller
             $validatedData = $request->validate([
                 'transId' => 'required|integer',
                 'prodCode' => 'required|string|max:20',
-                'firstQty' => 'required|integer|min:1',
-                'secondQty' => 'nullable|integer|min:0',
+                'firstQty' => 'required|integer',
+                'secondQty' => 'nullable|integer',
                 'user' => 'nullable|integer',
             ], [
                 'transId.required' => 'Please provide a transaction ID.',
-                'firstQty.min' => 'First quantity must be at least 1.',
             ]);  
 
             $productExist = Product::where('prod_newNo', $validatedData['prodCode'])

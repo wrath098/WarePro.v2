@@ -2,7 +2,7 @@
     import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-import ViewButton from '@/Components/Buttons/ViewButton.vue';
+    import ViewButton from '@/Components/Buttons/ViewButton.vue';
 
     const props = defineProps({
         iar: Object,
@@ -39,18 +39,20 @@ import ViewButton from '@/Components/Buttons/ViewButton.vue';
                                 <th>PO No.</th>
                                 <th>Supplier</th>
                                 <th>IAR Date</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="(transaction, index) in props.iar" :key="transaction.air_id">
                                 <td>{{ ++index }}</td>
-                                <td>{{ transaction.air_id }}</td>
-                                <td>{{ transaction.po_no }}</td>
-                                <td>{{ transaction.name }}</td>
-                                <td>{{ transaction.air_date }}</td>
+                                <td>{{ transaction.airId }}</td>
+                                <td>{{ transaction.poId }}</td>
+                                <td>{{ transaction.supplier }}</td>
+                                <td>{{ transaction.date }}</td>
+                                <td>{{ transaction.status }}</td>
                                 <td>
-                                    <ViewButton :href="route('iar.particular', { iar: transaction.air_id})" tooltip="View"/>
+                                    <ViewButton :href="route('iar.particular', { iar: transaction.id})" tooltip="View"/>
                                 </td>
                             </tr>
                         </tbody>

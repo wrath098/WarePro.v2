@@ -199,7 +199,7 @@
                 <li>
                     <div class="px-5 pt-2">
                         <div class="flex flex-row items-center">
-                            <div class="text-sm font-light tracking-wide text-gray-500">IAR</div>
+                            <div class="text-sm font-light tracking-wide text-gray-500">Inspection and Acceptance</div>
                         </div>
                     </div>
                     <SidebarLink :href="route('iar')" :active="false">

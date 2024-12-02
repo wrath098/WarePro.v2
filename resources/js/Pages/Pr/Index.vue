@@ -1,6 +1,5 @@
 <script setup>
-    import { Head, router } from '@inertiajs/vue3';
-    import { reactive, ref } from 'vue';
+    import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import Print from '@/Components/Buttons/Print.vue';
@@ -10,29 +9,6 @@
         toPr: Object,
         pendingPr: Object
     });
-
-    const filteredYear = ref([]);
-    const generatePr = reactive({
-        selectedType: '',
-        selectedYear: '',
-        semester: '',
-        qtyAdjust: '',
-    });
-
-    const onTypeChange = (context) => {
-        const type = props.toPr.find(typ => typ.ppmp_type === context.selectedType);
-        filteredYear.value = type ? type.years : [];
-        generatePr.selectedYear = '';
-    };
-
-    const submitForm = (url, data) => {
-        router.post(url, data, {
-            onError: (errors) => {
-                console.error(`Form submission failed for ${url}`, errors);
-            },
-        });
-    };
-    const submitPr = () => submitForm('pr/create-pr', generatePr);
 </script>
 
 <template>

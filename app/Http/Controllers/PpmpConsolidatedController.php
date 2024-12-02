@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpConsolidated;
+use App\Models\PpmpTransaction;
+use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +16,49 @@ class PpmpConsolidatedController extends Controller
     public function __construct(ProductService $productService)
     {
         $this->productService = $productService;
+    }
+
+    public function store(Request $request) {
+        try {
+            $validatedData = $request->validate([
+                'transId' => 'required|integer',
+                'prodCode' => 'required|string|max:20',
+                'firstQty' => 'required|integer',
+                'secondQty' => 'nullable|integer',
+                'user' => 'nullable|integer',
+            ], [
+                'transId.required' => 'Please provide a transaction ID.',
+            ]);
+
+            $productExist = Product::where('prod_newNo', $validatedData['prodCode'])
+                ->where('prod_status', 'active')->first();
+            if (!$productExist) {
+                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list.']);
+            }
+
+            $particularExist = PpmpConsolidated::where('trans_id', $validatedData['transId'])
+                ->where('prod_id', $productExist->id)->first();
+            if ($particularExist) {
+                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list.']);
+            } else {
+                PpmpConsolidated::create([
+                    'qty_first' => $validatedData['firstQty'],
+                    'qty_second' => $validatedData['secondQty'] ? $validatedData['secondQty'] : 0,
+                    'prod_id' => $productExist->id,
+                    'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
+                    'created_by' => $validatedData['user'],
+                    'updated_by' => $validatedData['user'],
+                    'trans_id' => $validatedData['transId'],
+                ]);
+
+                $transId = PpmpTransaction::findOrFail($validatedData['transId']);
+                $transId->update(['updated_by' => $validatedData['user']]);
+
+                return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully added!']);
+            }
+        } catch(\Exception $e) {
+            return redirect()->back()->with(['error' => 'Product No. '. $request->prodCode . ' updating failed!']);
+        }
     }
 
     public function update(Request $request, PpmpConsolidated $ppmpConsolidated)
