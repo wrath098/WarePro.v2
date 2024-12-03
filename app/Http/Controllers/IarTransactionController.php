@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\IarParticular;
 use App\Models\IarTransaction;
+use App\Models\Product;
+use App\Models\ProductInventory;
+use App\Models\ProductInventoryTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -34,16 +38,50 @@ class IarTransactionController extends Controller
         $iarId = $request->input('iar');
         $iarTransaction = IarTransaction::findOrFail($iarId);
 
-        $particulars = $iarTransaction->load('iarParticulars');
+        $particulars = $iarTransaction->load(['iarParticulars' => function($query) {
+            $query->where('status', 'pending');
+        }]);
         $particulars = $particulars->iarParticulars->map(fn($item) => [
-            'pId' => $item,
-            
+            'pId' => $item->id,
+            'itemNo' => $item->item_no,
+            'stockNo' => $item->stock_no,
+            'unit' => ucfirst($item->unit),
+            'specs' => $item->description,
+            'quantity' => $item->qty,
+            'price' => $item->price,
+            'status' => $item->status,
+            'cost' => number_format(($item->qty * $item->price), 2,'.', ','),
         ]);
 
         return Inertia::render('Iar/Particular', ['iar' => $iarTransaction,'particulars' => $particulars]);
     }
 
-    public function collectIarTransactions()
+    public function acceptIarParticular(Request $request)
+    {   
+        $particular = IarParticular::findOrFail($request->pid);
+        $product = $this->validateProduct($particular->stock_no);
+        $userId = Auth::id();
+
+        if(!$product) {
+            return redirect()->back()->with(['error' => 'Product not found!']);
+        }
+
+        $data = [
+            'type' => 'purchase',
+            'qty' => $particular->qty,
+            'refNo' => $particular->id,
+            'prodId' => $product->id,
+            'user' => $userId,
+        ];
+
+        $this->createInventoryTransaction($data);
+        $this->updateProductInventory($data);
+        $particular->update(['status' => 'completed', 'updated_by ' => $userId]);
+
+        return redirect()->back()->with(['message' => 'Successfully Added!!']);
+    }
+
+    private function collectIarTransactions()
     {
         DB::beginTransaction();
         
@@ -99,5 +137,61 @@ class IarTransactionController extends Controller
     private function verifyExistence($request) {
         $record = IarTransaction::withTrashed()->where('sdi_iar_id', $request)->exists();
         return $record;
+    }
+
+    private function validateProduct($request)
+    {
+        if (preg_match("/^\d{2}-\d{4}$/", $request)) {
+            if (preg_match('/-(\d+)$/', $request, $matches)) {
+                if (isset($matches[1])) {
+                    $product = Product::where('prod_oldNo', $matches[1])->first();
+                    if ($product) {
+                        return $product;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        } 
+        elseif (preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $request)) {
+            $product = Product::where('prod_newNo', $request)->first();
+            if ($product) {
+                return $product;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private function createInventoryTransaction($request)
+    {
+        return ProductInventoryTransaction::create([
+            'type' => $request['type'],
+            'qty' => $request['qty'],
+            'ref_no' => $request['refNo'],
+            'prod_id' => $request['prodId'],
+            'created_by ' => $request['user'],
+        ]);
+    }
+
+    private function updateProductInventory($request)
+    {
+        $productExist = ProductInventory::where('prod_id', $request['prodId'])->first();
+
+        if($productExist) {
+            $productExist->qtyOnStock += $request['qty'];
+            $productExist->updated_by += $request['user'];
+            $productExist->save();
+        } else {
+            return ProductInventory::create([
+                'qtyOnStock' => $request['qty'],
+                'prod_id' => $request['prodId'],
+                'updated_by' => $request['user'],
+            ]);
+        }
     }
 }

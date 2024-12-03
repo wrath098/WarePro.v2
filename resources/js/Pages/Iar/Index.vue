@@ -30,7 +30,7 @@
         </template>
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white p-2 lg:overflow-hidden shadow-sm sm:rounded-lg">
                     <DataTable class="display">
                         <thead>
                             <tr>

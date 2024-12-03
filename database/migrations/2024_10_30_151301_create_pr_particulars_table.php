@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('pr_id')->nullable();
             $table->unsignedBigInteger('conpar_id')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->foreign('prod_id')->references('id')->on('products');
             $table->foreign('pr_id')->references('id')->on('pr_transactions');
             $table->foreign('conpar_id')->references('id')->on('ppmp_consolidateds');
             $table->foreign('updated_by')->references('id')->on('users');
