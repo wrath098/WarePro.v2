@@ -58,30 +58,105 @@ class IarTransactionController extends Controller
 
     public function acceptIarParticular(Request $request)
     {   
-        $particular = IarParticular::findOrFail($request->pid);
-        $product = $this->validateProduct($particular->stock_no);
-        $userId = Auth::id();
+        DB::beginTransaction();
+        
+        try {
+            $particular = IarParticular::findOrFail($request->pid);
+            $product = $this->validateProduct($particular->stock_no);
+            $userId = Auth::id();
 
-        if(!$product) {
-            return redirect()->back()->with(['error' => 'Product not found!']);
+            if(!$product) {
+                throw new \Exception('Product Item not found!');
+            }
+
+            $data = [
+                'type' => 'purchase',
+                'qty' => $particular->qty,
+                'refNo' => $particular->id,
+                'prodId' => $product->id,
+                'user' => $userId,
+            ];
+
+            $this->createInventoryTransaction($data);
+            $this->updateProductInventory($data);
+            $particular->update(['status' => 'completed', 'updated_by' => $userId]);
+
+            $iarTransaction = IarTransaction::findOrFail($particular->air_id);
+            $iarTransaction = $iarTransaction->load(['iarParticulars' => function($query) {
+                $query->where('status', 'pending');
+            }]);
+
+            if($iarTransaction->iarParticulars->isNotEmpty()) {
+                DB::commit();
+                return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' was added to the Product Inventory!!']);
+            }
+
+            $iarTransaction->update(['status' => 'completed', 'updated_by' => $userId]);
+            DB::commit();
+            return redirect()->route('iar')->with(['message' => 'Transaction no. ' . $iarTransaction->sdi_iar_id . ' has been removed from the list due to no pending particulars.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
         }
-
-        $data = [
-            'type' => 'purchase',
-            'qty' => $particular->qty,
-            'refNo' => $particular->id,
-            'prodId' => $product->id,
-            'user' => $userId,
-        ];
-
-        $this->createInventoryTransaction($data);
-        $this->updateProductInventory($data);
-        $particular->update(['status' => 'completed', 'updated_by ' => $userId]);
-
-        return redirect()->back()->with(['message' => 'Successfully Added!!']);
     }
 
-    private function collectIarTransactions()
+    public function updateIarParticular(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $particular = IarParticular::findOrFail($request->pid);
+            $userId = Auth::id();
+
+            $product = $this->validateProduct($request->stockNo);
+
+            if(!$product) {
+                throw new \Exception('Product Item not found!');
+            }
+
+            $particular->update(['stock_no' => $request->stockNo, 'updated_by' => $userId]);
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' successfully updated the stock no.!!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function rejectIarParticular(Request $request)
+    {
+        DB::beginTransaction();
+        
+        try {
+            $particular = IarParticular::findOrFail($request->pid);
+            $userId = Auth::id();
+
+            $particular->update(['status' => 'failed', 'updated_by' => $userId]);
+
+            $iarTransaction = IarTransaction::findOrFail($particular->air_id);
+            $iarTransaction = $iarTransaction->load(['iarParticulars' => function($query) {
+                $query->where('status', 'pending');
+            }]);
+            
+            if($iarTransaction->iarParticulars->isNotEmpty()) {
+                DB::commit();
+                return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' Added to the Product Inventory!!']);
+            }
+
+            $iarTransaction->update(['status' => 'completed', 'updated_by' => $userId]);
+            DB::commit();
+            return redirect()->route('iar')->with(['message' => 'Transaction no. ' . $iarTransaction->sdi_iar_id . ' has been removed from the list due to no pending particulars.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function collectIarTransactions()
     {
         DB::beginTransaction();
         
@@ -126,7 +201,7 @@ class IarTransactionController extends Controller
                 }
             }
             DB::commit();
-
+            return redirect()->back()->with(['message' => 'Successfully collected the IAR Transactions from the AssetPro!!']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error during transaction: " . $e->getMessage());
@@ -174,7 +249,7 @@ class IarTransactionController extends Controller
             'qty' => $request['qty'],
             'ref_no' => $request['refNo'],
             'prod_id' => $request['prodId'],
-            'created_by ' => $request['user'],
+            'created_by' => $request['user'],
         ]);
     }
 

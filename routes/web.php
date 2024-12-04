@@ -113,8 +113,11 @@ Route::middleware('auth')->prefix('pr')->group(function () {
 
 Route::middleware('auth')->prefix('iar')->group(function () {
     Route::get('/', [IarTransactionController::class, 'index'])->name('iar');
+    Route::get('/collect-transactions', [IarTransactionController::class, 'collectIarTransactions'])->name('iar.collect.transactions');
     Route::get('/particulars', [IarTransactionController::class, 'fetchIarParticular'])->name('iar.particular');
     Route::post('/particulars/accept', [IarTransactionController::class, 'acceptIarParticular'])->name('iar.particular.accept');
+    Route::put('/particulars/update', [IarTransactionController::class, 'updateIarParticular'])->name('iar.particular.update');
+    Route::post('/particulars/reject', [IarTransactionController::class, 'rejectIarParticular'])->name('iar.particular.reject');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

@@ -3,6 +3,7 @@
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
+    import Refresh from '@/Components/Buttons/Refresh.vue';
 
     const props = defineProps({
         iar: Object,
@@ -15,10 +16,11 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2">
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
+                <ol class="flex space-x-2 leading-tight">
                     <li><a class="after:content-['/'] after:ml-2 text-green-700">Inspection and Acceptance</a></li>
-                    <li class="after:content-[''] after:ml-2 text-green-700" aria-current="page">Transactions</li> 
+                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">Transactions</li> 
+                    <li><Refresh :href="route('iar.collect.transactions')" class="" tooltip="Refresh"/></li>
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">

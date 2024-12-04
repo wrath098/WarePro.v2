@@ -96,12 +96,6 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="'https://localhost'" :active="false">
-                                    <ArrowHeadRight :class="{ 'text-white' : false}"/>
-                                    Inventory
-                                </SubSidebarLink>
-                            </li>
-                            <li>
                                 <SubSidebarLink :href="route('product.unmodified.list')" :active="route().current('product.unmodified.list')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('product.unmodified.list')}"/>
                                     Unmodified
