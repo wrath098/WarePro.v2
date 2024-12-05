@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('product_inventories', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('qtyOnStock')->nullable();
+            $table->bigInteger('qty_on_stock')->default(0);
+            $table->bigInteger('qty_physical_count')->default(0);
+            $table->bigInteger('qty_purchase')->default(0);
+            $table->bigInteger('qty_issued')->default(0);
             $table->string('location')->nullable();
-            $table->bigInteger('reorderLevel')->nullable();
+            $table->bigInteger('reorder_level')->nullable();
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('prod_id')->references('id')->on('products');

@@ -258,12 +258,14 @@ class IarTransactionController extends Controller
         $productExist = ProductInventory::where('prod_id', $request['prodId'])->first();
 
         if($productExist) {
-            $productExist->qtyOnStock += $request['qty'];
+            $productExist->qty_on_stock += $request['qty'];
+            $productExist->qty_purchase += $request['qty'];
             $productExist->updated_by += $request['user'];
             $productExist->save();
         } else {
             return ProductInventory::create([
-                'qtyOnStock' => $request['qty'],
+                'qty_on_stock' => $request['qty'],
+                'qty_purchase' => $request['qty'],
                 'prod_id' => $request['prodId'],
                 'updated_by' => $request['user'],
             ]);

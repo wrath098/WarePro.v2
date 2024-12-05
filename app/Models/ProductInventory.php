@@ -13,9 +13,12 @@ class ProductInventory extends Model
     protected $table = 'product_inventories';
 
     protected $fillable = [
-        'qtyOnStock',
+        'qty_on_stock',
+        'qty_physical_count',
+        'qty_purchase',
+        'qty_issued',
         'location',
-        'reorderLevel',
+        'reorder_level',
         'prod_id',
         'updated_by',
     ];

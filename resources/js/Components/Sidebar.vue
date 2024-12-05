@@ -8,15 +8,16 @@
     import ArrowDown from '@/Components/Svgs/ArrowDown.vue';
     import ArrowRight from '@/Components/Svgs/ArrowRight.vue';
     import Bag from '@/Components/Svgs/Bag.vue';
-    import Inbox from '@/Components/Svgs/Inbox.vue';
+    import Inspect from '@/Components/Svgs/Inspect.vue';
     import Documents from '@/Components/Svgs/Documents.vue';
     import Files from '@/Components/Svgs/Files.vue';
     import CircleDot from '@/Components/Svgs/CircleDot.vue';
-    import Import from '@/Components/Svgs/Import.vue';
     import ClipboardList from '@/Components/Svgs/ClipboardList.vue';
     import ArrowHeadRight from './Svgs/ArrowHeadRight.vue';
     import Column from '@/Components/Svgs/Column.vue';
     import Add from '@/Components/Svgs/Add.vue';
+    import Stock from './Svgs/Stock.vue';
+    import Clipboard from './Svgs/Clipboard.vue';
 </script>
 
 <template>
@@ -138,7 +139,7 @@
                 </li>
                 <li>
                     <SidebarDropdown :active="route().current('conso.ppmp.type')">
-                            <ClipboardList :class="{'text-white': route().current('conso.ppmp.type')}" />
+                            <Clipboard :class="{'text-white': route().current('conso.ppmp.type')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated</span>
                             <ArrowDown :class="{'text-white': route().current('conso.ppmp.type')}" />
                         <template #dropdown-items>
@@ -193,12 +194,16 @@
                 <li>
                     <div class="px-5 pt-2">
                         <div class="flex flex-row items-center">
-                            <div class="text-sm font-light tracking-wide text-gray-500">Inspection and Acceptance</div>
+                            <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
                         </div>
                     </div>
-                    <SidebarLink :href="route('iar')" :active="false">
-                        <Inbox/>
-                        <span class="ml-3">Receiving</span>
+                    <SidebarLink :href="route('iar')" :active="route().current('iar')" class="mb-1">
+                        <Inspect :class="{ 'text-white' : route().current('iar')}"/>
+                        <span class="ml-3">Inspection and Acceptance</span>
+                    </SidebarLink>
+                    <SidebarLink :href="route('inventory.index')" :active="false">
+                        <Stock/>
+                        <span class="ml-3">Stock Quantity</span>
                     </SidebarLink>
                 </li>
                 <li>

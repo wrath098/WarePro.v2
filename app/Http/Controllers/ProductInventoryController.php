@@ -3,16 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductInventory;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProductInventoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $productService;
+
+    public function __construct(ProductService $productService)
     {
-        //
+        $this->productService = $productService;
+    }
+
+    public function index(): Response
+    {
+        $inventory = ProductInventory::all();
+
+        $inventory = $inventory->map(function($item) {
+            $stockNo = $this->productService->getProductCode($item->prod_id);
+            $prodDesc = $this->productService->getProductName($item->prod_id);
+            $prodUnit = $this->productService->getProductUnit($item->prod_id);
+            $status = $item->qty_on_stock <= $item->reorder_level ? 'Reorder' : 'Available';
+            return [
+                'id' => $item->id,
+                'stockNo' => $stockNo,
+                'prodDesc' => $prodDesc,
+                'prodUnit' => $prodUnit,
+                'stockAvailable' => $item->qty_on_stock,
+                'status' => $status,
+            ];
+        });
+        return Inertia::render('Inventory/Index', ['inventory' => $inventory]);
     }
 
     /**

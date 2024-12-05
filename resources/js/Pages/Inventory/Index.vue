@@ -2,11 +2,10 @@
     import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import ViewButton from '@/Components/Buttons/ViewButton.vue';
-    import Refresh from '@/Components/Buttons/Refresh.vue';
+import { DataTable } from 'datatables.net-vue3';
 
     const props = defineProps({
-        iar: Object,
+        inventory: Object,
     });
 </script>
 
@@ -18,9 +17,7 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-['/'] after:ml-2 text-green-700">Inspection and Acceptance</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">Transactions</li> 
-                    <li><Refresh :href="route('iar.collect.transactions')" class="" tooltip="Refresh"/></li>
+                    <li><a class="after:content-[''] after:ml-2 text-green-700">Product Inventory</a></li>
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-green-600 my-2">
@@ -36,31 +33,28 @@
                     <DataTable class="w-full text-gray-900 display">
                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                             <tr>
-                                <th>No.</th>
-                                <th>IAR No.</th>
-                                <th>PO No.</th>
-                                <th>Supplier</th>
-                                <th>IAR Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th class="w-1/12">No.</th>
+                                <th class="w-1/12">Stock No.</th>
+                                <th class="w-7/12">Description</th>
+                                <th class="w-1/12">Unit of Measure</th>
+                                <th class="w-1/12">Stock Available</th>
+                                <th class="w-1/12">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(transaction, index) in props.iar" :key="transaction.air_id">
+                            <tr v-for="(item, index) in inventory" :key="item.id">
                                 <td>{{ ++index }}</td>
-                                <td>{{ transaction.airId }}</td>
-                                <td>{{ transaction.poId }}</td>
-                                <td>{{ transaction.supplier }}</td>
-                                <td>{{ transaction.date }}</td>
+                                <td>{{ item.stockNo }}</td>
+                                <td>{{ item.prodDesc }}</td>
+                                <td>{{ item.prodUnit }}</td>
+                                <td>{{ item.stockAvailable }}</td>
                                 <td>
                                     <span :class="{
-                                        'bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-300': transaction.status === 'Pending',
+                                        'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': item.status === 'Available',
+                                        'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300': item.status == 'Reorder'
                                         }">
-                                        {{ transaction.status }}
+                                        {{ item.status }}
                                     </span>
-                                    </td>
-                                <td>
-                                    <ViewButton :href="route('iar.particular', { iar: transaction.id})" tooltip="View"/>
                                 </td>
                             </tr>
                         </tbody>

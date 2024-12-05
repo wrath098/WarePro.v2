@@ -20,6 +20,7 @@ use App\Http\Controllers\Pdf\IndividualPpmpController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
+use App\Http\Controllers\ProductInventoryController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -118,6 +119,10 @@ Route::middleware('auth')->prefix('iar')->group(function () {
     Route::post('/particulars/accept', [IarTransactionController::class, 'acceptIarParticular'])->name('iar.particular.accept');
     Route::put('/particulars/update', [IarTransactionController::class, 'updateIarParticular'])->name('iar.particular.update');
     Route::post('/particulars/reject', [IarTransactionController::class, 'rejectIarParticular'])->name('iar.particular.reject');
+});
+
+Route::middleware('auth')->prefix('inventory')->group(function () {
+    Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {
