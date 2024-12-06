@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
@@ -19,70 +20,31 @@ class ProductInventoryController extends Controller
 
     public function index(): Response
     {
-        $inventory = ProductInventory::all();
+        $products = Product::where('prod_status', 'active')->with('inventory')->get();
 
-        $inventory = $inventory->map(function($item) {
-            $stockNo = $this->productService->getProductCode($item->prod_id);
-            $prodDesc = $this->productService->getProductName($item->prod_id);
-            $prodUnit = $this->productService->getProductUnit($item->prod_id);
-            $status = $item->qty_on_stock <= $item->reorder_level ? 'Reorder' : 'Available';
+        $products = $products->map(function($product) {
+            $inventory = $product->inventory;
+            $status = 'Reorder';
+            $qty_on_stock = 0;
+            $reorder_level = 0;
+
+            if ($inventory) {
+                $qty_on_stock = $inventory->qty_on_stock;
+                $reorder_level = $inventory->reorder_level;
+                $status = $qty_on_stock <= $reorder_level ? 'Reorder' : 'Available';
+            }
+        
             return [
-                'id' => $item->id,
-                'stockNo' => $stockNo,
-                'prodDesc' => $prodDesc,
-                'prodUnit' => $prodUnit,
-                'stockAvailable' => $item->qty_on_stock,
+                'id' => $inventory ? $inventory->id : null,
+                'stockNo' => $product->prod_newNo,
+                'prodDesc' => $product->prod_desc,
+                'prodUnit' => $product->prod_unit,
+                'stockAvailable' => $qty_on_stock,
                 'status' => $status,
+                'prodId' => $product->id
             ];
         });
-        return Inertia::render('Inventory/Index', ['inventory' => $inventory]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(ProductInventory $productInventory)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProductInventory $productInventory)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ProductInventory $productInventory)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ProductInventory $productInventory)
-    {
-        //
+        
+        return Inertia::render('Inventory/Index', ['inventory' => $products]);
     }
 }

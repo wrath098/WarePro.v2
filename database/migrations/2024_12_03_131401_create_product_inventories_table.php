@@ -18,7 +18,7 @@ return new class extends Migration
             $table->bigInteger('qty_purchase')->default(0);
             $table->bigInteger('qty_issued')->default(0);
             $table->string('location')->nullable();
-            $table->bigInteger('reorder_level')->nullable();
+            $table->bigInteger('reorder_level')->default(1);
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('prod_id')->references('id')->on('products');

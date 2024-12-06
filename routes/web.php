@@ -21,6 +21,7 @@ use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
 use App\Http\Controllers\ProductInventoryController;
+use App\Http\Controllers\ProductInventoryTransactionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -123,6 +124,7 @@ Route::middleware('auth')->prefix('iar')->group(function () {
 
 Route::middleware('auth')->prefix('inventory')->group(function () {
     Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
+    Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

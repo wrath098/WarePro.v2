@@ -7,6 +7,7 @@ use App\Models\IarTransaction;
 use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
+use App\Models\ProductPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class IarTransactionController extends Controller
     public function acceptIarParticular(Request $request)
     {   
         DB::beginTransaction();
-        
+
         try {
             $particular = IarParticular::findOrFail($request->pid);
             $product = $this->validateProduct($particular->stock_no);
@@ -74,11 +75,13 @@ class IarTransactionController extends Controller
                 'qty' => $particular->qty,
                 'refNo' => $particular->id,
                 'prodId' => $product->id,
+                'price' => $product->price,
                 'user' => $userId,
             ];
 
             $this->createInventoryTransaction($data);
             $this->updateProductInventory($data);
+            $this->updateProductPrice($data);
             $particular->update(['status' => 'completed', 'updated_by' => $userId]);
 
             $iarTransaction = IarTransaction::findOrFail($particular->air_id);
@@ -230,7 +233,7 @@ class IarTransactionController extends Controller
                 }
             }
         } 
-        elseif (preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $request)) {
+        elseif (preg_match("/^\d{2}-\d{2,3}-\d{2,4}$/", $request)) {
             $product = Product::where('prod_newNo', $request)->first();
             if ($product) {
                 return $product;
@@ -268,6 +271,17 @@ class IarTransactionController extends Controller
                 'qty_purchase' => $request['qty'],
                 'prod_id' => $request['prodId'],
                 'updated_by' => $request['user'],
+            ]);
+        }
+    }
+
+    private function updateProductPrice($product) {
+        $latestPrice = ProductPrice::where('prod_id', $product['prodId'])->orderBy('created_at', 'desc')->first();
+
+        if($product['price'] != null && $latestPrice->prod_price > $product['price']){
+            ProductPrice::create([
+                'prod_price' => $product['prodPrice'],
+                'prod_id' => $product['prodId'],
             ]);
         }
     }
