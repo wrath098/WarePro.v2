@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\ItemClassController;
 use App\Http\Controllers\OfficeController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\ProductInventoryTransactionController;
+use App\Http\Controllers\RisTransactionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,9 +32,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
 
@@ -125,6 +125,10 @@ Route::middleware('auth')->prefix('iar')->group(function () {
 Route::middleware('auth')->prefix('inventory')->group(function () {
     Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
+});
+
+Route::middleware('auth')->prefix('ris')->group(function () {
+    Route::get('/', [RisTransactionController::class, 'create'])->name('create.ris');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

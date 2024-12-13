@@ -201,20 +201,13 @@
                         <Inspect :class="{ 'text-white' : route().current('iar')}"/>
                         <span class="ml-3">Inspection and Acceptance</span>
                     </SidebarLink>
-                    <SidebarLink :href="route('inventory.index')" :active="false">
-                        <Stock/>
-                        <span class="ml-3">Stock Quantity</span>
+                    <SidebarLink :href="route('create.ris')" :active="route().current('create.ris')" class="mb-1">
+                        <ArrowRight :class="{ 'text-white' : route().current('create.ris')}"/>
+                        <span class="ml-3">Requisition and Issuance</span>
                     </SidebarLink>
-                </li>
-                <li>
-                    <div class="px-5 pt-2">
-                        <div class="flex flex-row items-center">
-                            <div class="text-sm font-light tracking-wide text-gray-500">RIS</div>
-                        </div>
-                    </div>
-                    <SidebarLink :href="'https://localhost'" :active="false">
-                        <ArrowRight/>
-                        <span class="ml-3">Releasing</span>
+                    <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
+                        <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
+                        <span class="ml-3">Stock Quantity</span>
                     </SidebarLink>
                 </li>
             </ul>
