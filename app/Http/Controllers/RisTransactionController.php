@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\RisTransaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,7 +12,8 @@ class RisTransactionController extends Controller
 {
     public function create(): Response
     {
-        return Inertia::render('Ris/Create');
+        $product = Product::where('prod_status', 'active')->get();
+        return Inertia::render('Ris/Create', ['products' => $product]);
     }
 
 }
