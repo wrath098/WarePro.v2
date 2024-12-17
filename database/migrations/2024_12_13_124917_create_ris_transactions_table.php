@@ -21,7 +21,7 @@ return new class extends Migration
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('office_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
-            $table->binary('attachment', length: 32)->nullable();
+            $table->string('attachment')->nullable();
             $table->foreign('prod_id')->references('id')->on('products');
             $table->foreign('office_id')->references('id')->on('offices');
             $table->foreign('created_by')->references('id')->on('users');
