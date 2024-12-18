@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Office;
 use App\Models\Product;
+use App\Models\ProductInventory;
 use App\Models\RisTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +52,14 @@ class RisTransactionController extends Controller
                 $risData['unit'] = $product['prod_unit'];
                 $risData['prodId'] = $product['id'];
 
+                $isProductAvailable = $this->validateAvailability($risData);
+                if($isProductAvailable !== true) {
+                    DB::rollback();
+                    return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prod_newNo'] . ' is ' . $isProductAvailable . ' ' . $product['prod_unit'] . '.']);
+                }
+                
                 $this->createRis($risData);
+                $this->updateQuantity($risData);
             }
         DB::commit();
         return redirect()->back()->with(['message' => 'RIS created successfully!']);
@@ -81,8 +89,23 @@ class RisTransactionController extends Controller
         ]);
     }
 
-    private function updateQuantity()
+    public function validateAvailability($requestData)
     {
-        
+        $productQuantity = ProductInventory::where('prod_id', $requestData['prodId'])->first();
+        $quantity = $productQuantity ? $productQuantity->qty_on_stock : 0;
+
+        if ($quantity >= $requestData['qty']) {
+            return true;
+        } else {
+            return $quantity;
+        }
+    }
+
+    private function updateQuantity($requestData)
+    {
+        $productQuantity = ProductInventory::where('prod_id', $requestData['prodId'])->lockForUpdate()->first();
+        $productQuantity->qty_on_stock -= $requestData['qty'];
+        $productQuantity->qty_issued -= $requestData['qty'];
+        return $productQuantity->save();
     }
 }
