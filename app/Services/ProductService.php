@@ -6,9 +6,7 @@ use App\Models\CapitalOutlay;
 use App\Models\Category;
 use App\Models\Fund;
 use App\Models\ItemClass;
-use App\Models\Office;
 use App\Models\PpmpConsolidated;
-use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Models\ProductPpmpException;
 use App\Models\ProductPrice;
@@ -191,7 +189,7 @@ class ProductService
     {
         $category = Category::where('fund_id', $fundId)
             ->where('cat_code', $code)
-            ->where('cat_name', $name)
+            ->whereRaw('LOWER(cat_name) = ?', [strtolower($name)])
             ->first();
         return $category;
     }

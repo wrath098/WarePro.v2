@@ -31,14 +31,14 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li><a :href="route('product.display.active')" class="after:content-['/'] after:ml-2 text-gray-600 hover:text-green-700">Products</a></li>
-                    <li class="text-green-700" aria-current="page">Price List</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Products</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Price List</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -84,7 +84,7 @@
                                         Unit Of Measure
                                     </th>
                                     <th v-for="(price, index) in products.data[0]?.price" :key="index" class="px-6 py-3 w-1/12">
-                                        <span>Price </span>( {{ index+1 }} )
+                                        <span>Price </span> <br>( {{ index+1 }} )
                                     </th>
                                 </tr>
                             </thead>

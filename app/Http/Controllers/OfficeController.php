@@ -11,35 +11,9 @@ use Inertia\Response;
 
 class OfficeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): Response
     {
-        $search = $request->input('search');
-        $offices = Office::query()
-        ->when($search, function ($query, $search) {
-            $query->where(function($q) use ($search) {
-                $q->where('office_code', 'like', '%' . $search . '%')
-                  ->orWhere('office_name', 'like', '%' . $search . '%')
-                  ->orWhere('office_head', 'like', '%' . $search . '%');
-            });
-        }, function ($query) {})
-        ->with('creator')
-        ->where('office_status', 'active')
-        ->orderBy('office_name')
-        ->paginate(10)
-        ->through(fn($office) => [
-            'id' => $office->id,
-            'code' => $office->office_code,
-            'name' => $office->office_name,
-            'head' => $office->office_head,
-            'position' => $office->position_head,
-            'status' => $office->office_status,
-            'addedBy' => $office->creator->name,
-        ]);
-
-        $data = Office::with('creator')
+        $offices = Office::with('creator')
             ->where('office_status', 'active')
             ->orderBy('office_name')
             ->get()
@@ -55,13 +29,9 @@ class OfficeController extends Controller
                 ];
             });
 
-        return Inertia::render('Office/Index', ['data' => $data, 'offices' => $offices, 'filters' => $request->only(['search']), 'authUserId' => Auth::id()]);
+        return Inertia::render('Office/Index', ['offices' => $offices, 'authUserId' => Auth::id()]);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -90,10 +60,6 @@ class OfficeController extends Controller
         }
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Office $office)
     {
         $validatedData = $request->validate([

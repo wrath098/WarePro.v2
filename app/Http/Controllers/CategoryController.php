@@ -20,9 +20,6 @@ class CategoryController extends Controller
         $this->productService = $productService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): Response
     {   
         $categories = $this->productService->getActiveCategory();
@@ -52,11 +49,9 @@ class CategoryController extends Controller
         return Inertia::render('Category/Index', ['categories' => $categories, 'funds' => $funds, 'authUserId' => Auth::id()]); 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        DB::beginTransaction();
         $fundId = $request->input('fundId');
         $catCode = $request->input('catCode');
         $catName = $request->input('catName');
@@ -66,29 +61,26 @@ class CategoryController extends Controller
             $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catCode, $catName);
 
             if($existingCategory) {
-                return redirect()->back()
-                    ->with(['error' => 'Category is already exist. If not on the list below, Please verify this to your system administrator.']);
-            } else {
-                Category::create([
-                    'fund_id' => $fundId,
-                    'cat_name' => $catName,
-                    'cat_code' => $catCode,
-                    'created_by' => $createdBy,
-                ]);
-
-                return redirect()->back()
-                    ->with(['message' => 'New Category was created successfully']);
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Category is already exist. If not on the list below, Please verify this to your system administrator.']);
             }
+
+            Category::create([
+                'fund_id' => $fundId,
+                'cat_name' => $catName,
+                'cat_code' => $catCode,
+                'created_by' => $createdBy,
+            ]);
+
+            Db::commit();
+            return redirect()->back()->with(['message' => 'New Category was created successfully']);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Failed to create category: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Failed to create New Category']);
+            return redirect()->back()->with(['error' => 'Failed to create New Category']);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request)
     {   
         $validated = $request->validate([

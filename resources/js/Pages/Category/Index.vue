@@ -81,13 +81,13 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Categories</li> 
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Categories</li> 
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -213,8 +213,8 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                                 <input type="hidden" v-model="editForm.updater">
                                 <input type="hidden" v-model="editForm.catId">
                                 <input type="text" v-model="editForm.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
-                                <input type="number" v-model="editForm.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required>
-                                <select v-model="editForm.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
+                                <input type="number" v-model="editForm.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required disabled>
+                                <select v-model="editForm.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required disabled>
                                     <option value="" disabled>Please choose its fund cluster if applicable</option>
                                     <option v-for="fund in funds" :key="fund.id" :value="fund.id">
                                         {{ fund.name }}

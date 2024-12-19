@@ -25,12 +25,9 @@ class ProductController extends Controller
     {
         $this->productService = $productService;
     }
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index(Request $request): Response
     {
-        $search = $request->input('search');
         $activeCategories  = Category::with('items')
             ->where('cat_status', 'active')
             ->get()
@@ -47,23 +44,12 @@ class ProductController extends Controller
                 ];
         });
     
-        $products = Product::query()
-            ->when($search, function ($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('prod_newNo', 'like', '%' . $search . '%')
-                      ->orWhere('prod_desc', 'like', '%' . $search . '%')
-                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%')
-                      ->orWhereHas('itemClass', function ($q) use ($search) {
-                            $q->where('item_name', 'like', '%' . $search . '%');
-                        });
-                });
-            }, function ($query) {})
-            ->with('itemClass')
+        $products = Product::with('itemClass')
             ->where('prod_status', 'active')
             ->orderBy('item_id', 'asc')
             ->orderBy('prod_desc', 'asc')
-            ->paginate(10)
-            ->through(fn($product) => [
+            ->get()
+            ->map(fn($product) => [
                 'id' => $product->id,
                 'newNo' => $product->prod_newNo,
                 'desc' => $product->prod_desc,
@@ -81,14 +67,10 @@ class ProductController extends Controller
         return Inertia::render('Product/Index', [
             'products' => $products, 
             'categories' => $activeCategories ,
-            'filters' => $request->only(['search']), 
             'authUserId' => Auth::id()
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -106,42 +88,32 @@ class ProductController extends Controller
             return DB::transaction(function () use ($validatedData) {
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
 
-               $product = Product::create([
+                $product = Product::create([
                     'prod_newNo' => $controlNo,
                     'prod_desc' => $validatedData['prodDesc'],
                     'prod_unit' => $validatedData['prodUnit'],
                     'prod_remarks' => $validatedData['prodRemarks'],
-                    'prod_remarks' => $validatedData['prodRemarks'],
                     'prod_oldNo' => $validatedData['prodOldCode'],
                     'item_id' => $validatedData['itemId'],
                     'created_by' => $validatedData['createdBy'],
+                    'updated_by' => $validatedData['createdBy'],
                 ]);
 
                 ProductPrice::create([
                     'prod_price' => $validatedData['prodPrice'],
                     'prod_id' => $product->id,
                 ]);
+
                 return redirect()->back()
                     ->with(['message' => 'New Product has been successfully added.']);
             });
         } catch (\Exception $e) {
-            Log::error('Product update failed: ' . $e->getMessage());
+            Log::error('Creating product failed: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'Creation of new product failed.']);
         }
     }
 
-    public function showAutoComplete(Request $request)
-    {
-        $query = $request->input('autoCompleteQuery');
-        $result = Product::where('name', 'LIKE', "%{query}%")->get();
-
-        return response()->json($result);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request)
     {
         $validatedData = $request->validate([
@@ -156,7 +128,7 @@ class ProductController extends Controller
                 $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
 
                 $product = Product::findOrFail($validatedData['prodId']);
-                $product->update(['prod_desc' => $validatedData['prodDesc']]);
+                $product->update(['prod_desc' => $validatedData['prodDesc'], 'updated_by' => $validatedData['updatedBy']]);
 
                 if($latestPrice != $validatedData['prodPrice']) {
                     ProductPrice::create([
@@ -204,6 +176,7 @@ class ProductController extends Controller
                         'prod_oldNo' => $validatedData['prodOldCode'],
                         'item_id' => $validatedData['itemId'],
                         'created_by' => $validatedData['updatedBy'],
+                        'updated_by' => $validatedData['updatedBy'],
                     ]);
 
                 ProductPrice::create([

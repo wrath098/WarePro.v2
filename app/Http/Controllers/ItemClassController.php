@@ -6,6 +6,7 @@ use App\Models\ItemClass;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,23 +20,15 @@ class ItemClassController extends Controller
         $this->productService = $productService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): Response
     {
-        $queryItem = ItemClass::query()
-        ->when($request->input('search'), function ($query, $search){
-            $query->where('item_name', 'like', '%' . $search . '%');
-        }, function ($query) {})
-        ->with('category', 'creator')
-        ->where('item_status', 'active')
-        ->orderBy('cat_id', 'asc')
-        ->orderBy('item_name', 'asc')
-        ->paginate(10)
-        ->withQueryString();
+        $queryItem = ItemClass::with('category', 'creator')
+            ->where('item_status', 'active')
+            ->orderBy('cat_id', 'asc')
+            ->orderBy('item_name', 'asc')
+            ->get();
 
-        $itemClass = $queryItem->through(fn($item) => [
+        $itemClass = $queryItem->map(fn($item) => [
             'id' => $item->id,
             'code' => str_pad($item->item_code, 2, '0', STR_PAD_LEFT),
             'name' => $item->item_name,
@@ -52,39 +45,39 @@ class ItemClassController extends Controller
 
         return Inertia::render('Item/Index', [
             'itemClasses' => $itemClass,
-            'filters' => $request->only(['search']),
             'categories' => $categories,
             'authUserId' => Auth::id()
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        DB::beginTransaction();
+
         $validated = $request->validate([
             'catId' => 'required|exists:categories,id',
-            'itemCode' => 'required|integer',
             'itemName' => 'required|string|max:255',
             'createdBy' => 'required|integer',
-
         ]);
 
         $catId = $validated['catId'];
-        $itemCode = $validated['itemCode'];
         $itemName = $validated['itemName'];
         $createdBy = $validated['createdBy'];
 
         try {
-            $itemExists = ItemClass::where('cat_id', $catId)
-                                    ->where('item_code', $itemCode)
-                                    ->exists();
+            $itemNameExist = ItemClass::withTrashed()->whereRaw('LOWER(item_name) = ?', [strtolower($validated['itemName'])])->first();
+            if ($itemNameExist) {
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Item Name under the selected category is already exist.']);
+            }
 
-            if($itemExists) {
-                return redirect()->back()
-                    ->with(['error' => 'Item code is already taken within the selected Category.']);
-            } 
+            $latestCode = ItemClass::withTrashed()
+                    ->where('cat_id', $catId)
+                    ->orderBy('created_at', 'desc')
+                    ->select('item_code')
+                    ->first();
+
+            $itemCode = $latestCode ? (int) $latestCode->item_code + 1 : 1;
 
             ItemClass::create([
                 'item_code' => $itemCode,
@@ -93,21 +86,21 @@ class ItemClassController extends Controller
                 'created_by' => $createdBy,
             ]);
 
+            DB::commit();
             return redirect()->back()
                 ->with(['message' => 'New Item Class has been successfully added']);
             
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Creation of Item Class: ' . $e->getMessage());
             return redirect()
                 ->with(['error' => 'An error occurred while adding the new item class.']);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, ItemClass $itemClass)
     {
+        DB::beginTransaction();
         $validatedData = $request->validate([
             'itemId' => 'required|integer',
             'editName' => 'required|string|max:255',
@@ -121,10 +114,12 @@ class ItemClassController extends Controller
                 'item_name' => $validatedData['editName'],
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
-
+            
+            DB::commit();
             return redirect()->back()
                 ->with(['message' => 'Item Class name was updated successfully.']);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Update of Item Class: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'An error occurred while adding the new item class.']);
@@ -133,6 +128,8 @@ class ItemClassController extends Controller
 
     public function deactivate(Request $request, ItemClass $itemClass)
     {
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'itemId' => 'required|integer',
             'updatedBy' => 'required|integer',
@@ -145,10 +142,12 @@ class ItemClassController extends Controller
                 'item_status' => 'deactivated',
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
-
+            
+            DB::commit();
             return redirect()->back()
                 ->with(['message' => 'Item Class name was updated successfully.']);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Deletion of Item Class: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'An error occurred while adding the new item class.']);
