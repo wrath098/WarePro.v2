@@ -195,27 +195,14 @@ class ProductController extends Controller
 
     public function showPriceList(Request $request)
     {
-        $search = $request->input('search');
-    
-        $products = Product::query()
-            ->when($search, function ($query, $search) {
-                $query->where(function($q) use ($search){
-                    $q->where('prod_newNo', 'like', '%' . $search . '%')
-                      ->orWhere('prod_desc', 'like', '%' . $search . '%')
-                      ->orWhere('prod_oldNo', 'like', '%' . $search . '%')
-                      ->orWhereHas('itemClass', function ($q) use ($search) {
-                            $q->where('item_name', 'like', '%' . $search . '%');
-                        });
-                });
-            }, function ($query) {})
-            ->with(['itemClass', 'prices' => function ($query) {
+        $products = Product::with(['itemClass', 'prices' => function ($query) {
                 $query->orderBy('created_at', 'desc')->limit(5);
             }])
             ->where('prod_status', 'active')
             ->orderBy('item_id', 'asc')
             ->orderBy('prod_desc', 'asc')
-            ->paginate(10)
-            ->through(fn($product) => [
+            ->get()
+            ->map(fn($product) => [
             'id' => $product->id,
             'newNo' => $product->prod_newNo,
             'desc' => $product->prod_desc,
@@ -233,7 +220,6 @@ class ProductController extends Controller
         
         return Inertia::render('Product/PriceList', [
             'products' => $products,
-            'filters' => $request->only('search')
         ]);
     }
 
@@ -259,7 +245,7 @@ class ProductController extends Controller
         }
     }
 
-    #FOR AUTOMATIC UPLOAD OF PRODUCTS ONLY
+    #FOR UPLOAD OF PRODUCTS FROM EXCEL FILE ONLY
     // public function importProduct()
     // {
     //     $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';

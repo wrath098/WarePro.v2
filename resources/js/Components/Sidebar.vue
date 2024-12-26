@@ -75,6 +75,12 @@
                                     Offices
                                 </SubSidebarLink>
                             </li>
+                            <li>
+                                <SubSidebarLink :href="''" :active="false">
+                                    <ArrowHeadRight :class="false"/>
+                                    Capital Outlay
+                                </SubSidebarLink>
+                            </li>
                         </template>
                     </SidebarDropdown>
                 </li>
@@ -87,19 +93,19 @@
                             <li>
                                 <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active')}"/>
-                                    Lists
+                                    Item List
                                 </SubSidebarLink>
                             </li>
                             <li>
                                 <SubSidebarLink :href="route('product.display.active.pricelist')" :active="route().current('product.display.active.pricelist')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active.pricelist')}"/>
-                                    Prices
+                                    Price Timeline
                                 </SubSidebarLink>
                             </li>
                             <li>
                                 <SubSidebarLink :href="route('product.unmodified.list')" :active="route().current('product.unmodified.list')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('product.unmodified.list')}"/>
-                                    Unmodified
+                                    Unmodified Quantity
                                 </SubSidebarLink>
                             </li>
                         </template>

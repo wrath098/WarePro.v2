@@ -99,13 +99,14 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Project Procurement and Manangement Plan</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">{{ ppmp.requestee.office_name }}</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -129,40 +130,44 @@
                                 </div>
                             </div>
 
-                            <div class="mx-2">                               
-                                <div class="mb-4 px-2">
-                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Requestee:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.requestee.office_name }}</p>
-                                </div>
-                                
-                                <div class="mb-4 px-2">
-                                    <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">No.:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_code }}</p>
-                                </div>
-                                
-                                <div class="mb-4 px-2">
-                                    <label for="ppmpType" class="block text-sm font-medium text-[#07074D] mb-1">Type:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_type }}</p>
-                                </div>
-                                
-                                <div class="mb-4 px-2">
-                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Price:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.price_adjustment }}</p>
-                                </div>
-                                
-                                <div class="mb-4 px-2">
-                                    <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_year }}</p>
-                                </div>       
-                                
-                                <div class="mb-4 px-2">
-                                    <label for="totalItems" class="block text-sm font-medium text-[#07074D] mb-1">Total Items Listed:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalItems }}</p>
-                                </div>
+                            <div class="p-2">
+                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
+                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Requestee</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.requestee.office_name }}</dd>
+                                        </div>
 
-                                <div class="mb-4 px-2">
-                                    <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Total Amount:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.formattedOverallPrice }}</p>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Transaction No.</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_code }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Type</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_type }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Price Adjustment</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.price_adjustment * 100}}%</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Calendar Year</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_year }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Total Items Listed</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalItems }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Total Amount</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.formattedOverallPrice }}</dd>
+                                        </div>
+                                    </dl>
                                 </div>
                             </div>
                         </div>

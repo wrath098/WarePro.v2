@@ -21,26 +21,26 @@ class ProductPpmpExceptionController extends Controller
         $this->productService = $productService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $search = $request->input('search');
+        $list = Product::where('prod_status', 'active')
+                ->get()
+                ->map(fn($item) => [
+                    'id' => $item->id,
+                    'code' => $item->prod_newNo,
+                    'desc' => $item->prod_desc,
+                    'unit' => $item->prod_unit,
+                ]);
 
-        $unModified = ProductPpmpException::where('status', 'active')->orderBy('created_at', 'desc')
-            ->when($search, function ($query) use ($search) {
-                $query->whereHas('product', function ($q) use ($search) {
-                    $q->where('prod_newNo', 'like', '%' . $search . '%')
-                    ->orWhere('prod_desc', 'like', '%' . $search . '%')
-                    ->orWhere('prod_oldNo', 'like', '%' . $search . '%');
-                });
-            })
-            ->paginate(10)
-            ->withQueryString();
+        $unModified = ProductPpmpException::where('status', 'active')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
 
-        $products = $unModified->getCollection()->map( function ($product) {
-            $data = Product::find($product->prod_id);
+        $productIds = $unModified->pluck('prod_id');
+        $productsData = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+        $products = $unModified->map( function ($product) use ($productsData) {
+            $data = $productsData->get($product->prod_id);
 
             if (!$data) {
                 return null;
@@ -51,35 +51,26 @@ class ProductPpmpExceptionController extends Controller
                 'year' => $product->year,
                 'code' => $data->prod_newNo,
                 'oldCode' => $data->prod_oldNo,
-                'desc' => '( ' . $this->productService->getItemName($data->item_id) . ' ) ' . $data->prod_desc,
+                'desc' => $data->prod_desc,
                 'unit' => $data->prod_unit,
             ];
 
         })->filter();
 
-        $unModified->setCollection($products);
-
         return Inertia::render('Product/Unmodified', [
-            'products' => $unModified,
-            'filters' => $request->only('search'),
+            'products' => $products,
+            'list' => $list,
             'authUserId' => Auth::id()
         ]);
     }
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'prodCode' => 'required|string|max:12',
-            'prodYear' => 'required|numeric',
-        ]);
-    
         try {
-            $validateProduct = Product::where('prod_newNo', $validatedData['prodCode'])
-                ->where('prod_status', 'active')
-                ->get();
+            $item = Product::findOrFail($request->prod['id']);
 
-            $validateList = ProductPpmpException::where('prod_id', $validateProduct->first()->id)
-                ->where('year', $validatedData['prodYear'])
+            $validateList = ProductPpmpException::where('prod_id', $item->id)
+                ->where('year', $request['ppmpYear'])
                 ->first();
             
             if($validateList) {
@@ -88,21 +79,13 @@ class ProductPpmpExceptionController extends Controller
                     ->with(['error' => 'Product Code is already exist on list!']);
             }
 
-            if ($validateProduct && $validateProduct->count() > 1) {
-                return redirect()->back()
-                    ->with(['error' => 'Product Code has been used by more than products. Please check your product list!']);
-            } else if ( $validateProduct && $validateProduct->count() === 1) {
-                ProductPpmpException::create([
-                    'year' => $validatedData['prodYear'],
-                    'prod_id' => $validateProduct->first()->id,
-                    ]);
+            ProductPpmpException::create([
+                'year' => $request['ppmpYear'],
+                'prod_id' => $item->id,
+            ]);
 
-                    return redirect()->back()
-                    ->with(['message' => 'Product has been added to the Unmodified successfully!']);
-            } else {
-                return redirect()->back()
-                    ->with(['error' => 'Product Code does not exist.']);
-            }
+            return redirect()->back()
+            ->with(['message' => 'Product has been added successfully!']);
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());

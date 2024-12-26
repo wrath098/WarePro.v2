@@ -104,13 +104,14 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="text-green-700" aria-current="page">Project Procurement and Manangement Plan</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Import</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -199,12 +200,12 @@
                                     <DataTable class="w-full text-gray-900 display">
                                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                                             <tr>
-                                                <th scope="col" class="px-6 py-3 w-1/6">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">Office Code</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">PPMP No.</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">PPMP Type</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">Price Adjustment</th>
-                                                <th scope="col" class="px-6 py-3 w-1/6">Action/s</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
+                                                <th scope="col" class="px-6 py-3 w-5/12">Office Code</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">PPMP No.</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">PPMP Type</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Price Adjustment</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
                                             </tr>
                                         </thead>
                                         <tbody>

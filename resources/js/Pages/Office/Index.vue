@@ -97,7 +97,7 @@
                     <div class="relative overflow-x-auto">
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 justify-end">
                             <AddButton @click="showModal('add')">
-                                    <span class="mr-2">New Item Class</span>
+                                    <span class="mr-2">New Office</span>
                             </AddButton>
                         </div>
                         <DataTable class="w-full text-left rtl:text-right text-gray-900">

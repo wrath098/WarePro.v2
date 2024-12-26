@@ -52,11 +52,12 @@ class PpmpTransactionController extends Controller
                     'ppmpType' => ucfirst($ppmp->ppmp_type),
                     'basedPrice' => $ppmp->price_adjustment,
                     'officeId' => $ppmp->office_id,
-                    'officeCode' => $ppmp->requestee->office_code ?? ''
+                    'officeCode' => $ppmp->requestee->office_name ?? ''
                 ];
         });
         
         $office = Office::where('office_status', 'active')
+            ->orderBy('office_name')
             ->get()
             ->map(function ($office) {
                 return [

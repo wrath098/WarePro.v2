@@ -65,7 +65,7 @@ class PriceListActiveController extends Controller
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
-        $pdf->Output('iPPMP.pdf', 'I');
+        $pdf->Output('Product Price List.pdf', 'I');
     }
 
     protected function tableHeader()
@@ -112,7 +112,7 @@ class PriceListActiveController extends Controller
                                                 <th width="25px">' . $count . '</th>
                                                 <th width="40px">' . $product->prod_oldNo . '</th>
                                                 <th width="63px">' . $product->prod_newNo . '</th>
-                                                <th width="376px">' . '(' . $item->item_name . ') ' . $product->prod_desc . '</th>
+                                                <th width="376px">' . $product->prod_desc . '</th>
                                                 <th width="60px">' . $product->prod_unit . '</th>
                                                 <th width="63px" style="text-align: right;">' . ($price[0] != 0 ? number_format($price[0], 2, '.', ',') : '-') . '</th>
                                                 <th width="63px" style="text-align: right;">' . ($price[1] != 0 ? number_format($price[1], 2, '.', ',') : '-') . '</th>
