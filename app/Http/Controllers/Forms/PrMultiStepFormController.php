@@ -231,7 +231,7 @@ class PrMultiStepFormController extends Controller
         }
     }
 
-    public function stepThree(Request $request)
+    public function submit(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -255,11 +255,11 @@ class PrMultiStepFormController extends Controller
             }
 
             DB::commit();
-            return response()->json(['message' => 'Successfully executed the request.'], 200);
+            return redirect()->route('pr.display.transactions')->with(['message' => 'Successfully executed the request.']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e->getMessage());
-            return response()->json(['error' => 'An error occurred while processing your request.'], 500);
+            return redirect()->back()->with(['error' => 'An error occurred while processing your request. Please contact your system administrator.']);
         }
     }
 

@@ -100,7 +100,7 @@
 
                                             <select v-model="generatePr.prDesc" class="mb-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                                 <option value="" disabled>Purchase Request Description</option>
-                                                <option value="nc">Non-Contract</option>
+                                                <option value="nc">Non-Contract/Bidding</option>
                                                 <option value="dc">Direct Contract</option>
                                                 <option value="psdbm">PS-DBM</option>
                                             </select>  

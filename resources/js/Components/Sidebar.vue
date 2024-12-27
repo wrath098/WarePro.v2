@@ -211,9 +211,17 @@
                         <ArrowRight :class="{ 'text-white' : route().current('create.ris')}"/>
                         <span class="ml-3">Requisition and Issuance</span>
                     </SidebarLink>
+                    <SidebarLink :href="''" :active="false" class="mb-1">
+                        <ArrowRight :class="{ 'text-white' : false}"/>
+                        <span class="ml-3">RIS Logs</span>
+                    </SidebarLink>
                     <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
                         <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
                         <span class="ml-3">Stock Quantity</span>
+                    </SidebarLink>
+                    <SidebarLink :href="''" :active="false" class="mb-1">
+                        <ArrowRight :class="{ 'text-white' : false}"/>
+                        <span class="ml-3">Stock Card</span>
                     </SidebarLink>
                 </li>
             </ul>

@@ -104,7 +104,7 @@
             selectedItems: selectedItems.value,
             prTransactionInfo: props.prInfo,
         };
-        Inertia.post('step-3', requestData);
+        Inertia.post('submit', requestData);
     };
 </script>
 

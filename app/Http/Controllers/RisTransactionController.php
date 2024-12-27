@@ -23,6 +23,12 @@ class RisTransactionController extends Controller
         return Inertia::render('Ris/Create', ['products' => $product, 'office' => $office]);
     }
 
+    public function RisLogs(): Response
+    {
+        $risTransaction = RisTransaction::all();
+        return Inertia::render();
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();
