@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpTransaction;
+use App\Models\PpmpConsolidated;
 use App\Models\PrParticular;
 use App\Models\PrTransaction;
 use App\Services\ProductService;
@@ -47,6 +48,60 @@ class PrTransactionController extends Controller
         ]);
     }
 
+    public function showProcurementBasis() {
+        $ppmpList = PpmpTransaction::with(['purchaseRequests', 'updater'])
+                ->where(function($query) {
+                    $query->where('ppmp_type', 'consolidated')
+                        ->orWhere('ppmp_type', 'contingency');
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+        $ppmpList = $ppmpList->map(function ($transaction) {
+            return [
+                'id' => $transaction->id,
+                'code' => $transaction->ppmp_code,
+                'ppmpYear' => $transaction->ppmp_year,
+                'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
+                'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
+                'version' => $transaction->ppmp_version ?? 'N/A',
+                'pr' => $transaction->purchaseRequests->count(),
+                'createdAt' => $transaction->created_at->format('Y-m-d H:i:s'),
+                'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
+            ];
+        });
+
+        return Inertia::render('Pr/ProcurementBasis', [
+            'ppmpList' => $ppmpList,
+        ]);
+    }
+
+    public function showAvailableToPurchase(PpmpTransaction $ppmpTransaction) 
+    {
+        $transaction = $ppmpTransaction->load(['consolidated', 'purchaseRequests']);
+
+        $particulars = $transaction->consolidated->map(function ($particular) {
+            $totalOnPr = $this->getPrUnderPpmpParticular($particular->id);
+            $availableQty = ($particular->qty_first + $particular->qty_second) - $totalOnPr;
+
+            return [
+                'prodId' => $particular->id,
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'firstQty' => $particular->qty_first,
+                'secondQty' => $particular->qty_second,
+                'onPrQty' => $totalOnPr,
+                'availableQty' => $availableQty,
+            ];
+        });
+        
+        return Inertia::render('Pr/MonitorParticular', [
+            'transaction' => $transaction->purchaseRequests,
+            'particulars' => $particulars,
+        ]);
+    }
+
     public function showParticulars(PrTransaction $prTransaction)
     {
         $descriptionMap = [
@@ -85,6 +140,19 @@ class PrTransactionController extends Controller
             'particulars' => $reformatParticular,
             'trashed' => $resultTrashedParticular,
         ]);
+    }
+
+    private function getPrUnderPpmpParticular($ppmpParticularId)
+    {
+        $prList = PpmpConsolidated::findOrFail($ppmpParticularId);
+        $pr = $prList->load(['purchaseRequest' => function ($query) {
+            $query->where('status', '!=', 'failed')
+                ->get();
+        }]);
+
+        $qtyOnPr = $pr->purchaseRequest->sum('qty');
+
+        return $qtyOnPr ?? 0;
     }
 
 }

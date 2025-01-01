@@ -170,11 +170,17 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Procurement</div>
                         </div>
                     </div>
-                    <SidebarDropdown :active="route().current('pr.form.step1') || route().current('pr.display.transactions')">
-                            <Bag :class="{'text-white': route().current('pr.form.step1') || route().current('pr.display.transactions')}" />
+                    <SidebarDropdown :active="route().current('pr.display.procurementBasis') || route().current('pr.form.step1') || route().current('pr.display.transactions')">
+                            <Bag :class="{'text-white': route().current('pr.display.procurementBasis') || route().current('pr.form.step1') || route().current('pr.display.transactions')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request</span>
                             <ArrowDown :class="{'text-white': route().current('pr.form.step1') || route().current('pr.display.transactions')}" />
                         <template #dropdown-items>
+                            <li>
+                                <SubSidebarLink :href="route('pr.display.procurementBasis')" :active="route().current('pr.display.procurementBasis')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('pr.display.procurementBasis')}"/>
+                                    Procurement Basis
+                                </SubSidebarLink>
+                            </li>
                             <li>
                                 <SubSidebarLink :href="route('pr.form.step1')" :active="route().current('pr.form.step1')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('pr.form.step1')}"/>

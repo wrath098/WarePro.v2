@@ -31,8 +31,9 @@ class PpmpTransactionController extends Controller
 
     public function index(Request $request): Response
     {   
-        $currentYear = date('Y');
+        $currentYear = 2024;
 
+        
         $officePpmpExist = PpmpTransaction::with('requestee')
             ->where(function($query) use ($currentYear) {
                 $query->where(function($query) {
@@ -460,7 +461,9 @@ class PpmpTransactionController extends Controller
         try {
             $ppmpTransaction = PpmpTransaction::with('particulars')->where('id', $request->input('ppmpId'))->first();
             if ($ppmpTransaction) {
-                $ppmpTransaction->forceDelete();
+                $ppmpTransaction->update(['updated_by' => Auth::id()]);
+                $ppmpTransaction->particulars()->delete();
+                $ppmpTransaction->delete();
                 return redirect()->back()
                     ->with(['message' => 'PPMP deletion was successful.']);
             } else {

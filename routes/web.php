@@ -21,6 +21,7 @@ use App\Http\Controllers\Pdf\IndividualPpmpController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
+use App\Http\Controllers\Pdf\SummaryOfConsolidatedPpmpController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\ProductInventoryTransactionController;
 use App\Http\Controllers\RisTransactionController;
@@ -107,6 +108,8 @@ Route::middleware('auth')->prefix('pr')->group(function () {
     Route::get('/create/step-2', [PrMultiStepFormController::class, 'stepTwo'])->name('pr.form.step2');
     Route::post('/create/submit', [PrMultiStepFormController::class, 'submit'])->name('pr.form.submit');       
     Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
+    Route::get('/procurement-basis', [PrTransactionController::class, 'showProcurementBasis'])->name('pr.display.procurementBasis');
+    Route::get('/procurement-basis/available-list/{ppmpTransaction}', [PrTransactionController::class, 'showAvailableToPurchase'])->name('pr.display.availableToPurchase');
     Route::get('/show-pr-particular/{prTransaction}', [PrTransactionController::class, 'showParticulars'])->name('pr.show.particular');
     Route::put('/particular/update', [PrParticularController::class, 'update'])->name('pr.particular.update');
     Route::post('/particular/restore/{prParticular}', [PrParticularController::class, 'restore'])->name('pr.particular.restore');
@@ -136,6 +139,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
     Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
     Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
+    Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
     Route::get('/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
