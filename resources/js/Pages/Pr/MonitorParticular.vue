@@ -1,17 +1,10 @@
 <script setup>
     import { Head} from '@inertiajs/vue3';
-    import { reactive, ref, watch, computed } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
-    import Modal from '@/Components/Modal.vue';
-    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
-    import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import Dropdown from '@/Components/Dropdown.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
-    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
 
     const props = defineProps({
+        ppmp: Object,
         transaction: Object,
         particulars: Object,
     });
@@ -28,7 +21,7 @@
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Purchase Request</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Procurement Basis</a></li>
-                    <li><a class="after:content-[''] after:ml-2 text-[#86591e]">Transaction No.</a></li>
+                    <li><a class="after:content-[''] after:ml-2 text-[#86591e]">Transaction No. : {{ ppmp.ppmpCode }}</a></li>
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
@@ -43,18 +36,42 @@
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="mx-2 w-full md:w-3/12 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div class="flex-1 flex items-start justify-between rounded-lg">
-                                <div class="flex flex-col gap-1 ">
-                                    <h2 class="text-lg font-semibold text-[#07074D] mb-4">Purchase Request List</h2>
+                        <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex-1 flex items-start justify-between bg-indigo-300 p-2 rounded-t-xl md:mb-8">
+                                <div class="flex flex-col gap-1">
+                                    <h2 class="text-lg justify-center font-semibold text-[#161555] mb-4">Purchase Request Information</h2>
                                 </div>
                             </div>
-                            <div v-for="pr in transaction" :key="pr.id" class="mb-4">
-                                <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_no }}</p>
+
+                            <div class="mx-2">                               
+                                <div class="mb-4 px-2">
+                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">PPMP Transaction No.:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmpCode }}</p>
+                                </div>
+
+                                <div class="mb-4 px-2">
+                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Calendar Year:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmpYear }}</p>
+                                </div>
+
+                                <div class="mb-4 px-2">
+                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Cumulative Total:</label>
+                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalAmount }}</p>
+                                </div>
+
+                                <div class="mb-4 px-2">
+                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">PR List: {{ ppmp.prCount }}</label>
+                                    <div v-for="pr in transaction" :key="pr.id">
+                                        <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_no }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
+                        <div class="mx-2 w-full md:w-9/12 bg-white rounded-md shadow mt-5 md:mt-0">
+                            <div class="bg-indigo-300 p-2 rounded-t-xl">
+                                <h2 class="text-lg font-semibold text-[#171858] mb-4">Particulars</h2>
+                            </div>
                             <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
                                     <DataTable class="w-full text-gray-900 display">
@@ -72,7 +89,7 @@
                                         </thead>
                                         <tbody>
                                             <tr v-for="(particular, index) in particulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                                <td class="px-6 py-3">{{ ++index }}</td>
+                                                <td class="px-6 py-3">{{ index + 1 }}</td>
                                                 <td class="px-6 py-3">{{ particular.prodCode }}</td>
                                                 <td class="px-6 py-3">{{ particular.prodName }}</td>
                                                 <td class="px-6 py-3">{{ particular.prodUnit }}</td>

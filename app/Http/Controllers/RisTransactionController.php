@@ -23,10 +23,10 @@ class RisTransactionController extends Controller
         return Inertia::render('Ris/Create', ['products' => $product, 'office' => $office]);
     }
 
-    public function RisLogs(): Response
+    public function risLogs(): Response
     {
-        $risTransaction = RisTransaction::all();
-        return Inertia::render();
+        $risTransaction = RisTransaction::orderBy('created_at', 'desc')->limit(1000)->get();
+        return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
     }
 
     public function store(Request $request)

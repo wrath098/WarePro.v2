@@ -105,7 +105,7 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-['/'] after:ml-2 text-gray-400">Requisition and Issuance</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Requisition and Issuance</a></li>
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">

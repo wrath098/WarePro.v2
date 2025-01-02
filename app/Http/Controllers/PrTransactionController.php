@@ -78,7 +78,20 @@ class PrTransactionController extends Controller
 
     public function showAvailableToPurchase(PpmpTransaction $ppmpTransaction) 
     {
-        $transaction = $ppmpTransaction->load(['consolidated', 'purchaseRequests']);
+        $transaction = $ppmpTransaction->load(['consolidated', 'purchaseRequests.prParticulars']);
+
+        $total = $transaction->purchaseRequests->map(function($pr) {
+            return isset($pr->prParticulars) ? $pr->prParticulars->sum(function($particular) {
+                return (float)$particular['unitPrice'] * (int)$particular['qty'];
+            }) : 0;
+        })->sum();
+
+        $ppmp = [
+            'ppmpCode' => $transaction->ppmp_code,
+            'ppmpYear' => $transaction->ppmp_year,
+            'totalAmount' => $total ? number_format($total, 2, '.', ',') : 0,
+            'prCount' => $transaction->purchaseRequests->count(),
+        ];
 
         $particulars = $transaction->consolidated->map(function ($particular) {
             $totalOnPr = $this->getPrUnderPpmpParticular($particular->id);
@@ -97,6 +110,7 @@ class PrTransactionController extends Controller
         });
         
         return Inertia::render('Pr/MonitorParticular', [
+            'ppmp' => $ppmp,
             'transaction' => $transaction->purchaseRequests,
             'particulars' => $particulars,
         ]);

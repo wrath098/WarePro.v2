@@ -31,8 +31,7 @@ class PpmpTransactionController extends Controller
 
     public function index(Request $request): Response
     {   
-        $currentYear = 2024;
-
+        $currentYear = date('Y');
         
         $officePpmpExist = PpmpTransaction::with('requestee')
             ->where(function($query) use ($currentYear) {

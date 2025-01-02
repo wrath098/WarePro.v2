@@ -217,8 +217,8 @@
                         <ArrowRight :class="{ 'text-white' : route().current('create.ris')}"/>
                         <span class="ml-3">Requisition and Issuance</span>
                     </SidebarLink>
-                    <SidebarLink :href="''" :active="false" class="mb-1">
-                        <ArrowRight :class="{ 'text-white' : false}"/>
+                    <SidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')" class="mb-1">
+                        <ArrowRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
                         <span class="ml-3">RIS Logs</span>
                     </SidebarLink>
                     <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
@@ -232,7 +232,7 @@
                 </li>
             </ul>
             <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
-                <li>
+                <li> 
                     <SidebarLink :href="route('dashboard')" :active="false">
                         <Documents/>
                         <span class="ml-3">Reports</span>
