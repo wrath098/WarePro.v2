@@ -54,7 +54,7 @@
                             <li>
                                 <SubSidebarLink :href="route('fund.display.all')" :active="route().current('fund.display.all')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('fund.display.all')}"/>
-                                    Fund Clusters
+                                    Account Classification
                                 </SubSidebarLink>
                             </li>
                             <li>

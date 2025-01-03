@@ -162,18 +162,27 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Category</h3>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> New Category</h3>
+                            <p class="text-sm text-gray-500"> Enter the details for the New Category you wish to add.</p>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details for the new Ctegory you wish to add.</p>
                                 <input type="hidden" v-model="form.createdBy">
-                                <input type="text" v-model="form.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
-                                <input type="number" v-model="form.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required>
-                                <select v-model="form.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                    <option value="" disabled selected>Please choose its fund cluster if applicable</option>
-                                    <option v-for="fund in funds" :key="fund.id" :value="fund.id">
-                                        {{ fund.name }}
-                                    </option>
-                                </select>
+                                <div class="relative z-0 w-full group mt-8">
+                                    <select v-model="form.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Please choose the Account Classification applicable</option>
+                                        <option v-for="fund in funds" :key="fund.id" :value="fund.id">
+                                            {{ fund.name }}
+                                        </option>
+                                    </select>
+                                    <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="form.catName" type="text" name="category" id="category" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
+                                    <label for="category" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
+                                </div>
+                                <!-- <div class="relative z-0 w-full group my-2">
+                                    <input v-model="form.catCode" type="number" name="categoryCode" id="categoryCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
+                                    <label for="categoryCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Code</label>
+                                </div> -->
                             </div>
                         </div>
                     </div>

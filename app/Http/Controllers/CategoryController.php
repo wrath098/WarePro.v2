@@ -53,22 +53,24 @@ class CategoryController extends Controller
     {
         DB::beginTransaction();
         $fundId = $request->input('fundId');
-        $catCode = $request->input('catCode');
         $catName = $request->input('catName');
         $createdBy = $request->input('createdBy');
         
         try {
-            $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catCode, $catName);
+            $lastCode = Category::selectRaw('cat_code')->orderBy('cat_code', 'desc')->first();
+            $newCode = (int) $lastCode->cat_code + 1;
+
+            $existingCategory  = $this->productService->validateCategoryExistence($fundId, $newCode, $catName);
 
             if($existingCategory) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Category is already exist. If not on the list below, Please verify this to your system administrator.']);
+                return redirect()->back()->with(['error' => 'Category Name is already exist.']);
             }
 
             Category::create([
                 'fund_id' => $fundId,
                 'cat_name' => $catName,
-                'cat_code' => $catCode,
+                'cat_code' => $newCode,
                 'created_by' => $createdBy,
             ]);
 

@@ -22,7 +22,7 @@ class FundController extends Controller
 
         foreach ($funds as $list) {
             $creator = User::findOrFail($list->created_by);
-            $list['nameOfCreator'] = $creator->name;
+            $list['nameOfCreator'] = $creator ? $creator->name : '';
         }
 
         return Inertia::render('Fund/Index', ['fundCluster' => $funds, 'authUserId' => Auth::id()]);
@@ -41,21 +41,22 @@ class FundController extends Controller
             $existingFund = Fund::withTrashed()->whereRaw('LOWER(fund_name) = ?', [strtolower($validation['fundName'])])->first();
             if ($existingFund) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Fund Cluster Name is already exist.']);
+                return redirect()->back()->with(['error' => 'Account Classification Name is already exist.']);
             }
 
             Fund::create([
                 'fund_name' => $validation['fundName'],
                 'description' => $validation['fundDesc'],
                 'created_by' => $validation['createdBy'],
+                'updated_by' => $validation['createdBy'],
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Fund Cluster created successfully']);
+            return redirect()->back()->with(['message' => 'Account Classification created successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Creation of Fund Cluster error: ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to create Fund Cluster']);
+            Log::error('Creation of Account Classification error: ' . $e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to create Account Classification']);
         }
     }
 
@@ -81,11 +82,11 @@ class FundController extends Controller
             ])->save();
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Fund Cluster updated successfully.']);
+            return redirect()->back()->with(['message' => 'Account Classification updated successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Updating of Fund Cluster error: ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Updating of Fund Cluster failed.']);
+            Log::error('Updating of Account Classification error: ' . $e->getMessage());
+            return redirect()->back()->with(['error' => 'Updating of Account Classification failed. Duplicate entry/name!']);
         }
     }
 
@@ -100,14 +101,22 @@ class FundController extends Controller
 
         try {
             $fund = Fund::findOrFail($validation['fundId']);
+            $fund->load('categories');
 
-            $fund->fill([
-                'fund_status' => 'deactivated',
-                'updated_by' => $validation['updatedBy'],
-            ])->save();
+            if($fund->categories->isEmpty()) {
+                $fund->forceDelete();
+                DB::commit();
+                return redirect()->back()->with(['message' => 'Account Classification removed successfully.']);
+            }
+
+            //FOR DEACTIVATION STATUS PORPUSE
+            // $fund->fill([
+            //     'fund_status' => 'deactivated',
+            //     'updated_by' => $validation['updatedBy'],
+            // ])->save();
             
             DB::commit();
-            return redirect()->back()->with(['message' => 'Fund Cluster deactivated successfully.']);
+            return redirect()->back()->with(['error' => 'Unable to remove the Account Classification. Please refer this to your system administrator!']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Deletion of Fund Cluster error: ' . $e->getMessage());
