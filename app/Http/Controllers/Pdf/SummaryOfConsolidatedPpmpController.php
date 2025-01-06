@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Pdf;
 use App\Http\Controllers\Controller;
 use App\Models\Office;
 use App\Models\PpmpTransaction;
-use App\Services\SumPdf;
+use App\Services\PpmpPDF;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
@@ -37,7 +37,7 @@ class SummaryOfConsolidatedPpmpController extends Controller
             ];
         })->sortBy('offCode');
 
-        $pdf = new SumPdf('L', 'mm', array(297, 420), true, 'UTF-8', false, $ppmp->ppmp_code);
+        $pdf = new PpmpPDF('L', 'mm', array(297, 420), true, 'UTF-8', false, $ppmp->ppmp_code);
 
         $logoPath = public_path('assets/images/benguet_logo.png');
         $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');

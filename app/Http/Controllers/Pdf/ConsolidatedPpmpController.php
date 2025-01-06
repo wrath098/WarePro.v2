@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Pdf;
 
 use App\Http\Controllers\Controller;
 use App\Models\PpmpTransaction;
-use App\Services\MyPDF;
+use App\Services\PpmpPDF;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
@@ -19,7 +19,7 @@ class ConsolidatedPpmpController extends Controller
 
     public function generatePdf_ConsolidatedPpmp(PpmpTransaction $ppmp)
     {
-        $pdf = new MyPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
+        $pdf = new PpmpPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false, $ppmp->ppmp_code);
 
         $logoPath = public_path('assets/images/benguet_logo.png');
         $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');

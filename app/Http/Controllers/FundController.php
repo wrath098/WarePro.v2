@@ -86,7 +86,7 @@ class FundController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Updating of Account Classification error: ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Updating of Account Classification failed. Duplicate entry/name!']);
+            return redirect()->back()->with(['error' => 'Updating failed! Account Classification Name is already exist.']);
         }
     }
 
@@ -116,7 +116,7 @@ class FundController extends Controller
             // ])->save();
             
             DB::commit();
-            return redirect()->back()->with(['error' => 'Unable to remove the Account Classification. Please refer this to your system administrator!']);
+            return redirect()->back()->with(['error' => 'Removing failed! Account Classification Name dependencies.']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Deletion of Fund Cluster error: ' . $e->getMessage());

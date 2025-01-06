@@ -185,10 +185,9 @@ class ProductService
         return $amount ?? null;
     }
 
-    public function validateCategoryExistence($fundId, $code, $name)
+    public function validateCategoryExistence($fundId, $name)
     {
         $category = Category::where('fund_id', $fundId)
-            ->where('cat_code', $code)
             ->whereRaw('LOWER(cat_name) = ?', [strtolower($name)])
             ->first();
         return $category;

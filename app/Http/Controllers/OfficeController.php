@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,6 +35,8 @@ class OfficeController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'offCode' => 'nullable|string|max:50',
             'offName' => 'required|string|max:150',
@@ -43,6 +46,16 @@ class OfficeController extends Controller
         ]);
 
         try {
+            $existingCode = Office::withTrashed()
+                ->whereRaw('LOWER(office_code) = ?', [strtolower($validatedData['offCode'])])
+                ->first();
+
+            if($existingCode) {
+                DB::rollback();
+                return redirect()->back()
+                    ->with(['error' => 'Office code already exist.']);
+            }
+
             Office::create([
                 'office_code' => $validatedData['offCode'],
                 'office_name' => $validatedData['offName'],
@@ -51,9 +64,11 @@ class OfficeController extends Controller
                 'created_by' => $validatedData['createdBy'],
             ]);
 
+            DB::commit();
             return redirect()->back()
                 ->with(['message' => 'New office has been successfully added.']);
         }catch (\Exception $e) {
+            DB::rollback();
             Log::error('Creation of Office: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.']);
@@ -62,6 +77,8 @@ class OfficeController extends Controller
 
     public function update(Request $request, Office $office)
     {
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'offId' => 'required|integer|',
             'offCode' => 'nullable|string|max:50',
@@ -74,6 +91,17 @@ class OfficeController extends Controller
         try {
             $office = Office::findOrFail($validatedData['offId']);
 
+            $existingCode = Office::withTrashed()
+                ->where('id', '!=', $office->id)
+                ->whereRaw('LOWER(office_code) = ?', [strtolower($validatedData['offCode'])])
+                ->get();
+
+            if($existingCode->isNotEmpty()) {
+                DB::rollback();
+                return redirect()->back()
+                    ->with(['error' => 'Office code already exist.']);
+            }
+
             $office->fill([
                 'office_code' => $validatedData['offCode'],
                 'office_name' => $validatedData['offName'],
@@ -82,9 +110,11 @@ class OfficeController extends Controller
                 'updated_by' => $validatedData['updatedBy'],
             ])->save();
 
+            DB::commit();
             return redirect()->back()
                 ->with(['message' => 'Office has been successfully updated.']);
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error('Update of Office: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.']);
@@ -93,20 +123,32 @@ class OfficeController extends Controller
 
     public function deactivate(Request $request, Office $office)
     {
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'offId' => 'required|integer',
             'updatedBy' => 'required|integer',
         ]);
+
         try {
             $office = Office::findOrFail($validatedData['offId']);
+            $office->load('requestPpmp');
 
-            $office->fill([
-                'office_status' => 'deactivated',
-                'updated_by' => $validatedData['updatedBy'],
-            ])->save();
+            if($office->requestPpmp->isEmpty()) {
+                $office->forceDelete();
+                DB::commit();
+                return redirect()->back()
+                    ->with(['message' => 'Office has been successfully removed.']);
+            }
 
+            // $office->fill([
+            //     'office_status' => 'deactivated',
+            //     'updated_by' => $validatedData['updatedBy'],
+            // ])->save();
+
+            DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Office was successfully removed.']);
+                ->with(['error' => 'Unable to removed the Office due to dependencies. ']);
         } catch (\Exception $e) {
             Log::error('Deletion of Office: ' . $e->getMessage());
             return redirect()->back()

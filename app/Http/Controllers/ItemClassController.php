@@ -65,7 +65,8 @@ class ItemClassController extends Controller
         $createdBy = $validated['createdBy'];
 
         try {
-            $itemNameExist = ItemClass::withTrashed()->whereRaw('LOWER(item_name) = ?', [strtolower($validated['itemName'])])->first();
+            $itemNameExist = ItemClass::withTrashed()->where('cat_id', $catId)->whereRaw('LOWER(item_name) = ?', [strtolower($validated['itemName'])])->first();
+
             if ($itemNameExist) {
                 DB::rollBack();
                 return redirect()->back()->with(['error' => 'Item Name under the selected category is already exist.']);
@@ -109,6 +110,12 @@ class ItemClassController extends Controller
 
         try {
             $itemClass = ItemClass::findOrFail($validatedData['itemId']);
+            $itemNameExist = ItemClass::withTrashed()->whereRaw('LOWER(item_name) = ?', [strtolower($validatedData['editName'])])->first();
+
+            if ($itemNameExist) {
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Item Name under the selected category is already exist.']);
+            }
 
             $itemClass->fill([
                 'item_name' => $validatedData['editName'],
@@ -137,15 +144,24 @@ class ItemClassController extends Controller
 
         try {
             $itemClass = ItemClass::findOrFail($validatedData['itemId']);
+            $itemClass->load('products');
 
-            $itemClass->fill([
-                'item_status' => 'deactivated',
-                'updated_by' => $validatedData['updatedBy'],
-            ])->save();
+            if($itemClass->products->isEmpty()) {
+                $itemClass->forceDelete();
+
+                DB::commit();
+                return redirect()->back()
+                    ->with(['message' => 'Item Class Name was removed successfully']);
+            }
+            
+            // $itemClass->fill([
+            //     'item_status' => 'deactivated',
+            //     'updated_by' => $validatedData['updatedBy'],
+            // ])->save();
             
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Item Class name was updated successfully.']);
+                ->with(['error' => 'Unable to remove the Item Class. Item Class has products already.']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Deletion of Item Class: ' . $e->getMessage());

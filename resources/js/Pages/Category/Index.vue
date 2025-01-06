@@ -212,23 +212,30 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                             <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                             </svg>
-
-
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Edit Category</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details for the new category you wish to add.</p>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Edit Category</h3>
+                            <p class="text-sm text-gray-500"> Enter the details for the new category you wish to add.</p>
+                            <div class="mt-10">
                                 <input type="hidden" v-model="editForm.updater">
                                 <input type="hidden" v-model="editForm.catId">
-                                <input type="text" v-model="editForm.catName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Common Office Supplies" required>
-                                <input type="number" v-model="editForm.catCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 01-99" required disabled>
-                                <select v-model="editForm.fundId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required disabled>
-                                    <option value="" disabled>Please choose its fund cluster if applicable</option>
-                                    <option v-for="fund in funds" :key="fund.id" :value="fund.id">
-                                        {{ fund.name }}
-                                    </option>
-                                </select>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="editForm.catName" type="text" name="editCatName" id="editCatName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
+                                    <label for="editCatName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="editForm.catCode" type="text" name="editCatCode" id="editCatCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" disabled/>
+                                    <label for="editCatCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Code</label>
+                                </div>
+                                <div class="relative z-0 w-full group my2">
+                                    <select v-model="editForm.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required disabled>
+                                        <option value="" disabled selected>Please choose the Account Classification applicable</option>
+                                        <option v-for="fund in funds" :key="fund.id" :value="fund.id">
+                                            {{ fund.name }}
+                                        </option>
+                                    </select>
+                                    <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
+                                </div>
                             </div>
                         </div>
                     </div>

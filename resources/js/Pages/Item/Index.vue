@@ -165,17 +165,24 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Item Class</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details for the new Item Class you wish to add.</p>
-                                <select v-model="form.catId" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                    <option value="" disabled selected>Please choose the category applicable</option>
-                                    <option v-for="category in categories" :key="category.id" :value="category.id">
-                                        {{ category.name }}
-                                    </option>
-                                </select>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> New Item Class</h3>
+                            <p class="text-sm text-gray-500"> Enter the details for the new Item Class you wish to add.</p>
+
+                            <div class="mt-10">
+                                <div class="relative z-0 w-full mb-5 group">
+                                    <select v-model="form.catId" name="catId" id="catId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected class="pl-5">Please choose the category applicable</option>
+                                        <option v-for="category in categories" :key="category.id" :value="category.id">
+                                            {{ category.name }}
+                                        </option>
+                                    </select>
+                                    <label for="catId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category</label>
+                                </div>
                                 <!-- <input type="number" v-model="form.itemCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. 1-99" required> -->
-                                <input type="text" v-model="form.itemName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Alcohol" required>
+                                <div class="relative z-0 w-full group my-1">
+                                    <input v-model="form.itemName" type="text" name="itemName" id="itemName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="itemName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Name</label>
+                                </div>
                                 <input type="hidden" v-model="form.createdBy">
                             </div>
                         </div>
@@ -208,12 +215,15 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Edit Item Class</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Edit the detail below for the Item Class you wish to update.</p>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Edit Item Class</h3>
+                            <p class="text-sm text-gray-500"> Edit the detail below for the Item Class you wish to update.</p>
+                            <div class="mt-10">
                                 <input type="hidden" v-model="editForm.itemId">
                                 <input type="hidden" v-model="editForm.updatedBy">
-                                <input type="text" v-model="editForm.editName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Alcohol" required>
+                                <div class="relative z-0 w-full group my-1">
+                                    <input v-model="editForm.editName" type="text" name="editItemName" id="editItemName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="editItemName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Name</label>
+                                </div>
                             </div>
                         </div>
                     </div>

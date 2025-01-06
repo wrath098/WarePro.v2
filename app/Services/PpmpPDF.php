@@ -3,7 +3,7 @@
 namespace App\Services;
 use TCPDF;
 
-class SumPdf extends TCPDF
+class PpmpPDF extends TCPDF
 {
     protected $customData;
 
@@ -20,7 +20,7 @@ class SumPdf extends TCPDF
 
         $this->SetFont('helvetica', 'I', 8);
 
-        $waterMark = 'PGSO-WarePro:' . $this->customData;
+        $waterMark = 'PGSO-WarePro : ' . $this->customData;
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 

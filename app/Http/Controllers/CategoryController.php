@@ -60,7 +60,7 @@ class CategoryController extends Controller
             $lastCode = Category::selectRaw('cat_code')->orderBy('cat_code', 'desc')->first();
             $newCode = (int) $lastCode->cat_code + 1;
 
-            $existingCategory  = $this->productService->validateCategoryExistence($fundId, $newCode, $catName);
+            $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catName);
 
             if($existingCategory) {
                 DB::rollBack();
@@ -100,26 +100,16 @@ class CategoryController extends Controller
         $updater = $validated['updater'];
 
         try {
-            DB::transaction(function () use ($catId, $fundId, $catCode, $catName, $updater) {
+            DB::transaction(function () use ($catId, $fundId, $catCode, $catName, $updater, $request) {
                 $category = Category::findOrFail($catId);
+                $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catName);
 
-                if($category->cat_code !== $catCode || $category->fund_id !== $fundId) {
-                    $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catCode, $catName);
-                    $category->update(['cat_status' => 'deactivated', 'updated_by' => $updater]);
-
-                    if($existingCategory ) {
-                        $existingCategory ->update(['cat_status' => 'active', 'updated_by' => $updater]);
-                    } else {
-                        Category::create([
-                            'fund_id' => $fundId,
-                            'cat_name' => $catName,
-                            'cat_code' => $catCode,
-                            'created_by' => $updater,
-                        ]);
-                    }
-                } else {
-                    $category->update(['cat_name' => $catName, 'updated_by' => $updater]);
+                if($existingCategory) {
+                    return redirect()->back()
+                    ->with(['error' => 'Category Name already exist.']);
                 }
+;
+                $category->update(['cat_name' => $catName, 'updated_by' => $updater]);
                 return redirect()->back()
                     ->with(['message' => 'Category was updated successfully.']);
             });
@@ -132,18 +122,25 @@ class CategoryController extends Controller
 
     public function deactivate(Request $request) {
         try {
-
             $catId = $request->input('catId');
             $updatedBy = $request->input('updater');
 
             $category = Category::findOrFail($catId);
-            $category->fill([
-                'cat_status' => 'deactivated',
-                'updated_by' => $updatedBy,
-            ])->save();
+            $category->load('items');
+
+            if($category->items->isEmpty()) {
+                $category->forceDelete();
+                return redirect()->back()
+                ->with(['message' => 'Category was remove successfully.']);
+            }
+
+            // $category->fill([
+            //     'cat_status' => 'deactivated',
+            //     'updated_by' => $updatedBy,
+            // ])->save();
 
             return redirect()->back()
-                ->with(['message' => 'Category was remove successfully.']);
+                ->with(['error' => 'Unable to remove the category. Category has subcategories.']);
         } catch (\Exception $e) {
             Log::error('Failed to remove the category: ' . $e->getMessage());
             return redirect()->back()

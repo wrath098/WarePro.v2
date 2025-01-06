@@ -167,13 +167,25 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> New Office</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details for the new Office you wish to add.</p>
-                                <input type="text" v-model="create.offCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. PGSO | PASSO | PACCO | etc.">
-                                <input type="text" v-model="create.offName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Provincial General Services Office" required>
-                                <input type="text" v-model="create.offHead" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Head of Office : Ex. Jennifer G. Bahod">
-                                <input type="text" v-model="create.posHead" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Position of Head : Ex. PGS Officer">
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> New Office</h3>
+                            <p class="text-sm text-gray-500"> Enter the details for the new Office you wish to add.</p>
+                            <div class="mt-10">
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="create.offCode" type="text" name="officeCode" id="officeCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="officeCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Code/Abbreviation</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="create.offName" type="text" name="officeName" id="officeName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="officeName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Name</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="create.offHead" type="text" name="officeHead" id="officeHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="officeHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Head of Office</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="create.posHead" type="text" name="positionHead" id="positionHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="positionHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Position of the Head of Office</label>
+                                </div>
                                 <input type="hidden" v-model="create.createdBy">
                             </div>
                         </div>
@@ -206,15 +218,27 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Edit Office</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Edit the detail below for the Office you wish to update.</p>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Edit Office</h3>
+                            <p class="text-sm text-gray-500"> Edit the detail below for the Office you wish to update.</p>
+                            <div class="mt-10">
                                 <input type="hidden" v-model="edit.offId">
                                 <input type="hidden" v-model="edit.updatedBy">
-                                <input type="text" v-model="edit.offCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Code : Ex. PGSO | PASSO | PACCO | etc.">
-                                <input type="text" v-model="edit.offName" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Name : Ex. Provincial General Services Office" required>
-                                <input type="text" v-model="edit.offHead" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Head of Office : Ex. Jennifer G. Bahod">
-                                <input type="text" v-model="edit.posHead" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Position of Head : Ex. PGS Officer">
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="edit.offCode" type="text" name="editOfficeCode" id="editOfficeCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="editOfficeCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Code/Abbreviation</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="edit.offName" type="text" name="editOfficeName" id="editOfficeName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="editOfficeName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Name</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="edit.offHead" type="text" name="editOfficeHead" id="editOfficeHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="editOfficeHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Head of Office</label>
+                                </div>
+                                <div class="relative z-0 w-full group my-3">
+                                    <input v-model="edit.posHead" type="text" name="editPositionHead" id="editPositionHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="editPositionHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Position of the Head of Office</label>
+                                </div>
                             </div>
                         </div>
                     </div>
