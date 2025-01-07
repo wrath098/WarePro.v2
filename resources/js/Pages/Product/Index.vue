@@ -92,8 +92,8 @@
     };
 
     function generateYears() {
-        const currentYear = new Date().getFullYear() + 5;
-        return Array.from({ length: 11 }, (_, i) => currentYear - i);
+        const currentYear = new Date().getFullYear() + 2;
+        return Array.from({ length: 5 }, (_, i) => currentYear - i);
     }
 
     const submitForm = (url, data) => {
@@ -240,7 +240,7 @@
                                         <label for="category" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category</label>
                                     </div>
                                     <div class="relative z-0 w-full my-3 group" v-if="filteredItems.length">
-                                        <select v-model="create.itemId" v-if="filteredItems.length" name="item" id="item" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <select v-model="create.itemId" name="item" id="item" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                             <option value="" disabled selected class="pl-5">Please choose an item applicable to the product</option>
                                             <option v-for="item in filteredItems" :key="item.id" :value="item.id">
                                                 {{ item.name }}
@@ -256,12 +256,12 @@
                                         <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
                                     </div>
                                     <div class="grid lg:grid-cols-2 lg:gap-6 mt-3">
-                                        <div class="relative z-0 w-full mb-5 group">
+                                        <div class="relative z-0 w-full group">
                                             <input v-model="create.prodPrice" type="number" name="prodPrice" id="prodPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                            <label for="prodPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Cost</label>
+                                            <label for="prodPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
                                         </div>
-                                        <div class="relative z-0 w-full mb-5 group">
-                                            <select v-model="create.prodUnit" name="prodUnit" id="prodUnit" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <div class="relative z-0 w-full group">
+                                            <select v-model="create.prodUnit" name="prodUnit" id="prodUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                                 <option disabled selected value="">Select Unit Of Measure</option>
                                                 <option value="Book">Book</option>
                                                 <option value="Bottle">Bottle</option>
@@ -287,11 +287,17 @@
                                             <label for="prodUnit" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
                                         </div>
                                     </div>
-                                    <select v-model="create.prodRemarks" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                        <option disabled value="">Select the Product Year</option>
-                                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-                                    </select>
-                                    <input type="text" v-model="create.prodOldCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Old Stock No: Ex. 1001 | 1002 | 1003 | etc.">
+                                    <div class="relative z-0 w-full my-3 group">
+                                        <select v-model="create.prodRemarks" name="prodRemarks" id="prodRemarks" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                            <option value="" disabled selected>Select the Product Year</option>
+                                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                        </select>
+                                        <label for="prodRemarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
+                                    </div>
+                                    <div class="relative z-0 w-full mb-5 group">
+                                        <input v-model="create.prodOldCode" type="number" name="prodOldCode" id="prodOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
+                                        <label for="prodOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
+                                    </div>
                                     <input type="hidden" v-model="create.createdBy">
                                 </div>
                             </div>
@@ -325,15 +331,20 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Edit Product</h3>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Edit Product</h3>
+                            <p class="text-sm text-gray-500"> Edit the details of the product you wish to modify.</p>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Edit the details of the product you wish to modify.</p>
-                                
                                 <div class="mt-5">
-                                    <p class="text-sm text-gray-500"> Product Information</p>
+                                    <p class="text-sm text-[#86591e] mb-2"> Product Information</p>
                                     <input type="hidden" v-model="edit.prodId">
-                                    <input type="text" v-model="edit.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Ex. 500ml/bottle, 70% Ethyl" required>
-                                    <input type="number" v-model="edit.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
+                                    <div class="relative z-0 w-full mb-5 group">
+                                        <textarea v-model="edit.prodDesc" type="text" name="editProdDesc" id="editProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required></textarea>
+                                        <label for="editProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                    </div>
+                                    <div class="relative z-0 w-full mb-5 group">
+                                        <input v-model="edit.prodPrice" type="number" name="editProdPrice" id="editProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                        <label for="editProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
+                                    </div>
                                     <input type="hidden" v-model="edit.updatedBy">
                                 </div>
                             </div>
@@ -367,57 +378,79 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Modify and Move Product</h3>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Modify and Move Product</h3>
+                            <p class="text-sm text-gray-500"> Enter the details of the Product you wish to modify and move.</p>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details of the Product you wish to modify and move.</p>
                                 <div class="mt-5">
-                                    <p class="text-sm text-gray-500">Choose Category | Item Class</p>
-                                    <select v-model="edit.selectedCategory" @change="onCategoryChange(edit)" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                        <option value="" disabled>Please choose the category applicable to the product</option>
-                                        <option v-for="category in props.categories" :key="category.id" :value="category.id">
-                                            {{ category.name }}
-                                        </option>
-                                    </select>
-
-                                    <select v-model="edit.itemId" v-if="filteredItems.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                        <option value="" disabled>Please choose an item applicable to the product</option>
-                                        <option v-for="item in filteredItems" :key="item.id" :value="item.id">
-                                            {{ item.name }}
-                                        </option>
-                                    </select>
+                                    <p class="text-sm text-[#86591e]">Choose Category | Item Class</p>
+                                    <div class="relative z-0 w-full my-3 group">
+                                        <select v-model="edit.selectedCategory" @change="onCategoryChange(edit)" name="modifyCategory" id="modifyCategory" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                            <option value="" disabled selected class="pl-5">Please choose the category applicable to the product</option>
+                                            <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                                                {{ category.name }}
+                                            </option>
+                                        </select>
+                                        <label for="modifyCategory" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category</label>
+                                    </div>
+                                    <div class="relative z-0 w-full my-3 group" v-if="filteredItems.length">
+                                        <select v-model="edit.itemId" name="modifyItem" id="modifyItem" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                            <option value="" disabled selected class="pl-5">Please choose an item applicable to the product</option>
+                                            <option v-for="item in filteredItems" :key="item.id" :value="item.id">
+                                                {{ item.name }}
+                                            </option>
+                                        </select>
+                                        <label for="modifyItem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Class</label>
+                                    </div>
                                 </div>
                                 <div class="mt-5">
-                                    <p class="text-sm text-gray-500"> Product Information</p>
-                                    <input type="text" v-model="edit.prodDesc" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Description : Ex. 500ml/bottle, 70% Ethyl" required>
-                                    <input type="text" v-model="edit.prodPrice" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Unit Price : Ex. 251.00" required>
-                                    <select v-model="edit.prodUnit" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                        <option disabled value="">Select Unit Of Measure</option>
-                                        <option value="Book">Book</option>
-                                        <option value="Bottle">Bottle</option>
-                                        <option value="Box">Box</option>
-                                        <option value="Bundle">Bundle</option>
-                                        <option value="Cannister">Cannister</option>
-                                        <option value="Cart">Cart</option>
-                                        <option value="Gallon">Gallon</option>
-                                        <option value="Kilo">Kilo</option>
-                                        <option value="Meter">Meter</option>
-                                        <option value="Pad">Pad</option>
-                                        <option value="Pack">Pack</option>
-                                        <option value="Pair">Pair</option>
-                                        <option value="Pc">Pc</option>
-                                        <option value="Pouch">Pouch</option>
-                                        <option value="Ream">Ream</option>
-                                        <option value="Roll">Roll</option>
-                                        <option value="Set">Set</option>
-                                        <option value="Tube">Tube</option>
-                                        <option value="Unit">Unit</option>
-                                        <option value="Yard">Yard</option>
-                                    </select>
-                                    <select v-model="edit.prodRemarks" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500">
-                                        <option disabled value="">Select the Product Year</option>
-                                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-                                    </select>
-                                    <input type="text" v-model="edit.prodOldCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Old Stock No: Ex. 1001 | 1002 | 1003 | etc.">
+                                    <p class="text-sm text-[#86591e]"> Product Information</p>
+                                    <div class="relative z-0 w-full group my-1">
+                                        <textarea v-model="edit.prodDesc" type="text" name="modifyProdDesc" id="modifyProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required> </textarea>
+                                        <label for="modifyProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                    </div>
+                                    <div class="grid lg:grid-cols-2 lg:gap-6 mt-3">
+                                        <div class="relative z-0 w-full group">
+                                            <input v-model="edit.prodPrice" type="number" name="modifyProdPrice" id="modifyProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                            <label for="modifyProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
+                                        </div>
+                                        <div class="relative z-0 w-full group">
+                                            <select v-model="edit.prodUnit" name="modifyProdUnit" id="modifyProdUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                                <option disabled selected value="">Select Unit Of Measure</option>
+                                                <option value="Book">Book</option>
+                                                <option value="Bottle">Bottle</option>
+                                                <option value="Box">Box</option>
+                                                <option value="Bundle">Bundle</option>
+                                                <option value="Cannister">Cannister</option>
+                                                <option value="Cart">Cart</option>
+                                                <option value="Gallon">Gallon</option>
+                                                <option value="Kilo">Kilo</option>
+                                                <option value="Meter">Meter</option>
+                                                <option value="Pad">Pad</option>
+                                                <option value="Pack">Pack</option>
+                                                <option value="Pair">Pair</option>
+                                                <option value="Pc">Pc</option>
+                                                <option value="Pouch">Pouch</option>
+                                                <option value="Ream">Ream</option>
+                                                <option value="Roll">Roll</option>
+                                                <option value="Set">Set</option>
+                                                <option value="Tube">Tube</option>
+                                                <option value="Unit">Unit</option>
+                                                <option value="Yard">Yard</option>
+                                            </select>
+                                            <label for="modifyProdUnit" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                        </div>
+                                    </div>
+                                    <div class="relative z-0 w-full my-3 group">
+                                        <select v-model="edit.prodRemarks" name="modifyProdRemarks" id="modifyProdRemarks" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                            <option value="" disabled selected>Select the Product Year</option>
+                                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                        </select>
+                                        <label for="modifyProdRemarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
+                                    </div>
+                                    <div class="relative z-0 w-full mb-5 group">
+                                        <input v-model="edit.prodOldCode" type="number" name="modifyProdOldCode" id="modifyProdOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
+                                        <label for="modifyProdOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
+                                    </div>
                                     <input type="hidden" v-model="edit.updatedBy">
                                 </div>
                             </div>

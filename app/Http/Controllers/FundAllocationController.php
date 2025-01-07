@@ -2,28 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CapitalOutlay;
+use App\Models\FundAllocation;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
-class CapitalOutlayController extends Controller
+class FundAllocationController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $generalFund = CapitalOutlay::with('allocations')->get();
-        $groupedByYear = $generalFund->groupBy('year');
-
-        $groupedByYear = $groupedByYear->map(function($funds) {
-            $totalAmount = $funds->sum('amount');
-            return $totalAmount;
-        });
-
-        dd($groupedByYear->toArray());
-        
-        return Inertia::render('Fund/GeneralFundIndex', ['generalFund' => $groupedByYear]);
+        //
     }
 
     /**
@@ -45,7 +34,7 @@ class CapitalOutlayController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CapitalOutlay $capitalOutlay)
+    public function show(FundAllocation $fundAllocation)
     {
         //
     }
@@ -53,7 +42,7 @@ class CapitalOutlayController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(CapitalOutlay $capitalOutlay)
+    public function edit(FundAllocation $fundAllocation)
     {
         //
     }
@@ -61,7 +50,7 @@ class CapitalOutlayController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CapitalOutlay $capitalOutlay)
+    public function update(Request $request, FundAllocation $fundAllocation)
     {
         //
     }
@@ -69,7 +58,7 @@ class CapitalOutlayController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CapitalOutlay $capitalOutlay)
+    public function destroy(FundAllocation $fundAllocation)
     {
         //
     }

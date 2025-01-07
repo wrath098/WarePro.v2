@@ -46,7 +46,7 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Core</div>
                         </div>
                     </div>
-                    <SidebarDropdown :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active')">
+                    <SidebarDropdown :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')">
                             <Files :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
                             <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active')}" />
@@ -76,9 +76,9 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="''" :active="false">
-                                    <ArrowHeadRight :class="false"/>
-                                    Capital Outlay
+                                <SubSidebarLink :href="route('general.fund.display')" :active="route().current('general.fund.display')">
+                                    <ArrowHeadRight :class="{ 'text-white ': route().current('general.fund.display')}"/>
+                                    General Services Fund 
                                 </SubSidebarLink>
                             </li>
                         </template>

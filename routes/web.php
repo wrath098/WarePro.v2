@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CapitalOutlayController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FundController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PrParticularController;
 use App\Http\Controllers\PrTransactionController;
 use App\Http\Controllers\Forms\PrMultiStepFormController;
+use App\Http\Controllers\FundAllocationController;
 use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
@@ -27,7 +29,6 @@ use App\Http\Controllers\ProductInventoryTransactionController;
 use App\Http\Controllers\RisTransactionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -69,6 +70,10 @@ Route::middleware('auth')->prefix('offices')->group(function () {
     Route::post('/save', [OfficeController::class, 'store'])->name('office.store');
     Route::post('/update', [OfficeController::class, 'update'])->name('office.update');
     Route::post('/deactivate', [OfficeController::class, 'deactivate'])->name('office.deactivate');
+});
+
+Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
+    Route::get('/', [CapitalOutlayController::class, 'index'])->name('general.fund.display');
 });
 
 Route::middleware('auth')->prefix('products')->group(function () {

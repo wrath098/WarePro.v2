@@ -84,35 +84,41 @@ class PpmpTransactionController extends Controller
         ]);
 
         try {
-
-            if ($this->validateIndivPpmp($validatedData)) {
-                return redirect()->back()->with(['error' => 'Office PPMP already exists!']);
-            }
-
-            DB::transaction(function () use ($validatedData, $request) {
-                $createPpmp = $this->createPpmpTransaction($validatedData);
-
-                if ($request->hasFile('file')) {
-                    $filePath = $this->handleFileUpload($request->file('file'));
-                    $fullPath = storage_path('app/' . $filePath);
-                    
-                    $startRow = 0;
-                    $currentRow = 0;
-                    (new FastExcel)->import($fullPath, function ($line) use ($createPpmp, &$currentRow, $startRow) {
-                        $currentRow++;
-
-                        if ($currentRow < $startRow) {
-                            return null;
-                        }
-
-                        return $this->processImportedLine($line, $createPpmp->id);
-                    });
-    
-                    Storage::delete($filePath);
+            if($validatedData['ppmpType'] == 'individual') {
+                if ($this->validateIndivPpmp($validatedData)) {
+                    return redirect()->back()->with(['error' => 'Office PPMP already exists!']);
                 }
-            });
-            return redirect()->route('import.ppmp.index')
-                ->with(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
+
+                DB::transaction(function () use ($validatedData, $request) {
+                    $createPpmp = $this->createPpmpTransaction($validatedData);
+
+                    if ($request->hasFile('file')) {
+                        $filePath = $this->handleFileUpload($request->file('file'));
+                        $fullPath = storage_path('app/' . $filePath);
+                        
+                        $startRow = 0;
+                        $currentRow = 0;
+                        (new FastExcel)->import($fullPath, function ($line) use ($createPpmp, &$currentRow, $startRow) {
+                            $currentRow++;
+
+                            if ($currentRow < $startRow) {
+                                return null;
+                            }
+
+                            return $this->processImportedLine($line, $createPpmp->id);
+                        });
+        
+                        Storage::delete($filePath);
+                    }
+                });
+                return redirect()->route('import.ppmp.index')
+                    ->with(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
+            } elseif ($validatedData['ppmpType'] == 'contingency') {
+                
+
+            } else {
+
+            }
         } catch (\Exception $e) {
             Log::error('File create ppmp error: ' . $e->getMessage());
             return redirect()->back()

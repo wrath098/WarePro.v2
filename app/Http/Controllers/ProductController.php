@@ -232,10 +232,18 @@ class ProductController extends Controller
         
         try {
             $product = Product::findOrFail($validatedData['prodId']);
-            $product->update([
-                'updated_by' => $validatedData['updatedBy'], 
-                'prod_status' => 'deactivated'
-            ]);
+            $product->load('prices');
+
+            foreach ($product->prices as $price) {
+                $price->forceDelete();
+            }
+            $product->forceDelete();
+
+            // $product->update([
+            //     'updated_by' => $validatedData['updatedBy'], 
+            //     'prod_status' => 'deactivated'
+            // ]);
+            
             return redirect()->back()
                 ->with(['message' => 'Product has been remove successfully.']);
         } catch (\Exception $e) {

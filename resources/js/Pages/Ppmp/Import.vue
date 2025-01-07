@@ -39,6 +39,7 @@
     const create = reactive({
         ppmpType: '',
         ppmpYear: '',
+        ppmpSem: '',
         office: '',
         createdBy: props.user,
     });
@@ -73,6 +74,7 @@
         const formData = new FormData();
             formData.append('ppmpType', create.ppmpType);
             formData.append('ppmpYear', create.ppmpYear);
+            formData.append('ppmpSem', create.ppmpSem);
             formData.append('office', create.office);
             formData.append('user', create.createdBy);
             formData.append('file', file.value);
@@ -122,41 +124,39 @@
                     <div class="flex flex-col md:flex-row items-start justify-center">
                         <div class="mx-2 w-full md:w-3/12 bg-white p-4 rounded-md shadow">
                             <form @submit.prevent="submit" class="space-y-5">
-                                <div>
-                                    <label for="ppmpType" class="mb-1 block text-base font-medium text-[#07074D]">
-                                        PPMP Type:
-                                    </label>
-                                    <select v-model="create.ppmpType" id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
-                                        <option value="" selected>Please choose PPMP Type</option>
+                                <p class="mb-1 block text-base font-medium text-[#86591e]">PPMP Information</p>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="create.ppmpType" name="ppmpType" id="ppmpType" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Please choose PPMP Type</option>
                                         <option value="individual">Individual</option>
                                         <option value="contingency">Contingency</option>
                                     </select>
+                                    <label for="ppmpType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
                                 </div>
-
-                                <div>
-                                    <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
-                                        PPMP for CY:
-                                    </label>
-                                    <select v-model="create.ppmpYear" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                        <option value="" selected>Please choose year</option>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="create.ppmpYear" name="ppmpYear" id="ppmpYear" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Please choose year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                     </select>
+                                    <label for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
                                 </div>
-
-                                <div>
-                                    <label for="ppmpYear" class="mb-1 block text-base font-medium text-[#07074D]">
-                                        Office
-                                    </label>
-                                    <select v-model="create.office" id="ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                        <option value="" selected>Please choose the office</option>
+                                <div class="relative z-0 w-full my-3 group" v-if="create.ppmpType == 'contingency'">
+                                    <select v-model="create.ppmpSem" name="ppmpSem" id="ppmpSem" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Please choose Semester</option>
+                                        <option value="1">1st Semester</option>
+                                        <option value="2">2nd Semester</option>
+                                    </select>
+                                    <label for="ppmpSem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Semester</label>
+                                </div>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="create.office" name="office" id="office" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Please choose the office</option>
                                         <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.name }}</option>
                                     </select>
+                                    <label for="office" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>
                                 </div>
-
                                 <div class="pt-4">
-                                    <label class="mb-5 block text-xl font-semibold text-[#07074D]">
-                                        Upload File
-                                    </label>
+                                    <p class="mb-5 block text-base font-medium text-[#86591e]">Upload File</p>
 
                                     <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
                                         <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".xls,.xlsx"/>
@@ -176,12 +176,7 @@
                                     </div>
 
                                     <div v-if="file">
-                                        <h4 class="text-lg font-semibold">Selected Files:</h4>
-                                        <ul class="mt-2">
-                                            <li class="text-[#07074D]">
-                                                {{ file.name }}
-                                            </li>
-                                        </ul>
+                                        <h4 class="text-sm font-medium text-[#86591e]">Selected Files: <span class="text-base text-gray-700 italic">{{ file.name }}</span></h4>
                                     </div>
                                 </div>
 
