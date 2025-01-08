@@ -101,7 +101,7 @@ const getInitials = (name) => {
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Fund Clusters</li> 
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Account Classification</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">

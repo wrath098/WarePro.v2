@@ -18,9 +18,7 @@ return new class extends Migration
             $table->double('amount')->nullable();
             $table->string('status')->default('active');
             $table->unsignedBigInteger('cap_id')->nullable();
-            $table->unsignedBigInteger('cat_id')->nullable();
             $table->foreign('cap_id')->references('id')->on('capital_outlays');
-            $table->foreign('cat_id')->references('id')->on('categories');
             $table->softDeletes();
             $table->timestamps();
         });

@@ -92,17 +92,25 @@ const getInitials = (name) => {
         .map(word => word.charAt(0).toUpperCase())
         .join('');
 };
+
+const formatDecimal = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    };
 </script>
 
 <template>
-    <Head title="Fund" />
+    <Head title="General Fund" />
     <div>
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Fund Clusters</li> 
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">General Fund</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
@@ -111,7 +119,6 @@ const getInitials = (name) => {
             <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
-            {{ generalFund }}
         </template>
 
         <div class="py-8">
@@ -119,69 +126,40 @@ const getInitials = (name) => {
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-4">
                         <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
-                            <li v-for="(funds, year) in generalFund" :key="year">
+                            <li v-for="(yearData, year) in generalFund" :key="year" class="">
                                 <div class="flex justify-center align-middle bg-indigo-600 p-2 rounded-t-xl mb-2">
                                     <h2 class="text-lg font-semibold text-[#ededee] mb-4">Calendar Year {{ year  }}</h2>
                                 </div>
                                 <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
                                     <dl class="-my-3 divide-y divide-gray-100 text-base">
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Requestee</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ funds }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Transaction No.</dt>
-                                            <dd class="text-gray-700 sm:col-span-2"></dd>
+                                            <dt class="font-medium text-gray-900">General Fund</dt>
+                                            <dd class="text-gray-700 sm:col-span-2 text-right">{{ formatDecimal(yearData.totalAmount) }}</dd>
                                         </div>
                                     </dl>
                                 </div>
-                            
-                                <!-- <div class="flex-1 flex items-start justify-between bg-gray-50 p-4 rounded-lg">
-                                    <div class="flex flex-col gap-1">
-                                        <p class="text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                                            {{ fund.fund_name }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            <span class="font-medium">Description: </span> {{ fund.description || 'No Description' }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            <span class="font-medium">Status: </span> {{ fund.fund_status }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            <span class="font-medium">Added By: </span> {{ fund.nameOfCreator }}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <Dropdown>
-                                            <template #trigger>
-                                                <button class="flex items-center bg-gray-700 text-indigo-100 p-2 rounded-full hover:text-gray-900  hover:bg-indigo-50 transition">
-                                                    <span class="sr-only">Open options</span>
-                                                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
-                                                        <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
-                                                    </svg>
-                                                </button>
-                                            </template>
-                                            <template #content>
-                                                <button @click="openEditModal(fund)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
-                                                    Edit 
-                                                </button>
-                                                <button @click="openDropModal(fund)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
-                                                    Remove
-                                                </button>
-                                            </template>
-                                        </Dropdown>
-                                    </div>
-                                </div> -->
+                                <h6 class="py-3 px-2 text-gray-400">Allocation</h6>
+                                <div v-for="account in yearData.funds" :key="id" class="flow-root border border-gray-100 py-3 shadow-sm mb-3">
+                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">{{ account.accountClass }} </dt>
+                                            <dd class="text-gray-700 sm:col-span-2 text-right">{{ formatDecimal(account.amount) }}</dd>
+                                        </div>
+                                        <div v-for="allocation in account.allocations" :key="id" class="grid grid-cols-1 gap-1 pl-10 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">{{ allocation.description }} - {{ allocation.semester }} </dt>
+                                            <dd class="text-gray-700 sm:col-span-2 text-right">{{ formatDecimal(allocation.amount) }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
                             </li>
-                            <button @click="showModal('add')" class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
+                            <!-- <button @click="showModal('add')" class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
                                 <span class="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
                                     <svg class="w-6 h-6 text-indigo-900 transition duration-75 ml-12" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M3 12h18"/>
                                     </svg>
                                     New Fund Cluster
                                 </span>
-                            </button>
+                            </button> -->
                         </ul>
                     </div>
                 </div>

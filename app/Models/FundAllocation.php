@@ -17,7 +17,6 @@ class FundAllocation extends Model
         'amount', 
         'status', 
         'cap_id', 
-        'cat_id',
     ];
 
     public function generalFund(): BelongsTo
