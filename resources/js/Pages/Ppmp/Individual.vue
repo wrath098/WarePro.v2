@@ -15,8 +15,27 @@
     const props = defineProps({
         ppmp: Object,
         ppmpParticulars: Object,
+        products: Object,
         user: Number,
     });
+
+    const stockNo = ref('');
+    const stockData = ref(null);
+
+    const fetchData = () => {
+        if (stockNo.value.length > 0) {
+            const foundStock = props.products.find(item => item.code === stockNo.value);
+            if (foundStock) {
+            stockData.value = {
+                ...foundStock,
+            };
+            } else {
+            stockData.value = null;
+            }
+        } else {
+            stockData.value = null;
+        }
+    };
 
     const modalState = ref(null);
     const showModal = (modalType) => { modalState.value = modalType; }
@@ -27,7 +46,7 @@
     
     const addParticular  = reactive({
         transId: props.ppmp.id,
-        prodCode: '',
+        prodCode: stockNo,
         firstQty: '',
         secondQty: '',
         user: props.user,
@@ -225,7 +244,23 @@
                             <p class="text-sm text-gray-500"> Enter the details for the add Product/Particular you wish to add.</p>
                             <div class="mt-3">
                                 <p class="text-sm text-gray-500"> Product No: </p>
-                                <input v-model="addParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" required>
+                                <!-- <input v-model="addParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" required> -->
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="stockNo" @input="fetchData" type="text" name="stockNo" id="stockNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                    <label for="stockNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
+                                </div>
+                                <div v-if="stockData">
+                                    <div>
+                                        <div class="relative z-0 w-full my-5 group">
+                                            <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.desc"></textarea>
+                                            <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
+                                        </div>
+                                        <div class="relative z-0 lg:w-1/2 my-5 group">
+                                            <input type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.unit"/>
+                                            <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                        </div>                               
+                                    </div>
+                                </div>
                             </div>
                             <div class="mt-5">
                                 <p class="text-sm text-gray-500"> Quantity: </p>

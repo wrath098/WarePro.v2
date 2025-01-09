@@ -28,7 +28,7 @@ class CapitalOutlayController extends Controller
                     'allocations' => $fund->allocations ? $fund->allocations->map(fn($allocation) => [
                         'id' => $allocation->id,
                         'description' => $allocation->description,
-                        'semester' => $allocation->semester == 1 ? '1st Sem' : '2nd Sem',
+                        'semester' => $allocation->semester == '1st' ? '1st Sem' : '2nd Sem',
                         'amount' => $allocation->amount,
                     ]) : [],
                 ]) : [],

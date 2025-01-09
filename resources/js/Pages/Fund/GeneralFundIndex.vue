@@ -62,12 +62,12 @@ const formatDecimal = (value) => {
                                 <div v-for="account in yearData.funds" :key="account.id" class="flow-root border border-gray-100 py-3 shadow-sm mb-3">
                                     <dl class="-my-3 divide-y divide-gray-100 text-base">
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">{{ account.accountClass }} </dt>
-                                            <dd class="text-gray-700 sm:col-span-2 text-right">{{ formatDecimal(account.amount) }}</dd>
+                                            <dt class="font-medium text-gray-900 sm:col-span-2">{{ account.accountClass }} </dt>
+                                            <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(account.amount) }}</dd>
                                         </div>
                                         <div v-for="allocation in account.allocations" :key="allocation.id" class="grid grid-cols-1 gap-1 pl-10 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">{{ allocation.description }} - {{ allocation.semester }} </dt>
-                                            <dd class="text-gray-700 sm:col-span-2 text-right">{{ formatDecimal(allocation.amount) }}</dd>
+                                            <dt class="font-medium text-gray-900 sm:col-span-2">{{ allocation.semester }} - {{ allocation.description }}</dt>
+                                            <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(allocation.amount) }}</dd>
                                         </div>
                                     </dl>
                                 </div>
