@@ -19,6 +19,7 @@ class PpmpTransaction extends Model
         'ppmp_type',
         'price_adjustment',
         'qty_adjustment',
+        'tresh_adjustment',
         'ppmp_status',
         'ppmp_version',
         'ppmp_year',

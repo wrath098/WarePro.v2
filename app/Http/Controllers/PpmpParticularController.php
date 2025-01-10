@@ -98,7 +98,6 @@ class PpmpParticularController extends Controller
     public function delete(Request $request, PpmpParticular $ppmpParticular)
     {
         try {
-
             $user = Auth::id();
             $transId = PpmpTransaction::findOrFail($ppmpParticular['trans_id']);
             $transId->update(['updated_by' => $user]);

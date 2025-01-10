@@ -132,6 +132,7 @@ class PpmpTransactionController extends Controller
 
     public function storeCopy(Request $request)
     { 
+        DB::beginTransaction();
         try {
             $percentage = (float)$request->input('qtyAdjust') / 100;
             $transactions = PpmpTransaction::with('particulars')
@@ -141,62 +142,43 @@ class PpmpTransactionController extends Controller
                 ->where('ppmp_version', 1)
                 ->get();
 
-            $version = PpmpTransaction::select('ppmp_version')
-                ->where('ppmp_year', $request->input('selectedYear'))
-                ->where('ppmp_type', $request->input('selectedType'))
-                ->where('ppmp_status', 'draft')
-                ->groupBy('ppmp_version')
-                ->orderBy('ppmp_version', 'desc')
-                ->first();
+            if(!$transactions) {
+                DB::rollBack();
+                return redirect()->back()->with([
+                    'error' => 'No drafted PPMP Found!'  
+                ]);
+            }
 
             $ppmpExist = PpmpTransaction::where('ppmp_year', $request->input('selectedYear'))
                 ->where('ppmp_type', $request->input('selectedType'))
                 ->where('ppmp_status', 'draft')
-                ->where('qty_adjustment', $percentage )
+                ->where('tresh_adjustment', $percentage )
                 ->exists();
 
             if($ppmpExist) {
+                DB::rollBack();
                 return redirect()->back()->with([
                     'error' => 'A copy of Individual PPMP with ' . (float)$request->input('qtyAdjust') . '% quantity adjustment already exist!'
                 ]);
             }
 
-            DB::transaction(function () use ($transactions, $percentage, $version) {
-                foreach ($transactions as $transaction) {
-                    $newPpmpData = [
-                        'ppmpType' => $transaction->ppmp_type,
-                        'ppmpYear' => $transaction->ppmp_year,
-                        'office' => $transaction->office_id,
-                        'user' => Auth::id(),
-                    ];
-    
-                    $createTransaction = $this->createPpmpTransaction($newPpmpData);
-    
-                    foreach ($transaction->particulars as $particular) {
-                        $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $transaction->ppmp_year);
-                        $modifiedQtyFirst = !$isExempted && $particular->qty_first > 1 ? floor((int)$particular->qty_first * $percentage) : $particular->qty_first;
-                        $modifiedQtySecond = !$isExempted && $particular->qty_second > 1 ? floor((int)$particular->qty_second * $percentage) : $particular->qty_second;
-    
-                        PpmpParticular::create([
-                            'qty_first' => $modifiedQtyFirst,
-                            'qty_second' => $modifiedQtySecond,
-                            'prod_id' => $particular->prod_id,
-                            'price_id' => $particular->price_id,
-                            'trans_id' => $createTransaction->id,
-                        ]);
-                    }
-    
-                    $createTransaction->update([
-                        'qty_adjustment' => $percentage,
-                        'ppmp_version' => $version ? (int)$version->ppmp_version + 1 : 2,
-                    ]);
-                }
-            });
+            foreach ($transactions as $transaction) {
+                foreach ($transaction->particulars as $particular) {
+                    $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $transaction->ppmp_year);
+                    $modifiedQtyFirst = !$isExempted && $particular->qty_first > 1 ? floor((int)$particular->qty_first * $percentage) : $particular->qty_first;
+                    $modifiedQtySecond = !$isExempted && $particular->qty_second > 1 ? floor((int)$particular->qty_second * $percentage) : $particular->qty_second;
 
+                    $particular->update(['tresh_first_qty' => $modifiedQtyFirst, 'tresh_second_qty' => $modifiedQtySecond]);
+                    $transaction->update(['tresh_adjustment' => $percentage, 'updated_by' => Auth::id()]);
+                }
+            }
+
+            DB::commit();
             return redirect()->route('indiv.ppmp.type', ['type' => 'individual' , 'status' => 'draft'])
                 ->with(['message' => 'Make a copy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
-
         } catch (\Exception $e) {
+
+            DB::rollBack();
             Log::error('Make a copy for PPMP error: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'Make a copy of the PPMP failed. Please contact your system administrator.']);
