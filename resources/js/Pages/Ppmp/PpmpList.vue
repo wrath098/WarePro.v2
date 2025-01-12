@@ -55,7 +55,7 @@
                 <ol class="flex space-x-2 leading-none">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Import</a></li>
-                    <li v-if="ppmp.status == 'Draft'"><Copy @click="showModal('copy')" class="mr-10" tooltip="Make a Copy"/></li>
+                    <li v-if="ppmp.status == 'Draft'"><Copy @click="showModal('copy')" class="mr-10" tooltip="Quantity Adjustment"/></li>
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
@@ -113,8 +113,8 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Make a Copy of PPMP</h3>
-                            <p class="text-sm text-gray-500"> Enter the details for creating a copy of PPMP you wish to copy and modify.</p>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Quantity Adjustment</h3>
+                            <p class="text-sm text-gray-500"> Enter the details to create a copy of the Individual PPMP with Quantity Adjustment. This will serve as the threshold for releasing items per office.</p>
                             <div class="mt-5">
                                 <p class="text-sm text-gray-500"> Select PPMP Type: </p>
                                 <select v-model="makeCopy.selectedType" @change="onTypeChange(makeCopy)" class="p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>

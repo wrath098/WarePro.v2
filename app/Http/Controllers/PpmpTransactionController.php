@@ -151,14 +151,14 @@ class PpmpTransactionController extends Controller
 
             $ppmpExist = PpmpTransaction::where('ppmp_year', $request->input('selectedYear'))
                 ->where('ppmp_type', $request->input('selectedType'))
-                ->where('ppmp_status', 'draft')
-                ->where('tresh_adjustment', $percentage )
+                ->where('ppmp_status', 'approved')
+                ->whereNotNull('tresh_adjustment')
                 ->exists();
 
             if($ppmpExist) {
                 DB::rollBack();
                 return redirect()->back()->with([
-                    'error' => 'A copy of Individual PPMP with ' . (float)$request->input('qtyAdjust') . '% quantity adjustment already exist!'
+                    'error' => 'Quantity Adjustment for the Individual PPMP has already been set!'
                 ]);
             }
 
@@ -526,19 +526,41 @@ class PpmpTransactionController extends Controller
 
     public function destroy(Request $request)
     {
+        DB::beginTransaction();
         try {
-            $ppmpTransaction = PpmpTransaction::with('particulars')->where('id', $request->input('ppmpId'))->first();
-            if ($ppmpTransaction) {
-                $ppmpTransaction->update(['updated_by' => Auth::id()]);
-                $ppmpTransaction->particulars()->delete();
-                $ppmpTransaction->delete();
-                return redirect()->back()
-                    ->with(['message' => 'PPMP deletion was successful.']);
+            $ppmpTransaction = PpmpTransaction::with('particulars')
+                ->where('id', $request->input('ppmpId'))
+                ->first();
+            
+            if($ppmpTransaction->ppmp_type == 'individual'){
+                $validateExistence = PpmpTransaction::where('ppmp_year', $ppmpTransaction->ppmp_year)
+                    ->where('ppmp_type', 'consolidated')
+                    ->where('ppmp_status', 'approved')
+                    ->exists();
+                
+                if (!$validateExistence) {
+                    $ppmpTransaction->particulars()->forceDelete();
+                    $ppmpTransaction->forceDelete();
+
+                    DB::commit();
+                    return redirect()->back()
+                        ->with(['message' => 'PPMP deletion was successful.']);
+                } else {
+
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['error' => 'Unable to delete the PPMP. Contact your system administrator with this matter!']);
+                }
             } else {
-                return redirect()->back()
-                    ->with(['error' => 'PPMP not found.']);
+
+                DB::rollback();
+                    return redirect()->back()
+                        ->with(['error' => 'This action is under construction!']);
             }
+            
         } catch (\Exception $e) {
+
+            DB::rollback();
             Log::error('File delete ppmp error: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'PPMP deletion failed. Please contact your system administrator']);
@@ -596,6 +618,8 @@ class PpmpTransactionController extends Controller
         PpmpParticular::create([
             'qty_first' => $janQty,
             'qty_second' => $mayQty,
+            'tresh_first_qty' => $janQty,
+            'tresh_second_qty' => $mayQty,
             'prod_id' => $isProductValid['prodId'],
             'price_id' => $isProductValid['priceId'],
             'trans_id' => $ppmpId,
