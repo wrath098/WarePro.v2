@@ -126,31 +126,31 @@
                             <form @submit.prevent="submit" class="space-y-5">
                                 <p class="mb-1 block text-base font-medium text-[#86591e]">PPMP Information</p>
                                 <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="create.ppmpType" name="ppmpType" id="ppmpType" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Please choose PPMP Type</option>
+                                    <select v-model="create.ppmpType" name="ppmpType" id="ppmpType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select PPMP Type</option>
                                         <option value="individual">Individual</option>
                                         <option value="contingency">Contingency</option>
                                     </select>
                                     <label for="ppmpType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
                                 </div>
                                 <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="create.ppmpYear" name="ppmpYear" id="ppmpYear" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Please choose year</option>
+                                    <select v-model="create.ppmpYear" name="ppmpYear" id="ppmpYear" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                     </select>
                                     <label for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
                                 </div>
                                 <div class="relative z-0 w-full my-3 group" v-if="create.ppmpType == 'contingency'">
-                                    <select v-model="create.ppmpSem" name="ppmpSem" id="ppmpSem" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Please choose Semester</option>
+                                    <select v-model="create.ppmpSem" name="ppmpSem" id="ppmpSem" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Semester</option>
                                         <option value="1">1st Semester</option>
                                         <option value="2">2nd Semester</option>
                                     </select>
                                     <label for="ppmpSem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Semester</label>
                                 </div>
                                 <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="create.office" name="office" id="office" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Please choose the office</option>
+                                    <select v-model="create.office" name="office" id="office" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Office</option>
                                         <option v-for="office in props.offices" :key="office.id" :value="office.id">{{ office.name }}</option>
                                     </select>
                                     <label for="office" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>

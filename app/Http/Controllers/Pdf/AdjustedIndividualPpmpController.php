@@ -8,7 +8,7 @@ use App\Services\PpmpPDF;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
-class IndividualPpmpController extends Controller
+class AdjustedIndividualPpmpController extends Controller
 {
     protected $productService;
 
@@ -20,15 +20,15 @@ class IndividualPpmpController extends Controller
     public function generatePdf_IndividualPpmp(PpmpTransaction $ppmp)
     {
         $ppmp->load('particulars', 'requestee');
-        $totalQtySecond = $ppmp->particulars()->sum('qty_second');
-        
+        $totalQtySecond = $ppmp->particulars()->sum('tresh_second_qty');
+
         $pdf = new PpmpPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false, $ppmp->ppmp_code);
         $logoPath = public_path('assets/images/benguet_logo.png');
         $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code));
+        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code) . ' - Adjusted');
         $pdf->SetSubject('Individual PPMP Particulars');
         $pdf->SetKeywords('Benguet, WarePro, Individual List');
 
@@ -148,8 +148,8 @@ class IndividualPpmpController extends Controller
         $text = '';
         $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
             'id' => $particular->id,
-            'qtyFirst' => $particular->qty_first,
-            'qtySecond' => $particular->qty_second,
+            'qtyFirst' => $particular->tresh_first_qty,
+            'qtySecond' => $particular->tresh_second_qty,
             'prodCode' => $this->productService->getProductCode($particular->prod_id),
             'prodName' => $this->productService->getProductName($particular->prod_id),
             'prodUnit' => $this->productService->getProductUnit($particular->prod_id),

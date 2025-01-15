@@ -20,11 +20,12 @@ class SummaryOfConsolidatedPpmpController extends Controller
 
     public function generatePdf_summaryOfConso(PpmpTransaction $ppmp)
     {
-        
+        $adjustment = $ppmp->qty_adjustment == 1 ? 'qty_adjustment' : 'tresh_adjustment';
+
         $individualPpmp = PpmpTransaction::with('particulars', 'requestee')
             ->where('ppmp_year', $ppmp->ppmp_year)
             ->where('ppmp_type', 'individual')
-            ->where('qty_adjustment', $ppmp->qty_adjustment)
+            ->where($adjustment, $ppmp->qty_adjustment)
             ->where('price_adjustment', $ppmp->price_adjustment)
             ->get();
 
@@ -81,7 +82,7 @@ class SummaryOfConsolidatedPpmpController extends Controller
         $table .= $this->tableHeader($individualPpmp);
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($individualPpmp);
+        $table .= $this->tableContent($individualPpmp, $adjustment);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -103,7 +104,7 @@ class SummaryOfConsolidatedPpmpController extends Controller
         return $header;
     }
 
-    protected function tableContent($individualPpmp)
+    protected function tableContent($individualPpmp, $adjustment)
     {
         $content = '';
         $funds = $this->productService->getAllProduct_FundModel();
@@ -125,7 +126,7 @@ class SummaryOfConsolidatedPpmpController extends Controller
                                     $content .= '<tr style="font-size: 8px; text-align: center;">
                                         <td style="font-size: 9px;" width="90px">' . $product->prod_newNo . '</td>
                                         ';
-
+                                    if($adjustment == 'qty_adjustment'){
                                         foreach($individualPpmp as $office) {
                                             $matchedParticulars = collect($office['particulars'])->filter(function ($particular) use ($product) {
                                                 return $particular['prod_id'] === $product->id;
@@ -140,6 +141,23 @@ class SummaryOfConsolidatedPpmpController extends Controller
 
                                             $content .= '<td style="font-size: 8px;" width="36px">' . ($total != 0 ? $total : '-') . '</td>';
                                         }
+                                    } else {
+                                        foreach($individualPpmp as $office) {
+                                            $matchedParticulars = collect($office['particulars'])->filter(function ($particular) use ($product) {
+                                                return $particular['prod_id'] === $product->id;
+                                            });
+
+                                            $total = $matchedParticulars->sum(function ($particular) {
+                                                $qtyFirst = isset($particular['tresh_first_qty']) ? $particular['tresh_first_qty'] : 0;
+                                                $qtySecond = isset($particular['tresh_second_qty']) ? $particular['tresh_second_qty'] : 0;
+
+                                                return $qtyFirst + $qtySecond;
+                                            });
+
+                                            $content .= '<td style="font-size: 8px;" width="36px">' . ($total != 0 ? $total : '-') . '</td>';
+                                        }
+                                    }
+                                        
                                     $content .= '</tr>';
                                 }  
                             }         

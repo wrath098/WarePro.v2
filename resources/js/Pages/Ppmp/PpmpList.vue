@@ -92,8 +92,9 @@
                                     <td class="px-6 py-3">{{ transaction.ppmp_year }}</td>
                                     <td class="px-6 py-3">v.{{ transaction.ppmp_version }}</td>
                                     <td class="px-6 py-3">{{ transaction.updater.name }}</td>
-                                    <td class="px-6 py-3">
-                                        <Print :href="route('generatePdf.IndividualPpmp', { ppmp: transaction.id})" tooltip="Print"></Print>
+                                    <td class="px-6 py-3 text-center">
+                                        <Print :href="route('generatePdf.IndividualPpmp', { ppmp: transaction.id})" tooltip="Initial"></Print>
+                                        <Print v-if="transaction.tresh_adjustment > 0 && transaction.tresh_adjustment < 1" :href="route('generatePdf.IndividualPpmp.withAdjustment', { ppmp: transaction.id})" tooltip="Adjusted"></Print>
                                     </td>
                                 </tr>
                             </tbody>
@@ -110,38 +111,34 @@
                         <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
                             <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
-                            </svg>
+                            </svg>                                            
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Quantity Adjustment</h3>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Quantity Adjustment</h3>
                             <p class="text-sm text-gray-500"> Enter the details to create a copy of the Individual PPMP with Quantity Adjustment. This will serve as the threshold for releasing items per office.</p>
                             <div class="mt-5">
-                                <p class="text-sm text-gray-500"> Select PPMP Type: </p>
-                                <select v-model="makeCopy.selectedType" @change="onTypeChange(makeCopy)" class="p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                    <option value="" disabled>Please choose the PPMP Type</option>
-                                    <option v-for="type in props.types" :key="type.ppmp_type" :value="type.ppmp_type">
-                                        {{ type.ppmp_type }}
-                                    </option>
-                                </select>
-
-                                <select v-model="makeCopy.selectedYear" v-if="filteredYears.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                    <option value="" disabled>Please choose the PPMP Year</option>
-                                    <option v-for="year in filteredYears" :key="year.ppmp_year" :value="year.ppmp_year">
-                                        {{ year.ppmp_year }}
-                                    </option>
-                                </select>
+                                <p class="text-sm text-[#86591e]">PPMP Information</p>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="makeCopy.selectedType" @change="onTypeChange(makeCopy)" name="selectedType" id="selectedType" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select the PPMP Type</option>
+                                        <option v-for="type in props.types" :key="type.ppmp_type" :value="type.ppmp_type">{{ type.ppmp_type }}</option>
+                                    </select>
+                                    <label for="selectedType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
+                                </div>
+                                <div class="relative z-0 w-full my-3 group" v-if="filteredYears.length">
+                                    <select v-model="makeCopy.selectedYear" name="selectedYear" id="selectedYear" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select the PPMP Year</option>
+                                        <option v-for="year in filteredYears" :key="year.ppmp_year" :value="year.ppmp_year">{{ year.ppmp_year }}</option>
+                                    </select>
+                                    <label for="selectedYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Year</label>
+                                </div>
                             </div>
                             <div class="mt-5">
-                                <p class="text-sm text-gray-500"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span></p>
-                                <input v-model="makeCopy.qtyAdjust"  
-                                    type="number"
-                                    id="qtyAdjust"
-                                    min="50"
-                                    max="100"
-                                    placeholder="Enter the percentage from 50 to 100"
-                                    class="w-full rounded-md border border-[#e0e0e0] bg-white py-2 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                                    required
-                                />
+                                <p class="text-sm text-[#86591e]"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span></p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="makeCopy.qtyAdjust" type="number" min="50" max="100" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Qty Adjustment</label>
+                                </div>
                             </div>
                         </div>
                     </div>

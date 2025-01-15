@@ -30,6 +30,7 @@
         selectedType: '',
         selectedYear: '',
         selectedVersion: '',
+        selectedCopy: '',
         priceAdjust:''
     });
 
@@ -140,42 +141,46 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Consolidate PPMP</h3>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Consolidate PPMP</h3>
                             <p class="text-sm text-gray-500"> Enter the details to generate a consolidated PPMP you wish to consolidate.</p>
                             <div class="mt-5">
-                                <p class="text-sm text-gray-500"> Select PPMP Type: </p>
-                                <select v-model="generateConsolidated.selectedType" @change="onTypeChange(generateConsolidated)" class="p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                    <option value="" disabled>Please choose the PPMP Type</option>
-                                    <option v-for="type in props.individualList" :key="type.ppmp_type" :value="type.ppmp_type">
-                                        {{ type.ppmp_type }}
-                                    </option>
-                                </select>
-
-                                <select v-model="generateConsolidated.selectedYear" v-if="filteredYears.length" @change="onYearChange(generateConsolidated)" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                    <option value="" disabled>Please choose the PPMP Year</option>
-                                    <option v-for="year in filteredYears" :key="year.ppmp_year" :value="year.ppmp_year">
-                                        {{ year.ppmp_year }}
-                                    </option>
-                                </select>
-
-                                <select v-model="generateConsolidated.selectedVersion" v-if="filteredVersion.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                    <option value="" disabled>Please choose the PPMP Version</option>
-                                    <option v-for="version in filteredVersion" :key="version.version" :value="version.version">
-                                        {{ version.version }}
-                                    </option>
-                                </select>
+                                <p class="text-sm text-[#86591e]">PPMP Information: </p>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="generateConsolidated.selectedType" @change="onTypeChange(generateConsolidated)" name="selectedType" id="selectedType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Type</option>
+                                        <option v-for="type in props.individualList" :key="type.ppmp_type" :value="type.ppmp_type">{{ type.ppmp_type }}</option>
+                                    </select>
+                                    <label for="selectedType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
+                                </div>
+                                <div class="relative z-0 w-full my-3 group" v-if="filteredYears.length">
+                                    <select v-model="generateConsolidated.selectedYear" @change="onYearChange(generateConsolidated)" name="selectedYear" id="selectedYear" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Year</option>
+                                        <option v-for="year in filteredYears" :key="year.ppmp_year" :value="year.ppmp_year">{{ year.ppmp_year }}</option>
+                                    </select>
+                                    <label for="selectedYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Year</label>
+                                </div>
+                                <div class="relative z-0 w-full my-3 group" v-if="filteredVersion.length">
+                                    <select v-model="generateConsolidated.selectedVersion" name="selectedVersion" id="selectedVersion" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Version</option>
+                                        <option v-for="version in filteredVersion" :key="version.version" :value="version.version">{{ version.version }}</option>
+                                    </select>
+                                    <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Version</label>
+                                </div>
+                                <div class="relative z-0 w-full my-3 group" v-if="filteredVersion.length">
+                                    <select v-model="generateConsolidated.selectedCopy" name="selectedCopy" id="selectedCopy" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Copy</option>
+                                        <option :value="'Initial'">Initial</option>
+                                        <option :value="'Adjusted'">Adjusted</option>
+                                    </select>
+                                    <label for="selectedCopy" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Copy</label>
+                                </div>
                             </div>
                             <div class="mt-5">
-                                <p class="text-sm text-gray-500"> Price Adjustment: <span class="text-sm text-[#8f9091]">Value: 100% - 120%</span></p>
-                                <input v-model="generateConsolidated.priceAdjust"  
-                                    type="number"
-                                    id="priceAdjust"
-                                    min="100"
-                                    max="120"
-                                    placeholder="Enter the percentage from 100 to 120"
-                                    class="w-full rounded-md border border-[#e0e0e0] bg-white py-2 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                                    required
-                                />
+                                <p class="text-sm text-[#86591e]"> Price Adjustment: <span class="text-sm text-[#8f9091]">Value: 100% - 120%</span></p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="generateConsolidated.priceAdjust" type="number" min="100" max="120" name="priceAdjust" id="priceAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="priceAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Percentage</label>
+                                </div>
                             </div>
                         </div>
                     </div>

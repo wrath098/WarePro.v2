@@ -17,6 +17,7 @@ use App\Http\Controllers\PrTransactionController;
 use App\Http\Controllers\Forms\PrMultiStepFormController;
 use App\Http\Controllers\FundAllocationController;
 use App\Http\Controllers\IarTransactionController;
+use App\Http\Controllers\Pdf\AdjustedIndividualPpmpController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\IndividualPpmpController;
@@ -148,6 +149,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
     Route::get('/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
+    Route::get('/adjusted-individual-ppmp-list/{ppmp}', [AdjustedIndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp.withAdjustment');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
 });
 

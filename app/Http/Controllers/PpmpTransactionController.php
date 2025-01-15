@@ -188,18 +188,21 @@ class PpmpTransactionController extends Controller
     public function storeConsolidated(Request $request)
     {
         try {
+            $selectedCopy = $request->selectedCopy;
             $ppmp = PpmpTransaction::where('ppmp_year', $request->selectedYear)
                 ->where('ppmp_type', $request->selectedType)
                 ->where('ppmp_version', $request->selectedVersion)
                 ->where('ppmp_status', 'draft')
                 ->firstOrFail();
             
+            $adjustmentField = $selectedCopy == 'Initial' ? 'qty_adjustment' : 'tresh_adjustment';
+
             $data = [
                 'ppmpType' => 'consolidated',
                 'ppmpYear' => $ppmp->ppmp_year,
                 'ppmpStatus' => $ppmp->ppmp_status, 
                 'basePrice' => $ppmp->price_adjustment, 
-                'qtyAdjust' => $ppmp->qty_adjustment,
+                'qtyAdjust' => $ppmp[$adjustmentField],
                 'version' => $ppmp->ppmp_version,
                 'office' => null,
                 'user' => Auth::id(),
@@ -208,16 +211,16 @@ class PpmpTransactionController extends Controller
             $existingConsoPpmp = $this->validateConsoPpmp($data);
             $data['newVersion'] = $existingConsoPpmp ? $existingConsoPpmp->ppmp_version + 1 : 1;
 
-            DB::transaction(function () use ($data) {
+            DB::transaction(function () use ($data, $selectedCopy) {
                 $createConsolidation = $this->createPpmpTransaction($data);                
                 $individualPpmp = $this->getIndividualPpmpTransactionsWithParticulars($data);
                 $groupParticulars = $individualPpmp->flatMap(function ($transaction) {
                     return $transaction->particulars;
-                })->groupBy('prod_id')->map(function ($items) use ($createConsolidation, $data) {
+                })->groupBy('prod_id')->map(function ($items) use ($createConsolidation, $data, $selectedCopy) {
                     $prodPrice = $this->productService->getLatestPriceIdentification($items->first()->prod_id);
                     
-                    $qtyFirst = (int) $items->sum('qty_first');
-                    $qtySecond = (int) $items->sum('qty_second');
+                    $qtyFirst = (int) $items->sum($selectedCopy == 'Initial' ? 'qty_first' : 'tresh_first_qty');
+                    $qtySecond = (int) $items->sum($selectedCopy == 'Initial' ? 'qty_second' : 'tresh_second_qty');
 
                     PpmpConsolidated::create([
                         'qty_first' => $qtyFirst,
@@ -551,6 +554,8 @@ class PpmpTransactionController extends Controller
                     return redirect()->back()
                         ->with(['error' => 'Unable to delete the PPMP. Contact your system administrator with this matter!']);
                 }
+            } elseif ($ppmpTransaction->ppmp_type == 'consolidated') {
+                dd($request->toArray());
             } else {
 
                 DB::rollback();
