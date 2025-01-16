@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('ppmp_type');
             $table->decimal('price_adjustment', 5, 2)->default(1.00);
             $table->decimal('qty_adjustment', 5, 2)->default(1.00);
+            $table->decimal('tresh_adjustment', 5, 2)->default(1.00);
             $table->string('ppmp_status', 20)->default('draft');
             $table->integer('ppmp_version')->unsigned()->default(1);
             $table->string('ppmp_year', 10)->nullable();

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->bigInteger('qty')->nullable();
             $table->decimal('price')->nullable();
             $table->string('status')->default('pending');
+            $table->date('date_expiry')->nullable();
             $table->string('remarks')->nullable();
             $table->unsignedBigInteger('air_id')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

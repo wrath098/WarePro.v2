@@ -104,7 +104,7 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Import</a></li>

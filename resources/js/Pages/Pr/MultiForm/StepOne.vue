@@ -44,15 +44,15 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-green-700">Purchase Request</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">New</li> 
-                    <li class="text-green-700" aria-current="page">MultiForm - Step One</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Purchase Request</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">New</li> 
+                    <li class="text-[#86591e]" aria-current="page">MultiForm - Step One</li> 
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>

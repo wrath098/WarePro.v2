@@ -18,15 +18,15 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-['/'] after:ml-2 text-green-700">Inspection and Acceptance</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">Transactions</li> 
-                    <li><Refresh :href="route('iar.collect.transactions')" class="" tooltip="Refresh"/></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Inspection and Acceptance</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Transactions</li> 
+                    <li><Refresh :href="route('iar.collect.transactions')" class="" tooltip="Fetch IAR"/></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -58,7 +58,7 @@
                                         }">
                                         {{ transaction.status }}
                                     </span>
-                                    </td>
+                                </td>
                                 <td>
                                     <ViewButton :href="route('iar.particular', { iar: transaction.id})" tooltip="View"/>
                                 </td>

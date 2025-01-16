@@ -14,6 +14,7 @@
     });
 
     const acceptParticular = reactive({pid: ''});
+    const acceptAllParticular = reactive({particulars: ''});
     const denyParticular = reactive({pid: ''});
     const editParticular = reactive({
         pid: '',
@@ -23,6 +24,11 @@
     const openAcceptModal = (particular) => {
         acceptParticular.pid = particular.pId;
         modalState.value = 'accept';
+    }
+
+    const openAcceptAllModal = (particulars) => {
+        acceptAllParticular.particulars = particulars;
+        modalState.value = 'acceptAll';
     }
 
     const openEditModal = (particular) => {
@@ -38,6 +44,7 @@
 
     const modalState = ref(null);
     const closeModal = () => { modalState.value = null; }
+    const isAcceptAllModalOpen = computed(() => modalState.value === 'acceptAll');
     const isAcceptModalOpen = computed(() => modalState.value === 'accept');
     const isEditModalOpen = computed(() => modalState.value === 'edit');
     const isDenyModalOpen = computed(() => modalState.value === 'deny');
@@ -65,6 +72,7 @@
     };
 
     const submitAcceptance = () => submitForm('post', 'particulars/accept', acceptParticular);
+    const submitAcceptanceAll = () => submitForm('post', 'particulars/acceptAll', acceptAllParticular);
     const submitEdit = () => submitForm('put', 'particulars/update', editParticular);
     const submitDeny = () => submitForm('post', 'particulars/reject', denyParticular);
 </script>
@@ -77,15 +85,23 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg md:leading-6"> 
                 <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-green-700">Inspection and Acceptance</a></li>
-                    <li class="after:content-[':'] after:ml-2 text-green-700" aria-current="page">Transactions</li>
-                    <li class="text-green-700" aria-current="page">IAR No. {{ iar.sdi_iar_id }} - P.O. No. {{ iar.po_no }}</li> 
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Inspection and Acceptance</a></li>
+                    <li class="after:content-[':'] after:ml-2 text-[#86591e]" aria-current="page">Transactions</li>
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">IAR No. {{ iar.sdi_iar_id }} - P.O. No. {{ iar.po_no }}</li>
+                    <li class="flex flex-col lg:flex-row">
+                        <button @click="openAcceptAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
+                            Accept All
+                        </button>
+                        <button @click="''" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
+                            Reject All
+                        </button>
+                    </li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -247,6 +263,38 @@
                     </svg>
                     Cancel
                 </DangerButton>
+            </div>
+        </form>
+    </Modal>
+    <Modal :show="isAcceptAllModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitAcceptanceAll">
+            <div class="bg-gray-100 h-auto">
+                <div class="bg-white p-6  md:mx-auto">
+                    <svg class="text-indigo-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
+                    </svg>
+
+                    <div class="text-center">
+                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept All Product!</h3>
+                        <p class="text-gray-600 my-2">Confirming this action will add all the Product within the list to the Product Inventory. <br> This action can't be undone.</p>
+                        <p> Please confirm if you wish to proceed.  </p>
+                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                            <SuccessButton>
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Confirm 
+                            </SuccessButton>
+
+                            <DangerButton @click="closeModal"> 
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Cancel
+                            </DangerButton>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </Modal>

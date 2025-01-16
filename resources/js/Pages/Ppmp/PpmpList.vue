@@ -54,7 +54,8 @@
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2 leading-none">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Import</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Individual</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">{{ props.ppmp.status }}</li>
                     <li v-if="ppmp.status == 'Draft'"><Copy @click="showModal('copy')" class="mr-10" tooltip="Quantity Adjustment"/></li>
                 </ol>
             </nav>

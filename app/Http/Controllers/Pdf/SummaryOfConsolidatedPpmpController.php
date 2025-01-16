@@ -38,8 +38,7 @@ class SummaryOfConsolidatedPpmpController extends Controller
             ];
         })->sortBy('offCode');
 
-        $pdf = new PpmpPDF('L', 'mm', array(297, 420), true, 'UTF-8', false, $ppmp->ppmp_code);
-
+        $pdf = new PpmpPDF('L', 'mm', array(420, 594), true, 'UTF-8', false, $ppmp->ppmp_code);
         $logoPath = public_path('assets/images/benguet_logo.png');
         $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');
 
@@ -57,8 +56,8 @@ class SummaryOfConsolidatedPpmpController extends Controller
 
         $pdf->AddPage();
 
-        $pdf->Image($logoPath, 148, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
-        $pdf->Image($pilipinasPath, 255, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
+        $pdf->Image($logoPath, 235, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
+        $pdf->Image($pilipinasPath, 345, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
 
         $html = '
             <div style="line-height: 0.01;">
@@ -71,7 +70,7 @@ class SummaryOfConsolidatedPpmpController extends Controller
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>PROJECT PROCUREMENT MANAGEMENT PLAN</h4>
                     <h5>OFFICE & JANITORIAL SUPPLIES</h5>
-                    <h6>Component Overview</h6>
+                    <h6>Summary Overview</h6>
                 </div>
             </div>
             <br>
@@ -93,13 +92,15 @@ class SummaryOfConsolidatedPpmpController extends Controller
     {
         $header = '<tr style="font-size: 8px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="90px">Item Stock No.</th>
+                    <th width="250px">Description.</th>
                 ';
 
         foreach($individualPpmp as $office) {
-            $header .= '<th width="36px">'. $office['offCode'] .'</th>';
+            $header .= '<th width="42px">'. $office['offCode'] .'</th>';
         }
 
-        $header .=  '</tr>';
+        $header .=  '<th width="69px">Total</th>
+                </tr>';
 
         return $header;
     }
@@ -123,8 +124,11 @@ class SummaryOfConsolidatedPpmpController extends Controller
                         foreach ($category->items as $item) {
                             if ($item->products->isNotEmpty()) {  
                                 foreach ($item->products as $product) {
+                                    $overallTotal = 0;
+                                    $productDesc = $this->productService->getProductName($product->id);
                                     $content .= '<tr style="font-size: 8px; text-align: center;">
                                         <td style="font-size: 9px;" width="90px">' . $product->prod_newNo . '</td>
+                                        <td style="font-size: 9px;text-align: left;" width="250px">' . $productDesc . '</td>
                                         ';
                                     if($adjustment == 'qty_adjustment'){
                                         foreach($individualPpmp as $office) {
@@ -139,7 +143,9 @@ class SummaryOfConsolidatedPpmpController extends Controller
                                                 return $qtyFirst + $qtySecond;
                                             });
 
-                                            $content .= '<td style="font-size: 8px;" width="36px">' . ($total != 0 ? $total : '-') . '</td>';
+                                            $overallTotal += $total;
+
+                                            $content .= '<td style="font-size: 8px;" width="42px">' . ($total != 0 ? $total : '-') . '</td>';
                                         }
                                     } else {
                                         foreach($individualPpmp as $office) {
@@ -154,11 +160,12 @@ class SummaryOfConsolidatedPpmpController extends Controller
                                                 return $qtyFirst + $qtySecond;
                                             });
 
-                                            $content .= '<td style="font-size: 8px;" width="36px">' . ($total != 0 ? $total : '-') . '</td>';
+                                            $overallTotal += $total;
+                                            $content .= '<td style="font-size: 8px;" width="42px">' . ($total != 0 ? number_format($total, 0, '.', ',') : '-') . '</td>';
                                         }
                                     }
-                                        
-                                    $content .= '</tr>';
+                                    $content .= '<td style="font-size: 8px;" width="69px">' . ($overallTotal != 0 ? number_format($overallTotal, 0, '.', ',') : '-') . '</td>
+                                            </tr>';
                                 }  
                             }         
                         }

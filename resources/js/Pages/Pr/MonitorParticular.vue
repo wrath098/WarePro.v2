@@ -37,33 +37,37 @@
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex flex-col md:flex-row items-start justify-center">
                         <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div class="flex-1 flex items-start justify-between bg-indigo-300 p-2 rounded-t-xl md:mb-8">
+                            <div class="flex-1 flex items-start justify-between bg-indigo-300 p-2 rounded-t-xl md:mb-5">
                                 <div class="flex flex-col gap-1">
                                     <h2 class="text-lg justify-center font-semibold text-[#161555] mb-4">Purchase Request Information</h2>
                                 </div>
                             </div>
+                            <div class="p-2">
+                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
+                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">PPMP Transaction No.</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmpCode }}</dd>
+                                        </div>
 
-                            <div class="mx-2">                               
-                                <div class="mb-4 px-2">
-                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">PPMP Transaction No.:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmpCode }}</p>
-                                </div>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Calendar Year</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmpYear}}</dd>
+                                        </div>
 
-                                <div class="mb-4 px-2">
-                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Calendar Year:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmpYear }}</p>
-                                </div>
-
-                                <div class="mb-4 px-2">
-                                    <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Cumulative Total:</label>
-                                    <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalAmount }}</p>
-                                </div>
-
-                                <div class="mb-4 px-2">
-                                    <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">PR List: {{ ppmp.prCount }}</label>
-                                    <div v-for="pr in transaction" :key="pr.id">
-                                        <p class="text-lg text-gray-800 font-semibold">{{ pr.pr_no }}</p>
-                                    </div>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Cumulative Total Amount</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalAmount }}</dd>
+                                        </div>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">PR Count : {{ ppmp.prCount }}</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">
+                                                <div v-for="pr in transaction" :key="pr.id">
+                                                    <p class="text-gray-800">{{ pr.pr_no }}</p>
+                                                </div>
+                                            </dd>
+                                        </div>
+                                    </dl>
                                 </div>
                             </div>
                         </div>

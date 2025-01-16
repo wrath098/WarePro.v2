@@ -1,15 +1,13 @@
 <script setup>
-    import { Head, router} from '@inertiajs/vue3';
-    import { ref, reactive, computed, watch } from 'vue';
+    import { Head } from '@inertiajs/vue3';
+    import { ref, reactive, computed } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
-    import { debounce } from 'lodash';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
-    import Pagination from '@/Components/Pagination.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
@@ -29,6 +27,7 @@
         prodUnit: '',
         prodRemarks: '',
         prodOldCode: '',
+        hasExpiry: '',
         createdBy: props.authUserId || '',
     });
 
@@ -41,6 +40,7 @@
         prodUnit: '',
         prodRemarks: '',
         prodOldCode: '',
+        hasExpiry: '',
         updatedBy: props.authUserId || '',
     });
 
@@ -192,6 +192,9 @@
                                     </td>
                                     <td class="py-2">
                                         {{ product.desc }}
+                                        <span v-if="product.expiry == 'Yes'" class="inline-flex items-center p-1 text-xs rounded bg-blue-100 text-blue-800">
+                                            Expiry
+                                        </span>
                                     </td>
                                     <td class="py-2 text-center">
                                         {{ product.unit }}
@@ -300,6 +303,17 @@
                                     </div>
                                     <input type="hidden" v-model="create.createdBy">
                                 </div>
+                                <div class="mt-5">
+                                    <p class="text-sm text-[#86591e]">Product Expiration <span class="text-xs text-[#3b3b3b]">(Optional)</span></p>
+                                    <div class="relative z-0 w-full my-3 group">
+                                        <select v-model="create.hasExpiry" name="hasExpiry" id="hasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer">
+                                            <option value="" disabled selected>Is Product has expiration?</option>
+                                            <option :value="1">Yes</option>
+                                            <option :value="2">No</option>
+                                        </select>
+                                        <label for="hasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -346,6 +360,17 @@
                                         <label for="editProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
                                     </div>
                                     <input type="hidden" v-model="edit.updatedBy">
+                                </div>
+                                <div class="mt-5">
+                                    <p class="text-sm text-[#86591e]">Product Expiration <span class="text-xs text-[#3b3b3b]">(Optional)</span></p>
+                                    <div class="relative z-0 w-full my-3 group">
+                                        <select v-model="edit.hasExpiry" name="editHasExpiry" id="editHasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer">
+                                            <option value="" disabled selected>Is Product has expiration?</option>
+                                            <option :value="1">Yes</option>
+                                            <option :value="2">No</option>
+                                        </select>
+                                        <label for="editHasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -450,6 +475,17 @@
                                     <div class="relative z-0 w-full mb-5 group">
                                         <input v-model="edit.prodOldCode" type="number" name="modifyProdOldCode" id="modifyProdOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                                         <label for="modifyProdOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
+                                    </div>
+                                    <div class="mt-5">
+                                    <p class="text-sm text-[#86591e]">Product Expiration <span class="text-xs text-[#3b3b3b]">(Optional)</span></p>
+                                        <div class="relative z-0 w-full my-3 group">
+                                            <select v-model="edit.hasExpiry" name="editHasExpiry" id="editHasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer">
+                                                <option value="" disabled selected>Is Product has expiration?</option>
+                                                <option :value="1">Yes</option>
+                                                <option :value="2">No</option>
+                                            </select>
+                                            <label for="editHasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
+                                        </div>
                                     </div>
                                     <input type="hidden" v-model="edit.updatedBy">
                                 </div>

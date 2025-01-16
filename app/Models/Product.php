@@ -22,6 +22,7 @@ class Product extends Model
         'prod_status',
         'prod_remarks',
         'prod_oldNo',
+        'has_expiry',
         'item_id',
         'created_by',
         'updated_by',

@@ -11,6 +11,7 @@ use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Services\ProductService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -252,6 +253,13 @@ class PpmpTransactionController extends Controller
     {
         DB::beginTransaction();
 
+        $adjustment = (float) $ppmpTransaction->qty_adjustment == 1.00 ? 'qty_adjustment' : 'tresh_adjustment';
+        $individualPpmp = PpmpTransaction::where('ppmp_type', 'individual')
+            ->where('ppmp_year', $ppmpTransaction->ppmp_year)
+            ->where('ppmp_status', $ppmpTransaction->ppmp_status)
+            ->where($adjustment, $ppmpTransaction->qty_adjustment)
+            ->get();
+
         $year = $ppmpTransaction->ppmp_year;
         $type = $ppmpTransaction->ppmp_type;
         $status = $ppmpTransaction->ppmp_status;
@@ -366,7 +374,12 @@ class PpmpTransactionController extends Controller
                 $this->createFundAllocation($category['name'], '2nd',  $category['secondSem'], $capitalId);
             }
         }
-        //$ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
+
+        foreach($individualPpmp as $ppmp) {
+            $ppmp->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
+        }
+
+        $ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
         DB::commit();
         return redirect()->route('conso.ppmp.type', ['type' => $type, 'status' => $status])->with('message', 'Proceeding to Approved PPMP successfully executed');
         } catch (\Exception $e) {
@@ -555,7 +568,29 @@ class PpmpTransactionController extends Controller
                         ->with(['error' => 'Unable to delete the PPMP. Contact your system administrator with this matter!']);
                 }
             } elseif ($ppmpTransaction->ppmp_type == 'consolidated') {
-                dd($request->toArray());
+                $ppmpTransaction = PpmpTransaction::with('consolidated', 'purchaseRequests')
+                    ->where('id', $request->input('ppmpId'))
+                    ->first();
+            
+                if($ppmpTransaction->purchaseRequests->isNotEmpty()) {
+                    DB::rollback();
+                    return redirect()->back()
+                        ->with(['error' => 'Unable to delete the PPMP. Purchase Request/s was already been created on this transaction!']);
+                }
+                
+                if ($ppmpTransaction->consolidated instanceof Collection) {
+                    foreach ($ppmpTransaction->consolidated as $consolidatedItem) {
+                        $consolidatedItem->forceDelete();
+                    }
+                } else {
+                    $ppmpTransaction->consolidated->forceDelete();
+                }
+                
+                $ppmpTransaction->forceDelete();
+
+                DB::commit();
+                return redirect()->back()
+                    ->with(['message' => 'PPMP deletion was successful.']);
             } else {
 
                 DB::rollback();

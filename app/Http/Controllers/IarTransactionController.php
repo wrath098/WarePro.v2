@@ -67,7 +67,7 @@ class IarTransactionController extends Controller
             $userId = Auth::id();
 
             if(!$product) {
-                throw new \Exception('Product Item not found!');
+                throw new \Exception('Product Item/Stock No. not found!');
             }
 
             $data = [
@@ -101,6 +101,24 @@ class IarTransactionController extends Controller
             DB::rollBack();
             Log::error("Error during transaction: " . $e->getMessage());
             return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function acceptIarParticularAll(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            foreach ($request->particulars as $particular) {
+                $product = $this->validateProduct($particular->stock_no);
+
+                if(!$product) {
+                    throw new \Exception('Product Item/Stock No. not found!');
+                }
+
+            };
+        } catch(\Exception $e) {
+
         }
     }
 

@@ -101,17 +101,17 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-none"> 
                 <ol class="flex space-x-2">
-                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">Project Procurement and Manangement Plan</li>
-                    <li class="after:content-[':'] after:ml-2 text-green-700" aria-current="page">Transaction No.</li> 
-                    <li class="text-green-700" aria-current="page">{{ ppmp.ppmp_code }}</li> 
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Project Procurement and Manangement Plan</li>
+                    <li class="after:content-[':'] after:ml-2 text-[#86591e]" aria-current="page">Transaction No.</li> 
+                    <li class="text-[#86591e]" aria-current="page">{{ ppmp.ppmp_code }}</li> 
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -120,17 +120,17 @@
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="mx-2 w-full md:w-3/12 bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div class="flex-1 flex items-start justify-between rounded-lg">
-                                <div class="flex flex-col gap-1 ">
-                                    <h2 class="text-lg font-semibold text-[#07074D] mb-4">PPMP Information</h2>
+                        <div class="mx-2 w-full md:w-3/12 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">
+                                <div class="flex flex-col gap-1">
+                                    <h2 class="text-lg font-semibold text-gray-50">PPMP Information</h2>
                                 </div>
                                 <div class="flex items-center">
                                     <Dropdown>
                                         <template #trigger>
                                             <button class="flex items-center rounded-full transition">
                                                 <span class="sr-only">Open options</span>
-                                                <svg class="w-7 h-7 text-indigo-500 hover:text-indigo-900" fill="currentColor" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                                <svg class="w-7 h-7 text-indigo-100 hover:text-yellow-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                                     <path d="m23.365,3.699l-1.322,1.322-3.064-3.064,1.234-1.234c.801-.801,2.108-.955,2.985-.237,1.009.825,1.064,2.316.166,3.214Zm-5.8-.328l-5.296,5.296c-.813.813-1.269,1.915-1.269,3.064v.769c0,.276.224.5.5.5h.769c1.149,0,2.251-.457,3.064-1.269l5.296-5.296-3.064-3.064Zm3.707,10.514l-.451-.26c.102-.544.153-1.088.153-1.625s-.051-1.081-.153-1.625l-.29-1.015-3.784,3.784c-1.196,1.196-2.786,1.855-4.478,1.855h-.77c-1.379,0-2.5-1.121-2.5-2.5v-.77c0-1.691.659-3.281,1.855-4.478l4.119-4.119v-.134c0-1.654-1.346-3-3-3s-3,1.346-3,3v.522c-1.047.37-2.016.929-2.857,1.649l-.45-.259c-.693-.398-1.501-.504-2.277-.295-.773.208-1.419.706-1.818,1.4-.4.694-.505,1.503-.296,2.277.208.773.706,1.419,1.401,1.819l.451.259c-.102.544-.153,1.088-.153,1.626s.051,1.082.153,1.626l-.451.259c-.695.4-1.192,1.046-1.401,1.819-.209.774-.104,1.583.295,2.276.399.695,1.045,1.193,1.819,1.401.776.21,1.584.104,2.277-.295l.45-.259c.841.721,1.81,1.279,2.857,1.649v.522c0,1.654,1.346,3,3,3s3-1.346,3-3v-.522c1.047-.37,2.016-.929,2.857-1.649l.45.259c.695.399,1.503.505,2.277.295.773-.208,1.419-.706,1.819-1.401.825-1.434.329-3.271-1.105-4.096Z"/>
                                                 </svg>
                                             </button>
@@ -147,7 +147,7 @@
                                                 <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                     <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
                                                 </svg>
-                                                <span class="ml-2">Component Overview</span>
+                                                <span class="ml-2">Summary Overview</span>
                                             </a>
                                             <a :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                                 <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -165,50 +165,55 @@
                                     </Dropdown>
                                 </div>
                             </div>
+                            <div class="p-2">
+                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
+                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Version</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">V.{{ ppmp.ppmp_version }}</dd>
+                                        </div>
 
-                            <div class="mb-4">
-                                <label for="officeName" class="block text-sm font-medium text-[#07074D] mb-1">Version:</label>
-                                <p class="text-lg text-gray-800 font-semibold">V.{{ ppmp.ppmp_version }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="ppmpCode" class="block text-sm font-medium text-[#07074D] mb-1">No.:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_code }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="ppmpType" class="block text-sm font-medium text-[#07074D] mb-1">Type:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_type }}</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Price:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.price_adjustment * 100 }}%</p>
-                            </div>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Transaction No.</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_code }}</dd>
+                                        </div>
 
-                            <div class="mb-4">
-                                <label for="priceAdjustment" class="block text-sm font-medium text-[#07074D] mb-1">Adjusted Quantity:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.qty_adjustment * 100 }}%</p>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="ppmpRemarks" class="block text-sm font-medium text-[#07074D] mb-1">PPMP for CY:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.ppmp_year }}</p>
-                            </div>       
-                            
-                            <div class="mb-4">
-                                <label for="totalItems" class="block text-sm font-medium text-[#07074D] mb-1">Total Items Listed:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalItems }}</p>
-                            </div>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Type</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_type }}</dd>
+                                        </div>
 
-                            <div class="mb-4">
-                                <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Total Amount:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.totalAmount }}</p>
-                            </div>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Price Adjustment</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.price_adjustment * 100 }}%</dd>
+                                        </div>
 
-                            <div class="mb-4">
-                                <label for="totalAmount" class="block text-sm font-medium text-[#07074D] mb-1">Created/Updated By:</label>
-                                <p class="text-lg text-gray-800 font-semibold">{{ ppmp.updater.name }}</p>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Quantity Adjustment</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.price_adjustment * 100 }}%</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Calendar Year</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_year }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Total Items Listed</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalItems }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Total Amount</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalAmount }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Created/Updated By</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.updater.name }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
                             </div>
                         </div>
 
@@ -266,16 +271,25 @@
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Additional Particular</h3>
+                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Additional Particular</h3>
                         <p class="text-sm text-gray-500"> Enter the details for the add Product/Particular you wish to add.</p>
-                        <div class="mt-3">
-                            <p class="text-sm text-gray-500"> Product No: </p>
-                            <input v-model="addParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" required>
+                        <div class="mt-5">
+                            <p class="text-sm text-[#86591e]"> Product No: </p>
+                            <div class="relative z-0 w-full group my-2">
+                                <input v-model="addParticular.prodCode" type="text" name="prodCode" id="prodCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label for="prodCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock No.</label>
+                            </div>
                         </div>
                         <div class="mt-5">
-                            <p class="text-sm text-gray-500"> Quantity: </p>
-                            <input v-model="addParticular.firstQty" type="number" id="firstQty" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="First Semester" required>
-                            <input v-model="addParticular.secondQty" type="number" id="secondQty" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Second Semester">
+                            <p class="text-sm text-[#86591e]"> Quantity: </p>
+                            <div class="relative z-0 w-full group my-2">
+                                <input v-model="addParticular.firstQty" type="number" name="firstQty" id="firstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label for="firstQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">First Semester (Qty)</label>
+                            </div>
+                            <div class="relative z-0 w-full group my-2">
+                                <input v-model="addParticular.secondQty" type="number" name="secondQty" id="secondQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label for="secondQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Second Semester (Qty)</label>
+                            </div>
                         </div>
                     </div>
                 </div>

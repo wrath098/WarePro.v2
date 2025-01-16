@@ -19,10 +19,16 @@
         individualList: Object,
     });
 
+    const edit = reactive({
+        ppmpId: '',
+        user: props.user,
+    });
+
     const modalState = ref(null);
     const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
     const isConsolidateModalOpen = computed(() => modalState.value === 'copy');
+    const isDropPpmpModalOpen = computed(() => modalState.value === 'drop');
 
     const filteredYears = ref([]);
     const filteredVersion = ref([]);
@@ -33,6 +39,11 @@
         selectedCopy: '',
         priceAdjust:''
     });
+
+    const openDropPpmpModal = (ppmp) => {
+        edit.ppmpId = ppmp.id;
+        modalState.value = 'drop';
+    };
 
     const onTypeChange = (context) => {
         const type = props.individualList.find(typ => typ.ppmp_type === context.selectedType);
@@ -56,6 +67,7 @@
         });
     };
     const submitConsolidated = () => submitForm('create-consolidated', generateConsolidated);
+    const submitDropPpmp = () => submitForm('drop', edit);
 </script>
 
 <template>
@@ -64,18 +76,18 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-['/'] after:ml-2 text-gray-600 hover:text-green-700">Project Procurement and Manangement Plan</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">{{ props.ppmp.type }}</li> 
-                    <li class="after:content-['/'] after:ml-2 text-green-700" aria-current="page">{{ props.ppmp.status }}</li> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
+                <ol class="flex space-x-2 leading-none">
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement and Manangement Plan</a></li>
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]">{{ props.ppmp.type }}</li> 
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">{{ props.ppmp.status }}</li> 
                     <li v-if="ppmp.status == 'Draft'"><Generate @click="showModal('copy')" class="" tooltip="Generate"/></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
+            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
                 {{ $page.props.flash.message }}
             </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
+            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
                 {{ $page.props.flash.error }}
             </div>
         </template>
@@ -114,10 +126,10 @@
                                                     <td class="px-6 py-3">{{ transaction.createdAt }}</td>
                                                     <td class="px-6 py-3" v-if="props.ppmp.status == 'Draft'">
                                                         <ViewButton :href="route('conso.ppmp.show', { ppmpTransaction: transaction.id })" tooltip="View"/>
-                                                        <RemoveButton @click="''" tooltip="Trash"/>
+                                                        <RemoveButton @click="openDropPpmpModal(transaction)" tooltip="Trash"/>
                                                     </td>
                                                     <td class="px-6 py-3" v-if="props.ppmp.status == 'Approved'">
-                                                        <Print :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: transaction.id})" tooltip="Print"></Print>
+                                                        <Print :href="route('generatePdf.ConsolidatedPpmp', { ppmp: transaction.id})" tooltip="Print"></Print>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -199,6 +211,38 @@
                         </svg>
                         Cancel
                     </DangerButton>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isDropPpmpModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitDropPpmp">
+                <input type="hidden" v-model="edit.ppmpId">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Drop PPMP?</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton>
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </Modal>

@@ -58,11 +58,11 @@ class ProductController extends Controller
                 'status' => $product->prod_status,
                 'price' => $this->productService->getLatestPrice($product->id),
                 'oldNo' => $product->prod_oldNo,
+                'expiry' => $product->has_expiry == 1 ? 'Yes' : 'No',
                 'catId' => optional($product->itemClass)->cat_id,
                 'itemId' => optional($product->itemClass)->id,
                 'itemName' => optional($product->itemClass)->item_name,
             ]);
-
 
         return Inertia::render('Product/Index', [
             'products' => $products, 
@@ -81,6 +81,7 @@ class ProductController extends Controller
             'prodUnit' => 'required|string',
             'prodRemarks' => 'required|integer',
             'prodOldCode' => 'nullable|string',
+            'hasExpiry'=> 'nullable|integer',
             'createdBy' => 'nullable|integer',
         ]);
 
@@ -94,6 +95,7 @@ class ProductController extends Controller
                     'prod_unit' => $validatedData['prodUnit'],
                     'prod_remarks' => $validatedData['prodRemarks'],
                     'prod_oldNo' => $validatedData['prodOldCode'],
+                    'has_expiry' => $validatedData['hasExpiry'] ?? 0,
                     'item_id' => $validatedData['itemId'],
                     'created_by' => $validatedData['createdBy'],
                     'updated_by' => $validatedData['createdBy'],
@@ -120,15 +122,17 @@ class ProductController extends Controller
             'prodId' => 'required|integer',
             'prodDesc' => 'required|string',
             'prodPrice' => 'required|numeric',
+            'hasExpiry' => 'nullable|integer',
             'updatedBy' => 'required|integer',
         ]);
 
         try {            
             return DB::transaction(function () use ($validatedData) {
                 $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
+                $hasExpiry = $validatedData['hasExpiry'] ?? 0;
 
                 $product = Product::findOrFail($validatedData['prodId']);
-                $product->update(['prod_desc' => $validatedData['prodDesc'], 'updated_by' => $validatedData['updatedBy']]);
+                $product->update(['prod_desc' => $validatedData['prodDesc'], 'updated_by' => $validatedData['updatedBy'], 'has_expiry' => $hasExpiry]);
 
                 if($latestPrice != $validatedData['prodPrice']) {
                     ProductPrice::create([
@@ -157,6 +161,7 @@ class ProductController extends Controller
             'prodUnit' => 'required|string',
             'prodRemarks' => 'required|integer',
             'prodOldCode' => 'nullable|string',
+            'hasExpiry'=> 'nullable|integer',
             'updatedBy' => 'nullable|integer',
         ]);
 
@@ -174,6 +179,7 @@ class ProductController extends Controller
                         'prod_remarks' => $validatedData['prodRemarks'],
                         'prod_remarks' => $validatedData['prodRemarks'],
                         'prod_oldNo' => $validatedData['prodOldCode'],
+                        'has_expiry' => $validatedData['hasExpiry'] ?? 0,
                         'item_id' => $validatedData['itemId'],
                         'created_by' => $validatedData['updatedBy'],
                         'updated_by' => $validatedData['updatedBy'],
