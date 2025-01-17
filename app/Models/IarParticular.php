@@ -21,6 +21,7 @@ class IarParticular extends Model
         'qty',
         'price',
         'status',
+        'date_expiry',
         'remarks',
         'air_id',
         'updated_by',

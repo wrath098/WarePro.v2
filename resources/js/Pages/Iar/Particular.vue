@@ -11,7 +11,25 @@
     const props = defineProps({
         iar: Object,
         particulars: Object,
+        productList: Object,
     });
+
+    const stockData = ref(null);
+
+    const fetchProduct = () => {
+        if (editParticular.stockNo.length > 0) {
+            const foundStock = props.productList.find(item => item.stockNo === editParticular.stockNo);
+            if (foundStock) {
+            stockData.value = {
+                ...foundStock,
+            };
+            } else {
+            stockData.value = null;
+            }
+        } else {
+            stockData.value = null;
+        }
+    };
 
     const acceptParticular = reactive({pid: ''});
     const acceptAllParticular = reactive({particulars: ''});
@@ -19,6 +37,10 @@
     const editParticular = reactive({
         pid: '',
         stockNo: '',
+        expiry: '',
+        parDesc: '',
+        parUnit: '',
+        parQty: '',
     });
 
     const openAcceptModal = (particular) => {
@@ -32,15 +54,28 @@
     }
 
     const openEditModal = (particular) => {
+        editParticular.stockNo = particular.stockNo;
         editParticular.pid = particular.pId;
-        editParticular.stockNo = particular.stock_no;
+        editParticular.parDesc = particular.specs;
+        editParticular.parUnit = particular.unit;
+        editParticular.parQty = particular.quantity;
         modalState.value = 'edit';
+
+        fetchProduct();
     }
 
     const openDenyModal = (particular) => {
         denyParticular.pid = particular.pId;
         modalState.value = 'deny';
     }
+   
+    const currentDate = computed(() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    });
 
     const modalState = ref(null);
     const closeModal = () => { modalState.value = null; }
@@ -112,16 +147,16 @@
                         <li v-for="particular in particulars" :key="particular.pId" class="gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
                             <div class="flex-1 flex items-start justify-between bg-gray-50 p-4 rounded-lg">
                                 <div class="flex flex-col gap-1">
-                                    <p class="flex text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                    <div class="flex text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
                                         Item No. {{ particular.itemNo }}
-                                        <div v-if="particular.stockNo == null" class="flex items-center">
-                                            <button @click="openEditModal(particular)" class="text-indigo-400 p-2 rounded-full hover:text-gray-900  hover:bg-indigo-50 transition">
+                                        <div class="flex items-center">
+                                            <button @click="openEditModal(particular)" class="text-indigo-500 p-2 rounded-full hover:text-gray-50  hover:bg-indigo-500 transition">
                                                 <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
                                                     <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
                                                 </svg>
                                             </button>
                                         </div>
-                                    </p>
+                                    </div>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
                                         <span class="font-medium">Stock No: </span> {{ particular.stockNo }}
                                     </p>
@@ -132,13 +167,16 @@
                                         <span class="font-medium">Quantity: </span> {{ particular.quantity }}
                                     </p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium">Unit Cost: </span> {{ particular.unit }}
+                                        <span class="font-medium">Unit: </span> {{ particular.unit }}
                                     </p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
                                         <span class="font-medium">Price: </span> {{ particular.price }}
                                     </p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
                                         <span class="font-medium">Total Cost: </span> {{ particular.cost }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <span class="font-medium ">Expiry Date: </span> {{ particular.expiry }}
                                     </p>
                                 </div>
                             </div>
@@ -237,13 +275,45 @@
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update Product Item</h3>
                         <p class="text-sm text-gray-500">Enter the proper stock no. of the product.</p>
-                        <div class="mt-3">
-                            <p class="text-sm text-gray-500"> Product Stock No: </p>
-                            <div class="relative mt-1">
-                                <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                    <span class="text-gray-600 text-sm font-semibold">Stock No: </span>
+                        <div class="mt-5">
+                            <p class="text-sm text-[#86591e]"> Product Information</p>
+                            <div class="relative z-0 w-full group my-2">
+                                <input v-model="editParticular.stockNo" @input="fetchProduct" type="text" name="editStockNo" id="editStockNo" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                <label for="editStockNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
+                            </div>
+                            <div v-if="stockData">
+                                <div class="relative z-0 w-full my-5 group">
+                                    <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-1 w-full text-sm bg-gray-300 bg-opacity-30 text-gray-900 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.desc"></textarea>
+                                    <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
                                 </div>
-                                <input v-model="editParticular.stockNo" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" required>
+                                <div class="grid lg:grid-cols-2 lg:gap-6">
+                                    <div class="relative z-0 group">
+                                        <input type="text" name="unitMeasure" id="unitMeasure" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-gray-300 bg-opacity-30 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.unit"/>
+                                        <label for="unitMeasure" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                    </div>   
+                                    <div v-if="stockData.expiry == 1" class="relative z-0 group">
+                                        <input v-model="editParticular.expiry" :min="currentDate" type="date" name="expiryDate" id="expiryDate" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
+                                        <label for="expiryDate" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Expiration Date</label>
+                                    </div>                               
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <p class="text-sm text-[#86591e]">Particular Information</p>
+                            <div class="relative z-0 w-full my-5 group">
+                                <textarea v-model="editParticular.parDesc" type="text" name="parDesc" id="parDesc" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-gray-300 bg-opacity-30 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled></textarea>
+                                <label for="parDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                            </div>
+                            <div class="grid lg:grid-cols-2 lg:gap-6">
+                                <div class="relative z-0 group">
+                                    <input v-model="editParticular.parUnit" type="text" name="parUnit" id="parUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
+                                    <label for="parUnit" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                </div>    
+                                <div class="relative z-0 group">
+                                    <input v-model="editParticular.parQty" type="number" name="parQty" id="parQty" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
+                                    <label for="parQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Qty</label>
+                                </div>                               
                             </div>
                         </div>
                     </div>

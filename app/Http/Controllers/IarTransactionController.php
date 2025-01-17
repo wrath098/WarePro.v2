@@ -38,10 +38,12 @@ class IarTransactionController extends Controller
     {   
         $iarId = $request->input('iar');
         $iarTransaction = IarTransaction::findOrFail($iarId);
+        $productList = $this->getAllActiveProducts();
 
         $particulars = $iarTransaction->load(['iarParticulars' => function($query) {
             $query->where('status', 'pending');
         }]);
+
         $particulars = $particulars->iarParticulars->map(fn($item) => [
             'pId' => $item->id,
             'itemNo' => $item->item_no,
@@ -52,9 +54,10 @@ class IarTransactionController extends Controller
             'price' => $item->price,
             'status' => $item->status,
             'cost' => number_format(($item->qty * $item->price), 2,'.', ','),
+            'expiry' => $item->date_expiry ?? 'N/A',
         ]);
 
-        return Inertia::render('Iar/Particular', ['iar' => $iarTransaction,'particulars' => $particulars]);
+        return Inertia::render('Iar/Particular', ['iar' => $iarTransaction,'particulars' => $particulars, 'productList' => $productList]);
     }
 
     public function acceptIarParticular(Request $request)
@@ -63,25 +66,35 @@ class IarTransactionController extends Controller
 
         try {
             $particular = IarParticular::findOrFail($request->pid);
-            $product = $this->validateProduct($particular->stock_no);
-            $userId = Auth::id();
+            $productDetails = $this->validateProduct($particular->stock_no);
 
-            if(!$product) {
+            if(!$productDetails) {
                 throw new \Exception('Product Item/Stock No. not found!');
             }
 
-            $data = [
+            $userId = Auth::id();
+
+            if($productDetails->has_expiry && !$particular->date_expiry) {
+                throw new \Exception('Product Item is Time-limited. Please enter the expiry date to proceed!');
+            }
+
+            if(strtolower($productDetails->prod_unit) !== strtolower($particular->unit)) {
+                throw new \Exception('The unit of measurement of the particular differs from the one in the product record: ' . $productDetails->prod_unit);
+            }
+
+            $productInventoryInfo = [
                 'type' => 'purchase',
                 'qty' => $particular->qty,
                 'refNo' => $particular->id,
-                'prodId' => $product->id,
-                'price' => $product->price,
+                'prodId' => $productDetails->id,
+                'price' => $productDetails->price,
                 'user' => $userId,
             ];
 
-            $this->createInventoryTransaction($data);
-            $this->updateProductInventory($data);
-            $this->updateProductPrice($data);
+            $this->createInventoryTransaction($productInventoryInfo);
+            $this->updateProductInventory($productInventoryInfo);
+            $this->updateProductPrice($productInventoryInfo);
+
             $particular->update(['status' => 'completed', 'updated_by' => $userId]);
 
             $iarTransaction = IarTransaction::findOrFail($particular->air_id);
@@ -95,6 +108,7 @@ class IarTransactionController extends Controller
             }
 
             $iarTransaction->update(['status' => 'completed', 'updated_by' => $userId]);
+
             DB::commit();
             return redirect()->route('iar')->with(['message' => 'Transaction no. ' . $iarTransaction->sdi_iar_id . ' has been removed from the list due to no pending particulars.']);
         } catch (\Exception $e) {
@@ -107,24 +121,69 @@ class IarTransactionController extends Controller
     public function acceptIarParticularAll(Request $request)
     {
         DB::beginTransaction();
+        $countParticularsToUpdated = 0;
 
         try {
             foreach ($request->particulars as $particular) {
-                $product = $this->validateProduct($particular->stock_no);
+                $productDetails = $this->validateProduct($particular['stockNo']);
 
-                if(!$product) {
-                    throw new \Exception('Product Item/Stock No. not found!');
+                if(!$productDetails) {
+                    $countParticularsToUpdated += 1;
+                    continue;
                 }
+    
+                $userId = Auth::id();
+
+                if($productDetails->has_expiry && !$particular['expiry']) {
+                    $countParticularsToUpdated += 1;
+                    continue;
+                }
+    
+                if(strtolower($productDetails->prod_unit) !== strtolower($particular['unit'])) {
+                    $countParticularsToUpdated += 1;
+                    continue;
+                }                
+                
+                $productInventoryInfo = [
+                    'type' => 'purchase',
+                    'qty' => $particular->qty,
+                    'refNo' => $particular->id,
+                    'prodId' => $productDetails->id,
+                    'price' => $productDetails->price,
+                    'user' => $userId,
+                ];
+
+                $this->createInventoryTransaction($productInventoryInfo);
+                $this->updateProductInventory($productInventoryInfo);
+                $this->updateProductPrice($productInventoryInfo);
+
+                $particularDetails = $this->getIarParticular($particular['pId']);
+                $particularDetails->update(['status' => 'completed', 'updated_by' => $userId]);
 
             };
-        } catch(\Exception $e) {
 
+            if($countParticularsToUpdated) {
+                DB::commit();
+                return redirect()->back()->with(['error' => $countParticularsToUpdated .' items were not added as they did not meet the required criteria: [Stock No. | Unit of Measure | Product Expiry]']);
+            }
+
+            $iarTransaction = $this->getIarTransaction($particularDetails->air_id);
+            $iarTransaction->update(['status' => 'completed', 'updated_by' => $userId]);
+
+            DB::commit();
+            return redirect()->route('iar')->with(['message' => 'Transaction no. ' . $iarTransaction->sdi_iar_id . ' has been removed from the list due to no pending particulars.']);
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
         }
     }
 
     public function updateIarParticular(Request $request)
     {
         DB::beginTransaction();
+
+        dd($request->toArray());
 
         try {
             $particular = IarParticular::findOrFail($request->pid);
@@ -136,10 +195,10 @@ class IarTransactionController extends Controller
                 throw new \Exception('Product Item not found!');
             }
 
-            $particular->update(['stock_no' => $request->stockNo, 'updated_by' => $userId]);
+            $particular->update(['stock_no' => $request->stockNo, 'updated_by' => $userId, 'date_expiry' => $request->expiry]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' successfully updated the stock no.!!']);
+            return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' updated successfully!!']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error during transaction: " . $e->getMessage());
@@ -164,7 +223,7 @@ class IarTransactionController extends Controller
             
             if($iarTransaction->iarParticulars->isNotEmpty()) {
                 DB::commit();
-                return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' Added to the Product Inventory!!']);
+                return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' has been denied!!']);
             }
 
             $iarTransaction->update(['status' => 'completed', 'updated_by' => $userId]);
@@ -281,7 +340,7 @@ class IarTransactionController extends Controller
         if($productExist) {
             $productExist->qty_on_stock += $request['qty'];
             $productExist->qty_purchase += $request['qty'];
-            $productExist->updated_by += $request['user'];
+            $productExist->updated_by = $request['user'];
             $productExist->save();
         } else {
             return ProductInventory::create([
@@ -302,5 +361,26 @@ class IarTransactionController extends Controller
                 'prod_id' => $product['prodId'],
             ]);
         }
+    }
+
+    private function getAllActiveProducts() {
+        $products = Product::where('prod_status', 'active')->get(['prod_newNo', 'prod_desc', 'prod_unit', 'has_expiry']);
+
+        return $products->map(fn($product) => [
+            'stockNo' => $product->prod_newNo,
+            'desc' => $product->prod_desc,
+            'unit' => $product->prod_unit,
+            'expiry'  => $product->has_expiry,
+        ]);
+    }
+
+    private function getIarParticular($iarParId) {
+        $particular = IarParticular::findOrFail($iarParId);
+        return $particular;
+    }
+
+    private function getIarTransaction($airTranId) {
+        $transaction = IarTransaction::findOrFail($airTranId);
+        return $transaction;
     }
 }
