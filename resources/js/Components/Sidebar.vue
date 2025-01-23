@@ -47,9 +47,9 @@
                         </div>
                     </div>
                     <SidebarDropdown :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')">
-                            <Files :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active')}" />
+                            <Files :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
-                            <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active')}" />
+                            <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}" />
                         <template #dropdown-items>
                             <li>
                                 <SubSidebarLink :href="route('fund.display.all')" :active="route().current('fund.display.all')">
@@ -123,10 +123,10 @@
                     </SidebarLink>
                 </li>
                 <li>
-                    <SidebarDropdown :active="route().current('indiv.ppmp.type')">
-                            <ClipboardList :class="{'text-white': route().current('indiv.ppmp.type')}" />
+                    <SidebarDropdown :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})">
+                            <ClipboardList :class="{'text-white': route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}" />
                             <span class="flex-1 ml-3 text-left whitespace-nowrap">Individual</span>
-                            <ArrowDown :class="{'text-white': route().current('indiv.ppmp.type')}" />
+                            <ArrowDown :class="{'text-white': route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}" />
                         <template #dropdown-items>
                             <li>
                                 <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'draft'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'})">
@@ -135,8 +135,8 @@
                                 </SubSidebarLink>
                             </li>
                             <li>
-                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'approved'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})">
-                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'final'})}"/>
+                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'approved'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}"/>
                                     Approved
                                 </SubSidebarLink>
                             </li>
@@ -209,10 +209,25 @@
                             <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
                         </div>
                     </div>
-                    <SidebarLink :href="route('iar')" :active="route().current('iar')" class="mb-1">
-                        <Inspect :class="{ 'text-white' : route().current('iar')}"/>
-                        <span class="ml-3">Inspection and Acceptance</span>
-                    </SidebarLink>
+                    <SidebarDropdown :active="route().current('iar') || route().current('show.iar.transactions')" class="mb-1">
+                            <Inspect :class="{ 'text-white' : route().current('iar') || route().current('show.iar.transactions')}"/>
+                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Inspection and Acceptance</span>
+                            <ArrowDown :class="{'text-white': route().current('iar') || route().current('show.iar.transactions')}" />
+                        <template #dropdown-items>
+                            <li>
+                                <SubSidebarLink :href="route('iar')" :active="route().current('iar')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('iar')}"/>
+                                    Pending Status
+                                </SubSidebarLink>
+                            </li>
+                            <li>
+                                <SubSidebarLink :href="route('show.iar.transactions')" :active="route().current('show.iar.transactions')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('show.iar.transactions')}"/>
+                                    All Transactions
+                                </SubSidebarLink>
+                            </li>
+                        </template>
+                    </SidebarDropdown>
                     <SidebarLink :href="route('create.ris')" :active="route().current('create.ris')" class="mb-1">
                         <ArrowRight :class="{ 'text-white' : route().current('create.ris')}"/>
                         <span class="ml-3">Requisition and Issuance</span>

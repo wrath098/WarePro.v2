@@ -31,7 +31,25 @@ class IarTransactionController extends Controller
             'status' => ucfirst($iar->status),
         ]);
 
-        return Inertia::render('Iar/Index', ['iar' => $lists]);
+        return Inertia::render('Iar/Pending', ['iar' => $lists]);
+    }
+
+    public function showAllTransactions()
+    {
+        $transactionList = IarTransaction::withTrashed()->with('updater')->orderby('updated_at', 'desc')->take(1000)->get();
+
+        $transactionList = $transactionList->map(fn($transaction) => [
+            'id' => $transaction->id,
+            'airId' => $transaction->sdi_iar_id,
+            'poId' => $transaction->po_no,
+            'supplier' => $transaction->supplier,
+            'date' => $transaction->date,
+            'status' => ucfirst($transaction->status),
+            'updater' => $transaction->updater->name ?? '',
+            'dateUpdated' => $transaction->updated_at->format('Y-m-d'),
+        ]);
+
+        return Inertia::render('Iar/Transactions', ['transactions' => $transactionList]);
     }
 
     public function fetchIarParticular(Request $request)
@@ -54,10 +72,45 @@ class IarTransactionController extends Controller
             'price' => $item->price,
             'status' => $item->status,
             'cost' => number_format(($item->qty * $item->price), 2,'.', ','),
-            'expiry' => $item->date_expiry ?? 'N/A',
+            'expiry' => $item->date_expiry ?? '',
         ]);
 
         return Inertia::render('Iar/Particular', ['iar' => $iarTransaction,'particulars' => $particulars, 'productList' => $productList]);
+    }
+
+    public function getCompletedIarTransactionParticulars(Request $request)
+    {   
+        $iarId = $request->input('iar');
+        $iarTransaction = $this->getIarTransaction($iarId);
+        $particulars = $iarTransaction->load(['iarParticulars', 'updater']);
+
+        $particulars = $particulars->iarParticulars->map(fn($item) => [
+            'pId' => $item->id,
+            'itemNo' => $item->item_no,
+            'stockNo' => $item->stock_no ?? 'N/A',
+            'unit' => ucfirst($item->unit),
+            'specs' => $item->description,
+            'quantity' => $item->qty,
+            'price' => $item->price,
+            'status' => ucfirst($item->status),
+            'cost' => number_format(($item->qty * $item->price), 2,'.', ','),
+            'expiry' => $item->date_expiry ?? '',
+        ]);
+
+        $iarTransaction = [
+            'id' => $iarTransaction->id,
+            'sdiIarId' => $iarTransaction->sdi_iar_id,
+            'poNo' => $iarTransaction->po_no,
+            'supplier' => $iarTransaction->supplier,
+            'iarDate' => $iarTransaction->date,
+            'status' => ucfirst($iarTransaction->status),
+            'remark' => $iarTransaction->remark,
+            'dateUpdated' => $iarTransaction->updated_at->format('Y-m-d'),
+            'particularCount' => $iarTransaction->iarParticulars->count(),
+            'updater' => $iarTransaction->updater->name,
+        ];
+        
+        return Inertia::render('Iar/CompletedTransactionParticulars', ['transaction' => $iarTransaction, 'particulars' => $particulars]);
     }
 
     public function acceptIarParticular(Request $request)
@@ -88,6 +141,7 @@ class IarTransactionController extends Controller
                 'refNo' => $particular->id,
                 'prodId' => $productDetails->id,
                 'price' => $productDetails->price,
+                'date_expiry' => $particular->date_expiry,
                 'user' => $userId,
             ];
 
@@ -146,10 +200,11 @@ class IarTransactionController extends Controller
                 
                 $productInventoryInfo = [
                     'type' => 'purchase',
-                    'qty' => $particular->qty,
-                    'refNo' => $particular->id,
+                    'qty' => $particular['quantity'],
+                    'refNo' => $particular['pId'],
                     'prodId' => $productDetails->id,
                     'price' => $productDetails->price,
+                    'date_expiry' => $particular['expiry'],
                     'user' => $userId,
                 ];
 
@@ -183,22 +238,29 @@ class IarTransactionController extends Controller
     {
         DB::beginTransaction();
 
-        dd($request->toArray());
-
         try {
-            $particular = IarParticular::findOrFail($request->pid);
             $userId = Auth::id();
 
-            $product = $this->validateProduct($request->stockNo);
+            $particularInfo = IarParticular::findOrFail($request->pid);
+            $productDetails = $this->validateProduct($request->stockNo);
 
-            if(!$product) {
+            if(!$productDetails) {
                 throw new \Exception('Product Item not found!');
             }
 
-            $particular->update(['stock_no' => $request->stockNo, 'updated_by' => $userId, 'date_expiry' => $request->expiry]);
+            if(strtolower($request->parUnit) != strtolower($productDetails->prod_unit)){
+                throw new \Exception('Product and IAR particular units of measurement do not match!');
+            }
+
+            $particularInfo->update([
+                'stock_no' => $productDetails->prod_newNo,
+                'unit' => $request->parUnit,
+                'updated_by' => $userId, 
+                'date_expiry' => $request->expiry
+            ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Item No.' . $particular->item_no . ' updated successfully!!']);
+            return redirect()->back()->with(['message' => 'Item No.' . $particularInfo->item_no . ' updated successfully!!']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error during transaction: " . $e->getMessage());
@@ -211,9 +273,8 @@ class IarTransactionController extends Controller
         DB::beginTransaction();
         
         try {
-            $particular = IarParticular::findOrFail($request->pid);
             $userId = Auth::id();
-
+            $particular = IarParticular::findOrFail($request->pid);
             $particular->update(['status' => 'failed', 'updated_by' => $userId]);
 
             $iarTransaction = IarTransaction::findOrFail($particular->air_id);
@@ -230,6 +291,31 @@ class IarTransactionController extends Controller
             DB::commit();
             return redirect()->route('iar')->with(['message' => 'Transaction no. ' . $iarTransaction->sdi_iar_id . ' has been removed from the list due to no pending particulars.']);
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function rejectAllParticular(Request $request)
+    {
+        DB::beginTransaction();
+
+        $userId = Auth::id();
+
+        try {
+            foreach ($request->particulars as $particular) {
+                $particularInfo = $this->getIarParticular($particular['pId']);
+                $particularInfo->update(['status' => 'failed', 'updated_by' => $userId]);
+            };
+            
+            $iarTransaction = $this->getIarTransaction($particularInfo->air_id);
+            $iarTransaction->update(['status' => 'completed', 'updated_by' => $userId]);
+
+            DB::commit();
+            return redirect()->route('iar')->with(['message' => 'Transaction no. ' . $iarTransaction->sdi_iar_id . ' has been removed from the list due to no pending particulars.']);
+            
+        } catch(\Exception $e) {
             DB::rollBack();
             Log::error("Error during transaction: " . $e->getMessage());
             return redirect()->back()->with(['error' => $e->getMessage()]);
@@ -253,7 +339,7 @@ class IarTransactionController extends Controller
                 ->get();
 
             foreach ($pgsoList as $iar) {
-                if(!$this->verifyExistence($iar->air_id)) {
+                if(!$this->verifyIarExistence($iar->air_id)) {
                     $createIar = IarTransaction::create([
                         'sdi_iar_id' => $iar->air_id,
                         'po_no' => $iar->po_no,
@@ -289,7 +375,7 @@ class IarTransactionController extends Controller
         }
     }
 
-    private function verifyExistence($request) {
+    private function verifyIarExistence($request) {
         $record = IarTransaction::withTrashed()->where('sdi_iar_id', $request)->exists();
         return $record;
     }
@@ -329,6 +415,7 @@ class IarTransactionController extends Controller
             'qty' => $request['qty'],
             'ref_no' => $request['refNo'],
             'prod_id' => $request['prodId'],
+            'date_expiry' => $request['date_expiry'],
             'created_by' => $request['user'],
         ]);
     }

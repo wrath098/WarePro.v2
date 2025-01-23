@@ -18,6 +18,7 @@ class ProductInventoryTransaction extends Model
         'notes',
         'ref_no',
         'prod_id',
+        'date_expiry',
         'created_by',
     ];
 

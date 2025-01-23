@@ -124,12 +124,15 @@ Route::middleware('auth')->prefix('pr')->group(function () {
 
 Route::middleware('auth')->prefix('iar')->group(function () {
     Route::get('/', [IarTransactionController::class, 'index'])->name('iar');
+    Route::get('/show-all-air-transaction', [IarTransactionController::class, 'showAllTransactions'])->name('show.iar.transactions');
     Route::get('/collect-transactions', [IarTransactionController::class, 'collectIarTransactions'])->name('iar.collect.transactions');
     Route::get('/particulars', [IarTransactionController::class, 'fetchIarParticular'])->name('iar.particular');
+    Route::get('/completed-iar-transaction/particulars', [IarTransactionController::class, 'getCompletedIarTransactionParticulars'])->name('iar.particular.completed');
     Route::post('/particulars/accept', [IarTransactionController::class, 'acceptIarParticular'])->name('iar.particular.accept');
     Route::post('/particulars/acceptAll', [IarTransactionController::class, 'acceptIarParticularAll'])->name('iar.particular.accept.all');
     Route::put('/particulars/update', [IarTransactionController::class, 'updateIarParticular'])->name('iar.particular.update');
-    Route::post('/particulars/reject', [IarTransactionController::class, 'rejectIarParticular'])->name('iar.particular.reject');
+    Route::put('/particulars/reject', [IarTransactionController::class, 'rejectIarParticular'])->name('iar.particular.reject');
+    Route::post('/particulars/rejectAll', [IarTransactionController::class, 'rejectAllParticular'])->name('iar.particular.reject.all');
 });
 
 Route::middleware('auth')->prefix('inventory')->group(function () {

@@ -34,6 +34,7 @@
     const acceptParticular = reactive({pid: ''});
     const acceptAllParticular = reactive({particulars: ''});
     const denyParticular = reactive({pid: ''});
+    const denyAllParticular = reactive({particulars: ''});
     const editParticular = reactive({
         pid: '',
         stockNo: '',
@@ -68,6 +69,11 @@
         denyParticular.pid = particular.pId;
         modalState.value = 'deny';
     }
+
+    const openDenyAllModal = (particulars) => {
+        denyAllParticular.particulars = particulars;
+        modalState.value = 'denyAll';
+    }
    
     const currentDate = computed(() => {
         const today = new Date();
@@ -83,7 +89,8 @@
     const isAcceptModalOpen = computed(() => modalState.value === 'accept');
     const isEditModalOpen = computed(() => modalState.value === 'edit');
     const isDenyModalOpen = computed(() => modalState.value === 'deny');
-    
+    const isDenyAllModalOpen = computed(() => modalState.value === 'denyAll');
+
     const submitForm = (action, url, data) => {
         let method;
 
@@ -109,7 +116,8 @@
     const submitAcceptance = () => submitForm('post', 'particulars/accept', acceptParticular);
     const submitAcceptanceAll = () => submitForm('post', 'particulars/acceptAll', acceptAllParticular);
     const submitEdit = () => submitForm('put', 'particulars/update', editParticular);
-    const submitDeny = () => submitForm('post', 'particulars/reject', denyParticular);
+    const submitDeny = () => submitForm('put', 'particulars/reject', denyParticular);
+    const submitDenyAll = () => submitForm('post', 'particulars/rejectAll', denyAllParticular);
 </script>
 
 <template>
@@ -127,7 +135,7 @@
                         <button @click="openAcceptAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
                             Accept All
                         </button>
-                        <button @click="''" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
+                        <button @click="openDenyAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
                             Reject All
                         </button>
                     </li>
@@ -240,7 +248,7 @@
                     </svg>
 
                     <div class="text-center">
-                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Product Rejected!</h3>
+                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Reject Particular!</h3>
                         <p class="text-gray-600 my-2">Confirming this action will remove the selected Product to the list. <br> This action can't be undone.</p>
                         <p> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
@@ -347,6 +355,38 @@
                     <div class="text-center">
                         <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept All Product!</h3>
                         <p class="text-gray-600 my-2">Confirming this action will add all the Product within the list to the Product Inventory. <br> This action can't be undone.</p>
+                        <p> Please confirm if you wish to proceed.  </p>
+                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                            <SuccessButton>
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Confirm 
+                            </SuccessButton>
+
+                            <DangerButton @click="closeModal"> 
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Cancel
+                            </DangerButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </Modal>
+    <Modal :show="isDenyAllModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitDenyAll">
+            <div class="bg-gray-100 h-auto">
+                <div class="bg-white p-6  md:mx-auto">
+                    <svg class="text-gray-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+
+                    <div class="text-center">
+                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Reject All Particulars!</h3>
+                        <p class="text-gray-600 my-2">Confirming this action will remove all Particulars on the list. <br> This action can't be undone.</p>
                         <p> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton>

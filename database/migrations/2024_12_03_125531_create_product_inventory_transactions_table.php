@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('type')->nullable();
             $table->bigInteger('qty')->nullable();
             $table->text('notes')->nullable();
+            $table->date('date_expiry')->nullable();
             $table->unsignedBigInteger('ref_no')->nullable();
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();

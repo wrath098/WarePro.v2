@@ -3,10 +3,9 @@
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
-    import Refresh from '@/Components/Buttons/Refresh.vue';
 
     const props = defineProps({
-        iar: Object,
+        transactions: Object,
     });
 </script>
 
@@ -19,8 +18,7 @@
             <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2 leading-tight">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Inspection and Acceptance</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Transactions</li> 
-                    <li><Refresh :href="route('iar.collect.transactions')" class="" tooltip="Fetch IAR"/></li>
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">All Transactions</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
@@ -36,17 +34,19 @@
                     <DataTable class="w-full text-gray-900 display">
                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
                             <tr>
-                                <th>No.</th>
-                                <th>IAR No.</th>
-                                <th>PO No.</th>
-                                <th>Supplier</th>
-                                <th>IAR Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th class="px-6 py-3 w-1/12">No.</th>
+                                <th class="px-6 py-3 w-1/12">IAR No.</th>
+                                <th class="px-6 py-3 w-1/12">PO No.</th>
+                                <th class="px-6 py-3 w-3/12">Supplier</th>
+                                <th class="px-6 py-3 w-1/12">IAR Date</th>
+                                <th class="px-6 py-3 w-1/12">Status</th>
+                                <th class="px-6 py-3 w-1/12">Updated By</th>
+                                <th class="px-6 py-3 w-1/12">Date Updated</th>
+                                <th class="px-6 py-3 w-1/12">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(transaction, index) in props.iar" :key="transaction.air_id">
+                            <tr v-for="(transaction, index) in props.transactions" :key="transaction.air_id">
                                 <td>{{ ++index }}</td>
                                 <td>{{ transaction.airId }}</td>
                                 <td>{{ transaction.poId }}</td>
@@ -55,12 +55,18 @@
                                 <td>
                                     <span :class="{
                                         'bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-300': transaction.status === 'Pending',
+                                        'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': transaction.status === 'Completed',
                                         }">
                                         {{ transaction.status }}
                                     </span>
                                 </td>
-                                <td>
+                                <td>{{ transaction.updater }}</td>
+                                <td>{{ transaction.dateUpdated }}</td>
+                                <td v-if="transaction.status === 'Pending'">
                                     <ViewButton :href="route('iar.particular', { iar: transaction.id})" tooltip="View"/>
+                                </td>
+                                <td v-if="transaction.status === 'Completed'">
+                                    <ViewButton :href="route('iar.particular.completed', { iar: transaction.id})" tooltip="View"/>
                                 </td>
                             </tr>
                         </tbody>
