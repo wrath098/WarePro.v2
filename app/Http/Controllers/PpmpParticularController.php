@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
+use App\Models\ProductInventory;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 
@@ -109,5 +111,45 @@ class PpmpParticularController extends Controller
             Log::error($e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to delete the particular.']);
         }
+    }
+
+    public function getOfficePpmpParticulars(Request $request)
+    {
+        try {
+            $officePpmp = $this->officePpmpWithParticulars($request->officeId, $request->year);
+            return response()->json(['data' => $officePpmp]);
+        } catch(\Exception $e) {
+            Log::error('Get Office Ppmp Particulars | RIS Module : ', $e->getMessage());
+            return response()->json(['data' => null]);
+        }
+    }
+
+    private function officePpmpWithParticulars($officeId, $year)
+    {
+        $officePpmp = PpmpTransaction::with('particulars')->where('office_id', $officeId)->where('ppmp_year', $year)->get();
+        $officePpmp = $officePpmp->map( function ($transactions) {
+            $transactions->particulars = $transactions->particulars->map(function($particular) {
+                return [
+                    'id' => $particular->id,
+                    'treshFirstQty' => $particular->tresh_first_qty,
+                    'treshSecondQty' => $particular->tresh_second_qty,
+                    'releasedQty' => $particular->released_qty,
+                    'availableStock' => $this->getProductAvailableStock($particular->prod_id),
+                    'prodStockNo' => $this->productService->getProductCode($particular->prod_id),
+                    'prodDesc' => $this->productService->getProductName($particular->prod_id),
+                    'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                ];
+            });
+
+            return $transactions->particulars;
+        });
+
+        return $officePpmp ?? null;
+    }
+
+    private function getProductAvailableStock($productId)
+    {
+        $productinventory = ProductInventory::where('prod_id', $productId)->first();
+        return $productinventory->qty_on_stock ?? 0;
     }
 }

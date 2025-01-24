@@ -1,5 +1,5 @@
 <script setup>
-    import { reactive, ref, watch } from 'vue';
+    import { reactive, ref, watch, onMounted } from 'vue';
     import { Head, router } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
@@ -7,11 +7,35 @@
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
+    import axios from 'axios';
 
     const props = defineProps({
         products: Object,
         office: Object
     });
+
+    const years = generateYears();
+    function generateYears() {
+        const currentYear = new Date().getFullYear() - 2;
+        return Array.from({ length: 3 }, (_, i) => currentYear + (3 - 1 - i));
+    }
+
+    const searchOfficePpmp = reactive({
+        officeId: '',
+        year: '',
+    });
+
+    const officePpmpParticulars = ref([]);
+    const fetchOfficePpmp = async () => {
+        if (searchOfficePpmp.officeId && searchOfficePpmp.year) {
+            try {
+                const response = await axios.get('api/office-ppmp-particulars', { params: searchOfficePpmp });
+                officePpmpParticulars.value = response.data;
+            } catch (error) {
+                console.error('Error fetching office data:', error);
+            }
+        }
+    };
 
     const risNo = ref('');
     const stockData = ref(null);
@@ -118,7 +142,24 @@
 
         <section class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="mx-2 w-full md:w-3/12 bg-white p-4 rounded-md shadow">
+                    <p class="mb-1 block text-base font-medium text-[#86591e]">PPMP Information</p>
+                    <div class="relative z-0 w-full mb-5 group">
+                        <select v-model="searchOfficePpmp.officeId" @change="fetchOfficePpmp" name="officeId" id="officeId" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                            <option value="" disabled selected class="pl-5">Select Office/End-User</option>
+                            <option v-for="user in office" :key="user.id" :value="user.id" class="ml-5">{{ user.office_code }}</option>
+                        </select>
+                        <label for="officeId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office/End-User</label>
+                    </div>
+                    <div v-if="searchOfficePpmp.officeId" @change="fetchOfficePpmp" class="relative z-0 w-full my-3 group">
+                        <select v-model="searchOfficePpmp.year" name="ppmpYear" id="ppmpYear" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                            <option value="" disabled selected>Select year</option>
+                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                        </select>
+                        <label for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
+                    </div>
+                </div>
+                <!-- <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="py-2">
                         <div class="relative isolate flex overflow-hidden bg-indigo-600 px-6 py-2.5 ">
                             <div class="flex flex-wrap">
@@ -262,7 +303,7 @@
                             </form>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </section>
         <Modal :show="modalState" @close="closeModal">

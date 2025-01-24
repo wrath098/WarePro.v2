@@ -698,15 +698,4 @@ class PpmpTransactionController extends Controller
 
         return $transactions;
     }
-
-    private function getConsoVersion(array $validatedData)
-    {
-        $ppmpExist = PpmpTransaction::where('ppmp_type', 'consolidated')
-            ->where('ppmp_year', $validatedData['ppmpYear'])
-            ->where('ppmp_status', $validatedData['ppmpStatus'])
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        return $ppmpExist->ppmp_version ?? null;
-    }
 }

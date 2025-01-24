@@ -157,4 +157,10 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
 });
 
+#API
+Route::middleware('auth')->prefix('api')->group(function () {
+    Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
+});
+
+
 require __DIR__.'/auth.php';

@@ -19,6 +19,7 @@ class PpmpParticular extends Model
         'qty_second',
         'tresh_first_qty',
         'tresh_second_qty',
+        'released_qty',
         'prod_id',
         'price_id',
         'trans_id',
