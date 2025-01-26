@@ -78,7 +78,7 @@
                             <li>
                                 <SubSidebarLink :href="route('general.fund.display')" :active="route().current('general.fund.display')">
                                     <ArrowHeadRight :class="{ 'text-white ': route().current('general.fund.display')}"/>
-                                    General Services Fund 
+                                    Annual Budget 
                                 </SubSidebarLink>
                             </li>
                         </template>

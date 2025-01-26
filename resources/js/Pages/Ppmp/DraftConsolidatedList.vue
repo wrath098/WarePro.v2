@@ -129,7 +129,7 @@
                                                         <RemoveButton @click="openDropPpmpModal(transaction)" tooltip="Trash"/>
                                                     </td>
                                                     <td class="px-6 py-3" v-if="props.ppmp.status == 'Approved'">
-                                                        <Print :href="route('generatePdf.ConsolidatedPpmp', { ppmp: transaction.id})" tooltip="Print"></Print>
+                                                        <Print :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: transaction.id})" tooltip="Print"></Print>
                                                     </td>
                                                 </tr>
                                             </tbody>

@@ -52,6 +52,59 @@ class IarTransactionController extends Controller
         return Inertia::render('Iar/Transactions', ['transactions' => $transactionList]);
     }
 
+    public function collectIarTransactions()
+    {
+        DB::beginTransaction();
+        
+        try {
+            $wareproList = IarTransaction::orderBy('sdi_iar_id', 'desc')->first();
+            $wareproList = $wareproList ? $wareproList->sdi_iar_id : 0;
+
+            $pgsoList = DB::connection('pgso-pms')
+                ->table('sdi_air')
+                ->select('sdi_air.air_id', 'sdi_air.po_no', 'psu_suppliers.name', 'sdi_air.air_date', 'sdi_air.warehouse')
+                ->join('psu_suppliers', 'sdi_air.supplier_id', '=', 'psu_suppliers.supplier_id')
+                ->where('sdi_air.air_id', '>' , $wareproList)
+                ->where('warehouse', 1)
+                ->get();
+
+            foreach ($pgsoList as $iar) {
+                if(!$this->verifyIarExistence($iar->air_id)) {
+                    $createIar = IarTransaction::create([
+                        'sdi_iar_id' => $iar->air_id,
+                        'po_no' => $iar->po_no,
+                        'supplier' => $iar->name,
+                        'date' => $iar->air_date,
+                    ]);
+        
+                    $particulars = DB::connection('pgso-pms')
+                        ->table('sdi_air_particulars')
+                        ->select('*')
+                        ->where('air_id', $iar->air_id)
+                        ->get();
+        
+                        foreach ($particulars as $particular) {
+                            IarParticular::create([
+                                'item_no' => $particular->item_no,
+                                'stock_no' => $particular->stock_no,
+                                'unit' => $particular->unit,
+                                'description' => $particular->description,
+                                'qty' => $particular->quantity,
+                                'price' => $particular->unit_cost,
+                                'air_id' => $createIar->id,
+                            ]);
+                        }
+                }
+            }
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Successfully collected the IAR Transactions from the AssetPro!!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     public function fetchIarParticular(Request $request)
     {   
         $iarId = $request->input('iar');
@@ -254,7 +307,7 @@ class IarTransactionController extends Controller
 
             $particularInfo->update([
                 'stock_no' => $productDetails->prod_newNo,
-                'unit' => $request->parUnit,
+                'unit' => ucfirst($request->parUnit),
                 'updated_by' => $userId, 
                 'date_expiry' => $request->expiry
             ]);
@@ -319,59 +372,6 @@ class IarTransactionController extends Controller
             DB::rollBack();
             Log::error("Error during transaction: " . $e->getMessage());
             return redirect()->back()->with(['error' => $e->getMessage()]);
-        }
-    }
-
-    public function collectIarTransactions()
-    {
-        DB::beginTransaction();
-        
-        try {
-            $wareproList = IarTransaction::orderBy('sdi_iar_id', 'desc')->first();
-            $wareproList = $wareproList ? $wareproList->sdi_iar_id : 0;
-
-            $pgsoList = DB::connection('pgso-pms')
-                ->table('sdi_air')
-                ->select('sdi_air.air_id', 'sdi_air.po_no', 'psu_suppliers.name', 'sdi_air.air_date', 'sdi_air.warehouse')
-                ->join('psu_suppliers', 'sdi_air.supplier_id', '=', 'psu_suppliers.supplier_id')
-                ->where('sdi_air.air_id', '>' , $wareproList)
-                ->where('warehouse', 1)
-                ->get();
-
-            foreach ($pgsoList as $iar) {
-                if(!$this->verifyIarExistence($iar->air_id)) {
-                    $createIar = IarTransaction::create([
-                        'sdi_iar_id' => $iar->air_id,
-                        'po_no' => $iar->po_no,
-                        'supplier' => $iar->name,
-                        'date' => $iar->air_date,
-                    ]);
-        
-                    $particulars = DB::connection('pgso-pms')
-                        ->table('sdi_air_particulars')
-                        ->select('*')
-                        ->where('air_id', $iar->air_id)
-                        ->get();
-        
-                        foreach ($particulars as $particular) {
-                            IarParticular::create([
-                                'item_no' => $particular->item_no,
-                                'stock_no' => $particular->stock_no,
-                                'unit' => $particular->unit,
-                                'description' => $particular->description,
-                                'qty' => $particular->quantity,
-                                'price' => $particular->unit_cost,
-                                'air_id' => $createIar->id,
-                            ]);
-                        }
-                }
-            }
-            DB::commit();
-            return redirect()->back()->with(['message' => 'Successfully collected the IAR Transactions from the AssetPro!!']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Error during transaction: " . $e->getMessage());
-            throw $e;
         }
     }
 

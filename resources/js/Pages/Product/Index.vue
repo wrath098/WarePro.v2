@@ -192,7 +192,7 @@
                                     </td>
                                     <td class="py-2">
                                         {{ product.desc }}
-                                        <span v-if="product.expiry == 'Yes'" class="inline-flex items-center p-1 text-xs rounded bg-blue-100 text-blue-800">
+                                        <span v-if="product.expiry == 'Yes'" class="inline-flex items-center p-1 text-xs rounded bg-red-100 text-red-800">
                                             Expiry
                                         </span>
                                     </td>

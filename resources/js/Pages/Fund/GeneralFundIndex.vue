@@ -20,6 +20,28 @@ const formatDecimal = (value) => {
             maximumFractionDigits: 2
         }).format(value);
     };
+
+const modalState = ref(null);
+const showModal = (modalType) => { modalState.value = modalType; }
+const closeModal = () => { modalState.value = null; }
+const isEditPPModalOpen = computed(() => modalState.value === 'edit');
+
+const editParticular = reactive({
+    budgetId: '',
+    firstSemContingency: '',
+    secondSemContingency: '',
+    user: props.user,
+});
+
+const openEditPpmpModal = (particular) => {
+    editParticular.partId = particular.pId;
+    editParticular.prodCode = particular.prodCode;
+    editParticular.prodDesc = particular.prodName;
+    editParticular.firstQty = numberWithoutCommas(particular.qtyFirst);
+    editParticular.secondQty = numberWithoutCommas(particular.qtySecond);
+    modalState.value = 'edit';
+}
+
 </script>
 
 <template>
@@ -30,7 +52,7 @@ const formatDecimal = (value) => {
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
                 <ol class="flex space-x-2">
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">General Fund</li> 
+                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Annual Budget</li> 
                 </ol>
             </nav>
             <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
@@ -47,8 +69,19 @@ const formatDecimal = (value) => {
                     <div class="p-4">
                         <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
                             <li v-for="(yearData, year) in generalFund" :key="year" class="">
-                                <div class="flex justify-center align-middle bg-indigo-600 p-2 rounded-t-xl mb-2">
-                                    <h2 class="text-lg font-semibold text-[#ededee] mb-4">Calendar Year {{ year  }}</h2>
+                                <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">
+                                    <div class="flex flex-col gap-1">
+                                        <h2 class="text-lg font-semibold text-gray-50">Annual Budget for CY {{ year }}</h2>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <a :href="route('general.fund.editFundAllocation', { budgetDetails: yearData, year: year})" class="flex items-center rounded-full transition">
+                                            <span class="sr-only">Open options</span>
+                                            <svg class="w-8 h-8 text-indigo-100 hover:text-yellow-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
+                                                <path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
                                     <dl class="-my-3 divide-y divide-gray-100 text-base">
@@ -72,14 +105,6 @@ const formatDecimal = (value) => {
                                     </dl>
                                 </div>
                             </li>
-                            <!-- <button @click="showModal('add')" class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
-                                <span class="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
-                                    <svg class="w-6 h-6 text-indigo-900 transition duration-75 ml-12" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M3 12h18"/>
-                                    </svg>
-                                    New Fund Cluster
-                                </span>
-                            </button> -->
                         </ul>
                     </div>
                 </div>

@@ -65,9 +65,17 @@ class CapitalOutlayController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(CapitalOutlay $capitalOutlay)
+    public function editFundAllocation(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'budgetDetails' => 'required|array',
+            'year' => 'required',
+        ]);
+
+        return Inertia::render('Fund/EditGeneralFund', [
+            'budgetDetails' => $validatedData['budgetDetails'],
+            'year' => $validatedData['year'],
+        ]);
     }
 
     /**

@@ -18,9 +18,8 @@ class RisTransactionController extends Controller
 {
     public function create(): Response
     {
-        $product = Product::where('prod_status', 'active')->get();
         $office = Office::where('office_status', 'active')->select('id', 'office_code')->orderBy('office_code', 'asc')->get();
-        return Inertia::render('Ris/Create', ['products' => $product, 'office' => $office]);
+        return Inertia::render('Ris/Create', ['office' => $office]);
     }
 
     public function risLogs(): Response
@@ -55,13 +54,13 @@ class RisTransactionController extends Controller
         try {
             foreach ($products as $product) {
                 $risData['qty'] = $product['qty'];
-                $risData['unit'] = $product['prod_unit'];
-                $risData['prodId'] = $product['id'];
+                $risData['unit'] = $product['prodUnit'];
+                $risData['prodId'] = $product['prodId'];
 
                 $isProductAvailable = $this->validateAvailability($risData);
                 if($isProductAvailable !== true) {
                     DB::rollback();
-                    return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prod_newNo'] . ' is ' . $isProductAvailable . ' ' . $product['prod_unit'] . '.']);
+                    return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
                 }
                 
                 $this->createRis($risData);

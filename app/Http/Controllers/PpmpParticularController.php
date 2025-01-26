@@ -119,32 +119,37 @@ class PpmpParticularController extends Controller
             $officePpmp = $this->officePpmpWithParticulars($request->officeId, $request->year);
             return response()->json(['data' => $officePpmp]);
         } catch(\Exception $e) {
-            Log::error('Get Office Ppmp Particulars | RIS Module : ', $e->getMessage());
+            Log::error(['Get Office Ppmp Particulars | RIS Module : ', $e->getMessage()]);
             return response()->json(['data' => null]);
         }
     }
 
     private function officePpmpWithParticulars($officeId, $year)
-    {
+    {   
+        $availableItems = [];
         $officePpmp = PpmpTransaction::with('particulars')->where('office_id', $officeId)->where('ppmp_year', $year)->get();
-        $officePpmp = $officePpmp->map( function ($transactions) {
-            $transactions->particulars = $transactions->particulars->map(function($particular) {
-                return [
+        $officePpmp = $officePpmp->map( function ($transactions) use (&$availableItems) {
+            $transactions->particulars = $transactions->particulars->map(function($particular) use (&$availableItems) {
+                $items = [
                     'id' => $particular->id,
                     'treshFirstQty' => $particular->tresh_first_qty,
                     'treshSecondQty' => $particular->tresh_second_qty,
                     'releasedQty' => $particular->released_qty,
+                    'prodId' => $particular->prod_id,
                     'availableStock' => $this->getProductAvailableStock($particular->prod_id),
                     'prodStockNo' => $this->productService->getProductCode($particular->prod_id),
                     'prodDesc' => $this->productService->getProductName($particular->prod_id),
                     'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
                 ];
-            });
 
-            return $transactions->particulars;
+                $availableItems[] = $items;
+                return $items;
+            })->sortBy('prodDesc');
+
+            return $transactions;
         });
 
-        return $officePpmp ?? null;
+        return $availableItems;
     }
 
     private function getProductAvailableStock($productId)

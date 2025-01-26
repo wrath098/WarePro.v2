@@ -185,6 +185,19 @@ class ProductService
         return $amount ?? null;
     }
 
+    public function getCapitalOutlayContingency($year, $fundId, $sem)
+    {
+        $capital = CapitalOutlay::with(['allocations' => function($query) use ($sem) {
+            $query->where('description', 'Contingency')
+                ->where('semester', $sem);
+        }])->where('year', $year)
+            ->where('fund_id', $fundId)
+            ->first();
+
+        $amount = $capital ? $capital->allocations->first()->amount : null;
+        return $amount;
+    }
+
     public function validateCategoryExistence($fundId, $name)
     {
         $category = Category::where('fund_id', $fundId)
