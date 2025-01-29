@@ -13,6 +13,24 @@ const props = defineProps({
     budgetDetails: Object,
     year: String,
 })
+
+const updateBudget = reactive({...props.budgetDetails});
+
+const modalState = ref(false);
+const closeModal = () => { modalState.value = false; }
+const showModal = () => { modalState.value = true; }
+
+const submitForm = () => {
+    showModal();
+};
+
+const confirmSubmit = () => {
+    
+    const data = { year: props.year, ...updateBudget};
+    Inertia.put('update-fund-allocations', data, {
+        onSuccess: () => closeModal(),
+    });
+};
 </script>
 
 <template>
@@ -48,7 +66,8 @@ const props = defineProps({
                         </div>
                     </div>
                     <div>
-                        <form action="">
+                        <form @submit.prevent="submitForm">
+                        <!-- Total Amount Field -->
                             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
                                 <h6 class="pb-2 text-gray-400">Budget</h6>
                                 <div class="-mx-3 md:flex mb-6">
@@ -56,27 +75,33 @@ const props = defineProps({
                                         <label class="block uppercase tracking-wide text-grey-darker text-xs font-bold mb-2" for="grid-first-name">
                                             Total Amount
                                         </label>
-                                        <input :value="budgetDetails.totalAmount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-red rounded py-3 px-4 mb-3" id="grid-first-name" type="number" placeholder="Total Amount">
+                                        <input v-model="updateBudget.totalAmount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-red rounded py-3 px-4 mb-3" id="grid-first-name" type="number" placeholder="Total Amount" readonly>
                                     </div>
                                 </div>
-                                
+
+                                <!-- Allocations -->
                                 <h6 class="py-2 text-gray-400">Allocation</h6>
-                                <div v-for="account in budgetDetails.funds" :key="account.id" class="-mx-3 md:flex mb-6 flex-col">
+                                <div v-for="account in updateBudget.funds" :key="account.id" class="-mx-3 md:flex mb-6 flex-col">
                                     <div class="md:w-1/2 px-3 mb-6 md:mb-0">
                                         <label class="block uppercase tracking-wide text-grey-darker text-xs font-bold mb-2" for="grid-first-name">
                                             {{ account.accountClass }}
                                         </label>
-                                        <input :value="account.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-red rounded py-3 px-4 mb-3" id="grid-first-name" type="number" placeholder="">
+                                        <input v-model="account.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-red rounded py-3 px-4 mb-3" id="grid-first-name" type="number" placeholder="">
                                     </div>
+
+                                    <!-- Account Allocations -->
                                     <div class="md:w-1/2 px-5 grid lg:grid-cols-2 lg:gap-6">
                                         <div v-for="allocation in account.allocations" :key="allocation.id">
                                             <label class="block uppercase tracking-wide text-grey-darker text-xs font-bold mb-2" for="grid-city">
                                                 {{ allocation.semester }} - {{ allocation.description }}
                                             </label>
-                                            <input :value="allocation.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-grey-lighter rounded py-3 px-4 disabled:bg-gray-300" id="grid-city" type="number" placeholder="" :disabled="allocation.description !== 'Contingency'">
+                                            <input v-model="allocation.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-grey-lighter rounded py-3 px-4 disabled:bg-gray-300" id="grid-city" type="number" placeholder="" :disabled="allocation.description !== 'Contingency'">
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="md:w-1/2 bg-blue-500 text-white rounded py-2 px-4 mt-4">Update</button>
                             </div>
                         </form>
                     </div>
@@ -84,6 +109,35 @@ const props = defineProps({
             </div>
         </div>
     </AuthenticatedLayout>
+    <Modal :show="modalState" @close="closeModal">
+            <div class="bg-gray-100 h-auto">
+                <div class="bg-white p-6  md:mx-auto">
+                    <svg class="text-indigo-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-center">
+                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Confirm Update!</h3>
+                        <p class="text-gray-600 my-2">Please confirm if you wish to proceed.</p>
+                        <p> This action can't be undone upon confirmation.</p>
+                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                            <SuccessButton @click="confirmSubmit">
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Confirm 
+                            </SuccessButton>
+
+                            <DangerButton @click="closeModal"> 
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Cancel
+                            </DangerButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Modal>
     </div>
 </template>
  

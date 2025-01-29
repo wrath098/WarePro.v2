@@ -76,6 +76,7 @@ Route::middleware('auth')->prefix('offices')->group(function () {
 Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
     Route::get('/', [CapitalOutlayController::class, 'index'])->name('general.fund.display');
     Route::get('/edit-fund-allocations', [CapitalOutlayController::class, 'editFundAllocation'])->name('general.fund.editFundAllocation');
+    Route::put('/update-fund-allocations', [CapitalOutlayController::class, 'updateFundAllocation'])->name('general.fund.updateFundAllocation');
 });
 
 Route::middleware('auth')->prefix('products')->group(function () {

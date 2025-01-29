@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\CapitalOutlay;
 use App\Models\Fund;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+
 
 class CapitalOutlayController extends Controller
 {
@@ -81,9 +85,22 @@ class CapitalOutlayController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CapitalOutlay $capitalOutlay)
+    public function updateFundAllocation(Request $request)
     {
-        //
+        DB::beginTransaction();
+        dd($request->all());
+        try {
+            $validateData = $request->all();
+
+            if(!$request->all()) {
+                dd('yes');
+            }
+            dd('no');
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during transaction: " . $e->getMessage());
+            return redirect()->back()->with(['error' => $e->getMessage()]);
+        }
     }
 
     /**
