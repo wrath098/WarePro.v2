@@ -10,6 +10,10 @@
             type: String,
             default: '',
         },
+        target: {
+            type: String,
+            default: '_self',
+        }
     });
 
     const showTooltip = ref(false);
@@ -21,6 +25,7 @@
             :href="href" 
             class="w-full inline-flex justify-center text-base sm:ml-3 sm:w-auto sm:text-sm" 
             :aria-label="tooltip"
+            :target="target"
             @mouseover="showTooltip = true" 
             @mouseleave="showTooltip = false" 
             @focus="showTooltip = true" 

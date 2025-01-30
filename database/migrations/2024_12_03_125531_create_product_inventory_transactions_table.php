@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('type')->nullable();
             $table->bigInteger('qty')->nullable();
+            $table->bigInteger('stock_qty')->nullable()->comment('if qty == stock_qty, return complete');
             $table->text('notes')->nullable();
             $table->date('date_expiry')->nullable();
+            $table->string('dispatch')->default('incomplete');
             $table->unsignedBigInteger('ref_no')->nullable();
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();

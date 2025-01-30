@@ -15,10 +15,12 @@ class ProductInventoryTransaction extends Model
     protected $fillable = [
         'type',
         'qty',
+        'stock_qty',
         'notes',
         'ref_no',
         'prod_id',
         'date_expiry',
+        'dispatch',
         'created_by',
     ];
 

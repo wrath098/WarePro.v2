@@ -174,7 +174,7 @@
                     </div>
                     <div v-if="officePpmpParticulars.data" class="relative z-0 w-full group ">
                         <select v-model="risNo" name="requestedItem" id="requestedItem"  class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                            <option value="" disabled selected>Select year</option>
+                            <option value="" disabled selected>Available Requested Items</option>
                             <option v-for="particular in officePpmpParticulars.data" :key="particular.id" :value="particular.id">{{ particular.prodDesc }}</option>
                         </select>
                         <label for="requestedItem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select Product Item</label>

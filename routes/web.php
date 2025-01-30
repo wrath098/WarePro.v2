@@ -145,7 +145,8 @@ Route::middleware('auth')->prefix('inventory')->group(function () {
 Route::middleware('auth')->prefix('ris')->group(function () {
     Route::get('/', [RisTransactionController::class, 'create'])->name('create.ris');
     Route::post('/store', [RisTransactionController::class, 'store'])->name('store.ris');
-    Route::get('/ris-logs', [RisTransactionController::class, 'risLogs'])->name('ris.display.logs');
+    Route::get('/ris-logs', [RisTransactionController::class, 'risTransactions'])->name('ris.display.logs');
+    Route::get('/{transactionId}/attachment', [RisTransactionController::class, 'showAttachment'])->name('ris.show.attachment');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

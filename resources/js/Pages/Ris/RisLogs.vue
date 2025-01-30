@@ -6,7 +6,7 @@
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
 
     const props = defineProps({
-        transactions: Object
+        transactions: Object,
     });
 </script>
 
@@ -42,26 +42,33 @@
                                             <tr class="text-center">
                                                 <th scope="col" class="px-6 py-3 w-1/12">No#</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">RIS No.</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Office (Requestee)</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Stock No.</th>
-                                                <th scope="col" class="px-6 py-3 w-3/12">Description</th>
+                                                <th scope="col" class="px-6 py-3 w-2/12">Description</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Unit of Measure</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Requested (Qty)</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Requestee</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Issued To</th>
                                                 <th scope="col" class="px-6 py-3 w-1/12">Issued By</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Date Released</th>
+                                                <th scope="col" class="px-6 py-3 w-1/12">Attachment</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="(transaction, index) in transactions" :key="transaction.id">
                                                 <td class="px-6 py-3">{{ index + 1 }}</td>
-                                                <td class="px-6 py-3">{{ transaction.ris_no }}</td>
-                                                <td class="px-6 py-3">{{ transaction.prod_id }}</td>
-                                                <td class="px-6 py-3">{{ transaction.prod_id }}</td>
+                                                <td class="px-6 py-3">{{ transaction.risNo }}</td>
+                                                <td class="px-6 py-3">{{ transaction.officeRequestee }}</td>
+                                                <td class="px-6 py-3">{{ transaction.stockNo }}</td>
+                                                <td class="px-6 py-3">{{ transaction.prodDesc }}</td>
                                                 <td class="px-6 py-3">{{ transaction.unit }}</td>
                                                 <td class="px-6 py-3">{{ transaction.qty }}</td>
-                                                <td class="px-6 py-3">{{ transaction.office_id }}</td>
-                                                <td class="px-6 py-3">{{ transaction.issued_to }}</td>
-                                                <td class="px-6 py-3">{{ transaction.created_by }}</td>
+                                                <td class="px-6 py-3">{{ transaction.issuedTo }}</td>
+                                                <td class="px-6 py-3">{{ transaction.releasedBy }}</td>
+                                                <td class="px-6 py-3">{{ transaction.dateReleased }}</td>
+                                                <td v-if="transaction.attachment" class="px-6 py-3">
+                                                    <ViewButton :href="route('ris.show.attachment', {transactionId : transaction.id})" tooltip="View" target="_blank"/>
+                                                </td>
+                                                <td v-else class="italic text-gray-400">No Attachment</td>
                                             </tr>
                                         </tbody>
                                     </DataTable>

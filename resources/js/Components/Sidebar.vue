@@ -228,14 +228,25 @@
                             </li>
                         </template>
                     </SidebarDropdown>
-                    <SidebarLink :href="route('create.ris')" :active="route().current('create.ris')" class="mb-1">
-                        <ArrowRight :class="{ 'text-white' : route().current('create.ris')}"/>
-                        <span class="ml-3">Requisition and Issuance</span>
-                    </SidebarLink>
-                    <SidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')" class="mb-1">
-                        <ArrowRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
-                        <span class="ml-3">RIS Logs</span>
-                    </SidebarLink>
+                    <SidebarDropdown :active="route().current('create.ris') || route().current('ris.display.logs')" class="mb-1">
+                            <ArrowRight :class="{ 'text-white' : route().current('create.ris') || route().current('ris.display.logs')}"/>
+                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Requisition and Issuance</span>
+                            <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs')}" />
+                        <template #dropdown-items>
+                            <li>
+                                <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
+                                    Create New
+                                </SubSidebarLink>
+                            </li>
+                            <li>
+                                <SubSidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')">
+                                    <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
+                                    Issuances
+                                </SubSidebarLink>
+                            </li>
+                        </template>
+                    </SidebarDropdown>
                     <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
                         <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
                         <span class="ml-3">Stock Quantity</span>
@@ -256,7 +267,7 @@
                 <li>
                     <SidebarLink :href="route('dashboard')" :active="false">
                         <CircleDot/>
-                        <span class="ml-3">Help</span>
+                        <span class="ml-3">Frequently Question and Answer (FQA)</span>
                     </SidebarLink>
                 </li>
             </ul>

@@ -413,6 +413,7 @@ class IarTransactionController extends Controller
         return ProductInventoryTransaction::create([
             'type' => $request['type'],
             'qty' => $request['qty'],
+            'stock_qty' => $request['qty'],
             'ref_no' => $request['refNo'],
             'prod_id' => $request['prodId'],
             'date_expiry' => $request['date_expiry'],

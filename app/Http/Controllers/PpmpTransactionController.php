@@ -274,6 +274,7 @@ class PpmpTransactionController extends Controller
                     ->first();
 
             if ($existTransaction) {
+                DB::rollBack();
                 return redirect()->back()->with([
                     'error' => 'Approved PPMP already exist! Transaction No.' . $existTransaction->ppmp_code
                 ]);
