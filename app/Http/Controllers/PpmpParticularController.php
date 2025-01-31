@@ -136,6 +136,7 @@ class PpmpParticularController extends Controller
                     'treshSecondQty' => $particular->tresh_second_qty,
                     'releasedQty' => $particular->released_qty,
                     'prodId' => $particular->prod_id,
+                    'prodInvId' => $this->getProductInventoryId($particular->prod_id),
                     'availableStock' => $this->getProductAvailableStock($particular->prod_id),
                     'prodStockNo' => $this->productService->getProductCode($particular->prod_id),
                     'prodDesc' => $this->productService->getProductName($particular->prod_id),
@@ -156,5 +157,11 @@ class PpmpParticularController extends Controller
     {
         $productinventory = ProductInventory::where('prod_id', $productId)->first();
         return $productinventory->qty_on_stock ?? 0;
+    }
+
+    private function getProductInventoryId($productId)
+    {
+        $productinventory = ProductInventory::where('prod_id', $productId)->first();
+        return $productinventory->id ?? 0;
     }
 }

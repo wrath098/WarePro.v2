@@ -308,6 +308,7 @@ class IarTransactionController extends Controller
             $particularInfo->update([
                 'stock_no' => $productDetails->prod_newNo,
                 'unit' => ucfirst($request->parUnit),
+                'qty' => $request->parQty,
                 'updated_by' => $userId, 
                 'date_expiry' => $request->expiry
             ]);

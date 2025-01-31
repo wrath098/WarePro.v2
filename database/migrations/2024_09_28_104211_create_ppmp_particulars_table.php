@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->integer('qty_first')->default(0);
             $table->integer('qty_second')->default(0);
-            $table->integer('tresh_first_qty')->default(0);
-            $table->integer('tresh_adjustment')->default(0);
+            $table->integer('tresh_first_qty')->default(0)->comment('Basis for Qty Issuances');
+            $table->integer('tresh_adjustment')->default(0)->comment('Basis for Qty Issuances');
             $table->integer('released_qty')->default(0)->comment('For Product Requisition monitoring of released qty');
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('price_id')->nullable();

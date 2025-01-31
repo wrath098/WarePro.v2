@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('product_inventories', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('qty_on_stock')->default(0);
-            $table->bigInteger('qty_physical_count')->default(0);
+            $table->bigInteger('qty_physical_count')->default(0)->comment('Row for Beginning Balance');
             $table->bigInteger('qty_purchase')->default(0);
             $table->bigInteger('qty_issued')->default(0);
             $table->string('location')->nullable();

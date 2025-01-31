@@ -78,18 +78,28 @@ class RisTransactionController extends Controller
                     return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
                 }
 
-                dd($this->updateReleasedItemQtyOnPpmp($product['id'])->toArray());
+                $totalTreshold = (int) $product['treshFirstQty'] + (int) $product['treshSecondQty'];
+                $totalReleased = (int) $product['releasedQty'] + (int) $product['qty'];
 
-                // $this->createRis($risData);
-                // $this->updateQuantity($risData);
-                // $this->updateInventoryTransaction($risData);
-            }
+                if($totalReleased > $totalTreshold) {
+                    DB::rollback();
+                    throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
+                }
+
+                $createRisTransaction = $this->createRis($risData);
+                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction, $totalReleased);
+                $this->updateQuantity($risData);
+                $this->updateInventoryTransaction($risData);
+                $this->updateReleasedItemQtyOnPpmp($product);
+                $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
+            }   
+
         DB::commit();
-        return redirect()->route('create.ris')->with(['message' => 'RIS created successfully!', 'form_data' => []]);
+        return redirect()->route('ris.display.logs')->with(['message' => 'RIS created successfully!']);
         } catch (\Exception $e) {
             DB::rollback();
             Log::error("Error creating RIS transaction: " . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to create RIS!']);
+            return redirect()->back()->with(['error' => $e->getMessage()]);
         }
     }
 
@@ -109,6 +119,19 @@ class RisTransactionController extends Controller
             'office_id' => $requestData['officeId'],
             'created_by' => $requestData['user'],
             'attachment' => $requestData['path'] ?? null,
+        ]);
+    }
+
+    private function createInventoryTransaction($product, $risData, $risId, $totalReleased)
+    {
+        return ProductInventoryTransaction::create([
+            'type' => 'issuance',
+            'qty' => $product['qty'],
+            'current_stock' => $totalReleased,
+            'prodInv_id' => $product['prodInvId'],
+            'ref_id' => $risId,
+            'prod_id' => $product['prodId'],
+            'created_by' => $risData['user'] ?? null,
         ]);
     }
 
@@ -134,9 +157,8 @@ class RisTransactionController extends Controller
 
     private function updateReleasedItemQtyOnPpmp($requestData)
     {
-        $itemOnPPmpInfo = PpmpParticular::findOrFail($requestData);
-        
-        return $itemOnPPmpInfo->update(['released_qty' => ]);
+        $itemOnPPmpInfo = PpmpParticular::findOrFail($requestData['id']);
+        return $itemOnPPmpInfo->update(['released_qty' => $itemOnPPmpInfo->released_qty += $requestData['qty']]);
     }
 
     private function getRisTransactions() {
@@ -209,5 +231,9 @@ class RisTransactionController extends Controller
         return $transaction;
     }
 
+    private function moveToTrashProductInventoryTransaction(ProductInventoryTransaction  $productInventory)
+    {
+        return $productInventory->delete();
+    }
     
 }

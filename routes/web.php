@@ -140,6 +140,7 @@ Route::middleware('auth')->prefix('iar')->group(function () {
 Route::middleware('auth')->prefix('inventory')->group(function () {
     Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
+    Route::get('/stock-card', [ProductInventoryController::class, 'showStockCard'])->name('show.stockCard');
 });
 
 Route::middleware('auth')->prefix('ris')->group(function () {
@@ -163,6 +164,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
 #API
 Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
+    Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
 });
 
 

@@ -251,8 +251,8 @@
                         <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
                         <span class="ml-3">Stock Quantity</span>
                     </SidebarLink>
-                    <SidebarLink :href="''" :active="false" class="mb-1">
-                        <ArrowRight :class="{ 'text-white' : false}"/>
+                    <SidebarLink :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
+                        <ArrowRight :class="{ 'text-white' : route().current('show.stockCard')}"/>
                         <span class="ml-3">Stock Card</span>
                     </SidebarLink>
                 </li>

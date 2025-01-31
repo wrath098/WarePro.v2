@@ -7,7 +7,7 @@
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
-import { Inertia } from '@inertiajs/inertia';
+    import { Inertia } from '@inertiajs/inertia';
 
 
     const props = defineProps({
@@ -72,9 +72,12 @@ import { Inertia } from '@inertiajs/inertia';
                             <tr>
                                 <th class="w-1/12">Action</th>
                                 <th class="w-1/12">Stock No.</th>
-                                <th class="w-7/12">Description</th>
+                                <th class="w-4/12">Description</th>
                                 <th class="w-1/12">Unit of Measure</th>
+                                <th class="w-1/12">Beginning Balance</th>
                                 <th class="w-1/12">Stock Available</th>
+                                <th class="w-1/12">Purchases</th>
+                                <th class="w-1/12">Issuances</th>
                                 <th class="w-1/12">Status</th>
                             </tr>
                         </thead>
@@ -90,7 +93,10 @@ import { Inertia } from '@inertiajs/inertia';
                                 <td>{{ item.stockNo }}</td>
                                 <td>{{ item.prodDesc }}</td>
                                 <td>{{ item.prodUnit }}</td>
-                                <td>{{ item.stockAvailable }}</td>
+                                <td class="text-center">{{ item.beginningBalance }}</td>
+                                <td class="text-center">{{ item.stockAvailable }}</td>
+                                <td class="text-center">{{ item.purchases }}</td>
+                                <td class="text-center">{{ item.issuances }}</td>
                                 <td>
                                     <span :class="{
                                         'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': item.status === 'Available',
