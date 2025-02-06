@@ -25,6 +25,7 @@ use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
 use App\Http\Controllers\Pdf\SummaryOfConsolidatedPpmpController;
+use App\Http\Controllers\Pdf\StockCardController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\ProductInventoryTransactionController;
 use App\Http\Controllers\RisTransactionController;
@@ -159,12 +160,15 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
     Route::get('/adjusted-individual-ppmp-list/{ppmp}', [AdjustedIndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp.withAdjustment');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
+    Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
+    Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
 });
 
 #API
 Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
     Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
+    Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
 });
 
 

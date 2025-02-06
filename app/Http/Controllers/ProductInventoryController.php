@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductInventory;
+use App\Models\ProductInventoryTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -48,7 +49,7 @@ class ProductInventoryController extends Controller
                 'prodId' => $product->id
             ];
         });
-        
+
         return Inertia::render('Inventory/Index', ['inventory' => $products]);
     }
 
@@ -60,11 +61,10 @@ class ProductInventoryController extends Controller
 
     public function getProductInventoryLogs(Request $request)
     {
-        $productDetails = $this->getProductInventory($request->product['prodId']);
+        $query = $request->input('query');
+        $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $query['startDate'], $query['endDate']);
 
-        Log::info('Request Data:', $productDetails->toArray());
-
-        return response()->json(['data' => $productDetails], 200);
+       return response()->json(['data' => $inventoryTransactions], 200);
     }
 
     public function productListInventory()
@@ -80,6 +80,26 @@ class ProductInventoryController extends Controller
         return $productList;
     }
 
+    public function searchProductItem(Request $request) 
+    {
+        $query = $request->input('query');
+
+        $products = Product::withTrashed()
+            ->where(function($product) use ($query) {
+                $product->where('prod_newNo', 'LIKE', '%' . $query . '%')
+                    ->orWhere('prod_desc', 'LIKE', '%' . $query . '%');
+            })
+            ->get()
+            ->map(fn($product) => [
+                'prodId' => $product->id,
+                'prodDesc' => $product->prod_desc,
+                'prodUnit' => $product->prod_unit,
+                'prodStockNo' => $product->prod_newNo,
+            ]);
+            
+        return response()->json(['data' => $products]);
+    }
+
     private function getProductDetails($productId)
     {
         $productDetail = Product::withTrashed()->findOrFail($productId);
@@ -92,8 +112,26 @@ class ProductInventoryController extends Controller
         ];
     }
 
-    private function getProductInventory($productId)
+
+    private function getProductInventoryTransactions($productId, $fromDate, $toDate)
     {
-        return ProductInventory::withTrashed()->findOrFail($productId);
+        $productUnit = $this->productService->getProductUnit($productId);
+
+        return ProductInventoryTransaction::withTrashed()
+                ->where(function($query) use ($productId, $fromDate, $toDate) {
+                    $query->where('prod_id', $productId)
+                        ->whereBetween('created_at', [$fromDate, $toDate]);
+                })
+                ->get()
+                ->map(function($transaction) use ($productUnit) {
+                    return [
+                        'id' => $transaction->id,
+                        'created' => $transaction->created_at->format('d-m-Y'),
+                        'unit' => $productUnit,
+                        'type' => ucfirst($transaction->type),
+                        'qty' => $transaction->qty,
+                        'adjustedTotalStock' => $transaction->current_stock,
+                    ];
+                });
     }
 }
