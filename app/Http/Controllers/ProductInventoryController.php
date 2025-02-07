@@ -112,7 +112,6 @@ class ProductInventoryController extends Controller
         ];
     }
 
-
     private function getProductInventoryTransactions($productId, $fromDate, $toDate)
     {
         $productUnit = $this->productService->getProductUnit($productId);
@@ -133,5 +132,10 @@ class ProductInventoryController extends Controller
                         'adjustedTotalStock' => $transaction->current_stock,
                     ];
                 });
+    }
+
+    private function getOfficeNameIfIssuance()
+    {
+
     }
 }

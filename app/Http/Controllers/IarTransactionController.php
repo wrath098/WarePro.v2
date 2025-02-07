@@ -188,6 +188,7 @@ class IarTransactionController extends Controller
                 throw new \Exception('The unit of measurement of the particular differs from the one in the product record: ' . $productDetails->prod_unit);
             }
 
+            $currentStock = (int)$this->getCurrentStockInventory($productDetails->id) + (int)$particular->qty;
             $productInventoryInfo = [
                 'type' => 'purchase',
                 'qty' => $particular->qty,
@@ -195,6 +196,7 @@ class IarTransactionController extends Controller
                 'prodId' => $productDetails->id,
                 'price' => $productDetails->price,
                 'date_expiry' => $particular->date_expiry,
+                'currentStock' => $currentStock,
                 'user' => $userId,
             ];
 
@@ -251,6 +253,7 @@ class IarTransactionController extends Controller
                     continue;
                 }                
                 
+                $currentStock = (int)$this->getCurrentStockInventory($productDetails->id) + (int)$particular['quantity'];
                 $productInventoryInfo = [
                     'type' => 'purchase',
                     'qty' => $particular['quantity'],
@@ -258,6 +261,7 @@ class IarTransactionController extends Controller
                     'prodId' => $productDetails->id,
                     'price' => $productDetails->price,
                     'date_expiry' => $particular['expiry'],
+                    'currentStock' => $currentStock,
                     'user' => $userId,
                 ];
 
@@ -358,6 +362,7 @@ class IarTransactionController extends Controller
         $userId = Auth::id();
 
         try {
+
             foreach ($request->particulars as $particular) {
                 $particularInfo = $this->getIarParticular($particular['pId']);
                 $particularInfo->update(['status' => 'failed', 'updated_by' => $userId]);
@@ -418,6 +423,7 @@ class IarTransactionController extends Controller
             'ref_no' => $request['refNo'],
             'prod_id' => $request['prodId'],
             'date_expiry' => $request['date_expiry'],
+            'current_stock' => $request['currentStock'],
             'created_by' => $request['user'],
         ]);
     }
@@ -471,5 +477,11 @@ class IarTransactionController extends Controller
     private function getIarTransaction($airTranId) {
         $transaction = IarTransaction::findOrFail($airTranId);
         return $transaction;
+    }
+
+    private function getCurrentStockInventory($prodId)
+    {
+        $inventoryDetails = ProductInventory::where('prod_id', $prodId)->first();
+        return $inventoryDetails->qty_on_stock ?? 0;
     }
 }

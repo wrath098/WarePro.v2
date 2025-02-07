@@ -99,6 +99,21 @@ class ProductService
         return $categories;
     }
 
+    public function getAllActiveProduct_Category()
+    {
+        $categories = Category::with([
+            'items' => function ($query) {
+                $query->where('item_status', 'active')->select('id', 'cat_id', 'item_code', 'item_name');
+            },
+            'items.products' => function ($query) {
+                $query->where('prod_status', 'active')->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+            },
+        ])
+        ->get(['id', 'cat_code', 'cat_name']);
+
+        return $categories;
+    }
+
     public function getCategoryName($id)
     {
         $categoryName = Category::findOrFail($id);

@@ -85,9 +85,9 @@ class RisTransactionController extends Controller
                     DB::rollback();
                     throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
                 }
-
+                $currentStock = (int)$this->getCurrentStockInventory($product['prodId']) - $product['qty'];
                 $createRisTransaction = $this->createRis($risData);
-                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction, $totalReleased);
+                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction, $currentStock);
                 $this->updateQuantity($risData);
                 $this->updateInventoryTransaction($risData);
                 $this->updateReleasedItemQtyOnPpmp($product);
@@ -122,12 +122,12 @@ class RisTransactionController extends Controller
         ]);
     }
 
-    private function createInventoryTransaction($product, $risData, $risId, $totalReleased)
+    private function createInventoryTransaction($product, $risData, $risId, $currentStock)
     {
         return ProductInventoryTransaction::create([
             'type' => 'issuance',
             'qty' => $product['qty'],
-            'current_stock' => $totalReleased,
+            'current_stock' => $currentStock,
             'prodInv_id' => $product['prodInvId'],
             'ref_id' => $risId,
             'prod_id' => $product['prodId'],
@@ -235,5 +235,10 @@ class RisTransactionController extends Controller
     {
         return $productInventory->delete();
     }
-    
+
+    private function getCurrentStockInventory($prodId)
+    {
+        $inventoryDetails = ProductInventory::where('prod_id', $prodId)->first();
+        return $inventoryDetails->qty_on_stock ?? 0;
+    }
 }

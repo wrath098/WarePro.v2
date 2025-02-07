@@ -7,6 +7,7 @@ use App\Models\ItemClass;
 use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Services\ProductService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +74,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'selectedCategory' => 'required|integer',
             'itemId' => 'required|integer',
@@ -85,31 +88,34 @@ class ProductController extends Controller
             'createdBy' => 'nullable|integer',
         ]);
 
-        try {            
-            return DB::transaction(function () use ($validatedData) {
-                $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
+        try 
+        {         
+            $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
 
-                $product = Product::create([
-                    'prod_newNo' => $controlNo,
-                    'prod_desc' => $validatedData['prodDesc'],
-                    'prod_unit' => $validatedData['prodUnit'],
-                    'prod_remarks' => $validatedData['prodRemarks'],
-                    'prod_oldNo' => $validatedData['prodOldCode'],
-                    'has_expiry' => $validatedData['hasExpiry'] ?? 0,
-                    'item_id' => $validatedData['itemId'],
-                    'created_by' => $validatedData['createdBy'],
-                    'updated_by' => $validatedData['createdBy'],
-                ]);
+            $product = Product::create([
+                'prod_newNo' => $controlNo,
+                'prod_desc' => $validatedData['prodDesc'],
+                'prod_unit' => $validatedData['prodUnit'],
+                'prod_remarks' => $validatedData['prodRemarks'],
+                'prod_oldNo' => $validatedData['prodOldCode'],
+                'has_expiry' => $validatedData['hasExpiry'] ?? 0,
+                'item_id' => $validatedData['itemId'],
+                'created_by' => $validatedData['createdBy'],
+                'updated_by' => $validatedData['createdBy'],
+            ]);
 
-                ProductPrice::create([
-                    'prod_price' => $validatedData['prodPrice'],
-                    'prod_id' => $product->id,
-                ]);
+            ProductPrice::create([
+                'prod_price' => $validatedData['prodPrice'],
+                'prod_id' => $product->id,
+            ]);
 
-                return redirect()->back()
-                    ->with(['message' => 'New Product has been successfully added.']);
-            });
+            DB::commit();
+            return redirect()->route('product.display.active')
+                ->with(['message' => 'New Product has been successfully added.']);
+
         } catch (\Exception $e) {
+            
+            DB::rollBack();
             Log::error('Creating product failed: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'Creation of new product failed.']);
@@ -236,26 +242,30 @@ class ProductController extends Controller
             'updatedBy' => 'nullable|integer',
         ]);
         
-        try {
-            $product = Product::findOrFail($validatedData['prodId']);
-            $product->load('prices');
+        DB::beginTransaction();
 
+        $product = Product::findOrFail($validatedData['prodId']);
+        $product->load('prices');
+
+        try {
             foreach ($product->prices as $price) {
                 $price->forceDelete();
             }
             $product->forceDelete();
-
-            // $product->update([
-            //     'updated_by' => $validatedData['updatedBy'], 
-            //     'prod_status' => 'deactivated'
-            // ]);
             
-            return redirect()->back()
+            DB::commit();
+            return redirect()->route('product.display.active')
                 ->with(['message' => 'Product has been remove successfully.']);
         } catch (\Exception $e) {
-            Log::error('Product update failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Moving the product to trash failed.']);
+            
+            $product->update([
+                'updated_by' => $validatedData['updatedBy'], 
+                'prod_status' => 'deactivated'
+            ]);
+
+            DB::commit();
+            return redirect()->route('product.display.active')
+                ->with(['message' => 'Product has been deactivated.']);
         }
     }
 

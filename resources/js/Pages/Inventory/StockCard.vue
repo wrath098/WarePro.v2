@@ -68,7 +68,7 @@
         },
         {
             data: 'created',
-            title: 'Date Created',
+            title: 'Date of Issuance/Acceptance',
         },
         {
             data: 'unit',
@@ -85,7 +85,7 @@
         },
         {
             data: 'adjustedTotalStock',
-            title: 'Total Amount',
+            title: 'Current Stock',
         },
     ];
 </script>
@@ -126,7 +126,7 @@
                                 <input v-model="searchProductInfo.product" @input="debouncedFetchProduct" type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                                 <label for="fetchProduct" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
                             </div>
-                            <ul v-if="productList.data" class="absolute w-3/4 h-60 bg-white border border-gray-300 mt-10 z-10 overflow-y-scroll">
+                            <ul v-if="productList.data" class="absolute w-3/4 h-60 bg-white border border-gray-300 mt-16 z-10 overflow-y-scroll">
                                 <li
                                     v-for="product in productList.data"
                                     :key="product.prodId"
@@ -151,7 +151,7 @@
                                 <button type="submit" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
                                     Filter
                                 </button>
-                                <a v-if="productTransactions.data" :href="route('generatePdf.StockCard', { productDetails: searchProductInfo })" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
+                                <a v-if="productTransactions.data && productTransactions.data.length > 0" :href="route('generatePdf.StockCard', { productDetails: searchProductInfo })" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
                                     Print
                                 </a>
                             </div>
