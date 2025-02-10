@@ -20,31 +20,19 @@ class ItemClassController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $queryItem = ItemClass::with('category', 'creator')
-            ->where('item_status', 'active')
-            ->orderBy('cat_id', 'asc')
-            ->orderBy('item_name', 'asc')
-            ->get();
-
-        $itemClass = $queryItem->map(fn($item) => [
-            'id' => $item->id,
-            'code' => str_pad($item->item_code, 2, '0', STR_PAD_LEFT),
-            'name' => $item->item_name,
-            'catId' => $item->category->id,
-            'category' => $item->category->cat_name,
-            'status' => ucfirst($item->item_status),
-            'creator' => $item->creator->name,
-        ]);
-
+        $activeItemClass = $this->getActiveItemClass();
+        $deactivatedItemClass = $this->getDeactivitedItemClass();
+        
         $categories = $this->productService->getActiveCategory()->map(fn($category) => [
             'id' => $category->id,
             'name' => $category->cat_name
         ]);
 
         return Inertia::render('Item/Index', [
-            'itemClasses' => $itemClass,
+            'activeItemClass' => $activeItemClass,
+            'deactivatedItemClass' => $deactivatedItemClass,
             'categories' => $categories,
             'authUserId' => Auth::id()
         ]);
@@ -133,6 +121,11 @@ class ItemClassController extends Controller
         }
     }
 
+    public function restore(ItemClass $itemClass)
+    {
+        dd($itemClass->toArray());
+    }
+
     public function deactivate(Request $request, ItemClass $itemClass)
     {
         DB::beginTransaction();
@@ -153,20 +146,71 @@ class ItemClassController extends Controller
                 return redirect()->back()
                     ->with(['message' => 'Item Class Name was removed successfully']);
             }
-            
-            // $itemClass->fill([
-            //     'item_status' => 'deactivated',
-            //     'updated_by' => $validatedData['updatedBy'],
-            // ])->save();
+
+            foreach ($itemClass->products as $product) {  
+                $product->update([
+                    'prod_status' => 'deactivated',
+                    'updated_by' => $validatedData['updatedBy'],
+                ]);
+            }
+
+            $itemClass->update([
+                'item_status' => 'prod_status',
+                'updated_by' => $validatedData['updatedBy'],
+            ]);
             
             DB::commit();
             return redirect()->back()
-                ->with(['error' => 'Unable to remove the Item Class. Item Class has products already.']);
+                ->with(['message' => 'Item Class has been move to trash!.']);
+
         } catch (\Exception $e) {
+
             DB::rollBack();
             Log::error('Deletion of Item Class: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'An error occurred while adding the new item class.']);
         }
+    }
+
+    private function getActiveItemClass()
+    {
+        $itemClass = ItemClass::with('category', 'creator')
+            ->where('item_status', 'active')
+            ->orderBy('cat_id', 'asc')
+            ->orderBy('item_name', 'asc')
+            ->get()
+            ->map(fn($item) => [
+                'id' => $item->id,
+                'code' => str_pad($item->item_code, 2, '0', STR_PAD_LEFT),
+                'name' => $item->item_name,
+                'catId' => $item->category->id,
+                'category' => $item->category->cat_name,
+                'status' => ucfirst($item->item_status),
+                'creator' => $item->creator->name,
+            ]
+        );
+
+        return $itemClass;
+    }
+
+    private function getDeactivitedItemClass()
+    {
+        $itemClass = ItemClass::with('category', 'creator')
+            ->where('item_status', 'deactivated')
+            ->orderBy('cat_id', 'asc')
+            ->orderBy('item_name', 'asc')
+            ->get()
+            ->map(fn($item) => [
+                'id' => $item->id,
+                'code' => str_pad($item->item_code, 2, '0', STR_PAD_LEFT),
+                'name' => $item->item_name,
+                'catId' => $item->category->id,
+                'category' => $item->category->cat_name,
+                'status' => ucfirst($item->item_status),
+                'creator' => $item->creator->name,
+            ]
+        );
+
+        return $itemClass;
     }
 }

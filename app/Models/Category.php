@@ -20,7 +20,7 @@ class Category extends Model
         'cat_name', 
         'cat_status', 
         'created_by', 
-        'updated_by '
+        'updated_by',
     ];
 
     protected $casts = [

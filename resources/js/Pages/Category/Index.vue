@@ -1,19 +1,24 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import Modal from '@/Components/Modal.vue';
 import DangerButton from '@/Components/Buttons/DangerButton.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+import Swal from 'sweetalert2';
+import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
 
 const modalState = ref(null);
+const page = usePage();
+const isLoading = ref(false);
 
 const isAddModalOpen = computed(() => modalState.value === 'add');
 const isEditModalOpen = computed(() => modalState.value === 'edit');
 const isDropModalOpen = computed(() => modalState.value === 'deactivate');
+const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
 
 const showModal = (modalType) => {
     modalState.value = modalType;
@@ -24,7 +29,8 @@ const closeModal = () => {
 }
 
 const props = defineProps({
-    categories: Array,
+    activeCategories: Object,
+    deactivatedCategories: Object,
     funds: Array,
     authUserId: Number,
 });
@@ -49,6 +55,11 @@ const dropForm = reactive({
     updater: props.authUserId || '',
 });
 
+const confirmForm = reactive({
+    catId: '',
+    updater: props.authUserId || '',
+});
+
 const openEditModal = (category) => {
     editForm.catId = category.id;
     editForm.catName = category.name;
@@ -62,15 +73,48 @@ const openDropModal = (category) => {
     modalState.value = 'deactivate';
 };
 
+const openConfirmModal = (category) => {
+    confirmForm.catId = category;
+    modalState.value = 'confirm';
+};
+
 const submitForm = (url, data) => {
+    isLoading.value = true;
     Inertia.post(url, data, {
-        onSuccess: () => closeModal(),
+        onSuccess: () => {
+            closeModal();
+            isLoading.value = false;
+        }
     });
 };
 
 const submit = () => submitForm('categories/save', form);
 const submitEdit = () => submitForm('categories/update', editForm);
 const submitDrop = () => submitForm('categories/deactivate', dropForm);
+const confirmFormSubmit = () => submitForm(`categories/restore/${confirmForm.catId}`, null);
+
+const message = computed(() => page.props.flash.message);
+const errMessage = computed(() => page.props.flash.error);
+
+onMounted(() => {
+    if (message.value) {
+        Swal.fire({
+            title: 'Success',
+            text: message.value,
+            icon: 'success',
+            confirmButtonText: 'OK',
+        });
+    }
+
+    if (errMessage.value) {
+        Swal.fire({
+            title: 'Failed',
+            text: errMessage.value,
+            icon: 'error',
+            confirmButtonText: 'OK',
+        });
+    }
+});
 </script>
 
 <template>
@@ -84,12 +128,6 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                     <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Categories</li> 
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -97,7 +135,7 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-4">
                         <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
-                            <li v-for="category in categories" :key="category.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
+                            <li v-for="category in activeCategories" :key="category.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
                                 <div class="text-2xl font-bold text-indigo-900">
                                     {{ category.code.padStart(2, '0') }}
                                 </div>
@@ -151,6 +189,37 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                     </div>
                 </div>
             </div>
+
+            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2 mt-10" v-if="deactivatedCategories.length > 0">
+                <DataTable class="display table-hover table-striped shadow-lg rounded-lg bg-white compact">
+                    <thead>
+                        <tr>
+                            <th>Transaction No.</th>
+                            <th>Code</th>
+                            <th>Fund Name</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Updated At</th>
+                            <th>Updated By</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="category in deactivatedCategories" :key="category.id">
+                            <td>{{ category.id}}</td>
+                            <td>{{ category.code.padStart(2, '0') }}</td>
+                            <td>{{ category.name }}</td>
+                            <td><span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300">{{ category.status }}</span></td>
+                            <td>{{ category.fundName }}</td>
+                            <td>{{ category.updatedAt }}</td>
+                            <td>{{ category.updatedBy }}</td>
+                            <td>
+                                <RecycleIcon @click="openConfirmModal(category.id)"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </DataTable>
+            </div>
         </div>
         <Modal :show="isAddModalOpen" @close="closeModal"> 
             <form @submit.prevent="submit">
@@ -188,7 +257,7 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -241,7 +310,7 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -271,7 +340,7 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                             <p class="text-gray-600 my-2">Confirming this action will remove the selected Category into the list.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>
@@ -285,6 +354,37 @@ const submitDrop = () => submitForm('categories/deactivate', dropForm);
                                     Cancel
                                 </DangerButton>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isConfirmModalOpen" @close="closeModal"> 
+            <form @submit.prevent="confirmFormSubmit">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-indigo-700 w-16 h-16 mx-auto my-6" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18.5,3h-5.53c-.08,0-.16-.02-.22-.05l-3.16-1.58c-.48-.24-1.02-.37-1.56-.37h-2.53C2.47,1,0,3.47,0,6.5v11c0,3.03,2.47,5.5,5.5,5.5h13c3.03,0,5.5-2.47,5.5-5.5V8.5c0-3.03-2.47-5.5-5.5-5.5Zm2.5,14.5c0,1.38-1.12,2.5-2.5,2.5H5.5c-1.38,0-2.5-1.12-2.5-2.5V8H20.95c.03,.16,.05,.33,.05,.5v9Zm-3.13-3.71c.39,.39,.39,1.02,0,1.41l-3.16,3.16c-.63,.63-1.71,.18-1.71-.71v-1.66H7.5c-.83,0-1.5-.67-1.5-1.5s.67-1.5,1.5-1.5h5.5v-1.66c0-.89,1.08-1.34,1.71-.71l3.16,3.16Z"/>
+                        </svg>
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Confirm as Approved!</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will remark the selected PPMP as Final/Approved. This action can't be undone.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div> 
                         </div>
                     </div>
                 </div>

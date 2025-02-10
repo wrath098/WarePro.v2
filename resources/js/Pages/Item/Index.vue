@@ -1,6 +1,6 @@
 <script setup>
-    import { Head } from '@inertiajs/vue3';
-    import { ref, reactive, computed } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { ref, reactive, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -10,10 +10,14 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
+    import Swal from 'sweetalert2';
 
+    const page = usePage();
+    const isLoading = ref(false);
 
     const props = defineProps({
-        itemClasses: Object,
+        activeItemClass: Object,
+        deactivatedItemClass: Object,
         categories: Array,
         authUserId: Number,
     });
@@ -55,14 +59,41 @@
     }
 
     const submitForm = (url, data) => {
+        isLoading.value = true;
         Inertia.post(url, data, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
         });
     };
 
     const submit = () => submitForm('items/save', form);
     const submitEdit = () => submitForm('items/update', editForm);
     const submitDeactivate = () => submitForm('items/deactivate', editForm);
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -71,17 +102,16 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Item Classes</a></li>
+                    <li class="flex flex-col lg:flex-row">
+                        <AddButton @click="showModal('add')">
+                            <span class="mr-2">New Item Class</span>
+                        </AddButton>
+                    </li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -89,9 +119,7 @@
                 <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="relative overflow-x-auto">
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 justify-end">
-                            <AddButton @click="showModal('add')">
-                                    <span class="mr-2">New Item Class</span>
-                            </AddButton>
+                            
                         </div>
                         <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
                             <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
@@ -114,13 +142,16 @@
                                     <th scope="col" class="px-6 py-3 w-2/12">
                                         Created/Updated By
                                     </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
+                                        Date Created/Updated
+                                    </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
                                         Action/s
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(item, index) in itemClasses" :key="item.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
+                                <tr v-for="(item, index) in activeItemClass" :key="item.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
                                     <td scope="row" class="py-2 text-center text-sm">
                                         {{  ++index }}
                                     </td>

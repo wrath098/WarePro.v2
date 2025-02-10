@@ -48,6 +48,11 @@ class ProductService
         return Category::where('cat_status', 'active')->orderBy('cat_code')->get();
     }
 
+    public function getDeactivatedCategory()
+    {
+        return Category::withTrashed()->where('cat_status', 'deactivated')->orderBy('cat_code')->get();
+    }
+
     public function getActiveItemclass()
     {
         return ItemClass::with('category')

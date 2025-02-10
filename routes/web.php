@@ -50,6 +50,7 @@ Route::middleware('auth')->prefix('funds')->group(function () {
     Route::get('/', [FundController::class, 'index'])->name('fund.display.all');
     Route::post('/save', [FundController::class, 'store'])->name('fund.store');
     Route::post('/update', [FundController::class, 'update'])->name('fund.update');
+    Route::put('/restore/{fundId}', [FundController::class, 'restore'])->name('fund.restore');
     Route::post('/deactivate', [FundController::class, 'deactivate'])->name('fund.deactivate');
 });
 
@@ -57,6 +58,7 @@ Route::middleware('auth')->prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('category.display.active');
     Route::post('/save', [CategoryController::class, 'store'])->name('category.store');
     Route::post('/update', [CategoryController::class, 'update'])->name('category.update');
+    Route::post('/restore/{catId}', [CategoryController::class, 'restore'])->name('category.restore');
     Route::post('/deactivate', [CategoryController::class, 'deactivate'])->name('category.deactivate');
 });
 
