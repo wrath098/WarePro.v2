@@ -1,13 +1,17 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import Modal from '@/Components/Modal.vue';
 import DangerButton from '@/Components/Buttons/DangerButton.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+import Swal from 'sweetalert2';
+
+const page = usePage();
+const isLoading = ref(false);
 
 const props = defineProps({
     budgetDetails: Object,
@@ -25,12 +29,38 @@ const submitForm = () => {
 };
 
 const confirmSubmit = () => {
-    
+    isLoading.value = true;
     const data = { year: props.year, ...updateBudget};
     Inertia.put('update-fund-allocations', data, {
-        onSuccess: () => closeModal(),
+        onSuccess: () => {
+            closeModal();
+            isLoading.value = false;
+        },
     });
 };
+
+const message = computed(() => page.props.flash.message);
+const errMessage = computed(() => page.props.flash.error);
+
+onMounted(() => {
+    if (message.value) {
+        Swal.fire({
+            title: 'Success',
+            text: message.value,
+            icon: 'success',
+            confirmButtonText: 'OK',
+        });
+    }
+
+    if (errMessage.value) {
+        Swal.fire({
+            title: 'Failed',
+            text: errMessage.value,
+            icon: 'error',
+            confirmButtonText: 'OK',
+        });
+    }
+});
 </script>
 
 <template>
@@ -86,7 +116,7 @@ const confirmSubmit = () => {
                                         <label class="block uppercase tracking-wide text-grey-darker text-xs font-bold mb-2" for="grid-first-name">
                                             {{ account.accountClass }}
                                         </label>
-                                        <input v-model="account.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-red rounded py-3 px-4 mb-3" id="grid-first-name" type="number" placeholder="">
+                                        <input v-model="account.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-red rounded py-3 px-4 mb-3" id="grid-first-name" type="number" :disabled="account.allocations != null" placeholder="" required>
                                     </div>
 
                                     <!-- Account Allocations -->
@@ -95,7 +125,7 @@ const confirmSubmit = () => {
                                             <label class="block uppercase tracking-wide text-grey-darker text-xs font-bold mb-2" for="grid-city">
                                                 {{ allocation.semester }} - {{ allocation.description }}
                                             </label>
-                                            <input v-model="allocation.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-grey-lighter rounded py-3 px-4 disabled:bg-gray-300" id="grid-city" type="number" placeholder="" :disabled="allocation.description !== 'Contingency'">
+                                            <input v-model="allocation.amount" class="appearance-none block w-full bg-grey-lighter text-grey-darker border border-grey-lighter rounded py-3 px-4 disabled:bg-gray-300" id="grid-city" type="number" placeholder="" :disabled="allocation.description !== 'Contingency'" required>
                                         </div>
                                     </div>
                                 </div>
@@ -120,7 +150,7 @@ const confirmSubmit = () => {
                         <p class="text-gray-600 my-2">Please confirm if you wish to proceed.</p>
                         <p> This action can't be undone upon confirmation.</p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                            <SuccessButton @click="confirmSubmit">
+                            <SuccessButton @click="confirmSubmit" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                 </svg>

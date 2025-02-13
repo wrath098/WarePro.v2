@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CapitalOutlay;
 use App\Models\Fund;
+use App\Models\FundAllocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class CapitalOutlayController extends Controller
     {
         $generalFund = CapitalOutlay::with('allocations')->get();
         $groupedByYear = $generalFund->groupBy('year');
+        $accountClass = $this->getActiveAaccountClass();
 
         $groupedByYear = $groupedByYear->map(function($funds) {
             $totalAmount = $funds->sum('amount');
@@ -39,23 +41,51 @@ class CapitalOutlayController extends Controller
             ];
         });
         
-        return Inertia::render('Fund/GeneralFundIndex', ['generalFund' => $groupedByYear]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return Inertia::render('Fund/GeneralFundIndex', [
+            'generalFund' => $groupedByYear, 
+            'accountClassification' => $accountClass,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function storeFund(Request $request)
     {
-        //
+        DB::beginTransaction();
+
+        $validatedData = $request->validate([
+            'year' => 'required|integer',
+            'fundId' => 'required|integer',
+            'amount' => 'required|integer',
+        ]);
+        
+        try {
+            $isFound = $this->verifyAccountBudget($validatedData['fundId'], $validatedData['year']);
+            
+            if($isFound) {
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Designated amount in selected Account Class already exist!']);
+            }
+
+            CapitalOutlay::create([
+                'year' => $validatedData['year'],
+                'cluster' => 'Regular',
+                'amount' => $validatedData['amount'],
+                'fund_id' => $validatedData['fundId'],
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Designated amount in selected Account Class created successfully!']);
+
+        } catch(\Exception $e) {
+            
+            DB::rollBack();
+            Log::error('Error creating fund account budget: '.$e->getMessage());
+            return redirect()->back()->with(['error' => 'An error occurred while creating the fund account budget.']);
+        }
     }
 
     /**
@@ -88,18 +118,52 @@ class CapitalOutlayController extends Controller
     public function updateFundAllocation(Request $request)
     {
         DB::beginTransaction();
-        dd($request->all());
-        try {
-            $validateData = $request->all();
 
-            if(!$request->all()) {
-                dd('yes');
+        try {
+
+            $validatedFunds = $request->validate([
+                'funds' => 'array',
+            ]);
+
+            $fundUpdates = [];
+            $allocationUpdates = [];
+
+            foreach ($validatedFunds['funds'] as $fund) {
+                $fundId = intval($fund['id']);
+                $fundAmount = (float)$fund['amount'];
+
+                $fundUpdates[$fundId] = [
+                    'amount' => $fundAmount,
+                    'updated_by' => Auth::id(),
+                ];
+
+                if (isset($fund['allocations']) && is_array($fund['allocations'])) {
+                    foreach ($fund['allocations'] as $allocation) {
+                        $allocationId = intval($allocation['id']);
+                        $allocationAmount = (float)$allocation['amount'];
+
+                        $allocationUpdates[$allocationId] = [
+                            'amount' => $allocationAmount,
+                        ];
+                    }
+                }
             }
-            dd('no');
-        } catch(\Exception $e) {
+
+            foreach ($fundUpdates as $fundId => $data) {
+                CapitalOutlay::where('id', $fundId)->lockForUpdate()->update($data);
+            }
+
+            foreach ($allocationUpdates as $allocationId => $data) {
+                FundAllocation::where('id', $allocationId)->lockForUpdate()->update($data);
+            }
+    
+            DB::commit();
+            return redirect()->route('general.fund.display')->with(['message' => 'Annual Budget updated successfully!']);
+        } catch (\Exception $e) {
+
             DB::rollBack();
-            Log::error("Error during transaction: " . $e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            Log::error("Error in updating Annual budget: " . $e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to update fund allocations. Please try again.']);
         }
     }
 
@@ -115,5 +179,26 @@ class CapitalOutlayController extends Controller
         $accountClass = Fund::findOrFail($id);
         $name = $accountClass ? $accountClass->fund_name : '';
         return $name;
+    }
+
+    private function getActiveAaccountClass() {
+        return Fund::where('fund_status', 'active')
+            ->get()
+            ->map(fn($class) => [
+                'id' => $class->id,
+                'account' => $class->fund_name,
+            ]);
+    }
+
+    private function getAccountClassDetails($id) {
+        $accountClass = Fund::findOrFail($id);
+        return $accountClass;
+    }
+
+    private function verifyAccountBudget(int $fundId, int $year): bool
+    {
+        return CapitalOutlay::where('year', $year)
+                ->where('fund_id', $fundId)
+                ->exists();
     }
 }

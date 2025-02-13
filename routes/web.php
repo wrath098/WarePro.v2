@@ -67,6 +67,7 @@ Route::middleware('auth')->prefix('items')->group(function () {
     Route::post('/save', [ItemClassController::class, 'store'])->name('item.store');
     Route::post('/update', [ItemClassController::class, 'update'])->name('item.update');
     Route::post('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
+    Route::post('/restore/{itemClass}', [ItemClassController::class, 'restore'])->name('item.restore');
 });
 
 Route::middleware('auth')->prefix('offices')->group(function () {
@@ -78,6 +79,7 @@ Route::middleware('auth')->prefix('offices')->group(function () {
 
 Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
     Route::get('/', [CapitalOutlayController::class, 'index'])->name('general.fund.display');
+    Route::post('/store-amount', [CapitalOutlayController::class, 'storeFund'])->name('general.fund.store.amount');
     Route::get('/edit-fund-allocations', [CapitalOutlayController::class, 'editFundAllocation'])->name('general.fund.editFundAllocation');
     Route::put('/update-fund-allocations', [CapitalOutlayController::class, 'updateFundAllocation'])->name('general.fund.updateFundAllocation');
 });

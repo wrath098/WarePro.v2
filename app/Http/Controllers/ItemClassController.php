@@ -123,7 +123,42 @@ class ItemClassController extends Controller
 
     public function restore(ItemClass $itemClass)
     {
-        dd($itemClass->toArray());
+        DB::beginTransaction();
+        $user = Auth::id();
+
+        try
+        {
+            $itemClassDetails = $itemClass->load(['category', 'products']);
+            $itemClassDetails->lockForUpdate();
+
+            if($itemClassDetails->category->cat_status != 'active'){
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Unable to restore the item class, main category is inactive!']);
+            }
+
+            foreach ($itemClass->products as $product) {  
+                $product->update([
+                    'prod_status' => 'active',
+                    'updated_by' => $user,
+                ]);
+            }
+
+            $itemClass->update([
+                'item_status' => 'active',
+                'updated_by' => $user,
+            ]);
+            
+            DB::commit();
+            return redirect()->back()
+                ->with(['message' => 'Item Class has been restored!.']);
+        } catch(\Exception $e) {
+            
+            DB::rollBack();
+            Log::error('Restoration of Item Class failed: ' . $e->getMessage());
+            return redirect()->back()
+                ->with(['error' => 'An error occurred while restoring the item class.']);
+        }
+        
     }
 
     public function deactivate(Request $request, ItemClass $itemClass)
@@ -155,7 +190,7 @@ class ItemClassController extends Controller
             }
 
             $itemClass->update([
-                'item_status' => 'prod_status',
+                'item_status' => 'deactivated',
                 'updated_by' => $validatedData['updatedBy'],
             ]);
             
@@ -168,7 +203,7 @@ class ItemClassController extends Controller
             DB::rollBack();
             Log::error('Deletion of Item Class: ' . $e->getMessage());
             return redirect()->back()
-                ->with(['error' => 'An error occurred while adding the new item class.']);
+                ->with(['error' => 'An error occurred while removing the new item class.']);
         }
     }
 
@@ -187,6 +222,7 @@ class ItemClassController extends Controller
                 'category' => $item->category->cat_name,
                 'status' => ucfirst($item->item_status),
                 'creator' => $item->creator->name,
+                'createdAt' => $item->created_at->format('F j, Y'),
             ]
         );
 
@@ -208,6 +244,7 @@ class ItemClassController extends Controller
                 'category' => $item->category->cat_name,
                 'status' => ucfirst($item->item_status),
                 'creator' => $item->creator->name,
+                'updatedAt' => $item->updated_at->format('F j, Y'),
             ]
         );
 

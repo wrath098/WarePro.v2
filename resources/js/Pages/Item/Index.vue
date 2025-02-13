@@ -10,6 +10,7 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
+    import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
     import Swal from 'sweetalert2';
 
     const page = usePage();
@@ -38,6 +39,7 @@
     const isAddModalOpen = computed(() => modalState.value === 'add');
     const isEditModalOpen = computed(() => modalState.value === 'edit');
     const isDeactivateModalOpen = computed(() => modalState.value === 'deactivate');
+    const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
 
     const showModal = (modalType) => {
         modalState.value = modalType;
@@ -52,6 +54,11 @@
     const openDeactivateModal = (item) => {
         editForm.itemId = item.id;
         modalState.value = 'deactivate';
+    };
+
+    const openConfirmModal = (item) => {
+        editForm.itemId = item;
+        modalState.value = 'confirm';
     };
 
     const closeModal = () => {
@@ -71,6 +78,7 @@
     const submit = () => submitForm('items/save', form);
     const submitEdit = () => submitForm('items/update', editForm);
     const submitDeactivate = () => submitForm('items/deactivate', editForm);
+    const confirmFormSubmit = () => submitForm(`items/restore/${editForm.itemId}`, null);
 
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
@@ -118,9 +126,6 @@
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="relative overflow-x-auto">
-                        <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 justify-end">
-                            
-                        </div>
                         <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
                             <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
                                 <tr>
@@ -130,10 +135,10 @@
                                     <th scope="col" class="px-6 py-3 w-1/12">
                                         Code
                                     </th>
-                                    <th scope="col" class="px-6 py-3 w-3/12">
+                                    <th scope="col" class="px-6 py-3 w-2/12">
                                         Class Name
                                     </th>
-                                    <th scope="col" class="px-6 py-3 w-3/12">
+                                    <th scope="col" class="px-6 py-3 w-2/12">
                                         Category
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
@@ -143,7 +148,7 @@
                                         Created/Updated By
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-2/12">
-                                        Date Created/Updated
+                                        Date Created
                                     </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
                                         Action/s
@@ -176,8 +181,80 @@
                                         {{ item.creator }}
                                     </td>
                                     <td class="py-2 text-center">
+                                        {{ item.createdAt }}
+                                    </td>
+                                    <td class="py-2 text-center">
                                         <EditButton @click="openEditModal(item)" tooltip="Edit"/>
                                         <RemoveButton @click="openDeactivateModal(item)" tooltip="Remove"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </DataTable>
+                    </div>
+                </div>
+            </div>
+            <div v-if="deactivatedItemClass.length > 0" class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2 mt-10">
+                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="relative overflow-x-auto">
+                        <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
+                            <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 w-1/12">
+                                        No.
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-1/12">
+                                        Code
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
+                                        Class Name
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
+                                        Category
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-1/12">
+                                        Current Status
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
+                                        Created/Updated By
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-2/12">
+                                        Date Updated
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 w-1/12">
+                                        Action/s
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, index) in deactivatedItemClass" :key="item.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
+                                    <td scope="row" class="py-2 text-center text-sm">
+                                        {{  ++index }}
+                                    </td>
+                                    <td scope="row" class="py-2 text-center text-sm">
+                                        {{  item.code }}
+                                    </td>
+                                    <td class="py-2">
+                                        {{ item.name }}
+                                    </td>
+                                    <td class="py-2">
+                                        {{ item.category }}
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        <span :class="{
+                                            'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300': item.status === 'Deactivated',
+                                            }">
+                                            {{ item.status }}
+                                        </span>
+                                        
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        {{ item.creator }}
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        {{ item.updatedAt }}
+                                    </td>
+                                    <td class="py-2 text-center">
+                                        <RecycleIcon @click="openConfirmModal(item.id)"/>
                                     </td>
                                 </tr>
                             </tbody>
@@ -220,7 +297,7 @@
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -260,7 +337,7 @@
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -290,7 +367,7 @@
                             <p class="text-gray-600 my-2">Confirming this action will remove the selected Item Class into the list. you can't redo this</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>
@@ -304,6 +381,37 @@
                                     Cancel
                                 </DangerButton>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </Modal>
+        <Modal :show="isConfirmModalOpen" @close="closeModal"> 
+            <form @submit.prevent="confirmFormSubmit">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-indigo-700 w-16 h-16 mx-auto my-6" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18.5,3h-5.53c-.08,0-.16-.02-.22-.05l-3.16-1.58c-.48-.24-1.02-.37-1.56-.37h-2.53C2.47,1,0,3.47,0,6.5v11c0,3.03,2.47,5.5,5.5,5.5h13c3.03,0,5.5-2.47,5.5-5.5V8.5c0-3.03-2.47-5.5-5.5-5.5Zm2.5,14.5c0,1.38-1.12,2.5-2.5,2.5H5.5c-1.38,0-2.5-1.12-2.5-2.5V8H20.95c.03,.16,.05,.33,.05,.5v9Zm-3.13-3.71c.39,.39,.39,1.02,0,1.41l-3.16,3.16c-.63,.63-1.71,.18-1.71-.71v-1.66H7.5c-.83,0-1.5-.67-1.5-1.5s.67-1.5,1.5-1.5h5.5v-1.66c0-.89,1.08-1.34,1.71-.71l3.16,3.16Z"/>
+                        </svg>
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Confirm as Approved!</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will remark the selected PPMP as Final/Approved. This action can't be undone.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div> 
                         </div>
                     </div>
                 </div>

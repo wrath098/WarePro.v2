@@ -145,9 +145,15 @@ class CategoryController extends Controller
         DB::beginTransaction();
 
         try {
-            $catId->load('items.products');
+            $catId->load(['items.products', 'funder']);
             $catId->lockForUpdate();
             $user = Auth::id();
+
+            if($catId->funder->fund_status != 'active') {
+                DB::rollBack();
+                return redirect()->back()
+                ->with(['error' => 'Unable to restore the category, main account classification is inactive!']);
+            }
 
             foreach ($catId->items as $item) {
                 $productIds = $item->products->pluck('id');
