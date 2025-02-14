@@ -176,14 +176,18 @@ class ProductController extends Controller
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
 
                 $product = Product::findOrFail($validatedData['prodId']);
-                $product->update(['updated_by' => $validatedData['updatedBy'], 'prod_status' => 'deactivated']);
 
+                $isFound = $this->verifyProductExistence($product->prod_oldNo, $validatedData['itemId']);
+
+                return response()->json([$isFound]);
+                
+                $product->update(['updated_by' => $validatedData['updatedBy'], 'prod_status' => 'deactivated']);
                 $product = Product::create([
                         'prod_newNo' => $controlNo,
                         'prod_desc' => $validatedData['prodDesc'],
                         'prod_unit' => $validatedData['prodUnit'],
                         'prod_remarks' => $validatedData['prodRemarks'],
-                        'prod_remarks' => $validatedData['prodRemarks'],
+                        'prod_remarks' => $product->prod_newNo,
                         'prod_oldNo' => $validatedData['prodOldCode'],
                         'has_expiry' => $validatedData['hasExpiry'] ?? 0,
                         'item_id' => $validatedData['itemId'],
@@ -267,6 +271,13 @@ class ProductController extends Controller
             return redirect()->route('product.display.active')
                 ->with(['message' => 'Product has been deactivated.']);
         }
+    }
+
+    private function verifyProductExistence($stockNo, $compareItemId) {
+        return Product::withTrashed()
+            ->where('prod_newNo', $stockNo)
+            ->where('item_id', $compareItemId)
+            ->first();
     }
 
     #FOR UPLOAD OF PRODUCTS FROM EXCEL FILE ONLY
