@@ -158,6 +158,11 @@ class ProductController extends Controller
 
     public function moveAndModify(Request $request)
     {
+        return redirect()->back()
+                    ->with(['error' => 'Please refer this action to your system administrator!']);
+
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'prodId' => 'required|integer',
             'selectedCategory' => 'required|integer',
@@ -172,23 +177,38 @@ class ProductController extends Controller
         ]);
 
         try {            
-            return DB::transaction(function () use ($validatedData) {
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
 
                 $product = Product::findOrFail($validatedData['prodId']);
 
                 $isFound = $this->verifyProductExistence($product->prod_oldNo, $validatedData['itemId']);
 
-                return response()->json([$isFound]);
+                if($isFound) {
+                    $isFound->lockForUpdate()->update([
+                        'updated_by' => $validatedData['updatedBy'],
+                        'prod_oldNo' => $product->prod_newNo,
+                        'prod_status' => 'active'
+                    ]);
+
+                    $product->lockForUpdate()->update([
+                        'updated_by' => $validatedData['updatedBy'],
+                    ]);
+
+                    $product->delete();
+
+                    DB::commit();
+                    return redirect()->back()
+                        ->with(['message' => 'Product has been modified successfully.']);
+                }
                 
                 $product->update(['updated_by' => $validatedData['updatedBy'], 'prod_status' => 'deactivated']);
-                $product = Product::create([
+
+                Product::create([
                         'prod_newNo' => $controlNo,
                         'prod_desc' => $validatedData['prodDesc'],
                         'prod_unit' => $validatedData['prodUnit'],
                         'prod_remarks' => $validatedData['prodRemarks'],
-                        'prod_remarks' => $product->prod_newNo,
-                        'prod_oldNo' => $validatedData['prodOldCode'],
+                        'prod_oldNo' => $product->prod_newNo,
                         'has_expiry' => $validatedData['hasExpiry'] ?? 0,
                         'item_id' => $validatedData['itemId'],
                         'created_by' => $validatedData['updatedBy'],
@@ -199,11 +219,14 @@ class ProductController extends Controller
                     'prod_price' => $validatedData['prodPrice'],
                     'prod_id' => $product->id,
                 ]);
+
+                DB::commit();
                 return redirect()->back()
-                    ->with(['message' => 'Product has been updated successfully.']);
-            });
+                    ->with(['message' => 'Product has been modified successfully.']);
         } catch (\Exception $e) {
-            Log::error('Product update failed: ' . $e->getMessage());
+            
+            DB::rollBack();
+            Log::error('Product modified failed: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'Modifying the product failed.']);
         }

@@ -148,9 +148,17 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Products</a></li>
+                    <li class="flex flex-col lg:flex-row">
+                        <AddButton @click="showModal('add')" class="mx-1">
+                            <span class="mr-2">New Product</span>
+                        </AddButton>
+                        <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1">
+                            <span class="mr-2">Print List</span>
+                        </PrintButton>
+                    </li>
                 </ol>
             </nav>
         </template>
@@ -161,12 +169,7 @@
                     <div class="relative overflow-x-auto">
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end">
                             <div class="flex mb:flex-column">
-                                <AddButton @click="showModal('add')">
-                                    <span class="mr-2">New Product</span>
-                                </AddButton>
-                                <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank">
-                                    <span class="mr-2">Print List</span>
-                                </PrintButton>
+                                
                             </div>
                         </div>
                         <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
