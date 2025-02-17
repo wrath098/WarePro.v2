@@ -84,42 +84,78 @@ class ProductListActiveController extends Controller
     {
         $text = '';
         $count = 0;
-        $productList = $this->productService->getActiveProduct_FundModel();
+        $productList = $this->productService->getAllProduct_Category();
 
-        foreach ($productList as $fund) {
-            if ($fund->categories->isNotEmpty()) {
+        foreach ($productList as $category) {
+            if ($category->items->isNotEmpty()) {
                 $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                            <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+                            <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                           </tr>';
         
-                foreach ($fund->categories as $category) {
-                    if ($category->items->isNotEmpty()) {
-                        $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                                    <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
-                                  </tr>';
-        
-                        foreach ($category->items as $item) {   
-                            if ($item->products->isNotEmpty()) {  
-                                foreach ($item->products as $product) {
-                                    $count++;
-                                    $price = $this->productService->getLatestPrice($product->id);
-                                    $formattedPrice = number_format($price, 2, '.', ',');
-                                    $text .= '<tr style="font-size: 9px;">
-                                                <th width="25px">' . $count . '</th>
-                                                <th width="40px" style="text-align: center;">' . $product->prod_oldNo . '</th>
-                                                <th width="63px">' . $product->prod_newNo . '</th>
-                                                <th width="268px">' . $product->prod_desc . '</th>
-                                                <th width="60px">' . $product->prod_unit . '</th>
-                                                <th width="63px" style="text-align: right;">' . $formattedPrice . '</th>
-                                              </tr>';
-                                }  
-                            }         
-                        }
-                    }
+                foreach ($category->items as $item) {
+                    if ($item->products->isNotEmpty()) {  
+                        foreach ($item->products as $product) {
+                            $count++;
+                            $price = $this->productService->getLatestPrice($product->id);
+                            $formattedPrice = number_format($price, 2, '.', ',');
+                            $text .= '<tr style="font-size: 9px;">
+                                        <th width="25px">' . $count . '</th>
+                                        <th width="40px" style="text-align: center;">' . $product->prod_oldNo . '</th>
+                                        <th width="63px">' . $product->prod_newNo . '</th>
+                                        <th width="268px">' . $product->prod_desc . '</th>
+                                        <th width="60px">' . $product->prod_unit . '</th>
+                                        <th width="63px" style="text-align: right;">' . $formattedPrice . '</th>
+                                        </tr>';
+                        }  
+                    }         
                 }
             }
         }
 
         return $text;
     }
+
+    #PRINT ALL PRODUCT BASE FROM THE ACCOUNT CLASSIFICATION
+    // protected function tableContent()
+    // {
+    //     $text = '';
+    //     $count = 0;
+    //     $productList = $this->productService->getActiveProduct_FundModel();
+
+    //     foreach ($productList as $fund) {
+    //         if ($fund->categories->isNotEmpty()) {
+    //             $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+    //                         <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+    //                       </tr>';
+        
+    //             foreach ($fund->categories as $category) {
+    //                 if ($category->items->isNotEmpty()) {
+    //                     $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+    //                                 <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+    //                               </tr>';
+        
+    //                     foreach ($category->items as $item) {   
+    //                         if ($item->products->isNotEmpty()) {  
+    //                             foreach ($item->products as $product) {
+    //                                 $count++;
+    //                                 $price = $this->productService->getLatestPrice($product->id);
+    //                                 $formattedPrice = number_format($price, 2, '.', ',');
+    //                                 $text .= '<tr style="font-size: 9px;">
+    //                                             <th width="25px">' . $count . '</th>
+    //                                             <th width="40px" style="text-align: center;">' . $product->prod_oldNo . '</th>
+    //                                             <th width="63px">' . $product->prod_newNo . '</th>
+    //                                             <th width="268px">' . $product->prod_desc . '</th>
+    //                                             <th width="60px">' . $product->prod_unit . '</th>
+    //                                             <th width="63px" style="text-align: right;">' . $formattedPrice . '</th>
+    //                                           </tr>';
+    //                             }  
+    //                         }         
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     return $text;
+    // }
 }

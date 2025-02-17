@@ -38,7 +38,7 @@ class PpmpParticularController extends Controller
             $productExist = Product::where('prod_newNo', $validatedData['prodCode'])
                 ->where('prod_status', 'active')->first();
             if (!$productExist) {
-                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list.']);
+                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on current product list.']);
             }
 
             $particularExist = PpmpParticular::where('trans_id', $validatedData['transId'])

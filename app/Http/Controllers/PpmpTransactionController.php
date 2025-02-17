@@ -176,13 +176,13 @@ class PpmpTransactionController extends Controller
 
             DB::commit();
             return redirect()->route('indiv.ppmp.type', ['type' => 'individual' , 'status' => 'draft'])
-                ->with(['message' => 'Make a copy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
+                ->with(['message' => 'Acopy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
         } catch (\Exception $e) {
 
             DB::rollBack();
             Log::error('Make a copy for PPMP error: ' . $e->getMessage());
             return redirect()->back()
-                ->with(['error' => 'Make a copy of the PPMP failed. Please contact your system administrator.']);
+                ->with(['error' => 'A copy of the PPMP generated failed. Please contact your system administrator.']);
         }
     }
 

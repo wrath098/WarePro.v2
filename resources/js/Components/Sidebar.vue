@@ -105,7 +105,7 @@
                             <li>
                                 <SubSidebarLink :href="route('product.unmodified.list')" :active="route().current('product.unmodified.list')">
                                     <ArrowHeadRight :class="{ 'text-white' : route().current('product.unmodified.list')}"/>
-                                    Unmodified Quantity
+                                    Unchanged Product (Qty)
                                 </SubSidebarLink>
                             </li>
                         </template>

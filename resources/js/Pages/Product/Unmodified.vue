@@ -1,6 +1,6 @@
 <script setup>
-    import { Head } from '@inertiajs/vue3';
-    import { ref, reactive, computed } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { ref, reactive, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -9,6 +9,10 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
+    import Swal from 'sweetalert2';
+    
+    const page = usePage();
+    const isLoading = ref(false);
 
     const props = defineProps({
         products: Object,
@@ -57,10 +61,15 @@
     const closeModal = () => { modalState.value = null; }
 
     const submitForm = (url, data) => {
+        isLoading.value = true;
         Inertia.post(url, data, {
-            onSuccess: () => { closeModal(); },
+            onSuccess: () => { 
+                closeModal();
+                isLoading.value = false;
+            },
             onError: (errors) => {
                 console.error(`Form submission failed for ${url}`, errors);
+                isLoading.value = false;
             },
         });
     };
@@ -72,6 +81,28 @@
         const currentYear = new Date().getFullYear() + 2;
         return Array.from({ length: 3 }, (_, i) => currentYear - i);
     }
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success!',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed!',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -80,31 +111,23 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Products</a></li>
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Unmodified Quantity</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Unchanged (Qty)</a></li>
+                    <li class="flex flex-col lg:flex-row">
+                        <AddButton @click="showModal('add')">
+                            <span class="mr-2">New</span>
+                        </AddButton>
+                    </li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
                 <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="relative overflow-x-auto">
-                        <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end px-4">
-                            <div class="flex mb:flex-col">
-                                <AddButton @click="showModal('add')">
-                                    <span class="mr-2">Add Product</span>
-                                </AddButton>
-                            </div>
-                        </div>
                         <div class="px-5">
                             <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
                                 <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
@@ -207,7 +230,7 @@
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -237,7 +260,7 @@
                             <p class="text-gray-600 my-2">Confirming this action will remove the selected Product into the list. This action can't be undone.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>

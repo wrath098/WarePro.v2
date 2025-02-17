@@ -1,6 +1,6 @@
 <script setup>
-    import { Head } from '@inertiajs/vue3';
-    import { reactive, ref, computed } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
@@ -11,6 +11,10 @@
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import AddIcon from '@/Components/Buttons/AddIcon.vue';
     import PrintIcon from '@/Components/Buttons/PrintIcon.vue';
+    import Swal from 'sweetalert2';
+    
+    const page = usePage();
+    const isLoading = ref(false);
 
     const props = defineProps({
         ppmp: Object,
@@ -97,8 +101,12 @@
                 throw new Error('Invalid action specified');
         }
 
+        isLoading.value = true;
         Inertia[method](url, data, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
         });
     };
 
@@ -108,6 +116,28 @@
         const ppmpParticular = dropParticular.pId;
         submitForm('delete', `delete/${ppmpParticular}`, null)
     };
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success!',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed!',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -116,18 +146,12 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">{{ ppmp.requestee.office_name }}</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -276,7 +300,7 @@
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -330,7 +354,7 @@
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -359,7 +383,7 @@
                             <p class="text-gray-600 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>

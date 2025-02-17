@@ -15,18 +15,17 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Products</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Price List</a></li>
+                    <li class="flex flex-col lg:flex-row">
+                        <PrintButton :href="route('generatePdf.PriceActiveList')" target="_blank">
+                            <span class="mr-2">Print List</span>
+                        </PrintButton>
+                    </li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -35,9 +34,7 @@
                     <div class="relative overflow-x-auto">
                         <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end">
                             <div class="flex mb:flex-col">
-                                <PrintButton :href="route('generatePdf.PriceActiveList')" target="_blank">
-                                    <span class="mr-2">Print List</span>
-                                </PrintButton>
+                                
                             </div>
                         </div>
                         <div class="px-5">

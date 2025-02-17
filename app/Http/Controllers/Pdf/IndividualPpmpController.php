@@ -146,15 +146,20 @@ class IndividualPpmpController extends Controller
     protected function tableContent($ppmp, $totalQtySecond)
     {
         $text = '';
-        $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
-            'id' => $particular->id,
-            'qtyFirst' => $particular->qty_first,
-            'qtySecond' => $particular->qty_second,
-            'prodCode' => $this->productService->getProductCode($particular->prod_id),
-            'prodName' => $this->productService->getProductName($particular->prod_id),
-            'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
-        ]);
+
+        $ppmpParticulars = $ppmp->particulars->map(function($particular) {
+            $verifyProduct = $this->productService->getProductCode($particular->prod_id);
+            dd($verifyProduct->toArray());
+            return [
+                'id' => $particular->id,
+                'qtyFirst' => $particular->qty_first,
+                'qtySecond' => $particular->qty_second,
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id)
+            ];
+        });
 
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
         $funds = $this->productService->getAllProduct_FundModel();
@@ -173,7 +178,6 @@ class IndividualPpmpController extends Controller
             }
             return [$category->cat_code => $totalMatchedItems];
         });
-
 
         if ($totalQtySecond != 0) {
             foreach ($funds as $fund) {

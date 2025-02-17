@@ -72,8 +72,10 @@
 
     const openEditModal = (product) => {
         edit.prodId = product.id;
+        edit.prodOldCode = product.oldNo;
         edit.prodDesc = product.desc;
         edit.prodPrice = product.price;
+        edit.hasExpiry = (product.expiry === 'Yes') ? 1 : 0;
         modalState.value = 'edit';
     };
 
@@ -86,6 +88,7 @@
         edit.prodUnit = product.unit;
         edit.prodRemarks = product.remarks;
         edit.prodOldCode = product.oldNo;
+        edit.hasExpiry = (product.expiry === 'Yes') ? 1 : 0;
         modalState.value = 'modify';
     };
 
@@ -117,14 +120,13 @@
     const submitEdit = () => submitForm('products/update', edit);
     const submitModify = () => submitForm('products/move-and-modify', edit);
     const submitDeactivate = () => submitForm('products/deactivate', edit);
-
     
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
     onMounted(() => {
         if (message.value) {
             Swal.fire({
-                title: 'Success',
+                title: 'Success!',
                 text: message.value,
                 icon: 'success',
                 confirmButtonText: 'OK',
@@ -133,7 +135,7 @@
 
         if (errMessage.value) {
             Swal.fire({
-                title: 'Error',
+                title: 'Failed!',
                 text: errMessage.value,
                 icon: 'error',
                 confirmButtonText: 'OK',
@@ -236,7 +238,7 @@
                                     </td>
                                     <td class="py-2 text-center">
                                         <EditButton @click="openEditModal(product)" tooltip="Edit"/>
-                                        <ModifyButton @click="openModifyModal(product)" tooltip="Modify"/>
+                                        <ModifyButton @click="openModifyModal(product)" tooltip="Move"/>
                                         <RemoveButton @click="openDeactivateModal(product)" tooltip="Remove"/>
                                     </td>
                                 </tr>
@@ -337,7 +339,7 @@
                                         <select v-model="create.hasExpiry" name="hasExpiry" id="hasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer">
                                             <option value="" disabled selected>Is Product has expiration?</option>
                                             <option :value="1">Yes</option>
-                                            <option :value="2">No</option>
+                                            <option :value="0">No</option>
                                         </select>
                                         <label for="hasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
                                     </div>
@@ -380,6 +382,10 @@
                                     <p class="text-sm text-[#86591e] mb-2"> Product Information</p>
                                     <input type="hidden" v-model="edit.prodId">
                                     <div class="relative z-0 w-full mb-5 group">
+                                        <input v-model="edit.prodOldCode" type="text" name="editprodOldCode" id="editprodOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" />
+                                        <label for="editprodOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock No</label>
+                                    </div>
+                                    <div class="relative z-0 w-full mb-5 group">
                                         <textarea v-model="edit.prodDesc" type="text" name="editProdDesc" id="editProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required></textarea>
                                         <label for="editProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
                                     </div>
@@ -395,7 +401,7 @@
                                         <select v-model="edit.hasExpiry" name="editHasExpiry" id="editHasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer">
                                             <option value="" disabled selected>Is Product has expiration?</option>
                                             <option :value="1">Yes</option>
-                                            <option :value="2">No</option>
+                                            <option :value="0">No</option>
                                         </select>
                                         <label for="editHasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
                                     </div>
@@ -431,8 +437,8 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Modify and Move Product</h3>
-                            <p class="text-sm text-gray-500"> Enter the details of the Product you wish to modify and move.</p>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Move Product</h3>
+                            <p class="text-sm text-gray-500"> Enter the details of the Product you wish to move.</p>
                             <div class="mt-2">
                                 <div class="mt-5">
                                     <p class="text-sm text-[#86591e]">Choose Category | Item Class</p>
@@ -458,16 +464,16 @@
                                 <div class="mt-5">
                                     <p class="text-sm text-[#86591e]"> Product Information</p>
                                     <div class="relative z-0 w-full group my-1">
-                                        <textarea v-model="edit.prodDesc" type="text" name="modifyProdDesc" id="modifyProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required> </textarea>
+                                        <textarea v-model="edit.prodDesc" type="text" name="modifyProdDesc" id="modifyProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required readonly> </textarea>
                                         <label for="modifyProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
                                     </div>
                                     <div class="grid lg:grid-cols-2 lg:gap-6 mt-3">
                                         <div class="relative z-0 w-full group">
-                                            <input v-model="edit.prodPrice" type="number" name="modifyProdPrice" id="modifyProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                            <input v-model="edit.prodPrice" type="text" name="modifyProdPrice" id="modifyProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required readonly />
                                             <label for="modifyProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
                                         </div>
                                         <div class="relative z-0 w-full group">
-                                            <select v-model="edit.prodUnit" name="modifyProdUnit" id="modifyProdUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                            <select v-model="edit.prodUnit" name="modifyProdUnit" id="modifyProdUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required disabled>
                                                 <option disabled selected value="">Select Unit Of Measure</option>
                                                 <option value="Book">Book</option>
                                                 <option value="Bottle">Bottle</option>
@@ -494,23 +500,23 @@
                                         </div>
                                     </div>
                                     <div class="relative z-0 w-full my-3 group">
-                                        <select v-model="edit.prodRemarks" name="modifyProdRemarks" id="modifyProdRemarks" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <select v-model="edit.prodRemarks" name="modifyProdRemarks" id="modifyProdRemarks" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required disabled>
                                             <option value="" disabled selected>Select the Product Year</option>
                                             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                         </select>
                                         <label for="modifyProdRemarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
-                                        <input v-model="edit.prodOldCode" type="number" name="modifyProdOldCode" id="modifyProdOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
+                                        <input v-model="edit.prodOldCode" type="number" name="modifyProdOldCode" id="modifyProdOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" readonly/>
                                         <label for="modifyProdOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
                                     </div>
                                     <div class="mt-5">
                                     <p class="text-sm text-[#86591e]">Product Expiration <span class="text-xs text-[#3b3b3b]">(Optional)</span></p>
                                         <div class="relative z-0 w-full my-3 group">
-                                            <select v-model="edit.hasExpiry" name="editHasExpiry" id="editHasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer">
+                                            <select v-model="edit.hasExpiry" name="editHasExpiry" id="editHasExpiry" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" disabled>
                                                 <option value="" disabled selected>Is Product has expiration?</option>
                                                 <option :value="1">Yes</option>
-                                                <option :value="2">No</option>
+                                                <option :value="0">No</option>
                                             </select>
                                             <label for="editHasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
                                         </div>

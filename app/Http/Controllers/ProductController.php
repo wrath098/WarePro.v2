@@ -124,32 +124,49 @@ class ProductController extends Controller
 
     public function update(Request $request)
     {
+        DB::beginTransaction();
+
         $validatedData = $request->validate([
             'prodId' => 'required|integer',
             'prodDesc' => 'required|string',
             'prodPrice' => 'required|numeric',
             'hasExpiry' => 'nullable|integer',
+            'prodOldCode' => 'required|string',
             'updatedBy' => 'required|integer',
         ]);
 
-        try {            
-            return DB::transaction(function () use ($validatedData) {
-                $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
-                $hasExpiry = $validatedData['hasExpiry'] ?? 0;
+        try {
+            $product = Product::findOrFail($validatedData['prodId']);
+            $product->lockForUpdate();
+            $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
 
-                $product = Product::findOrFail($validatedData['prodId']);
-                $product->update(['prod_desc' => $validatedData['prodDesc'], 'updated_by' => $validatedData['updatedBy'], 'has_expiry' => $hasExpiry]);
+            $isOLdCodeFound = $this->verifyOldStockNo($validatedData['prodOldCode'], $product->id);
 
-                if($latestPrice != $validatedData['prodPrice']) {
-                    ProductPrice::create([
-                        'prod_price' => $validatedData['prodPrice'],
-                        'prod_id' => $validatedData['prodId'],
-                    ]);
-                }
-                return redirect()->back()
-                    ->with(['message' => 'Product has been updated successfully.']);
-            });
+            if ($validatedData['prodOldCode'] && $isOLdCodeFound) {
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Product Old Stock No is already in used! Stock no:' . $isOLdCodeFound->prod_newNo]);
+            }
+
+            $product->update([
+                'prod_desc' => $validatedData['prodDesc'],
+                'updated_by' => $validatedData['updatedBy'],
+                'has_expiry' => $validatedData['hasExpiry'],
+                'prod_oldNo' => $validatedData['prodOldCode'],
+            ]);
+
+            if($latestPrice != $validatedData['prodPrice']) {
+                ProductPrice::create([
+                    'prod_price' => $validatedData['prodPrice'],
+                    'prod_id' => $validatedData['prodId'],
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()
+                ->with(['message' => 'Product has been updated successfully.']);
         } catch (\Exception $e) {
+
+            DB::rollBack();
             Log::error('Product update failed: ' . $e->getMessage());
             return redirect()->back()
                 ->with(['error' => 'An error occurred while updating the product.']);
@@ -158,8 +175,9 @@ class ProductController extends Controller
 
     public function moveAndModify(Request $request)
     {
-        return redirect()->back()
-                    ->with(['error' => 'Please refer this action to your system administrator!']);
+        // dd($request->toArray());
+        // return redirect()->back()
+        //             ->with(['error' => 'This action is not available yet. Please refer to your system administrator!']);
 
         DB::beginTransaction();
 
@@ -167,7 +185,7 @@ class ProductController extends Controller
             'prodId' => 'required|integer',
             'selectedCategory' => 'required|integer',
             'itemId' => 'required|integer',
-            'prodPrice' => 'required|numeric',
+            'prodPrice' => 'required',
             'prodDesc' => 'required|string',
             'prodUnit' => 'required|string',
             'prodRemarks' => 'required|integer',
@@ -178,22 +196,22 @@ class ProductController extends Controller
 
         try {            
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
-
                 $product = Product::findOrFail($validatedData['prodId']);
+                $product->lockForUpdate();
+                $isProductFound = $this->verifyProductExistence($product->prod_oldNo, $validatedData['itemId']);
 
-                $isFound = $this->verifyProductExistence($product->prod_oldNo, $validatedData['itemId']);
-
-                if($isFound) {
-                    $isFound->lockForUpdate()->update([
+                if($isProductFound) {
+                    $isProductFound->lockForUpdate();
+                    $isProductFound->restore();
+                    $isProductFound->update([
                         'updated_by' => $validatedData['updatedBy'],
                         'prod_oldNo' => $product->prod_newNo,
-                        'prod_status' => 'active'
+                        'prod_status' => 'active',
                     ]);
 
-                    $product->lockForUpdate()->update([
+                    $product->update([
                         'updated_by' => $validatedData['updatedBy'],
                     ]);
-
                     $product->delete();
 
                     DB::commit();
@@ -201,9 +219,9 @@ class ProductController extends Controller
                         ->with(['message' => 'Product has been modified successfully.']);
                 }
                 
-                $product->update(['updated_by' => $validatedData['updatedBy'], 'prod_status' => 'deactivated']);
+                $product->update(['updated_by' => $validatedData['updatedBy']]);
 
-                Product::create([
+                $createNewProduct = Product::create([
                         'prod_newNo' => $controlNo,
                         'prod_desc' => $validatedData['prodDesc'],
                         'prod_unit' => $validatedData['prodUnit'],
@@ -216,9 +234,11 @@ class ProductController extends Controller
                     ]);
 
                 ProductPrice::create([
-                    'prod_price' => $validatedData['prodPrice'],
-                    'prod_id' => $product->id,
+                    'prod_price' => (float) $validatedData['prodPrice'],
+                    'prod_id' => $createNewProduct->id,
                 ]);
+
+                $product->delete();
 
                 DB::commit();
                 return redirect()->back()
@@ -264,15 +284,13 @@ class ProductController extends Controller
 
     public function deactivate(Request $request)
     {
+        DB::beginTransaction();
+        
         $validatedData = $request->validate([
             'prodId' => 'required|integer',
             'updatedBy' => 'nullable|integer',
         ]);
-        
-        DB::beginTransaction();
-
-        $product = Product::findOrFail($validatedData['prodId']);
-        $product->load('prices');
+        $product = Product::with('prices')->findOrFail($validatedData['prodId']);
 
         try {
             foreach ($product->prices as $price) {
@@ -287,20 +305,30 @@ class ProductController extends Controller
             
             $product->update([
                 'updated_by' => $validatedData['updatedBy'], 
-                'prod_status' => 'deactivated'
             ]);
+            $product->delete();
 
             DB::commit();
             return redirect()->route('product.display.active')
-                ->with(['message' => 'Product has been deactivated.']);
+                ->with(['message' => 'Product has been move to trashed.']);
         }
     }
 
-    private function verifyProductExistence($stockNo, $compareItemId) {
+    private function verifyProductExistence(string $stockNo, int $compareItemId): ?Product
+    {
         return Product::withTrashed()
             ->where('prod_newNo', $stockNo)
             ->where('item_id', $compareItemId)
             ->first();
+    }
+
+    private function verifyOldStockNo(string $oldStockNo, int $productId): ?Product
+    {
+        $query = Product::where('prod_oldNo', $oldStockNo);
+        if ($productId !== null) {
+            $query = $query->where('id', '!=', $productId);
+        }
+        return $query->first();
     }
 
     #FOR UPLOAD OF PRODUCTS FROM EXCEL FILE ONLY

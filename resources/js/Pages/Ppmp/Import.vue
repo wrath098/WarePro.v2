@@ -1,6 +1,6 @@
 <script setup>
-    import { Head, router } from '@inertiajs/vue3';
-    import { reactive, ref, computed } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
@@ -9,6 +9,10 @@
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
+    import Swal from 'sweetalert2';
+    
+    const page = usePage();
+    const isLoading = ref(false);
 
     const props = defineProps({
         officePpmps: Object,
@@ -79,7 +83,7 @@
             formData.append('user', create.createdBy);
             formData.append('file', file.value);
 
-        router.post('ppmp/create', formData, {
+        Inertia.post('ppmp/create', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -87,15 +91,42 @@
     };
 
     const submitForm = (url, data) => {
+        isLoading.value = true;
         Inertia.post(url, data, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
             onError: (errors) => {
                 console.error(`Form submission failed for ${url}`, errors);
+                isLoading.value = false;
             },
         });
     };
 
     const submitDropPpmp = () => submitForm('ppmp/drop', edit);
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success!',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed!',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -104,18 +135,12 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
+            <nav aria-label="breadcrumb" class="font-semibold"> 
                 <ol class="flex space-x-2">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Import</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -182,7 +207,8 @@
 
                                 <div>
                                     <button
-                                        class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none">
+                                        class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none"
+                                        :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                         Create PPMP
                                     </button>
                                 </div>

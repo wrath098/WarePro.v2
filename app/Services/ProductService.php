@@ -30,7 +30,7 @@ class ProductService
     public function generateStockNo($id)
     {
         $itemClass = ItemClass::findOrFail($id); 
-        $latestProduct  = $itemClass->products()->orderBy('prod_newNo', 'desc')->first();
+        $latestProduct  = $itemClass->products()->withTrashed()->orderBy('prod_newNo', 'desc')->first();
 
         $lastStockNo  = $latestProduct ? $latestProduct->prod_newNo : null;
         $lastNumber = $this->extractLastNumber($lastStockNo);

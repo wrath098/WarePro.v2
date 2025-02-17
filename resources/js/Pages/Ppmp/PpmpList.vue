@@ -1,6 +1,6 @@
 <script setup>
-    import { Head, router } from '@inertiajs/vue3';
-    import { ref, computed, reactive } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { ref, computed, reactive, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import Sidebar from '@/Components/Sidebar.vue';
@@ -8,6 +8,11 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import Print from '@/Components/Buttons/Print.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import Swal from 'sweetalert2';
+    import { Inertia } from '@inertiajs/inertia';
+    
+    const page = usePage();
+    const isLoading = ref(false);
     
     const props = defineProps({
         ppmpTransaction: Object,
@@ -34,7 +39,7 @@
     };
 
     const submitForm = (url, data) => {
-        router.post(url, data, {
+        Inertia.post(url, data, {
             onSuccess: () => closeModal(),
             onError: (errors) => {
                 console.error(`Form submission failed for ${url}`, errors);
@@ -42,6 +47,28 @@
         });
     };
     const submitCopy = () => submitForm('copy-ppmp', makeCopy);
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success!',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed!',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -50,8 +77,7 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2 leading-none">
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Individual</a></li>
@@ -59,12 +85,6 @@
                     <li v-if="ppmp.status == 'Draft'"><Copy @click="showModal('copy')" class="mr-10" tooltip="Quantity Adjustment"/></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
