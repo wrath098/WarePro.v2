@@ -83,10 +83,16 @@ class ProductService
 
     public function getAllProduct_FundModel()
     {
-        $funds = Fund::with([
-            'categories:id,fund_id,cat_code,cat_name',
-            'categories.items:id,cat_id,item_code,item_name',
-            'categories.items.products:id,item_id,prod_newNo,prod_desc,prod_unit,prod_oldNo',
+        $funds = Fund::withTrashed()->with([
+            'categories' => function ($query) {
+                $query->withTrashed()->select('id', 'fund_id', 'cat_code', 'cat_name');
+            },
+            'categories.items' => function ($query) {
+                $query->withTrashed()->select('id', 'cat_id', 'item_code', 'item_name');
+            },
+            'categories.items.products' => function ($query) {
+                $query->withTrashed()->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+            }
         ])
         ->get(['id', 'fund_name']);
 
@@ -95,9 +101,13 @@ class ProductService
 
     public function getAllProduct_Category()
     {
-        $categories = Category::with([
-            'items:id,cat_id,item_code,item_name',
-            'items.products:id,item_id,prod_newNo,prod_desc,prod_unit,prod_oldNo',
+        $categories = Category::withTrashed()->with([
+            'items' => function ($query) {
+                $query->withTrashed()->select('id', 'cat_id', 'item_code', 'item_name');
+            },
+            'items.products' => function ($query) {
+                $query->withTrashed()->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+            }
         ])
         ->get(['id', 'cat_code', 'cat_name']);
 
@@ -121,13 +131,13 @@ class ProductService
 
     public function getCategoryName($id)
     {
-        $categoryName = Category::findOrFail($id);
+        $categoryName = Category::withTrashed()->findOrFail($id);
         return $categoryName ? $categoryName->cat_name : null;
     }
 
     public function getItemName($id)
     {
-        $itemName = ItemClass::findOrFail($id);
+        $itemName = ItemClass::withTrashed()->findOrFail($id);
         return $itemName ? $itemName->item_name : null;
     }
 
@@ -142,7 +152,7 @@ class ProductService
 
     public function getLatestPrice($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::withTrashed()->findOrFail($id);
         $priceResult = $product->prices()->orderBy('created_at', 'desc')->first();
         return $priceResult->prod_price ?? null;
     }
@@ -162,28 +172,28 @@ class ProductService
 
     public function getFiveLatestPrice($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::withTrashed()->findOrFail($id);
         $priceResult = $product->prices()->orderBy('created_at', 'desc')->limit(5)->get();
         return $priceResult->id ?? null;
     }
 
     public function getProductName($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::withTrashed()->findOrFail($id);
         $productName = $product->prod_desc;
         return $productName ?? '';
     }
 
     public function getProductUnit($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::withTrashed()->findOrFail($id);
         $productUnit = $product->prod_unit;
         return $productUnit ?? '';
     }
 
     public function getProductCode($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::withTrashed()->findOrFail($id);
         $productCode = $product->prod_newNo;
         return $productCode ?? '';
     }
@@ -228,11 +238,10 @@ class ProductService
 
     public function validateProductExcemption($prodId, $year)
     {
-        $exist = ProductPpmpException::where('prod_id', $prodId)
+        return ProductPpmpException::where('prod_id', $prodId)
             ->where('year', $year)
             ->where('status', 'active')
             ->exists();
-        return $exist;
     }
 
     public function validateProduct($id)
@@ -253,5 +262,10 @@ class ProductService
             }
         }
         return false;
+    }
+
+    public function verifyProductIfActive(int $id): bool
+    {
+        return Product::where('id', $id)->where('prod_status', 'active')->exists();
     }
 }

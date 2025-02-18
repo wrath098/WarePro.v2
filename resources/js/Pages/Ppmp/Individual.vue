@@ -284,6 +284,9 @@
                                         </div>                               
                                     </div>
                                 </div>
+                                <div v-else-if="stockNo">
+                                    <p class="text-red-500 text-xs italic mt-2">No product found!</p>
+                                </div>
                             </div>
                             <div class="mt-5">
                                 <p class="text-sm text-[#86591e]"> Product Quantity: </p>

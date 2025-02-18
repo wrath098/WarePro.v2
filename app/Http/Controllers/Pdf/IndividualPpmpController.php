@@ -148,8 +148,6 @@ class IndividualPpmpController extends Controller
         $text = '';
 
         $ppmpParticulars = $ppmp->particulars->map(function($particular) {
-            $verifyProduct = $this->productService->getProductCode($particular->prod_id);
-            dd($verifyProduct->toArray());
             return [
                 'id' => $particular->id,
                 'qtyFirst' => $particular->qty_first,

@@ -94,7 +94,7 @@ class ConsolidatedPpmpController extends Controller
             ';     
         $pdf->writeHTML($table2, true, false, true, false, '');
 
-        $pdf->Output('cPPMP-' . strtoupper($ppmp->ppmp_status) . '-' . $ppmp->ppmp_status . '.pdf', 'I');
+        $pdf->Output('Consolidated PPMP.pdf', 'I');
     }
 
     protected function tableHeader()
@@ -157,7 +157,7 @@ class ConsolidatedPpmpController extends Controller
         });
         
         $sortedParticulars = $groupParticulars->sortBy('prodCode');
-        $funds = $this->productService->getActiveProduct_FundModel();
+        $funds = $this->productService->getAllProduct_FundModel();
 
         foreach ($funds as $fund) {
             if ($fund->categories->isNotEmpty()) {

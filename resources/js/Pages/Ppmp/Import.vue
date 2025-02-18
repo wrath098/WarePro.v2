@@ -263,7 +263,7 @@
                             <p class="text-gray-600 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>

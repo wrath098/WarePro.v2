@@ -1,6 +1,6 @@
 <script setup>
-    import { Head} from '@inertiajs/vue3';
-    import { reactive, ref, watch, computed } from 'vue';
+    import { Head, usePage} from '@inertiajs/vue3';
+    import { reactive, ref, watch, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
@@ -10,6 +10,10 @@
     import Dropdown from '@/Components/Dropdown.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import Swal from 'sweetalert2';
+    
+    const page = usePage();
+    const isLoading = ref(false);
 
     const props = defineProps({
         ppmp: Object,
@@ -70,29 +74,66 @@
     };
 
     const submit = () => {
+        isLoading.value = true;
         Inertia.post(`../proceed-to-approved/${form.conId}`, form, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
         });
     };
 
     const submitEdit = () => {
+        isLoading.value = true;
         Inertia.put(`../consolidated-particular/update/${editParticular.partId}`, editParticular, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
         });
     };
 
     const submitDrop = () => {
+        isLoading.value = true;
         Inertia.delete(`../consolidated-particular/destroy/${dropParticular.pId}`, dropParticular, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
         });
     };
 
     const submitAdd = () => {
+        isLoading.value = true;
         Inertia.post(`../consolidated-particular/add`, addParticular, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
         });
     };
 
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success!',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed!',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -101,19 +142,13 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-none"> 
+            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2">
                     <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Project Procurement and Manangement Plan</li>
                     <li class="after:content-[':'] after:ml-2 text-[#86591e]" aria-current="page">Transaction No.</li> 
                     <li class="text-[#86591e]" aria-current="page">{{ ppmp.ppmp_code }}</li> 
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -190,7 +225,7 @@
 
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Quantity Adjustment</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.price_adjustment * 100 }}%</dd>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.qty_adjustment * 100 }}% of the original quantity</dd>
                                         </div>
 
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
@@ -295,7 +330,7 @@
                 </div>
             </div>
             <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <SuccessButton>
+                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
@@ -348,7 +383,7 @@
                 </div>
             </div>
             <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <SuccessButton>
+                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
@@ -377,7 +412,7 @@
                         <p class="text-gray-600 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
                         <p> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                            <SuccessButton>
+                            <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                 </svg>
@@ -408,7 +443,7 @@
                         <p class="text-gray-600 my-2">Confirming this action will remark the selected PPMP as Final/Approved. This action can't be undone.</p>
                         <p> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                            <SuccessButton>
+                            <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                 </svg>

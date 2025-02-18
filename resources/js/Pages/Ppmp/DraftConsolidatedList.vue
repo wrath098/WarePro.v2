@@ -1,7 +1,7 @@
 <script setup>
-    import { Head } from '@inertiajs/vue3';
+    import { Head, usePage } from '@inertiajs/vue3';
     import { Inertia } from '@inertiajs/inertia';
-    import { reactive, ref, computed } from 'vue';
+    import { reactive, ref, computed, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import Sidebar from '@/Components/Sidebar.vue';
@@ -11,7 +11,10 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Print from '@/Components/Buttons/Print.vue';
-
+    import Swal from 'sweetalert2';
+    
+    const page = usePage();
+    const isLoading = ref(false);
 
     const props = defineProps({
         ppmp: Object,
@@ -59,15 +62,42 @@
     };
 
     const submitForm = (url, data) => {
+        isLoading.value = true;
         Inertia.post(url, data, {
-            onSuccess: () => closeModal(),
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            },
             onError: (errors) => {
                 console.error(`Form submission failed for ${url}`, errors);
+                isLoading.value = false;
             },
         });
     };
     const submitConsolidated = () => submitForm('create-consolidated', generateConsolidated);
     const submitDropPpmp = () => submitForm('drop', edit);
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success!',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed!',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -84,12 +114,6 @@
                     <li v-if="ppmp.status == 'Draft'"><Generate @click="showModal('copy')" class="" tooltip="Generate"/></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
@@ -198,7 +222,7 @@
                     </div>
                 </div>
                 <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton>
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
@@ -227,7 +251,7 @@
                             <p class="text-gray-600 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton>
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>

@@ -106,7 +106,7 @@ class PpmpParticularController extends Controller
 
             $ppmpParticular->delete();
 
-            return redirect()->back()->with(['message' => 'Product has been successfully deleted!']);
+            return redirect()->back()->with(['message' => 'Product has been moved to trashed succecfully!']);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to delete the particular.']);
