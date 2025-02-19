@@ -127,6 +127,9 @@ Route::middleware('auth')->prefix('pr')->group(function () {
     Route::put('/particular/update', [PrParticularController::class, 'update'])->name('pr.particular.update');
     Route::post('/particular/restore/{prParticular}', [PrParticularController::class, 'restore'])->name('pr.particular.restore');
     Route::delete('/particular/trash/{prParticular}', [PrParticularController::class, 'moveToTrash'])->name('pr.particular.movetotrash');
+    Route::put('/particular/approve/{prParticular}', [PrParticularController::class, 'approve'])->name('pr.particular.approve');
+    Route::put('/particular/failedAll/{prTransaction}', [PrTransactionController::class, 'failedAll'])->name('pr.particular.failedAll');
+    Route::put('/particular/approvedAll/{prTransaction}', [PrTransactionController::class, 'approvedAll'])->name('pr.particular.approvedAll');
 });
 
 Route::middleware('auth')->prefix('iar')->group(function () {

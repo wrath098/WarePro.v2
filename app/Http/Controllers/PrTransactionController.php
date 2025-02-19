@@ -7,7 +7,6 @@ use App\Models\PpmpConsolidated;
 use App\Models\PrParticular;
 use App\Models\PrTransaction;
 use App\Services\ProductService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +32,7 @@ class PrTransactionController extends Controller
 
         $pendingPr = PrTransaction::with('ppmpController', 'updater')
             ->where('pr_status', 'draft')
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($pr) use ($descriptionMap) {
                 $pr->semester = $pr->semester == 'qty_first' ? 'First Semester' : 'Second Semester';
@@ -154,6 +154,76 @@ class PrTransactionController extends Controller
             'particulars' => $reformatParticular,
             'trashed' => $resultTrashedParticular,
         ]);
+    }
+
+    public function approvedAll(PrTransaction $prTransaction) {
+        DB::beginTransaction();
+
+        try{
+            $particulars = $this->getAllDraftedParticulars($prTransaction->id);
+            if ($particulars->isNotEmpty()) {
+                PrParticular::whereIn('id', $particulars->pluck('id'))
+                    ->update(['status' => 'approved', 'updated_by' => Auth::id()]);
+            }
+    
+            $prTransaction->lockForUpdate();
+            $prTransaction->update(['pr_status' => 'approved', 'updated_by' => Auth::id()]);
+
+            DB::commit();
+            return redirect()->route('pr.display.transactions')
+                ->with(['message' => "{$particulars->count()} items successfully approved for the selected Purchase Request."]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Failed to approve PR transaction ID: {$prTransaction->id}. Error: " . $e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to approve all the items. Please refer to your system administrator.']);
+        }
+    }
+
+    public function failedAll(PrTransaction $prTransaction) {
+        DB::beginTransaction();
+
+        try{
+            $prTransaction->loadCount(['prParticulars' => function ($query) {
+                $query->where('status', 'approved');
+            }]);
+            
+            $particulars = $this->getAllDraftedParticulars($prTransaction->id);
+
+            if($prTransaction->pr_particulars_count == 0) {
+                if ($particulars->isNotEmpty()) {
+                    PrParticular::whereIn('id', $particulars->pluck('id'))->delete();
+                }
+
+                $prTransaction->lockForUpdate();
+                $prTransaction->update(['updated_by' => Auth::id()]);
+                $prTransaction->delete();
+
+                DB::commit();
+                return redirect()->route('pr.display.transactions')
+                    ->with(['message' => 'Successfully removed the Purchase Request from the list.']);
+            }
+
+            if ($particulars->isNotEmpty()) {
+                PrParticular::whereIn('id', $particulars->pluck('id'))->delete();
+            }
+
+            $prTransaction->lockForUpdate();
+            $prTransaction->update(['pr_status' => 'approved', 'updated_by' => Auth::id()]);
+
+            DB::commit();
+            return redirect()->route('pr.display.transactions')
+                ->with(['message' => 'Successfully marked the items as failed in the selected Purchase Request.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Failed to mark PR transaction ID: {$prTransaction->id} as failed. Error: " . $e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to mark the Purchase Request as failed. Please refer to your system administrator.']);
+        }
+    }
+
+    private function getAllDraftedParticulars($transactioId) {
+        return PrParticular::where('pr_id', $transactioId)
+            ->where('status', 'draft')
+            ->get();
     }
 
     private function getPrUnderPpmpParticular($ppmpParticularId)

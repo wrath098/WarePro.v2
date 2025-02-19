@@ -445,6 +445,7 @@ class PpmpTransactionController extends Controller
         $totalAmount = 0;
         $ppmpTransaction->load('updater', 'consolidated');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
+        $countTrashedItems = $ppmpTransaction->consolidated()->onlyTrashed()->count();
 
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
@@ -477,7 +478,11 @@ class PpmpTransactionController extends Controller
         $ppmpTransaction->totalItems = $sortedParticulars->count();
         $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
 
-        return Inertia::render('Ppmp/Consolidated', ['ppmp' =>  $ppmpTransaction, 'user' => Auth::id(),]);
+        return Inertia::render('Ppmp/Consolidated', [
+            'ppmp' =>  $ppmpTransaction,
+            'countTrashed' => $countTrashedItems,
+            'user' => Auth::id(),
+        ]);
     }
 
     public function showIndividualPpmp_Type(Request $request): Response
@@ -663,7 +668,9 @@ class PpmpTransactionController extends Controller
         $mayQty = is_numeric($line['May']) ? $line['May'] : 0;
         $totalQuantity = intval($janQty) + intval($mayQty);
 
-        if (!preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock) || !preg_match("/^\d{4}$/", $code) || $totalQuantity === 0) {
+         # New Stock Pattern Comparison
+        # !preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock) 
+        if (!preg_match("/^\d{4}$/", $code) || $totalQuantity === 0) {
             return null;
         }
         

@@ -98,6 +98,10 @@ class PrMultiStepFormController extends Controller
                 ];
             });
 
+            if ($result->isEmpty()) {
+                return redirect()->route('pr.form.step1')->with(['error' => 'No available items to procure!']);
+            }
+
             $sortResult = $result->sortBy('prodCode');
             return Inertia::render('Pr/MultiForm/StepTwo', [
                 'toPr' => $sortResult,
@@ -166,6 +170,9 @@ class PrMultiStepFormController extends Controller
                 ];
             })->filter()->values();
 
+            if ($result->isEmpty()) {
+                return redirect()->route('pr.form.step1')->with(['error' => 'No available items to procure!']);
+            }
 
             $sortResult = $result->sortBy('prodCode');
 
@@ -221,6 +228,9 @@ class PrMultiStepFormController extends Controller
                 ];
             })->filter()->values();
 
+            if ($result->isEmpty()) {
+                return redirect()->route('pr.form.step1')->with(['error' => 'No available items to procure!']);
+            }
 
             $sortResult = $result->sortBy('prodCode');
 

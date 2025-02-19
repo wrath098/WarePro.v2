@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\PpmpConsolidated;
 use App\Models\PrParticular;
+use App\Models\PrTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PrParticularController extends Controller
@@ -98,6 +100,39 @@ class PrParticularController extends Controller
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to restore the particular from the trash. Product Code: ' . $prodCode]);
+        }
+    }
+
+    public function approve(PrParticular $prParticular)
+    {
+        DB::beginTransaction();
+        try {
+
+            $prParticular->lockForUpdate;
+            $prParticular->update([
+                'status' => 'approved',
+                'updated_by' => Auth::id(),
+            ]);
+
+            $countDraftedParticulars = PrTransaction::withCount(['prParticulars as draft_count' => function ($query) {
+                $query->where('status', 'draft');
+            }])->find($prParticular->pr_id);
+
+            if($countDraftedParticulars->draft_count == 0) {
+                $countDraftedParticulars->lockForUpdate;
+                $countDraftedParticulars->update([
+                    'pr_status' => 'approved',
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Successfully approved a product for Purchase Order. Product Code: ' . $prParticular->prod_id]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+            Log::error($e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to approved the particular. Product Code: ' . $prParticular->prod_id]);
         }
     }
 
