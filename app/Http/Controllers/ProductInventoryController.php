@@ -22,34 +22,7 @@ class ProductInventoryController extends Controller
 
     public function index(): Response
     {
-        $products = Product::where('prod_status', 'active')->with('inventory')->get();
-
-        $products = $products->map(function($product) {
-            $inventory = $product->inventory;
-            $status = 'Reorder';
-            $qty_on_stock = 0;
-            $reorder_level = 0;
-
-            if ($inventory) {
-                $qty_on_stock = $inventory->qty_on_stock;
-                $reorder_level = $inventory->reorder_level;
-                $status = $qty_on_stock <= $reorder_level ? 'Reorder' : 'Available';
-            }
-        
-            return [
-                'id' => $inventory ? $inventory->id : null,
-                'stockNo' => $product->prod_newNo,
-                'prodDesc' => $product->prod_desc,
-                'prodUnit' => $product->prod_unit,
-                'beginningBalance' => $inventory->qty_physical_count ?? 0,
-                'stockAvailable' => $qty_on_stock,
-                'purchases' => $inventory->qty_purchase ?? 0,
-                'issuances' => $inventory->qty_issued ?? 0,
-                'status' => $status,
-                'prodId' => $product->id
-            ];
-        });
-
+        $products = $this->filterProductsWithInventory();
         return Inertia::render('Inventory/Index', ['inventory' => $products]);
     }
 
@@ -134,8 +107,46 @@ class ProductInventoryController extends Controller
                 });
     }
 
-    private function getOfficeNameIfIssuance()
+    private function fetchAllProductsWithQuantity()
     {
+        return Product::withTrashed()->with('inventory')->get();
+    }
 
+    private function filterProductsWithInventory()
+    {
+        $products = $this->fetchAllProductsWithQuantity();
+
+        $products = $products->map(function($product) {
+            $inventory = $product->inventory;
+            $currentStock = $inventory ? $inventory->qty_on_stock : 0;
+            $status = 'Reorder';
+            $qty_on_stock = 0;
+            $reorder_level = 0;
+
+            if(($product->deleted_at || $product->prod_status != 'active')  && ($currentStock <= 0)) {
+                return null;
+            } else {
+                if ($inventory) {
+                    $qty_on_stock = $inventory->qty_on_stock;
+                    $reorder_level = $inventory->reorder_level;
+                    $status = $qty_on_stock <= $reorder_level ? 'Reorder' : 'Available';
+                }
+            
+                return [
+                    'id' => $inventory ? $inventory->id : null,
+                    'stockNo' => $product->prod_newNo,
+                    'prodDesc' => $product->prod_desc,
+                    'prodUnit' => $product->prod_unit,
+                    'beginningBalance' => $inventory->qty_physical_count ?? 0,
+                    'stockAvailable' => $qty_on_stock,
+                    'purchases' => $inventory->qty_purchase ?? 0,
+                    'issuances' => $inventory->qty_issued ?? 0,
+                    'status' => $status,
+                    'prodId' => $product->id
+                ];
+            }
+        })->filter();
+
+        return $products;
     }
 }

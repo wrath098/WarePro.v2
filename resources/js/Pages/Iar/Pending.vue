@@ -1,12 +1,38 @@
 <script setup>
-    import { Head } from '@inertiajs/vue3';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { computed, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Refresh from '@/Components/Buttons/Refresh.vue';
+    import Swal from 'sweetalert2';
 
+    const page = usePage();
     const props = defineProps({
         iar: Object,
+    });
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
     });
 </script>
 
@@ -23,12 +49,6 @@
                     <li><Refresh :href="route('iar.collect.transactions')" class="" tooltip="Fetch IAR"/></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">

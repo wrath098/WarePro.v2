@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class IarTransactionController extends Controller
@@ -36,7 +37,7 @@ class IarTransactionController extends Controller
 
     public function showAllTransactions()
     {
-        $transactionList = IarTransaction::withTrashed()->with('updater')->orderby('updated_at', 'desc')->take(1000)->get();
+        $transactionList = IarTransaction::withTrashed()->with('updater')->orderby('updated_at', 'desc')->take(2000)->get();
 
         $transactionList = $transactionList->map(fn($transaction) => [
             'id' => $transaction->id,
@@ -142,7 +143,7 @@ class IarTransactionController extends Controller
             'itemNo' => $item->item_no,
             'stockNo' => $item->stock_no ?? 'N/A',
             'unit' => ucfirst($item->unit),
-            'specs' => $item->description,
+            'specs' => Str::limit($item->description, 100, '.....'),
             'quantity' => $item->qty,
             'price' => $item->price,
             'status' => ucfirst($item->status),
@@ -175,7 +176,7 @@ class IarTransactionController extends Controller
             $productDetails = $this->validateProduct($particular->stock_no);
 
             if(!$productDetails) {
-                throw new \Exception('Product Item/Stock No. not found!');
+                throw new \Exception('Product Item/Stock No. not found. Please update the product code and try again!');
             }
 
             $userId = Auth::id();
@@ -200,10 +201,14 @@ class IarTransactionController extends Controller
                 'user' => $userId,
             ];
 
-            $this->createInventoryTransaction($productInventoryInfo);
+            $newIar = $this->createInventoryTransaction($productInventoryInfo);
             $this->updateProductInventory($productInventoryInfo);
             $this->updateProductPrice($productInventoryInfo);
 
+            if(!$newIar->date_expiry) {
+                $this->moveToTrashProductInventoryTransaction($newIar);
+            }
+            
             $particular->update(['status' => 'completed', 'updated_by' => $userId]);
 
             $iarTransaction = IarTransaction::findOrFail($particular->air_id);
@@ -302,7 +307,7 @@ class IarTransactionController extends Controller
             $productDetails = $this->validateProduct($request->stockNo);
 
             if(!$productDetails) {
-                throw new \Exception('Product Item not found!');
+                throw new \Exception('Product Item not found.');
             }
 
             if(strtolower($request->parUnit) != strtolower($productDetails->prod_unit)){
@@ -388,10 +393,18 @@ class IarTransactionController extends Controller
 
     private function validateProduct($request)
     {
-        if (preg_match("/^\d{2}-\d{4}$/", $request)) {
+        if (preg_match("/^\d{2}-\d{2,3}-\d{2,4}$/", $request)) {
+            $product = Product::withTrashed()->where('prod_newNo', $request)->first();
+            if ($product) {
+                return $product;
+            } else {
+                return false;
+            }
+        }
+        elseif (preg_match("/^\d{2}-\d{4}$/", $request)) {
             if (preg_match('/-(\d+)$/', $request, $matches)) {
                 if (isset($matches[1])) {
-                    $product = Product::where('prod_oldNo', $matches[1])->first();
+                    $product = Product::withTrashed()->where('prod_oldNo', $matches[1])->first();
                     if ($product) {
                         return $product;
                     } else {
@@ -401,26 +414,21 @@ class IarTransactionController extends Controller
                     return false;
                 }
             }
-        } 
-        elseif (preg_match("/^\d{2}-\d{2,3}-\d{2,4}$/", $request)) {
-            $product = Product::where('prod_newNo', $request)->first();
-            if ($product) {
-                return $product;
-            } else {
-                return false;
-            }
-        } else {
+        }  else {
             return false;
         }
     }
 
     private function createInventoryTransaction($request)
     {
+        $prodInvId = $this->getProductInventoryId($request['prodId']);
+        
         return ProductInventoryTransaction::create([
             'type' => $request['type'],
             'qty' => $request['qty'],
             'stock_qty' => $request['qty'],
             'ref_no' => $request['refNo'],
+            'prodInv_id' => $prodInvId->id,
             'prod_id' => $request['prodId'],
             'date_expiry' => $request['date_expiry'],
             'current_stock' => $request['currentStock'],
@@ -430,7 +438,7 @@ class IarTransactionController extends Controller
 
     private function updateProductInventory($request)
     {
-        $productExist = ProductInventory::where('prod_id', $request['prodId'])->first();
+        $productExist = $this->getProductInventoryId($request['prodId']);;
 
         if($productExist) {
             $productExist->qty_on_stock += $request['qty'];
@@ -441,6 +449,7 @@ class IarTransactionController extends Controller
             return ProductInventory::create([
                 'qty_on_stock' => $request['qty'],
                 'qty_purchase' => $request['qty'],
+                'prodInv_id' => $productExist->id,
                 'prod_id' => $request['prodId'],
                 'updated_by' => $request['user'],
             ]);
@@ -459,7 +468,7 @@ class IarTransactionController extends Controller
     }
 
     private function getAllActiveProducts() {
-        $products = Product::where('prod_status', 'active')->get(['prod_newNo', 'prod_desc', 'prod_unit', 'has_expiry']);
+        $products = Product::withTrashed()->get(['prod_newNo', 'prod_desc', 'prod_unit', 'has_expiry']);
 
         return $products->map(fn($product) => [
             'stockNo' => $product->prod_newNo,
@@ -483,5 +492,14 @@ class IarTransactionController extends Controller
     {
         $inventoryDetails = ProductInventory::where('prod_id', $prodId)->first();
         return $inventoryDetails->qty_on_stock ?? 0;
+    }
+
+    private function getProductInventoryId($productId) {
+        return ProductInventory::where('prod_id', $productId)->first();
+    }
+
+    private function moveToTrashProductInventoryTransaction(ProductInventoryTransaction  $productInventory)
+    {
+        return $productInventory->delete();
     }
 }

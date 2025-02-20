@@ -1,15 +1,17 @@
 <script setup>
-    import { computed, reactive, ref } from 'vue';
-    import { Head } from '@inertiajs/vue3';
+    import { computed, onMounted, reactive, ref } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import { DataTable } from 'datatables.net-vue3';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import Swal from 'sweetalert2';
 
-
+    const page = usePage();
+    const isLoading = ref(false);
     const props = defineProps({
         inventory: Object,
     });
@@ -37,13 +39,37 @@
     }
 
     const submitAdd = () => {
+        isLoading.value = true;
         Inertia.post('inventory/store', addParticular, {
             onSuccess: () => {
                 closeModal();
+                isLoading.value = false;
             },
         });
     }
 
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 </script>
 
 <template>
@@ -54,15 +80,10 @@
         <template #header>
             <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
                 <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-[''] after:ml-2 text-green-700">Product Inventory</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Product Inventory</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Current Stock</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">

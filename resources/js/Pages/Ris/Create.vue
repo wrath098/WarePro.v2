@@ -1,6 +1,7 @@
 <script setup>
-    import { reactive, ref, watch, onMounted } from 'vue';
-    import { Head, router } from '@inertiajs/vue3';
+    import { reactive, ref, watch, onMounted, computed } from 'vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
@@ -8,6 +9,31 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
     import axios from 'axios';
+    import Swal from 'sweetalert2';
+
+    const page = usePage();
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 
     const props = defineProps({
         office: Object
@@ -115,7 +141,7 @@
             formData.append('requestProducts', JSON.stringify(requestData.value));
             formData.append('file', file.value);
 
-        router.post('ris/store', formData, {
+        Inertia.post('ris/store', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -134,12 +160,6 @@
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Requisition and Issuance</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <section class="py-8">

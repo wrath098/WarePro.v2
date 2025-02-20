@@ -171,7 +171,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
 });
 
-#API
+#AJAX
 Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
     Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');

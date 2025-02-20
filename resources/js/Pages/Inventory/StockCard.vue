@@ -1,14 +1,39 @@
 <script setup>
     import { computed, onMounted, reactive, ref, watch } from 'vue';
-    import { Head } from '@inertiajs/vue3';
+    import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import { DataTable } from 'datatables.net-vue3';
     import axios from 'axios';
     import { debounce } from 'lodash';
+    import Swal from 'sweetalert2';
 
     const props = defineProps({
         availableProducts: Object,
+    }); 
+
+    const page = usePage();
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
     });
 
     const searchProductInfo = reactive({
@@ -101,12 +126,6 @@
                     <li><a class="after:content-[''] after:ml-2 text-green-700">Product Inventory</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-green-600 my-2">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-red-600 my-2">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">

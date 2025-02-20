@@ -15,27 +15,34 @@ class ProductInventoryTransactionController extends Controller
     {
         DB::beginTransaction();
         try {
-
-            ProductInventoryTransaction::create([
-                'type' => $request->type,
-                'qty' => $request->qty,
-                'notes' => $request->remarks,
-                'prod_id' => $request->prodId,
-                'created_by' => Auth::id(),
-            ]);
+            $productInventoryId = 0;
 
             if($request->pid) {
                 $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
                 $productInventory->qty_on_stock += $request->qty;
                 $productInventory->updated_by = Auth::id();
                 $productInventory->save();
+
+                $productInventoryId = $request->pid;
             } else {
-                ProductInventory::create([
+                $createProductInventory = ProductInventory::create([
                     'qty_on_stock' => $request->qty,
                     'prod_id' => $request->prodId,
                     'updated_by' => Auth::id(),
                 ]);
+
+                $productInventoryId = $createProductInventory->id;
             }
+
+            ProductInventoryTransaction::create([
+                'type' => $request->type,
+                'qty' => $request->qty,
+                'notes' => $request->remarks,
+                'prodInv_id' => $productInventoryId,
+                'prod_id' => $request->prodId,
+                'current_stock' => $request->qty,
+                'created_by' => Auth::id(),
+            ]);
             
             DB::commit();
             return redirect()->back()->with(['message' => 'Successfully added the quantity to Product code ' . $request->stockNo]);

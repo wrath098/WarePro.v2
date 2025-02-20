@@ -87,7 +87,7 @@ class RisTransactionController extends Controller
                 }
                 $currentStock = (int)$this->getCurrentStockInventory($product['prodId']) - $product['qty'];
                 $createRisTransaction = $this->createRis($risData);
-                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction, $currentStock);
+                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
                 $this->updateQuantity($risData);
                 $this->updateInventoryTransaction($risData);
                 $this->updateReleasedItemQtyOnPpmp($product);
@@ -129,7 +129,7 @@ class RisTransactionController extends Controller
             'qty' => $product['qty'],
             'current_stock' => $currentStock,
             'prodInv_id' => $product['prodInvId'],
-            'ref_id' => $risId,
+            'ref_no' => $risId,
             'prod_id' => $product['prodId'],
             'created_by' => $risData['user'] ?? null,
         ]);

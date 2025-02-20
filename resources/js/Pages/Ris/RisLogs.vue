@@ -1,12 +1,39 @@
 <script setup>
-    import { Head } from '@inertiajs/vue3';
+    import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Sidebar from '@/Components/Sidebar.vue';
     import Print from '@/Components/Buttons/Print.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
+    import { computed, onMounted } from 'vue';
+    import Swal from 'sweetalert2';
+
+    const page = usePage();
 
     const props = defineProps({
         transactions: Object,
+    });
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
     });
 </script>
 
@@ -22,12 +49,6 @@
                     <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Procurement Basis</a></li>
                 </ol>
             </nav>
-            <div v-if="$page.props.flash.message" class="text-indigo-400 my-2 italic">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-else-if="$page.props.flash.error" class="text-gray-400 my-2 italic">
-                {{ $page.props.flash.error }}
-            </div>
         </template>
 
         <div class="py-8">
