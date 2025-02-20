@@ -420,15 +420,12 @@ class IarTransactionController extends Controller
     }
 
     private function createInventoryTransaction($request)
-    {
-        $prodInvId = $this->getProductInventoryId($request['prodId']);
-        
+    {        
         return ProductInventoryTransaction::create([
             'type' => $request['type'],
             'qty' => $request['qty'],
             'stock_qty' => $request['qty'],
             'ref_no' => $request['refNo'],
-            'prodInv_id' => $prodInvId->id,
             'prod_id' => $request['prodId'],
             'date_expiry' => $request['date_expiry'],
             'current_stock' => $request['currentStock'],
@@ -438,7 +435,7 @@ class IarTransactionController extends Controller
 
     private function updateProductInventory($request)
     {
-        $productExist = $this->getProductInventoryId($request['prodId']);;
+        $productExist = $this->getProductInventoryId($request['prodId']);
 
         if($productExist) {
             $productExist->qty_on_stock += $request['qty'];
@@ -449,7 +446,6 @@ class IarTransactionController extends Controller
             return ProductInventory::create([
                 'qty_on_stock' => $request['qty'],
                 'qty_purchase' => $request['qty'],
-                'prodInv_id' => $productExist->id,
                 'prod_id' => $request['prodId'],
                 'updated_by' => $request['user'],
             ]);
