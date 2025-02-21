@@ -14,14 +14,17 @@ class ProductInventoryTransactionController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
+        $currentInventory = $request->qty;
+        
         try {
             if($request->pid) {
                 $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
+                $currentInventory = $productInventory->qty_on_stock + $request->qty;
                 $productInventory->qty_on_stock += $request->qty;
                 $productInventory->updated_by = Auth::id();
                 $productInventory->save();
             } else {
-                $createProductInventory = ProductInventory::create([
+                ProductInventory::create([
                     'qty_on_stock' => $request->qty,
                     'prod_id' => $request->prodId,
                     'updated_by' => Auth::id(),
@@ -33,7 +36,7 @@ class ProductInventoryTransactionController extends Controller
                 'qty' => $request->qty,
                 'notes' => $request->remarks,
                 'prod_id' => $request->prodId,
-                'current_stock' => $request->qty,
+                'current_stock' => $currentInventory,
                 'created_by' => Auth::id(),
             ]);
             

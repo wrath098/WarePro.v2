@@ -170,7 +170,10 @@
                                 <button type="submit" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
                                     Filter
                                 </button>
-                                <a v-if="productTransactions.data && productTransactions.data.length > 0" :href="route('generatePdf.StockCard', { productDetails: searchProductInfo })" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
+                                <a v-if="productTransactions.data && productTransactions.data.length > 0" 
+                                    :href="route('generatePdf.StockCard', { productDetails: searchProductInfo })" 
+                                    target="_blank"
+                                    class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
                                     Print
                                 </a>
                             </div>

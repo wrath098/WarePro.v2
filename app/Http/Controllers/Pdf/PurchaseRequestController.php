@@ -63,7 +63,7 @@ class PurchaseRequestController extends Controller
                                 <th width="240px">OBR No.</th>
                                 <th width="159px">Date :</th>
                             </tr>
-                        <thead>
+                        </thead>
                     </table> 
         ';
 

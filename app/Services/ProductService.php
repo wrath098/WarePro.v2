@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Models\ItemClass;
 use App\Models\PpmpConsolidated;
 use App\Models\Product;
+use App\Models\ProductInventory;
 use App\Models\ProductPpmpException;
 use App\Models\ProductPrice;
 
@@ -226,6 +227,12 @@ class ProductService
 
         $amount = $capital ? $capital->allocations->first()->amount : null;
         return $amount;
+    }
+
+    public function getProductReorderPoint(int $id)
+    {
+        $product = ProductInventory::withTrashed()->where('prod_id', $id)->first();
+        return $product ? $product->reorder_level : 0;
     }
 
     public function validateCategoryExistence($fundId, $name)

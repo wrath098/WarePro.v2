@@ -201,13 +201,9 @@ class IarTransactionController extends Controller
                 'user' => $userId,
             ];
 
-            $newIar = $this->createInventoryTransaction($productInventoryInfo);
+            $this->createInventoryTransaction($productInventoryInfo);
             $this->updateProductInventory($productInventoryInfo);
             $this->updateProductPrice($productInventoryInfo);
-
-            if(!$newIar->date_expiry) {
-                $this->moveToTrashProductInventoryTransaction($newIar);
-            }
             
             $particular->update(['status' => 'completed', 'updated_by' => $userId]);
 
@@ -492,10 +488,5 @@ class IarTransactionController extends Controller
 
     private function getProductInventoryId($productId) {
         return ProductInventory::where('prod_id', $productId)->first();
-    }
-
-    private function moveToTrashProductInventoryTransaction(ProductInventoryTransaction  $productInventory)
-    {
-        return $productInventory->delete();
     }
 }
