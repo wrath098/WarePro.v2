@@ -73,6 +73,11 @@ class ProductInventoryController extends Controller
         return response()->json(['data' => $products]);
     }
 
+    public function getIssuanceLogs(Request $request)
+    {
+        return response()->json(['data' => $request->toArray()]);
+    }
+
     private function getProductDetails($productId)
     {
         $productDetail = Product::withTrashed()->findOrFail($productId);

@@ -176,6 +176,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
     Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
     Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
+    Route::get('/issuances-log', [ProductInventoryController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
 });
 
 

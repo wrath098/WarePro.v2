@@ -4,14 +4,36 @@
     import Sidebar from '@/Components/Sidebar.vue';
     import Print from '@/Components/Buttons/Print.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
-    import { computed, onMounted } from 'vue';
+    import { computed, onMounted, reactive, ref } from 'vue';
     import Swal from 'sweetalert2';
+    import axios from 'axios';
 
     const page = usePage();
 
     const props = defineProps({
         transactions: Object,
     });
+
+    const transactionLogs = ref([]);
+    const filterLogs = reactive({
+        startDate: '',
+        endDate: '',
+    });
+
+    const submitFilter = async () => {
+        if (filterLogs.startDate && filterLogs.endDate) {
+            try {
+                const response = await axios.get('../api/issuances-log', { 
+                    params: { query: filterLogs},
+                });
+                transactionLogs.value = response.data;
+                console.log(transactionLogs.value);
+                return transactionLogs;
+            } catch (error) {
+                console.error('Error fetching product data:', error);
+            }
+        }
+    };
 
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
@@ -63,20 +85,15 @@
                             </p>
                         </div>
                     </div>
-                    <form>
+                    <form @submit.prevent="submitFilter">
                         <div class="grid lg:grid-cols-4 lg:gap-6 my-5 mx-3">
-                            <div class="relative z-0 w-full group my-5">
-                                <input type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                <label for="fetchProduct" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
-                            </div>
-
                             <div class="relative z-0 w-full my-5 group">
-                                <input type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                <input v-model="filterLogs.startDate" type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                                 <label for="from" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
                             </div>
 
                             <div class="relative z-0 w-full my-5 group">
-                                <input type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                <input v-model="filterLogs.endDate" type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                                 <label for="to" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
                             </div>
 
@@ -85,7 +102,7 @@
                                     Filter
                                 </button>
                                 <a 
-                                    :href="route('generatePdf.StockCard', { productDetails: searchProductInfo })" 
+                                    :href="route('generatePdf.StockCard', { productDetails: filterLogs })" 
                                     target="_blank"
                                     class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
                                     Print
