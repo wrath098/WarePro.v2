@@ -29,17 +29,15 @@ class StockCardController extends Controller
         $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $query['startDate'], $query['endDate']);
         $totalRequest = count($inventoryTransactions);
 
-        // dump($query, $inventoryTransactions->toArray());
-
         $pdf = new MyPDF('P', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
         $logoPath = public_path('assets/images/benguet_logo.png');
         $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle('Consolidated PPMP');
-        $pdf->SetSubject('Consolidated PPMP Particulars');
-        $pdf->SetKeywords('Benguet, WarePro, Consolidated List');
+        $pdf->SetTitle('Stock Card');
+        $pdf->SetSubject('StockCard');
+        $pdf->SetKeywords('Benguet, WarePro, StockCard, Stock Card');
         
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(true);

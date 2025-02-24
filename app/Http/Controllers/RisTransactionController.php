@@ -147,6 +147,13 @@ class RisTransactionController extends Controller
         }
     }
 
+    public function getIssuanceLogs(Request $request)
+    {
+        $query = $request->input('query');
+        $resultLogs = $this->getFilteredIssuanceLogs($query['startDate'], $query['endDate']);
+        return response()->json(['data' => $resultLogs]);
+    }
+
     private function updateQuantity($requestData)
     {
         $productQuantity = ProductInventory::where('prod_id', $requestData['prodId'])->lockForUpdate()->first();
@@ -162,7 +169,7 @@ class RisTransactionController extends Controller
     }
 
     private function getRisTransactions() {
-        $transactions = RisTransaction::with(['creator', 'productDetails', 'requestee'])->orderBy('created_at', 'desc')->limit(2000)->get();
+        $transactions = RisTransaction::with(['creator', 'productDetails', 'requestee'])->orderBy('created_at', 'desc')->limit(100)->get();
 
         $transactions = $transactions->map(fn($transaction) => [
             'id' => $transaction->id,
@@ -240,5 +247,29 @@ class RisTransactionController extends Controller
     {
         $inventoryDetails = ProductInventory::where('prod_id', $prodId)->first();
         return $inventoryDetails->qty_on_stock ?? 0;
+    }
+
+    private function getFilteredIssuanceLogs($fromDate, $toDate)
+    {
+        $resultLogs = RisTransaction::whereBetween('created_at', [$fromDate, $toDate])
+            ->with(['creator', 'productDetails', 'requestee'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $logs = $resultLogs->map(fn($transaction) => [
+            'id' => $transaction->id,
+            'risNo' => $transaction->ris_no,
+            'stockNo' => $transaction->productDetails->prod_newNo,
+            'prodDesc' => $transaction->productDetails->prod_desc,
+            'qty' => $transaction->qty,
+            'unit' => $transaction->unit,
+            'issuedTo' => $transaction->issued_to,
+            'officeRequestee' => $transaction->requestee->office_code,
+            'dateReleased'=> $transaction->created_at->format('Y-m-d H:i:s'),
+            'releasedBy' => $transaction->creator->name,
+            'attachment' => $transaction->attachment ?? null,
+        ]);
+
+        return $logs ?? '';
     }
 }

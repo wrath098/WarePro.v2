@@ -11,11 +11,11 @@ class MyPDF extends TCPDF
 
         $this->SetFont('helvetica', 'I', 8);
 
-        $waterMark = 'PGSO-WarePro';
+        $waterMark = '';
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 
-        $footerText = 'CG:System Generated';
+        $footerText = 'PGSO-WarePro-GC';
 
         $totalWidth = $this->getPageWidth();
 

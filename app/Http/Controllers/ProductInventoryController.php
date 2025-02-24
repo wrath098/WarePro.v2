@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
+use App\Models\RisTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -73,11 +74,6 @@ class ProductInventoryController extends Controller
         return response()->json(['data' => $products]);
     }
 
-    public function getIssuanceLogs(Request $request)
-    {
-        return response()->json(['data' => $request->toArray()]);
-    }
-
     private function getProductDetails($productId)
     {
         $productDetail = Product::withTrashed()->findOrFail($productId);
@@ -99,8 +95,13 @@ class ProductInventoryController extends Controller
                     $query->where('prod_id', $productId)
                         ->whereBetween('created_at', [$fromDate, $toDate]);
                 })
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($transaction) use ($productUnit) {
+                    $issuanceDetails = '';
+                    if ($transaction->type == 'issuance') {
+                        $issuanceDetails = $this->getIssuanceTypeDetails($transaction->ref_no);
+                    }
                     return [
                         'id' => $transaction->id,
                         'created' => $transaction->created_at->format('d-m-Y'),
@@ -108,6 +109,8 @@ class ProductInventoryController extends Controller
                         'type' => ucfirst($transaction->type),
                         'qty' => $transaction->qty,
                         'adjustedTotalStock' => $transaction->current_stock,
+                        'risNo' => $issuanceDetails ? $issuanceDetails['risNo'] : '',
+                        'requestee' => $issuanceDetails ? $issuanceDetails['officeCode'] : '',
                     ];
                 });
     }
@@ -153,5 +156,22 @@ class ProductInventoryController extends Controller
         })->filter();
 
         return $products;
+    }
+
+    private function getIssuanceTypeDetails(int $id): array
+    {
+        $risTransaction = RisTransaction::withTrashed()
+            ->select('ris_no', 'office_id')
+            ->find($id);
+
+        if($risTransaction) {
+            $requestee = $risTransaction->requestee()->select('office_code')->first();
+            return [
+                'risNo' => $risTransaction->ris_no,
+                'officeCode' => $requestee ? $requestee->office_code : null,
+            ];
+        }
+
+        return [];
     }
 }

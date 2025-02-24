@@ -87,22 +87,35 @@
 
     const columns = [
         {
-            data: 'id',
-            title: 'Transaction No.',
-            width: '10%',
+            data: null,
+            title: 'Transaction #',
+            width: '5%',
+            render: function(data, type, row, meta) {
+                return meta.row + 1;
+            },
+            className: 'text-center',
         },
         {
             data: 'created',
             title: 'Date of Issuance/Acceptance',
-        },
-        {
-            data: 'unit',
-            title: 'Unit of Measure',
+            width: '10%',
         },
         {
             data: 'type',
             title: 'Kind',
             width: '20%',
+        },
+        {
+            data: 'risNo',
+            title: 'Transaction No#',
+        },
+        {
+            data: 'requestee',
+            title: 'Office (Requestee)',
+        },
+        {
+            data: 'unit',
+            title: 'Unit of Measure',
         },
         {
             data: 'qty',
@@ -121,16 +134,17 @@
     <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-[''] after:ml-2 text-green-700">Product Inventory</a></li>
+            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
+                <ol class="flex space-x-2">
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Product Inventory</a></li>
+                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Stock Card</a></li>
                 </ol>
             </nav>
         </template>
         <div class="py-8">
             <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="w-full bg-white h-auto mb-2 rounded-md">
-                    <div class="relative isolate flex overflow-hidden bg-indigo-600 px-6 py-2.5 rounded-md">
+                <div class="w-full bg-white h-auto mb-2 rounded-md shadow-md">
+                    <div class="relative isolate flex overflow-hidden bg-indigo-500 px-6 py-2.5 rounded-md">
                         <div class="flex flex-wrap">
                             <p class="text-base text-gray-100">
                                 <strong class="font-semibold">Product Information and Date of Duration</strong>
@@ -145,7 +159,7 @@
                                 <input v-model="searchProductInfo.product" @input="debouncedFetchProduct" type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                                 <label for="fetchProduct" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
                             </div>
-                            <ul v-if="productList.data" class="absolute w-3/4 h-60 bg-white border border-gray-300 mt-16 z-10 overflow-y-scroll">
+                            <ul v-if="productList.data" class="absolute w-3/4 h-60 bg-white border border-gray-500 mt-16 z-10 overflow-y-scroll rounded-lg">
                                 <li
                                     v-for="product in productList.data"
                                     :key="product.prodId"
@@ -167,20 +181,23 @@
                             </div>
 
                             <div class="relative z-0 w-full my-5 group text-center">
-                                <button type="submit" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
+                                <button type="submit" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px">
                                     Filter
                                 </button>
-                                <a v-if="productTransactions.data && productTransactions.data.length > 0" 
-                                    :href="route('generatePdf.StockCard', { productDetails: searchProductInfo })" 
+                                <a 
+                                    :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard', { productDetails: searchProductInfo }) : '#'" 
                                     target="_blank"
-                                    class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
+                                    class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
+                                    :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"
+                                    @click="!(productTransactions.data && productTransactions.data.length > 0) && $event.preventDefault()"
+                                    >
                                     Print
                                 </a>
                             </div>
                         </div>
                     </form>
                 </div>
-                <div class="bg-white p-2 lg:overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white p-2 lg:overflow-hidden shadow-md sm:rounded-lg">
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
@@ -197,8 +214,17 @@
     </div>
 </template>
 <style scoped>
-    table.dataTable th {
-    background-color: #4c51bf;
-    color: white;
-    }
+:deep(table.dataTable) {
+    border: 2px solid #555555;
+}
+
+:deep(table.dataTable thead > tr > th) {
+    background-color: #555555;
+    text-align: center;
+    color: aliceblue;
+}
+
+:deep(table.dataTable tbody > tr > td) {
+    text-align: center;
+}
 </style>

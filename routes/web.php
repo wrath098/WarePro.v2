@@ -24,6 +24,7 @@ use App\Http\Controllers\Pdf\IndividualPpmpController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
+use App\Http\Controllers\Pdf\SsmiController;
 use App\Http\Controllers\Pdf\SummaryOfConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\StockCardController;
 use App\Http\Controllers\ProductInventoryController;
@@ -169,6 +170,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
+    Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
 });
 
 #AJAX
@@ -176,7 +178,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
     Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
     Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
-    Route::get('/issuances-log', [ProductInventoryController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
+    Route::get('/issuances-log', [RisTransactionController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
 });
 
 
