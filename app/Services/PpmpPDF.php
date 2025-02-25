@@ -20,11 +20,11 @@ class PpmpPDF extends TCPDF
 
         $this->SetFont('helvetica', 'I', 8);
 
-        $waterMark = 'PGSO-WarePro : ' . $this->customData;
+        $waterMark = '';
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 
-        $footerText = 'CG:System Generated';
+        $footerText = 'PGSO-WarePro : ' . $this->customData;
 
         $totalWidth = $this->getPageWidth();
 

@@ -169,7 +169,12 @@ class RisTransactionController extends Controller
     }
 
     private function getRisTransactions() {
-        $transactions = RisTransaction::with(['creator', 'productDetails', 'requestee'])->orderBy('created_at', 'desc')->limit(100)->get();
+        $transactions = RisTransaction::with(['creator', 'requestee', 'productDetails' => function($query) {
+                $query->withTrashed();
+            }])
+            ->orderBy('created_at', 'desc')
+            ->limit(100)
+            ->get();
 
         $transactions = $transactions->map(fn($transaction) => [
             'id' => $transaction->id,
@@ -252,7 +257,9 @@ class RisTransactionController extends Controller
     private function getFilteredIssuanceLogs($fromDate, $toDate)
     {
         $resultLogs = RisTransaction::whereBetween('created_at', [$fromDate, $toDate])
-            ->with(['creator', 'productDetails', 'requestee'])
+            ->with(['creator', 'requestee', 'productDetails' => function($query) {
+                $query->withTrashed();
+            }])
             ->orderBy('created_at', 'desc')
             ->get();
 

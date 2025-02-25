@@ -246,7 +246,7 @@
                     </div>
 
                     <div v-if="requestData.length > 0" class="w-fullpx-5 pt-5 relative overflow-x-auto">
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-700 rounded-md">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-700 border-2 border-gray-700 rounded-md">
                             <thead class="text-xs text-gray-200 uppercase bg-gray-700 ">
                                 <tr class="rounded-md">
                                     <th class="px-6 py-3 w-1/12 text-center">Action</th>

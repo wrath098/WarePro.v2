@@ -24,7 +24,19 @@ class ProductInventoryController extends Controller
     public function index(): Response
     {
         $products = $this->filterProductsWithInventory();
-        return Inertia::render('Inventory/Index', ['inventory' => $products]);
+        $countOutOfStock = $products->filter(function($transaction) {
+            return $transaction['status'] === 'Out of Stock';
+        })->count();
+
+        $countAvailable = $products->filter(function($transaction) {
+            return $transaction['status'] === 'Available';
+        })->count();
+
+        return Inertia::render('Inventory/Index', [
+            'inventory' => $products,
+            'countOutOfStock' => $countOutOfStock,
+            'countAvailable' => $countAvailable,
+        ]);
     }
 
     public function showStockCard(Request $request)
@@ -127,7 +139,7 @@ class ProductInventoryController extends Controller
         $products = $products->map(function($product) {
             $inventory = $product->inventory;
             $currentStock = $inventory ? $inventory->qty_on_stock : 0;
-            $status = 'Reorder';
+            $status = 'Out of Stock';
             $qty_on_stock = 0;
             $reorder_level = 0;
 
@@ -137,7 +149,7 @@ class ProductInventoryController extends Controller
                 if ($inventory) {
                     $qty_on_stock = $inventory->qty_on_stock;
                     $reorder_level = $inventory->reorder_level;
-                    $status = $qty_on_stock <= $reorder_level ? 'Reorder' : 'Available';
+                    $status = $qty_on_stock <= $reorder_level ? 'Out of Stock' : 'Available';
                 }
             
                 return [

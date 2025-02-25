@@ -175,10 +175,6 @@ class ProductController extends Controller
 
     public function moveAndModify(Request $request)
     {
-        // dd($request->toArray());
-        // return redirect()->back()
-        //             ->with(['error' => 'This action is not available yet. Please refer to your system administrator!']);
-
         DB::beginTransaction();
 
         $validatedData = $request->validate([
@@ -198,51 +194,18 @@ class ProductController extends Controller
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
                 $product = Product::findOrFail($validatedData['prodId']);
                 $product->lockForUpdate();
-                $isProductFound = $this->verifyProductExistence($product->prod_oldNo, $validatedData['itemId']);
 
-                if($isProductFound) {
-                    $isProductFound->lockForUpdate();
-                    $isProductFound->restore();
-                    $isProductFound->update([
-                        'updated_by' => $validatedData['updatedBy'],
-                        'prod_oldNo' => $product->prod_newNo,
-                        'prod_status' => 'active',
-                    ]);
-
-                    $product->update([
-                        'updated_by' => $validatedData['updatedBy'],
-                    ]);
-                    $product->delete();
-
-                    DB::commit();
-                    return redirect()->back()
-                        ->with(['message' => 'Product has been modified successfully.']);
-                }
-                
-                $product->update(['updated_by' => $validatedData['updatedBy']]);
-
-                $createNewProduct = Product::create([
+                $product->fill([
                         'prod_newNo' => $controlNo,
-                        'prod_desc' => $validatedData['prodDesc'],
-                        'prod_unit' => $validatedData['prodUnit'],
-                        'prod_remarks' => $validatedData['prodRemarks'],
                         'prod_oldNo' => $product->prod_newNo,
-                        'has_expiry' => $validatedData['hasExpiry'] ?? 0,
                         'item_id' => $validatedData['itemId'],
-                        'created_by' => $validatedData['updatedBy'],
                         'updated_by' => $validatedData['updatedBy'],
                     ]);
-
-                ProductPrice::create([
-                    'prod_price' => (float) $validatedData['prodPrice'],
-                    'prod_id' => $createNewProduct->id,
-                ]);
-
-                $product->delete();
+                $product->save();
 
                 DB::commit();
                 return redirect()->back()
-                    ->with(['message' => 'Product has been modified successfully.']);
+                    ->with(['message' => 'Product has been move successfully.']);
         } catch (\Exception $e) {
             
             DB::rollBack();
@@ -312,14 +275,6 @@ class ProductController extends Controller
             return redirect()->route('product.display.active')
                 ->with(['message' => 'Product has been move to trashed.']);
         }
-    }
-
-    private function verifyProductExistence(string $stockNo, int $compareItemId): ?Product
-    {
-        return Product::withTrashed()
-            ->where('prod_newNo', $stockNo)
-            ->where('item_id', $compareItemId)
-            ->first();
     }
 
     private function verifyOldStockNo(string $oldStockNo, int $productId): ?Product

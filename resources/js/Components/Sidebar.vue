@@ -249,11 +249,15 @@
                     </SidebarDropdown>
                     <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
                         <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
-                        <span class="ml-3">Stock Quantity</span>
+                        <span class="ml-3">Current Stock</span>
                     </SidebarLink>
                     <SidebarLink :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
                         <ArrowRight :class="{ 'text-white' : route().current('show.stockCard')}"/>
                         <span class="ml-3">Stock Card</span>
+                    </SidebarLink>
+                    <SidebarLink :href="route('show.expiry.products')" :active="route().current('show.expiry.products')" class="my-1">
+                        <ArrowRight :class="{ 'text-white' : route().current('show.expiry.products')}"/>
+                        <span class="ml-3">On Expiry</span>
                     </SidebarLink>
                 </li>
             </ul>

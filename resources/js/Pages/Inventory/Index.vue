@@ -14,6 +14,8 @@
     const isLoading = ref(false);
     const props = defineProps({
         inventory: Object,
+        countOutOfStock: Number,
+        countAvailable: Number,
     });
 
     const addParticular = reactive({
@@ -86,7 +88,46 @@
             </nav>
         </template>
         <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
+            <div class="grid grid-cols-1 gap-3 px-4 sm:grid-cols-3 sm:px-8">
+                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="p-4 bg-indigo-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor">
+                            <path fill="currentColor" d="M6 12A6 6 0 1 0 6 0a6 6 0 0 0 0 12Zm2.53-6.72L5.78 8.03a.75.75 0 0 1-1.06 0l-1-1a.75.75 0 0 1 1.06-1.06l.47.47l2.22-2.22a.75.75 0 0 1 1.06 1.06Z"/>
+                        </svg>
+                    </div>
+                    <div class="px-4 text-gray-700">
+                        <h3 class="text-sm tracking-wider">Total Items Available</h3>
+                        <p class="text-3xl">{{ countAvailable }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="p-4 bg-yellow-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                <path d="M3 16a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zm7 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zm7 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zM5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/>
+                                <path d="M16.5 8.5L19 11l2.5-2.5"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="px-4 text-gray-700">
+                        <h3 class="text-sm tracking-wider">Total Items for Re-Order</h3>
+                        <p class="text-3xl"></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="p-4 bg-red-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 22c-.818 0-1.6-.33-3.163-.988C4.946 19.373 3 18.554 3 17.175V7.542M12 22c.818 0 1.6-.33 3.163-.988C19.054 19.373 21 18.554 21 17.175V7.542M12 22v-9.97m9-4.488c0 .613-.802 1-2.405 1.773l-2.92 1.41c-1.804.87-2.705 1.304-3.675 1.304m9-4.487c0-.612-.802-.999-2.405-1.772L17 5M3 7.542c0 .613.802 1 2.405 1.773l2.92 1.41c1.804.87 2.705 1.304 3.675 1.304M3 7.542c0-.612.802-.999 2.405-1.772L7 5m-1 8.026l2 .997M10 2l2 2m0 0l2 2m-2-2l-2 2m2-2l2-2" color="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="px-4 text-gray-700">
+                        <h3 class="text-sm tracking-wider">Total Items Out of Stock</h3>
+                        <p class="text-3xl">{{ countOutOfStock }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 sm:px-6 lg:px-8">
                 <div class="bg-white p-2 lg:overflow-hidden shadow-sm sm:rounded-lg">
                     <DataTable class="w-full text-gray-900 display">
                         <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
@@ -121,7 +162,7 @@
                                 <td>
                                     <span :class="{
                                         'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': item.status === 'Available',
-                                        'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300': item.status == 'Reorder'
+                                        'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300': item.status == 'Out of Stock'
                                         }">
                                         {{ item.status }}
                                     </span>
@@ -197,3 +238,14 @@
     </AuthenticatedLayout>
     </div>
 </template>
+<style scoped>
+:deep(table.dataTable) {
+    border: 2px solid #555555;
+}
+
+:deep(table.dataTable thead > tr > th) {
+    background-color: #555555;
+    text-align: center;
+    color: aliceblue;
+}
+</style>

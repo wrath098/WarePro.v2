@@ -157,7 +157,7 @@ class ApprovedConsolidatedPpmpController extends Controller
         });
         
         $sortedParticulars = $groupParticulars->sortBy('prodCode');
-        $funds = $this->productService->getActiveProduct_FundModel();
+        $funds = $this->productService->getAllProduct_FundModel();
 
         foreach ($funds as $fund) {
             if ($fund->categories->isNotEmpty()) {
@@ -274,8 +274,8 @@ class ApprovedConsolidatedPpmpController extends Controller
             $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id);
             $contingency = $capitalOutlay - $fundTotal;
 
-            $contingencyFirst = $this->productService->getCapitalOutlayContingency($ppmpTransaction->ppmp_year, $fund->id, $firstSem);;
-            $contingencySecond = $this->productService->getCapitalOutlayContingency($ppmpTransaction->ppmp_year, $fund->id, $secondSem);;
+            $contingencyFirst = $this->productService->getCapitalOutlayContingency($ppmpTransaction->ppmp_year, $fund->id, $firstSem);
+            $contingencySecond = $this->productService->getCapitalOutlayContingency($ppmpTransaction->ppmp_year, $fund->id, $secondSem);
 
             $grandTotalFirstQty = $fundFirstTotal + $contingencyFirst;
             $grandTotalSecondQty = $fundSecondTotal + $contingencySecond;

@@ -150,6 +150,7 @@ Route::middleware('auth')->prefix('inventory')->group(function () {
     Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
     Route::get('/stock-card', [ProductInventoryController::class, 'showStockCard'])->name('show.stockCard');
+    Route::get('/expiry-products', [ProductInventoryTransactionController::class, 'showProductsOnExpired'])->name('show.expiry.products');
 });
 
 Route::middleware('auth')->prefix('ris')->group(function () {
