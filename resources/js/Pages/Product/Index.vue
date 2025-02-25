@@ -6,7 +6,7 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Components/Sidebar.vue';
+    import Sidebar from '@/Layouts/Sidebar.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';

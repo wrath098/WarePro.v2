@@ -1,7 +1,7 @@
 <script setup>
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Components/Sidebar.vue';
+    import Sidebar from '@/Layouts/Sidebar.vue';
     import { computed, onMounted, reactive, ref } from 'vue';
     import { DataTable } from 'datatables.net-vue3';
     import Swal from 'sweetalert2';

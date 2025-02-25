@@ -1,7 +1,7 @@
 <script setup>
     import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Components/Sidebar.vue';
+    import Sidebar from '@/Layouts/Sidebar.vue';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';
     
     const props = defineProps({

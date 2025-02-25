@@ -2,7 +2,7 @@
     import { computed, onMounted, reactive, ref, watch } from 'vue';
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Components/Sidebar.vue';
+    import Sidebar from '@/Layouts/Sidebar.vue';
     import { DataTable } from 'datatables.net-vue3';
     import axios from 'axios';
     import { debounce } from 'lodash';

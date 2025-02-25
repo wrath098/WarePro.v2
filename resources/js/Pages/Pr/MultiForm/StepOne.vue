@@ -3,7 +3,7 @@
     import { Head, usePage } from '@inertiajs/vue3';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';   
-    import Sidebar from '@/Components/Sidebar.vue';
+    import Sidebar from '@/Layouts/Sidebar.vue';
     import Swal from 'sweetalert2';
     
     const page = usePage();

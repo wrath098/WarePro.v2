@@ -3,7 +3,7 @@
     import { ref, computed, reactive, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Components/Sidebar.vue';
+    import Sidebar from '@/Layouts/Sidebar.vue';
     import Copy from '@/Components/Buttons/Copy.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import Print from '@/Components/Buttons/Print.vue';

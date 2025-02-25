@@ -3,7 +3,7 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 import { ref, reactive, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Sidebar from '@/Components/Sidebar.vue';
+import Sidebar from '@/Layouts/Sidebar.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import Modal from '@/Components/Modal.vue';
 import DangerButton from '@/Components/Buttons/DangerButton.vue';
