@@ -143,7 +143,7 @@ class ProductController extends Controller
 
             if ($validatedData['prodOldCode'] && $isOLdCodeFound) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Product Old Stock No is already in used! Stock no:' . $isOLdCodeFound->prod_newNo]);
+                return redirect()->back()->with(['error' => 'Product Old Stock No is already in used by stock no# ' . $isOLdCodeFound->prod_newNo]);
             }
 
             $product->update([
@@ -191,8 +191,7 @@ class ProductController extends Controller
 
         try {            
                 $controlNo = $this->productService->generateStockNo($validatedData['itemId']);
-                $product = Product::findOrFail($validatedData['prodId']);
-                $product->lockForUpdate();
+                $product = Product::where('id', $validatedData['prodId'])->lockForUpdate()->firstOrFail();
 
                 $product->fill([
                         'prod_newNo' => $controlNo,
@@ -283,6 +282,15 @@ class ProductController extends Controller
             return redirect()->route('product.display.active')
                 ->with(['error' => 'Unable to remove the product no#' . $product->prod_newNo . ' Please refer this to your system administrator!']);
         }
+    }
+
+    public function getTrashedItems()
+    {
+        $query = Product::where('prod_status', 'deactivated')
+            ->orderBy('prod_desc', 'asc')
+            ->get();
+        
+        return response()->json(['data' => $query]);
     }
 
     private function verifyOldStockNo(string $oldStockNo, int $productId): ?Product

@@ -88,7 +88,7 @@
                             </SidebarDropdown>
                         </li>
                         <li>
-                            <SidebarDropdown :active="route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')">
+                            <SidebarDropdown :active="$page.url.includes('/product')">
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
                                     :class="{'text-white': route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')}"

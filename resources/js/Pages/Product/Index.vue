@@ -12,6 +12,8 @@
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import ModifyButton from '@/Components/Buttons/ModifyButton.vue';
     import Swal from 'sweetalert2';
+    import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
+    import axios from 'axios';
     
     const page = usePage();
     const isLoading = ref(false);
@@ -20,6 +22,21 @@
         categories: Object,
         authUserId: Number,
     });
+
+    const trashedItems = ref([]);
+    const isTrashedActive = ref(false);
+    const fetchTrashedItems = async () => {
+        isLoading.value = true;
+        isTrashedActive.value = true;
+        try {
+            const response = await axios.get('products/trashed-items');
+            trashedItems.value = response.data;
+            isLoading.value = false;
+        } catch (error) {
+            isLoading.value = false;
+            console.error('Error fetching trashed items:', error);
+        }
+    };
 
     const create = reactive({
         selectedCategory: '',
@@ -152,6 +169,33 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'prod_newNo',
+            title: 'New No#',
+        },
+        {
+            data: 'prod_desc',
+            title: 'Description',
+        },
+        {
+            data: 'prod_status',
+            title: 'Status',
+        },
+        {
+            data: 'prod_oldNo',
+            title: 'Old No#',
+        },
+        {
+            data: 'updated_at',
+            title: 'Date Remove',
+        },
+        {
+            data: 'updated_by',
+            title: 'Remove By',
+        },
+    ];
 </script>
 
 <template>
@@ -161,18 +205,16 @@
             <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
                     <li class="inline-flex items-center" aria-current="page">
-                        <li class="inline-flex items-center">
-                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
-                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                </svg>
-                                Products
-                            </a>
-                        </li>
+                        <a :href="route('product.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Products
+                        </a>
                     </li>
-                    <li aria-current="page">
+                    <li :aria-current="!isTrashedActive ? 'page' : undefined">
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="route('product.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
@@ -180,15 +222,26 @@
                             </a>
                         </div>
                     </li>
+                    <li v-if="isTrashedActive" aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Trashed
+                            </a>
+                        </div>
+                    </li>
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
                         <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
-                            <span class="mr-2">New Product</span>
+                            <span class="mr-2">New Product Item</span>
                         </AddButton>
                         <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Print List</span>
                         </PrintButton>
+                        <TrashedButton @click="fetchTrashedItems" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                            <span class="mr-2">Trashed</span>
+                        </TrashedButton>
                     </li>
                 </ol>
             </nav>
@@ -198,7 +251,7 @@
             <div class="overflow-hidden p-4">
                 <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="relative overflow-x-auto">
-                        <DataTable class="display table-hover table-striped shadow-lg rounded-lg">
+                        <DataTable v-if="!isTrashedActive" class="display table-hover table-striped shadow-lg rounded-lg">
                             <thead>
                                 <tr>
                                     <th scope="col" class="px-6 py-3 w-1/12">
@@ -228,8 +281,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(product, index) in products" :key="product.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-
+                                <tr v-for="product in products" :key="product.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
                                     <td scope="row" class="py-2 text-center text-sm">
                                         {{  product.newNo }}
                                     </td>
@@ -263,6 +315,17 @@
                                 </tr>
                             </tbody>
                         </DataTable>
+
+                        <DataTable
+                        v-if="isTrashedActive"
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="trashedItems.data"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: true
+                        }"
+                    />
                     </div>
                 </div>
             </div>

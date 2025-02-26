@@ -96,6 +96,9 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');
     Route::post('/store-unmodified-product', [ProductPpmpExceptionController::class, 'store'])->name('store.unmodified.product');
     Route::post('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
+
+    #AJAX
+    Route::get('/trashed-items', [ProductController::class, 'getTrashedItems'])->name('trashed.product.items');
 });
 
 Route::middleware('auth')->prefix('ppmp')->group(function () {
