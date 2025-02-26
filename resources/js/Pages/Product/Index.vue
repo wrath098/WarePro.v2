@@ -6,7 +6,6 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';
@@ -123,6 +122,8 @@
     
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
+    const warningMessage = computed(() => page.props.flash.warning);
+
     onMounted(() => {
         if (message.value) {
             Swal.fire({
@@ -141,23 +142,51 @@
                 confirmButtonText: 'OK',
             });
         }
+
+        if (warningMessage.value) {
+            Swal.fire({
+                title: 'Warning!',
+                text: warningMessage.value,
+                icon: 'warning',
+                confirmButtonText: 'OK',
+            });
+        }
     });
 </script>
 
 <template>
     <Head title="Products" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Products</a></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <li class="inline-flex items-center">
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                Products
+                            </a>
+                        </li>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('product.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Item List
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')" class="mx-1">
+                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Product</span>
                         </AddButton>
-                        <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1">
+                        <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Print List</span>
                         </PrintButton>
                     </li>
@@ -165,21 +194,13 @@
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4">
+                <div class="overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="relative overflow-x-auto">
-                        <div class="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-end">
-                            <div class="flex mb:flex-column">
-                                
-                            </div>
-                        </div>
-                        <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
-                            <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
+                        <DataTable class="display table-hover table-striped shadow-lg rounded-lg">
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        No#
-                                    </th>
                                     <th scope="col" class="px-6 py-3 w-1/12">
                                         New Stock No.
                                     </th>
@@ -208,9 +229,7 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(product, index) in products" :key="product.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  index+1 }}
-                                    </td>
+
                                     <td scope="row" class="py-2 text-center text-sm">
                                         {{  product.newNo }}
                                     </td>
@@ -223,7 +242,7 @@
                                     <td class="py-2">
                                         {{ product.desc }}
                                         <span v-if="product.expiry == 'Yes'" class="inline-flex items-center p-1 text-xs rounded bg-red-100 text-red-800">
-                                            Expiry
+                                            With Expiration
                                         </span>
                                     </td>
                                     <td class="py-2 text-center">
@@ -328,7 +347,7 @@
                                         <label for="prodRemarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
-                                        <input v-model="create.prodOldCode" type="number" name="prodOldCode" id="prodOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
+                                        <input v-model="create.prodOldCode" type="text" name="prodOldCode" id="prodOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                                         <label for="prodOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
                                     </div>
                                     <input type="hidden" v-model="create.createdBy">
@@ -579,6 +598,45 @@
             </form>
         </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>
- 
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-6ef2e16d] table.dataTable tbody > tr > td:nth-child(3)) {
+            text-align: left !important;
+    }
+
+    :deep([data-v-6ef2e16d] table.dataTable tbody > tr > td:nth-child(4)) {
+            text-align: left !important;
+    }
+</style>

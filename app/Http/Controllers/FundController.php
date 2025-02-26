@@ -36,7 +36,10 @@ class FundController extends Controller
         ]);
         
         try {
-            $existingFund = Fund::withTrashed()->whereRaw('LOWER(fund_name) = ?', [strtolower($validation['fundName'])])->first();
+            $existingFund = Fund::withTrashed()
+                ->whereRaw('LOWER(fund_name) = ?', [strtolower($validation['fundName'])])
+                ->first();
+                
             if ($existingFund) {
                 DB::rollBack();
                 return redirect()->back()->with(['error' => 'Account Classification Name is already exist.']);

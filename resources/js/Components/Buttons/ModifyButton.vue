@@ -19,7 +19,7 @@ const props = defineProps({
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16h13M4 16l4-4m-4 4 4 4M20 8H7m13 0-4 4m4-4-4-4"/>
             </svg>
         </button>
-        <div v-if="tooltip" class="absolute z-10 w-auto p-1 text-sm text-white bg-blue-700 rounded-lg tooltip">
+        <div v-if="tooltip" class="absolute z-10 w-auto p-1 text-xs text-white bg-blue-700 rounded-lg tooltip">
             {{ tooltip }}
         </div>
     </div>

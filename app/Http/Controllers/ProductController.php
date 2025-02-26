@@ -27,9 +27,9 @@ class ProductController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $activeCategories  = Category::with('items')
+        $activeCategories = Category::with('items')
             ->where('cat_status', 'active')
             ->get()
             ->map(function ($category) {
@@ -136,8 +136,7 @@ class ProductController extends Controller
         ]);
 
         try {
-            $product = Product::findOrFail($validatedData['prodId']);
-            $product->lockForUpdate();
+            $product = Product::where('id', $validatedData['prodId'])->lockForUpdate()->firstOrFail();
             $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
 
             $isOLdCodeFound = $this->verifyOldStockNo($validatedData['prodOldCode'], $product->id);
@@ -253,7 +252,8 @@ class ProductController extends Controller
             'prodId' => 'required|integer',
             'updatedBy' => 'nullable|integer',
         ]);
-        $product = Product::with('prices')->findOrFail($validatedData['prodId']);
+
+        $product = Product::with('prices')->where('id', $validatedData['prodId'])->lockForUpdate()->firstOrFail();
 
         try {
             foreach ($product->prices as $price) {
@@ -263,17 +263,25 @@ class ProductController extends Controller
             
             DB::commit();
             return redirect()->route('product.display.active')
-                ->with(['message' => 'Product has been remove successfully.']);
+                ->with(['message' => 'Product has been deleted successfully.']);
         } catch (\Exception $e) {
             
-            $product->update([
-                'updated_by' => $validatedData['updatedBy'], 
+            $product->fill([
+                'prod_status' => 'deactivated',
+                'updated_by' => $validatedData['updatedBy'],
             ]);
-            $product->delete();
 
-            DB::commit();
+            if ($product->save()) {
+                DB::commit();
+                return redirect()->route('product.display.active')
+                ->with(['warning' => 'The product has been moved to the trash. Unable to delete!']);
+            }
+
+            Log::error('Failed to deactivate product ID ' . $product->prod_newNo . ': ' . $e->getMessage());
+
+            DB::rollBack();
             return redirect()->route('product.display.active')
-                ->with(['message' => 'Product has been move to trashed.']);
+                ->with(['error' => 'Unable to remove the product no#' . $product->prod_newNo . ' Please refer this to your system administrator!']);
         }
     }
 
