@@ -6,7 +6,6 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
@@ -101,19 +100,75 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'code',
+            title: 'Code #',
+            width: '7%'
+        },
+        {
+            data: 'name',
+            title: 'Name',
+            width: '20%'
+        },
+        {
+            data: 'head',
+            title: 'Department Head',
+            width: '18%'
+        },
+        {
+            data: 'position',
+            title: 'Position',
+            width: '15%'
+        },
+        {
+            data: 'updatedBy',
+            title: 'Updated By',
+            width: '12%'
+        },
+        {
+            data: 'updatedAt',
+            title: 'Updated At',
+            width: '15%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '13%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
     <Head title="Office" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Offices</a></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Components
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('office.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Offices
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')">
+                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Office</span>
                         </AddButton>
                     </li>
@@ -121,64 +176,22 @@
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="relative overflow-x-auto">
-                        <DataTable class="w-full text-left rtl:text-right text-gray-900">
-                            <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        No#
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Code
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-3/12">
-                                        Office Name
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-3/12">
-                                        Head of Office
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Position
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Added By
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Action/s
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(office, index) in offices" :key="office.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  index+1 }}
-                                    </td>
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  office.code }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ office.name }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ office.head }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        {{ office.position }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        {{ office.addedBy }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <EditButton @click="openEditModal(office)" tooltip="Edit"/>
-                                        <RemoveButton @click="openDeactivateModal(office)" tooltip="Remove"/>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </DataTable>
-                    </div>
+        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="props.offices"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <EditButton @click="openEditModal(props.cellData)" tooltip="Edit"/>
+                                <RemoveButton @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
+                            </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
@@ -320,6 +333,45 @@
             </form>
         </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>
- 
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-da5bce7f] table.dataTable tbody > tr > td:nth-child(2)) {
+            text-align: left !important;
+    }
+
+    :deep([data-v-da5bce7f] table.dataTable tbody > tr > td:nth-child(3)) {
+            text-align: left !important;
+    }
+</style>

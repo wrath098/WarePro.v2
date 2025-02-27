@@ -12,9 +12,9 @@ use Inertia\Response;
 
 class OfficeController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $offices = Office::with('creator')
+        $offices = Office::with(['updater', 'creator'])
             ->where('office_status', 'active')
             ->orderBy('office_name')
             ->get()
@@ -26,7 +26,8 @@ class OfficeController extends Controller
                     'head' => $office->office_head,
                     'position' => $office->position_head,
                     'status' => $office->office_status,
-                    'addedBy' => optional($office->creator)->name ?? 'N/A',
+                    'updatedBy' => $office->updater ? $office->updater->name : $office->creator->name,
+                    'updatedAt' => $office->updated_at ? $office->updated_at->format('F j, Y') : $office->created_at->format('F j, Y'),
                 ];
             });
 

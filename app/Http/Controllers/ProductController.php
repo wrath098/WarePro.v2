@@ -243,6 +243,35 @@ class ProductController extends Controller
         ]);
     }
 
+    public function restore(Request $request)
+    {
+        $id = $request->prodId;
+        $user = Auth::id();
+
+        DB::beginTransaction();
+        try {
+            $query = Product::with('itemClass')->where('id', $id)->lockForUpdate()->firstOrFail();
+            
+            if ($query->itemClass->item_status == 'deactivated')
+            {
+                DB::rollBack();
+                return redirect()->back()
+                        ->with(['error' => 'Unable to restore the selected product. Item Class is currently not active!']);
+            }
+
+            $query->update(['prod_status' => 'active', 'updated_by' => $user]);
+            DB::commit();
+            return redirect()->back()
+                    ->with(['message' => 'Product has been restored successfully.']);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+            Log::error('Product restoration failed: ' . $e->getMessage());
+            return redirect()->back()
+                ->with(['error' => 'Product restoration failed!']);
+        }
+    }
+
     public function deactivate(Request $request)
     {
         DB::beginTransaction();
@@ -287,8 +316,19 @@ class ProductController extends Controller
     public function getTrashedItems()
     {
         $query = Product::where('prod_status', 'deactivated')
+            ->with(['updater', 'itemClass'])
             ->orderBy('prod_desc', 'asc')
-            ->get();
+            ->get()
+            ->map(fn($product) => [
+                'id' => $product->id,
+                'stockNo' => $product->prod_newNo,
+                'desc' => $product->prod_desc,
+                'unit' => $product->prod_unit,
+                'usedSince' => $product->prod_remarks,
+                'oldNo' => $product->prod_oldNo,
+                'updatedAt' => $product->updated_at->format('F j, Y'),
+                'updatedBy' => $product->updater->name,
+            ]);
         
         return response()->json(['data' => $query]);
     }

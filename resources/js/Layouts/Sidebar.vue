@@ -62,7 +62,7 @@
                                     </li>
                                     <li>
                                         <SubSidebarLink :href="route('category.display.active')" :active="route().current('category.display.active')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('category.display.all')}"/>
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('category.display.active')}"/>
                                             Categories
                                         </SubSidebarLink>
                                     </li>
@@ -91,7 +91,7 @@
                             <SidebarDropdown :active="$page.url.includes('/product')">
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{'text-white': route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')}"
+                                    :class="{'text-white': $page.url.includes('/product')}"
                                     fill="currentColor" 
                                     aria-hidden="true" 
                                     xmlns="http://www.w3.org/2000/svg" 
@@ -100,7 +100,7 @@
                                     <path fill="currentColor" fill-rule="evenodd" d="M15 4H9v16h6zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3zM4 4h3v16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2" clip-rule="evenodd"/>
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Products</span>
-                                <ArrowDown :class="{'text-white': route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')}" />
+                                <ArrowDown :class="{'text-white': $page.url.includes('/product')}" />
                                 
                                 <template #dropdown-items>
                                     <li>
@@ -112,13 +112,13 @@
                                     <li>
                                         <SubSidebarLink :href="route('product.display.active.pricelist')" :active="route().current('product.display.active.pricelist')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active.pricelist')}"/>
-                                            Price Timeline
+                                            Price List
                                         </SubSidebarLink>
                                     </li>
                                     <li>
                                         <SubSidebarLink :href="route('product.unmodified.list')" :active="route().current('product.unmodified.list')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('product.unmodified.list')}"/>
-                                            Unchanged Product (Qty)
+                                            Fixed Quantity
                                         </SubSidebarLink>
                                     </li>
                                 </template>

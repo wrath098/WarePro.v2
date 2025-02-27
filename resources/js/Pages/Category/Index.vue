@@ -1,224 +1,297 @@
 <script setup>
-import { Head, usePage } from '@inertiajs/vue3';
-import { Inertia } from '@inertiajs/inertia';
-import { ref, reactive, computed, onMounted } from 'vue';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Sidebar from '@/Layouts/Sidebar.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import Modal from '@/Components/Modal.vue';
-import DangerButton from '@/Components/Buttons/DangerButton.vue';
-import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
-import Swal from 'sweetalert2';
-import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
+    import { Head, usePage } from '@inertiajs/vue3';
+    import { Inertia } from '@inertiajs/inertia';
+    import { ref, reactive, computed, onMounted } from 'vue';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
+    import Modal from '@/Components/Modal.vue';
+    import DangerButton from '@/Components/Buttons/DangerButton.vue';
+    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import Swal from 'sweetalert2';
+    import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
+    import AddButton from '@/Components/Buttons/AddButton.vue';
+    import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
 
-const modalState = ref(null);
-const page = usePage();
-const isLoading = ref(false);
+    const modalState = ref(null);
+    const page = usePage();
+    const isLoading = ref(false);
 
-const isAddModalOpen = computed(() => modalState.value === 'add');
-const isEditModalOpen = computed(() => modalState.value === 'edit');
-const isDropModalOpen = computed(() => modalState.value === 'deactivate');
-const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
+    const isAddModalOpen = computed(() => modalState.value === 'add');
+    const isEditModalOpen = computed(() => modalState.value === 'edit');
+    const isDropModalOpen = computed(() => modalState.value === 'deactivate');
+    const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
 
-const showModal = (modalType) => {
-    modalState.value = modalType;
-}
+    const showModal = (modalType) => {
+        modalState.value = modalType;
+    }
 
-const closeModal = () => {
-    modalState.value = null;
-}
+    const closeModal = () => {
+        modalState.value = null;
+    }
 
-const props = defineProps({
-    activeCategories: Object,
-    deactivatedCategories: Object,
-    funds: Array,
-    authUserId: Number,
-});
+    const props = defineProps({
+        activeCategories: Object,
+        funds: Array,
+        authUserId: Number,
+    });
 
-const form = reactive({
-    catName: '',
-    catCode: '',
-    fundId: '',
-    createdBy: props.authUserId || '',
-});
-
-const editForm = reactive({
-    catId: '',
-    catName: '',
-    catCode: '',
-    fundId: '',
-    updater: props.authUserId || '',
-});
-
-const dropForm = reactive({
-    catId: '',
-    updater: props.authUserId || '',
-});
-
-const confirmForm = reactive({
-    catId: '',
-    updater: props.authUserId || '',
-});
-
-const openEditModal = (category) => {
-    editForm.catId = category.id;
-    editForm.catName = category.name;
-    editForm.catCode = category.code;
-    editForm.fundId = category.fundId;
-    modalState.value = 'edit';
-};
-
-const openDropModal = (category) => {
-    dropForm.catId = category.id;
-    modalState.value = 'deactivate';
-};
-
-const openConfirmModal = (category) => {
-    confirmForm.catId = category;
-    modalState.value = 'confirm';
-};
-
-const submitForm = (url, data) => {
-    isLoading.value = true;
-    Inertia.post(url, data, {
-        onSuccess: () => {
-            closeModal();
+    const trashedCategories = ref([]);
+    const isTrashedActive = ref(false);
+    const fetchTrashedCategories = async () => {
+        isLoading.value = true;
+        isTrashedActive.value = true;
+        try {
+            const response = await axios.get('categories/trashed-categories');
+            trashedCategories.value = response.data;
             isLoading.value = false;
+        } catch (error) {
+            isLoading.value = false;
+            console.error('Error fetching trashed items:', error);
+        }
+    };
+
+    const form = reactive({
+        catName: '',
+        catCode: '',
+        fundId: '',
+        createdBy: props.authUserId || '',
+    });
+
+    const editForm = reactive({
+        catId: '',
+        catName: '',
+        catCode: '',
+        fundId: '',
+        updater: props.authUserId || '',
+    });
+
+    const dropForm = reactive({
+        catId: '',
+        updater: props.authUserId || '',
+    });
+
+    const confirmForm = reactive({
+        catId: '',
+        updater: props.authUserId || '',
+    });
+
+    const openEditModal = (category) => {
+        editForm.catId = category.id;
+        editForm.catName = category.name;
+        editForm.catCode = category.code;
+        editForm.fundId = category.fundId;
+        modalState.value = 'edit';
+    };
+
+    const openDropModal = (category) => {
+        dropForm.catId = category.id;
+        modalState.value = 'deactivate';
+    };
+
+    const openConfirmModal = (category) => {
+        confirmForm.catId = category;
+        modalState.value = 'confirm';
+    };
+
+    const submitForm = (url, data) => {
+        isLoading.value = true;
+        Inertia.post(url, data, {
+            onSuccess: () => {
+                closeModal();
+                isLoading.value = false;
+            }
+        });
+    };
+
+    const submit = () => submitForm('categories/save', form);
+    const submitEdit = () => submitForm('categories/update', editForm);
+    const submitDrop = () => submitForm('categories/deactivate', dropForm);
+    const confirmFormSubmit = () => submitForm(`categories/restore/${confirmForm.catId}`, null);
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
         }
     });
-};
 
-const submit = () => submitForm('categories/save', form);
-const submitEdit = () => submitForm('categories/update', editForm);
-const submitDrop = () => submitForm('categories/deactivate', dropForm);
-const confirmFormSubmit = () => submitForm(`categories/restore/${confirmForm.catId}`, null);
-
-const message = computed(() => page.props.flash.message);
-const errMessage = computed(() => page.props.flash.error);
-
-onMounted(() => {
-    if (message.value) {
-        Swal.fire({
-            title: 'Success',
-            text: message.value,
-            icon: 'success',
-            confirmButtonText: 'OK',
-        });
-    }
-
-    if (errMessage.value) {
-        Swal.fire({
-            title: 'Failed',
-            text: errMessage.value,
-            icon: 'error',
-            confirmButtonText: 'OK',
-        });
-    }
-});
+    const columns = [
+        {
+            data: null,
+            title: 'Code #',
+            width: '10%',
+            render: '#code',
+        },
+        {
+            data: 'name',
+            title: 'Name',
+            width: '35%'
+        },
+        {
+            data: 'status',
+            title: 'Current Status',
+            width: '10%',
+            render: (data, type, row) => {
+                return `
+                <span class="${data === 'Deactivated' 
+                    ? 'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300' 
+                    : ''}">
+                    ${data}
+                </span>
+                `;
+            },
+        },
+        {
+            data: 'fundName',
+            title: 'Account Classification',
+            width: '15%'
+        },
+        {
+            data: 'updatedBy',
+            title: 'Removed By',
+            width: '10%'
+        },
+        {
+            data: 'updatedAt',
+            title: 'Date Removed',
+            width: '10%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '10%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
     <Head title="Category" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2">
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Categories</li> 
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Components
+                        </a>
+                    </li>
+                    <li :aria-current="!isTrashedActive ? 'page' : undefined">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('category.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Categories
+                            </a>
+                        </div>
+                    </li>
+                    <li v-if="isTrashedActive" aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Trashed
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
+                    <li class="flex flex-col lg:flex-row">
+                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                            <span class="mr-2">New Item Class</span>
+                        </AddButton>
+                        <TrashedButton @click="fetchTrashedCategories" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                            <span class="mr-2">Trashed</span>
+                        </TrashedButton>
+                    </li>
                 </ol>
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-4">
-                        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
-                            <li v-for="category in activeCategories" :key="category.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
-                                <div class="text-2xl font-bold text-indigo-900">
-                                    {{ category.code.padStart(2, '0') }}
-                                </div>
+        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <ul v-if="!isTrashedActive" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
+                        <li v-for="category in activeCategories" :key="category.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
+                            <div class="text-2xl font-bold text-indigo-900">
+                                {{ category.code.padStart(2, '0') }}
+                            </div>
 
-                                <div class="flex-1 flex items-start justify-between bg-gray-50 p-4 rounded-lg">
-                                    <div class="flex flex-col gap-1">
-                                        <p class="text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                                            {{ category.name }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            <span class="font-medium">Fund Cluster: </span> {{ category.fundName}}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            <span class="font-medium ">Added By: </span> {{ category.creatorName }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            <span class="font-medium">Status: </span> {{ category.status }}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <Dropdown>
-                                            <template #trigger>
-                                                <button class="flex items-center bg-gray-700 text-indigo-100 p-2 rounded-full hover:text-gray-900  hover:bg-indigo-50 transition">
-                                                    <span class="sr-only">Open options</span>
-                                                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
-                                                        <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
-                                                    </svg>
-                                                </button>
-                                            </template>
-                                            <template #content>
-                                                <button @click="openEditModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
-                                                    Edit 
-                                                </button>
-                                                <button @click="openDropModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
-                                                    Remove
-                                                </button>
-                                            </template>
-                                        </Dropdown>
-                                    </div>
+                            <div class="flex-1 flex items-start justify-between bg-gray-50 p-4 rounded-lg">
+                                <div class="flex flex-col gap-1">
+                                    <p class="text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        {{ category.name }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <span class="font-medium">Fund Cluster: </span> {{ category.fundName}}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <span class="font-medium ">Added By: </span> {{ category.creatorName }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <span class="font-medium">Status: </span> {{ category.status }}
+                                    </p>
                                 </div>
-                            </li>
-                            <button @click="showModal('add')" class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md transition-transform transform hover:scale-105">
-                                <span class="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
-                                    <svg class="w-6 h-6 text-indigo-900 transition duration-75 ml-10" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18M3 12h18"/>
-                                    </svg>
-                                    New Category
-                                </span>
-                            </button>
-                        </ul>
-                    </div>
+                                <div class="flex items-center">
+                                    <Dropdown>
+                                        <template #trigger>
+                                            <button class="flex items-center bg-gray-700 text-indigo-100 p-2 rounded-full hover:text-gray-900  hover:bg-indigo-50 transition">
+                                                <span class="sr-only">Open options</span>
+                                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
+                                                    <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <button @click="openEditModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                                Edit 
+                                            </button>
+                                            <button @click="openDropModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                                Remove
+                                            </button>
+                                        </template>
+                                    </Dropdown>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <DataTable
+                        v-if="isTrashedActive"
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="trashedCategories.data"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: true
+                        }">
+                            <template #code="props">
+                                <span>{{ props.cellData.code.padStart(2, '0') }}</span>
+                            </template>
+                            <template #action="props">
+                                <RecycleIcon @click="openConfirmModal(props.cellData.id)"/>
+                            </template>
+                    </DataTable>
                 </div>
-            </div>
-
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2 mt-10" v-if="deactivatedCategories.length > 0">
-                <DataTable class="display table-hover table-striped shadow-lg rounded-lg bg-white compact">
-                    <thead>
-                        <tr>
-                            <th>Transaction No.</th>
-                            <th>Code</th>
-                            <th>Fund Name</th>
-                            <th>Status</th>
-                            <th>Description</th>
-                            <th>Updated At</th>
-                            <th>Updated By</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="category in deactivatedCategories" :key="category.id">
-                            <td>{{ category.id}}</td>
-                            <td>{{ category.code.padStart(2, '0') }}</td>
-                            <td>{{ category.name }}</td>
-                            <td><span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300">{{ category.status }}</span></td>
-                            <td>{{ category.fundName }}</td>
-                            <td>{{ category.updatedAt }}</td>
-                            <td>{{ category.updatedBy }}</td>
-                            <td>
-                                <RecycleIcon @click="openConfirmModal(category.id)"/>
-                            </td>
-                        </tr>
-                    </tbody>
-                </DataTable>
             </div>
         </div>
         <Modal :show="isAddModalOpen" @close="closeModal"> 
@@ -391,6 +464,45 @@ onMounted(() => {
             </form>
         </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>
- 
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-de7a9c2b] table.dataTable tbody > tr > td:nth-child(2)) {
+            text-align: left !important;
+    }
+
+    :deep([data-v-de7a9c2b] table.dataTable tbody > tr > td:nth-child(4)) {
+            text-align: left !important;
+    }
+</style>

@@ -23,7 +23,6 @@ class ItemClassController extends Controller
     public function index(): Response
     {
         $activeItemClass = $this->getActiveItemClass();
-        $deactivatedItemClass = $this->getDeactivitedItemClass();
         
         $categories = $this->productService->getActiveCategory()->map(fn($category) => [
             'id' => $category->id,
@@ -32,7 +31,6 @@ class ItemClassController extends Controller
 
         return Inertia::render('Item/Index', [
             'activeItemClass' => $activeItemClass,
-            'deactivatedItemClass' => $deactivatedItemClass,
             'categories' => $categories,
             'authUserId' => Auth::id()
         ]);
@@ -128,25 +126,26 @@ class ItemClassController extends Controller
 
         try
         {
-            $itemClassDetails = $itemClass->load(['category', 'products']);
-            $itemClassDetails->lockForUpdate();
+            $itemClassDetails = $itemClass->load([
+                'category', 
+                'products' => function ($query) {
+                    $query->onlyTrashed()
+                        ->where('prod_status', 'active')
+                        ->lockForUpdate();
+                }
+            ]);
 
             if($itemClassDetails->category->cat_status != 'active'){
                 DB::rollBack();
                 return redirect()->back()->with(['error' => 'Unable to restore the item class, main category is inactive!']);
             }
 
-            foreach ($itemClass->products as $product) {  
-                $product->update([
-                    'prod_status' => 'active',
-                    'updated_by' => $user,
-                ]);
+            foreach ($itemClassDetails->products as $product) {
+                $product->restore();
+                $product->update(['updated_by' => $user]);
             }
 
-            $itemClass->update([
-                'item_status' => 'active',
-                'updated_by' => $user,
-            ]);
+            $itemClassDetails->update(['item_status' => 'active', 'updated_by' => $user]);
             
             DB::commit();
             return redirect()->back()
@@ -158,7 +157,12 @@ class ItemClassController extends Controller
             return redirect()->back()
                 ->with(['error' => 'An error occurred while restoring the item class.']);
         }
-        
+    }
+
+    public function showTrashedItemClass()
+    {
+        $deactivatedItemClass = $this->getDeactivitedItemClass();
+        return response()->json(['data' => $deactivatedItemClass]);
     }
 
     public function deactivate(Request $request, ItemClass $itemClass)
@@ -181,12 +185,16 @@ class ItemClassController extends Controller
                 return redirect()->back()
                     ->with(['message' => 'Item Class Name was removed successfully']);
             }
+            
 
             foreach ($itemClass->products as $product) {  
-                $product->update([
-                    'prod_status' => 'deactivated',
-                    'updated_by' => $validatedData['updatedBy'],
-                ]);
+                if ($product->prod_status == 'active') {
+                    $product->update([
+                        'updated_by' => $validatedData['updatedBy'],
+                    ]);
+    
+                    $product->delete();
+                }
             }
 
             $itemClass->update([
@@ -231,8 +239,8 @@ class ItemClassController extends Controller
 
     private function getDeactivitedItemClass()
     {
-        $itemClass = ItemClass::with('category', 'creator')
-            ->where('item_status', 'deactivated')
+        return ItemClass::where('item_status', 'deactivated')
+            ->with('category', 'updater')
             ->orderBy('cat_id', 'asc')
             ->orderBy('item_name', 'asc')
             ->get()
@@ -243,11 +251,9 @@ class ItemClassController extends Controller
                 'catId' => $item->category->id,
                 'category' => $item->category->cat_name,
                 'status' => ucfirst($item->item_status),
-                'creator' => $item->creator->name,
-                'updatedAt' => $item->updated_at->format('F j, Y'),
+                'updatedBy' => $item->updater ? $item->updater->name : '',
+                'removeAt' => $item->updated_at->format('F j, Y'),
             ]
         );
-
-        return $itemClass;
     }
 }

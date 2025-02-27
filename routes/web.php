@@ -61,6 +61,9 @@ Route::middleware('auth')->prefix('categories')->group(function () {
     Route::post('/update', [CategoryController::class, 'update'])->name('category.update');
     Route::post('/restore/{catId}', [CategoryController::class, 'restore'])->name('category.restore');
     Route::post('/deactivate', [CategoryController::class, 'deactivate'])->name('category.deactivate');
+
+    #AJAX
+    Route::get('/trashed-categories', [CategoryController::class, 'showTrashedCategories'])->name('category.show.trashed');
 });
 
 Route::middleware('auth')->prefix('items')->group(function () {
@@ -69,6 +72,9 @@ Route::middleware('auth')->prefix('items')->group(function () {
     Route::post('/update', [ItemClassController::class, 'update'])->name('item.update');
     Route::post('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
     Route::post('/restore/{itemClass}', [ItemClassController::class, 'restore'])->name('item.restore');
+
+    #AJAX
+    Route::get('/trashed-itemclass', [ItemClassController::class, 'showTrashedItemClass'])->name('item.show.trashed');
 });
 
 Route::middleware('auth')->prefix('offices')->group(function () {
@@ -91,6 +97,7 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::get('/autocomplete-product', [ProductController::class, 'showAutoComplete'])->name('product.show.autocomplete');
     Route::post('/save', [ProductController::class, 'store'])->name('product.store');
     Route::post('/update', [ProductController::class, 'update'])->name('product.update');
+    Route::put('/restore', [ProductController::class, 'restore'])->name('product.restore');
     Route::any('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
     Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
     Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');

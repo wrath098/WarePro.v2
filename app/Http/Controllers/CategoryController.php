@@ -23,7 +23,6 @@ class CategoryController extends Controller
     public function index(): Response
     {   
         $categories = $this->productService->getActiveCategory();
-        $deactivatedCategories = $this->productService->getDeactivatedCategory();
         $funds = $this->productService->getActiveFunds();
 
         $funds = $funds->map(function ($fund) {
@@ -34,7 +33,6 @@ class CategoryController extends Controller
         });
 
         $categories->load('funder', 'creator');
-        $deactivatedCategories->load('funder', 'updater');
                     
         $categories = $categories->map(function ($category) {
             return [
@@ -46,24 +44,10 @@ class CategoryController extends Controller
                 'fundName' => $category->funder->fund_name ?? '',
                 'creatorName' => $category->creator->name,
             ];
-        });
-
-        $deactivatedCategories = $deactivatedCategories->map(function ($category) {
-            return [
-                'id' => $category->id,
-                'code' => $category->cat_code,
-                'name' => $category->cat_name,
-                'status' => ucfirst($category->cat_status),
-                'fundId' => $category->funder->id ?? '',
-                'fundName' => $category->funder->fund_name ?? '',
-                'updatedAt' => $category->updated_at->format('F j, Y'),
-                'updatedBy' => $category->updater->name ?? '',
-            ];
-        });       
+        });  
 
         return Inertia::render('Category/Index', [
             'activeCategories' => $categories,
-            'deactivatedCategories' => $deactivatedCategories, 
             'funds' => $funds, 
             'authUserId' => Auth::id()
         ]); 
@@ -145,7 +129,15 @@ class CategoryController extends Controller
         DB::beginTransaction();
 
         try {
-            $catId->load(['items.products', 'funder']);
+            $catId->load([
+                'items' => function($query) {
+                    $query->onlyTrashed()->where('item_status', 'active');
+                },
+                'items.products' => function($query) {
+                    $query->onlyTrashed()->where('prod_status', 'active');
+                },
+                'funder'
+            ]);
             $catId->lockForUpdate();
             $user = Auth::id();
 
@@ -156,17 +148,8 @@ class CategoryController extends Controller
             }
 
             foreach ($catId->items as $item) {
-                $productIds = $item->products->pluck('id');
-        
-                $item->products()->whereIn('id', $productIds)->update([
-                    'prod_status' => 'active',
-                    'updated_by' => $user,
-                ]);
-
-                $item->update([
-                    'item_status' => 'active',
-                    'updated_by' => $user,
-                ]);
+                $this->restoreProductsForItem($item, $user);
+                $this->restoreItem($item, $user);
             }
 
             $catId->update([
@@ -182,6 +165,28 @@ class CategoryController extends Controller
             DB::rollBack();
             return redirect()->back()->with(['error' => $e->getMessage()]);
         }       
+    }
+
+    public function showTrashedCategories()
+    {
+        $query = Category::where('cat_status', 'deactivated')
+            ->with(['funder', 'updater'])
+            ->orderBy('cat_code')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'code' => $category->cat_code,
+                    'name' => $category->cat_name,
+                    'status' => ucfirst($category->cat_status),
+                    'fundId' => $category->funder->id ?? '',
+                    'fundName' => $category->funder->fund_name ?? '',
+                    'updatedAt' => $category->updated_at->format('F j, Y'),
+                    'updatedBy' => $category->updater->name ?? '',
+                ];
+            });
+
+        return response()->json(['data' => $query]);
     }
 
     public function deactivate(Request $request) {
@@ -200,26 +205,15 @@ class CategoryController extends Controller
 
                 DB::commit();
                 return redirect()->back()
-                ->with(['message' => 'Category was remove successfully.']);
+                ->with(['message' => 'Category was deleted successfully.']);
             }
 
             foreach ($category->items as $item) {
-                $productIds = $item->products->pluck('id');
-        
-                $item->products()->whereIn('id', $productIds)->update([
-                    'prod_status' => 'deactivated',
-                    'updated_by' => $updatedBy,
-                ]);
-
-                $item->update([
-                    'item_status' => 'deactivated',
-                    'updated_by' => $updatedBy,
-                ]);
+                $this->deleteProductsForItem($item, $updatedBy);
+                $this->deleteItem($item, $updatedBy);
             }
-            $category->update([
-                'cat_status' => 'deactivated',
-                'updated_by' => $updatedBy,
-            ]);
+
+            $category->update(['cat_status' => 'deactivated', 'updated_by' => $updatedBy]);
 
             DB::commit();
             return redirect()->back()
@@ -227,9 +221,34 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error('Failed to remove the category: ' . $e->getMessage());
+            Log::error('Failed to remove the category: ' . $e->getMessage(), [
+                'category_id' => $catId,
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->with(['error' => 'Failed to remove the category.']);
         }
+    }
+
+    private function deleteProductsForItem($item, $updatedBy) {
+        $productIds = $item->products->pluck('id');
+        $item->products()->whereIn('id', $productIds)->update(['updated_by' => $updatedBy]);
+        $item->products()->whereIn('id', $productIds)->delete();
+    }
+
+    private function deleteItem($item, $updatedBy) {
+        $item->update(['updated_by' => $updatedBy]);
+        $item->delete();
+    }
+
+    private function restoreProductsForItem($item, $updatedBy) {
+        $productIds = $item->products->pluck('id');
+        $item->products()->whereIn('id', $productIds)->update(['updated_by' => $updatedBy]);
+        $item->products()->whereIn('id', $productIds)->restore();
+    }
+
+    private function restoreItem($item, $updatedBy) {
+        $item->update(['updated_by' => $updatedBy]);
+        $item->restore();
     }
 }

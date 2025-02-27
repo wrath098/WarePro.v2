@@ -6,22 +6,37 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
     import Swal from 'sweetalert2';
+    import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
+    import axios from 'axios';
 
     const page = usePage();
     const isLoading = ref(false);
 
     const props = defineProps({
         activeItemClass: Object,
-        deactivatedItemClass: Object,
         categories: Array,
         authUserId: Number,
     });
+
+    const trashedItems = ref([]);
+    const isTrashedActive = ref(false);
+    const fetchTrashedItemClass = async () => {
+        isLoading.value = true;
+        isTrashedActive.value = true;
+        try {
+            const response = await axios.get('items/trashed-itemclass');
+            trashedItems.value = response.data;
+            isLoading.value = false;
+        } catch (error) {
+            isLoading.value = false;
+            console.error('Error fetching trashed items:', error);
+        }
+    };
 
     const form = reactive({
         catId: '',
@@ -102,164 +117,180 @@
             });
         }
     });
+    const activeColumns = [
+        {
+            data: 'code',
+            title: 'Code #',
+            width: '10%'
+        },
+        {
+            data: 'name',
+            title: 'Class Name',
+            width: '15%'
+        },
+        {
+            data: 'category',
+            title: 'Category',
+            width: '20%'
+        },
+        {
+            data: 'status',
+            title: 'Current Status',
+            width: '15%',
+            render: (data, type, row) => {
+                return `
+                <span class="${data === 'Active' 
+                    ? 'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300' 
+                    : ''}">
+                    ${data}
+                </span>
+                `;
+            },
+        },
+        {
+            data: 'creator',
+            title: 'Created By',
+            width: '12%'
+        },
+        {
+            data: 'createdAt',
+            title: 'Created At',
+            width: '12%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '16%',
+            render: '#action',
+        },
+    ];
+
+    const inactiveColumns = [
+        {
+            data: 'code',
+            title: 'Code #',
+            width: '10%'
+        },
+        {
+            data: 'name',
+            title: 'Class Name',
+            width: '15%'
+        },
+        {
+            data: 'category',
+            title: 'Category',
+            width: '20%'
+        },
+        {
+            data: 'status',
+            title: 'Current Status',
+            width: '15%',
+            render: (data, type, row) => {
+                return `
+                <span class="${data === 'Deactivated' 
+                    ? 'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300' 
+                    : ''}">
+                    ${data}
+                </span>
+                `;
+            },
+        },
+        {
+            data: 'updatedBy',
+            title: 'Removed By',
+            width: '12%'
+        },
+        {
+            data: 'removeAt',
+            title: 'Date Removed',
+            width: '12%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '16%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
     <Head title="Item Class" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Item Classes</a></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Components
+                        </a>
+                    </li>
+                    <li :aria-current="!isTrashedActive ? 'page' : undefined">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('item.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Item Classess
+                            </a>
+                        </div>
+                    </li>
+                    <li v-if="isTrashedActive" aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Trashed
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')">
+                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Item Class</span>
                         </AddButton>
+                        <TrashedButton @click="fetchTrashedItemClass" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                            <span class="mr-2">Trashed</span>
+                        </TrashedButton>
                     </li>
                 </ol>
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="relative overflow-x-auto">
-                        <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
-                            <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        No.
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Code
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Class Name
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Category
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Current Status
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Created/Updated By
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Date Created
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Action/s
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(item, index) in activeItemClass" :key="item.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  ++index }}
-                                    </td>
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  item.code }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ item.name }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ item.category }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <span :class="{
-                                            'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': item.status === 'Active',
-                                            }">
-                                            {{ item.status }}
-                                        </span>
-                                        
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        {{ item.creator }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        {{ item.createdAt }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <EditButton @click="openEditModal(item)" tooltip="Edit"/>
-                                        <RemoveButton @click="openDeactivateModal(item)" tooltip="Remove"/>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </DataTable>
-                    </div>
-                </div>
-            </div>
-            <div v-if="deactivatedItemClass.length > 0" class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2 mt-10">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="relative overflow-x-auto">
-                        <DataTable class="w-full text-left rtl:text-right text-gray-900 ">
-                            <thead class="text-sm text-center text-gray-100 uppercase bg-indigo-600">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        No.
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Code
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Class Name
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Category
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Current Status
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Created/Updated By
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-2/12">
-                                        Date Updated
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-1/12">
-                                        Action/s
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(item, index) in deactivatedItemClass" :key="item.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  ++index }}
-                                    </td>
-                                    <td scope="row" class="py-2 text-center text-sm">
-                                        {{  item.code }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ item.name }}
-                                    </td>
-                                    <td class="py-2">
-                                        {{ item.category }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <span :class="{
-                                            'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300': item.status === 'Deactivated',
-                                            }">
-                                            {{ item.status }}
-                                        </span>
-                                        
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        {{ item.creator }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        {{ item.updatedAt }}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <RecycleIcon @click="openConfirmModal(item.id)"/>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </DataTable>
-                    </div>
+        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        v-if="!isTrashedActive"
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="activeColumns"
+                        :data="props.activeItemClass"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <EditButton @click="openEditModal(props.cellData)" tooltip="Edit"/>
+                                <RemoveButton @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
+                            </template>
+                    </DataTable>
+
+                    <DataTable
+                        v-if="isTrashedActive"
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="inactiveColumns"
+                        :data="trashedItems.data"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: true
+                        }">
+                            <template #action="props">
+                                <RecycleIcon @click="openConfirmModal(props.cellData.id)"/>
+                            </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
@@ -418,6 +449,45 @@
             </form>
         </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>
- 
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-44f48a2f] table.dataTable tbody > tr > td:nth-child(2)) {
+            text-align: left !important;
+    }
+
+    :deep([data-v-44f48a2f] table.dataTable tbody > tr > td:nth-child(3)) {
+            text-align: left !important;
+    }
+</style>
