@@ -19,15 +19,24 @@ class CapitalOutlayController extends Controller
      */
     public function index()
     {
-        $generalFund = CapitalOutlay::with('allocations')->get();
-        $groupedByYear = $generalFund->groupBy('year');
         $accountClass = $this->getActiveAaccountClass();
+        $availableYears = CapitalOutlay::select('year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->take(5)
+            ->pluck('year');
+
+        $latestYear = CapitalOutlay::max('year');
+        $generalFund = CapitalOutlay::with('allocations')
+            ->where('year', $latestYear)
+            ->get();
+        $groupedByYear = $generalFund->groupBy('year');
 
         $groupedByYear = $groupedByYear->map(function($funds) {
             $totalAmount = $funds->sum('amount');
             return [
                 'totalAmount' => $totalAmount,
-                'funds' => $funds ?  $funds->map(fn($fund) => [
+                'funds' => $funds->map(fn($fund) => [
                     'id' => $fund->id,
                     'amount' => $fund->amount,
                     'accountClass' => $this->getAccountClassName($fund->fund_id),
@@ -37,11 +46,12 @@ class CapitalOutlayController extends Controller
                         'semester' => $allocation->semester == '1st' ? '1st Sem' : '2nd Sem',
                         'amount' => $allocation->amount,
                     ]) : [],
-                ]) : [],
+                ]),
             ];
         });
         
         return Inertia::render('Fund/GeneralFundIndex', [
+            'availableYears' => $availableYears,
             'generalFund' => $groupedByYear, 
             'accountClassification' => $accountClass,
         ]);

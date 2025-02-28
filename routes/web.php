@@ -53,6 +53,9 @@ Route::middleware('auth')->prefix('funds')->group(function () {
     Route::post('/update', [FundController::class, 'update'])->name('fund.update');
     Route::put('/restore/{fundId}', [FundController::class, 'restore'])->name('fund.restore');
     Route::post('/deactivate', [FundController::class, 'deactivate'])->name('fund.deactivate');
+
+    #AJAX
+    Route::get('/trashed-funds', [FundController::class, 'showTrashedFunds'])->name('show.trash.funds');
 });
 
 Route::middleware('auth')->prefix('categories')->group(function () {

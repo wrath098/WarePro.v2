@@ -41,19 +41,25 @@
                                 </div>
                             </div>
                             <SidebarDropdown :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')">
-                                    <svg 
-                                        class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                        :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}"
-                                        fill="currentColor" 
-                                        aria-hidden="true" 
-                                        viewBox="0 0 20 20" 
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
-                                    </svg>
-                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
-                                    <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}" />
+                                <svg 
+                                    class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                    :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}"
+                                    fill="currentColor" 
+                                    aria-hidden="true" 
+                                    viewBox="0 0 20 20" 
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
+                                <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}" />
                                 <template #dropdown-items>
+                                    <li>
+                                        <SubSidebarLink :href="route('general.fund.display')" :active="route().current('general.fund.display')">
+                                            <ArrowHeadRight :class="{ 'text-white ': route().current('general.fund.display')}"/>
+                                            Proposed Budget 
+                                        </SubSidebarLink>
+                                    </li>
                                     <li>
                                         <SubSidebarLink :href="route('fund.display.all')" :active="route().current('fund.display.all')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('fund.display.all')}"/>
@@ -76,12 +82,6 @@
                                         <SubSidebarLink :href="route('office.display.active')" :active="route().current('office.display.active')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('office.display.active')}"/>
                                             Offices
-                                        </SubSidebarLink>
-                                    </li>
-                                    <li>
-                                        <SubSidebarLink :href="route('general.fund.display')" :active="route().current('general.fund.display')">
-                                            <ArrowHeadRight :class="{ 'text-white ': route().current('general.fund.display')}"/>
-                                            Annual Budget 
                                         </SubSidebarLink>
                                     </li>
                                 </template>

@@ -9,6 +9,7 @@ import DangerButton from '@/Components/Buttons/DangerButton.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
 import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
 import Swal from 'sweetalert2';
+import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
 
 const modalState = ref(null);
 const page = usePage();
@@ -29,9 +30,23 @@ const closeModal = () => {
 
 const props = defineProps({
     activeFund: Array,
-    inActiveFund: Array,
     authUserId: Number,
 });
+
+const trashedFund = ref([]);
+const isTrashedActive = ref(false);
+const fetchTrashedFund = async () => {
+    isLoading.value = true;
+    isTrashedActive.value = true;
+    try {
+        const response = await axios.get('funds/trashed-funds');
+        trashedFund.value = response.data;
+        isLoading.value = false;
+    } catch (error) {
+        isLoading.value = false;
+        console.error('Error fetching trashed items:', error);
+    }
+};
 
 const form = reactive({
     fundName: '',
@@ -149,14 +164,57 @@ onMounted(() => {
         });
     }
 });
+
+const columns = [
+        {
+        data: null,
+        title: 'Action',
+        width: '10%',
+        render: '#action',
+    },
+    {
+        data: 'name',
+        title: 'Fund Name',
+        width: '20%',
+    },
+    {
+        data: 'status',
+        title: 'Current Status',
+        width: '15%',
+        render: (data, type, row) => {
+            return `
+            <span class="${data === 'Deactivated' 
+                ? 'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300' 
+                : ''}">
+                ${data}
+            </span>
+            `;
+        },
+    },
+    {
+        data: 'desc',
+        title: 'Description',
+        width: '15%'
+    },
+    {
+        data: 'nameOfCreator',
+        title: 'Removed By',
+        width: '20%'
+    },
+    {
+        data: 'updatedAt',
+        title: 'Date Removed',
+        width: '20%'
+    },
+];
 </script>
 
 <template>
     <Head title="Fund" />
     <AuthenticatedLayout>
         <template #header>
-            <nav class="flex" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
                     <li class="inline-flex items-center">
                         <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -167,7 +225,7 @@ onMounted(() => {
                             Components
                         </a>
                     </li>
-                    <li aria-current="page">
+                    <li :aria-current="!isTrashedActive ? 'page' : undefined">
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="route('fund.display.all')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
@@ -175,13 +233,27 @@ onMounted(() => {
                             </a>
                         </div>
                     </li>
+                    <li v-if="isTrashedActive" aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Trashed
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
+                    <li class="flex flex-col lg:flex-row">
+                        <TrashedButton @click="fetchTrashedFund" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                            <span class="mr-2">Trashed</span>
+                        </TrashedButton>
+                    </li>
                 </ol>
             </nav>
         </template>
-
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md">
-            <div class="overflow-hidden shadow-sm sm:rounded-lg p-4">
-                <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <ul v-if="!isTrashedActive" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <li v-for="fund in activeFund" :key="fund.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
                         <div class="text-2xl font-bold text-indigo-900">
                             {{ getInitials(fund.fund_name) }}
@@ -228,34 +300,21 @@ onMounted(() => {
                             Add New Account Classification
                     </button>
                 </ul>
-            </div>
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2 mt-10" v-if="inActiveFund.length > 0">
-                <DataTable class="display table-hover table-striped shadow-lg rounded-lg bg-white compact">
-                    <thead>
-                        <tr>
-                            <th>Transaction No.</th>
-                            <th>Fund Name</th>
-                            <th>Status</th>
-                            <th>Description</th>
-                            <th>Updated At</th>
-                            <th>Updated By</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="fund in inActiveFund" :key="fund.id">
-                            <td>{{ fund.id}}</td>
-                            <td>{{ fund.fund_name }}</td>
-                            <td><span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300">{{ fund.fund_status }}</span></td>
-                            <td>{{ fund.description }}</td>
-                            <td>{{ fund.updated_at }}</td>
-                            <td>{{ fund.nameOfCreator }}</td>
-                            <td>
-                                <RecycleIcon @click="openConfirmModal(fund.id)"/>
-                            </td>
-                        </tr>
-                    </tbody>
-                </DataTable>
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        v-if="isTrashedActive"
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="trashedFund.data"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <RecycleIcon @click="openConfirmModal(props.cellData.id)"/>
+                            </template>
+                    </DataTable>
+                </div>
             </div>
         </div>
         <Modal :show="isAddModalOpen" @close="closeModal"> 
@@ -413,4 +472,40 @@ onMounted(() => {
         </form>
     </Modal>
 </template>
- 
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-6a28093d] table.dataTable tbody > tr > td:nth-child(2)) {
+            text-align: left !important;
+    }
+</style>

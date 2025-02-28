@@ -141,8 +141,8 @@ class ItemClassController extends Controller
             }
 
             foreach ($itemClassDetails->products as $product) {
-                $product->restore();
                 $product->update(['updated_by' => $user]);
+                $product->restore();
             }
 
             $itemClassDetails->update(['item_status' => 'active', 'updated_by' => $user]);
@@ -175,8 +175,9 @@ class ItemClassController extends Controller
         ]);
 
         try {
-            $itemClass = ItemClass::findOrFail($validatedData['itemId']);
-            $itemClass->load('products');
+            $itemClass = ItemClass::with(['products' => function ($query) {
+                $query->withTrashed();
+            }])->findOrFail($validatedData['itemId']);
 
             if($itemClass->products->isEmpty()) {
                 $itemClass->forceDelete();
@@ -185,10 +186,9 @@ class ItemClassController extends Controller
                 return redirect()->back()
                     ->with(['message' => 'Item Class Name was removed successfully']);
             }
-            
 
             foreach ($itemClass->products as $product) {  
-                if ($product->prod_status == 'active') {
+                if ($product->prod_status == 'active' && $product->deleted_at == null) {
                     $product->update([
                         'updated_by' => $validatedData['updatedBy'],
                     ]);

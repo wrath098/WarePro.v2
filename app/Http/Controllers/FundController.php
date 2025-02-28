@@ -17,11 +17,8 @@ class FundController extends Controller
     public function index(): Response
     {
         $activeFunds = $this->getActiveFund();
-        $deactivatedFunds = $this->getDeactivatedFund();
-
         return Inertia::render('Fund/Index', [
-            'activeFund' => $activeFunds, 
-            'inActiveFund' => $deactivatedFunds, 
+            'activeFund' => $activeFunds,
             'authUserId' => Auth::id()
         ]);
     }
@@ -96,40 +93,39 @@ class FundController extends Controller
         DB::beginTransaction();
 
         try {
-            $fundId->load('categories.items.products');
+            $fundId->load([
+                'categories' => function ($query) {
+                    $query->onlyTrashed()->where('cat_status', 'active');
+                },
+                'categories.items' => function ($query) {
+                    $query->onlyTrashed()->where('item_status', 'active');
+                },
+                'categories.items.products' => function ($query) {
+                    $query->onlyTrashed()->where('prod_status', 'active');
+                },
+            ]);
             $fundId->lockForUpdate();
             $user = Auth::id();
 
             foreach ($fundId->categories as $category) {
                 foreach ($category->items as $item) {
-                    $productIds = $item->products->pluck('id');
-            
-                    $item->products()->whereIn('id', $productIds)->update([
-                        'prod_status' => 'active',
-                        'updated_by' => $user,
-                    ]);
-
-                    $item->update([
-                        'item_status' => 'active',
-                        'updated_by' => $user,
-                    ]);
+                    $this->restoreProducts($item, $user);
+                    $item->update(['updated_by' => $user]);
+                    $item->restore();
                 }
-                $category->update([
-                    'cat_status' => 'active',
-                    'updated_by' => $user,
-                ]);
+
+                $category->update(['updated_by' => $user]);
+                $category->restore();
             }
 
-            $fundId->update([
-                'fund_status' => 'active',
-                'updated_by' => $user,
-            ]);
+            $fundId->update(['fund_status' => 'active', 'updated_by' => $user]);
 
             DB::commit();
             return redirect()->back()->with(['message' => 'An account classification activated.']);
         } catch (\Exception $e) {
             
             DB::rollBack();
+            Log::error('Restoration of Fund Cluster error for fundId ' . $fundId->fund_name . ': ' . $e->getMessage());
             return redirect()->back()->with(['error' => $e->getMessage()]);
         }        
     }
@@ -144,34 +140,21 @@ class FundController extends Controller
         ]);
 
         try {
-            $fund = Fund::findOrFail($validation['fundId']);
-            $fund->load('categories.items.products');
+            $fund = Fund::with('categories.items.products')->findOrFail($validation['fundId']);
             $fund->lockForUpdate();
 
             if($fund->categories->isEmpty()) {
                 $fund->forceDelete();
                 DB::commit();
-                return redirect()->back()->with(['message' => 'Account Classification removed successfully.']);
+                return redirect()->back()->with(['message' => 'Account Classification deleted successfully.']);
             }
 
             foreach ($fund->categories as $category) {
                 foreach ($category->items as $item) {
-                    $productIds = $item->products->pluck('id');
-            
-                    $item->products()->whereIn('id', $productIds)->update([
-                        'prod_status' => 'deactivated',
-                        'updated_by' => $validation['updatedBy'],
-                    ]);
-
-                    $item->update([
-                        'item_status' => 'deactivated',
-                        'updated_by' => $validation['updatedBy'],
-                    ]);
+                    $this->deleteProductsForItem($item, $validation['updatedBy']);
+                    $this->deleteItem($item, $validation['updatedBy']);
                 }
-                $category->update([
-                    'cat_status' => 'deactivated',
-                    'updated_by' => $validation['updatedBy'],
-                ]);
+                $this->deleteCategory($category, $validation['updatedBy']);
             }
 
             $fund->update([
@@ -180,12 +163,18 @@ class FundController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Account Classification deactivated.']);
+            return redirect()->back()->with(['message' => 'Account Classification move to trashed.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Deletion of Fund Cluster error: ' . $e->getMessage());
+            Log::error('Deletion of Fund Cluster error for fundId ' . $validation['fundId'] . ': ' . $e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to move the fund cluster to trash.']);
         }
+    }
+
+    public function showTrashedFunds()
+    {
+        $deactivatedFunds = $this->getDeactivatedFund();
+        return response()->json(['data' => $deactivatedFunds]);
     }
 
     private function getUserName($userId)
@@ -222,14 +211,41 @@ class FundController extends Controller
             ->map(function($fund) {
                 return [
                     'id' => $fund->id,
-                    'fund_name' => $fund->fund_name,
-                    'fund_status' => ucfirst($fund->fund_status),
-                    'description' => $fund->description,
-                    'updated_at' => $fund->updated_at->format('F j, Y'),
+                    'name' => $fund->fund_name,
+                    'status' => ucfirst($fund->fund_status),
+                    'desc' => $fund->description,
+                    'updatedAt' => $fund->updated_at->format('F j, Y'),
                     'nameOfCreator' => $this->getUserName($fund->created_by),
                 ];
             });
 
         return $funds;
+    }
+
+    private function deleteProductsForItem($item, $updatedBy)
+    {
+        $productIds = $item->products->pluck('id');
+        $item->products()->whereIn('id', $productIds)->update(['updated_by' => $updatedBy]);
+        $item->products()->whereIn('id', $productIds)->delete();
+    }
+
+    private function deleteItem($itemClass, $updatedBy)
+    {
+        $itemClass->update(['updated_by' => $updatedBy]);
+        $itemClass->delete();
+    }
+
+    private function deleteCategory($category, $updatedBy)
+    {
+        $category->update(['updated_by' => $updatedBy]);
+        $category->delete();
+    }
+
+    private function restoreProducts($item, $user)
+    {
+        foreach ($item->products as $product) {
+            $product->update(['updated_by' => $user]);
+            $product->restore();
+        }
     }
 }

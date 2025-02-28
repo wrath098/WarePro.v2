@@ -3,7 +3,6 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 import { ref, reactive, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Sidebar from '@/Layouts/Sidebar.vue';
 import Modal from '@/Components/Modal.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
 import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -15,8 +14,35 @@ const isLoading = ref(false);
 
 const props = defineProps({
     generalFund: Object,
+    availableYears: Object,
     accountClassification: Object,
 });
+
+const newBudgetInformation = ref([]);
+const isFetchClick = ref(false);
+const selectYear = (year) => {
+    searchProductInfo.prodId = product.prodId;
+    searchProductInfo.product = product.prodDesc;
+    productList.value = [];
+};
+
+const fetchNewBudgetInfo = async () => {
+    if (searchProductInfo.product && searchProductInfo.startDate && searchProductInfo.endDate) {
+        isLoading.value = true;
+        try {
+            const response = await axios.get('../api/product-inventory-log', { 
+                params: { query: searchProductInfo},
+            });
+            productTransactions.value = response.data;
+            isFetchClick.value = true;
+            isLoading.value = false;
+            return productTransactions;
+        } catch (error) {
+            isLoading.value = false;
+            console.error('Error fetching product data:', error);
+        }
+    }
+};
 
 const years = generateYears();
 function generateYears() {
@@ -80,67 +106,104 @@ const formatDecimal = (value) => {
 </script>
 
 <template>
-    <Head title="General Fund" />
-    <div>
-    <Sidebar/>
+    <Head title="Proposed Budget" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Annual Budget</li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Components
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('general.fund.display')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Proposed Budget
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')">
-                            <span class="mr-2">New Budget</span>
+                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                            <span class="mr-2">New Budget Allocation</span>
                         </AddButton>
                     </li>
                 </ol>
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-4">
-                        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
-                            <li v-for="(yearData, year) in generalFund" :key="year" class="">
-                                <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">
-                                    <div class="flex flex-col gap-1">
-                                        <h2 class="text-lg font-semibold text-gray-50">Annual Budget for CY {{ year }}</h2>
+        <div class="my-4 max-w-screen-2xl mb-8">
+            <div class="overflow-hidden">
+                <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-4">
+                    <section class="py-6 bg-white rounded-md m-3 lg:m-0">
+                        <div class="px-4 mx-auto sm:px-6 lg:px-8">
+                            <div class="max-w-2xl mx-auto text-center">
+                                <h2 class="text-3xl font-bold leading-tight text-black">
+                                    Available Years
+                                </h2>
+                            </div>
+                            <div v-for="(year, index) in availableYears" :key="index" class="max-w-3xl mx-auto mt-2 space-y-4 md:mt-4">
+                                <div class="transition-all duration-200 bg-white border-2 border-indigo-400 shadow-lg cursor-pointer hover:bg-indigo-400">
+                                    <button type="button" class="flex items-center justify-between w-full px-4 py-3">
+                                        <span class="flex text-lg font-semibold text-black">{{ year }}</span>
+                                        <svg class="w-6 h-6 text-black" stroke="currentColor" viewBox="0 0 208 456" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill="currentColor" d="M9 388q8 4 15 4q11 0 17-6l162-186L41 14Q26-1 11 12Q-4 29 9 42l137 156L9 354q-13 19 0 34z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-center text-gray-600 textbase mt-9">
+                                Select the desired year to display the designated budget and its breakdown!
+                            </p>
+                        </div>
+                    </section>
+                    
+                    <ul class="col-span-3 bg-white rounded-md">
+                        <li v-for="(yearData, year) in generalFund" :key="year" class="bg-white rounded-md pb-2 mb-2">
+                            <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">
+                                <div class="flex flex-col gap-1">
+                                    <h2 class="text-lg font-semibold text-gray-50">{{ year }} | Summary Overview</h2>
+                                </div>
+                                <div class="flex items-center">
+                                    <a :href="route('general.fund.editFundAllocation', { budgetDetails: yearData, year: year})" class="flex items-center rounded-full transition" title="Edit">
+                                        <span class="sr-only">Open options</span>
+                                        <svg class="w-8 h-8 text-white hover:text-green-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
+                                            <path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>                           
+                            <div v-for="account in yearData.funds" :key="account.id" class="flow-root py-3 m-4 border-2 border-indigo-400 ">
+                                <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                    <div class="grid grid-cols-1 gap-1 p-3 bg-indigo-100 sm:grid-cols-3 sm:gap-4 border-b-2 border-indigo-400">
+                                        <dt class="font-medium text-indigo-900 sm:col-span-2">{{ account.accountClass }} </dt>
+                                        <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(account.amount) }}</dd>
                                     </div>
-                                    <div class="flex items-center">
-                                        <a :href="route('general.fund.editFundAllocation', { budgetDetails: yearData, year: year})" class="flex items-center rounded-full transition">
-                                            <span class="sr-only">Open options</span>
-                                            <svg class="w-8 h-8 text-indigo-100 hover:text-yellow-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                                <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
-                                                <path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/>
-                                            </svg>
-                                        </a>
+                                    <div v-for="allocation in account.allocations" :key="allocation.id" class="grid grid-cols-1 gap-1 pl-10 p-3 even:bg-gray-200/90 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900 sm:col-span-2">{{ allocation.semester }} - {{ allocation.description }}</dt>
+                                        <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(allocation.amount) }}</dd>
                                     </div>
-                                </div>
-                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
-                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">General Fund</dt>
-                                            <dd class="text-gray-700 sm:col-span-2 text-right">{{ formatDecimal(yearData.totalAmount) }}</dd>
-                                        </div>
-                                    </dl>
-                                </div>
-                                <h6 class="py-3 px-2 text-gray-400">Allocation</h6>
-                                <div v-for="account in yearData.funds" :key="account.id" class="flow-root border border-gray-100 py-3 shadow-sm mb-3">
-                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900 sm:col-span-2">{{ account.accountClass }} </dt>
-                                            <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(account.amount) }}</dd>
-                                        </div>
-                                        <div v-for="allocation in account.allocations" :key="allocation.id" class="grid grid-cols-1 gap-1 pl-10 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900 sm:col-span-2">{{ allocation.semester }} - {{ allocation.description }}</dt>
-                                            <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(allocation.amount) }}</dd>
-                                        </div>
-                                    </dl>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
+                                </dl>
+                            </div>
+                            <div class="flow-root py-3 m-4">
+                                <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                    <div class="grid grid-cols-1 gap-1 p-3 bg-indigo-900 sm:grid-cols-3 sm:gap-4 rounded-lg shadow-sm text-gray-100">
+                                        <dt class="font-medium">Total Amount</dt>
+                                        <dd class="sm:col-span-2 text-right">{{ formatDecimal(yearData.totalAmount) }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -199,6 +262,5 @@ const formatDecimal = (value) => {
             </div>
         </form>
     </Modal>
-    </div>
 </template>
  

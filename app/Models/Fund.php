@@ -19,7 +19,7 @@ class Fund extends Model
         'fund_status', 
         'description', 
         'created_by', 
-        'updated_by '
+        'updated_by'
     ];
 
     protected $casts = [
