@@ -11,6 +11,7 @@ use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Services\ProductService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,10 +36,9 @@ class PpmpTransactionController extends Controller
 
     public function index(): Response
     {   
-        $currentYear = date('Y');
+        $currentYear = Carbon::now()->year;
         
-        $officePpmpExist = PpmpTransaction::with('requestee')
-            ->where(function($query) use ($currentYear) {
+        $officePpmpExist = PpmpTransaction::where(function($query) use ($currentYear) {
                 $query->where(function($query) {
                     $query->where('ppmp_type', 'individual')
                         ->orWhere('ppmp_type', 'contingency');
@@ -47,6 +47,7 @@ class PpmpTransactionController extends Controller
                 ->where('ppmp_version', 1)
                 ->whereYear('created_at', $currentYear);
             })
+            ->with(['requestee', 'creator'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($ppmp) {
@@ -54,9 +55,10 @@ class PpmpTransactionController extends Controller
                     'id' => $ppmp->id,
                     'ppmpCode' => $ppmp->ppmp_code,
                     'ppmpType' => ucfirst($ppmp->ppmp_type),
-                    'basedPrice' => $ppmp->price_adjustment,
+                    'basedPrice' => ((float) $ppmp->price_adjustment * 100) . '%',
                     'officeId' => $ppmp->office_id,
-                    'officeCode' => $ppmp->requestee->office_name ?? ''
+                    'officeCode' => $ppmp->requestee->office_name ?? '',
+                    'creator' => $ppmp->creator->name ?? ''
                 ];
         });
         
@@ -566,6 +568,18 @@ class PpmpTransactionController extends Controller
         return Inertia::render('Ppmp/DraftConsolidatedList', ['ppmp' => $request, 'transactions' => $transactions, 'individualList' => $result]);
     }
 
+    public function showOfficeListWithNoPpmp(Request $request) {
+        $result = [];
+        if ($request->ppmpType == 'individual') {
+            $result = $this->getOfficesWithNoPpmp($request->ppmpType, $request->ppmpYear);
+        } elseif ($request->ppmpType == 'contingency') {
+            $result = $this->fetchOfficeList();
+        } else {
+            $result = [];
+        }
+        return response()->json(['data' => $result]);
+    }
+
     public function destroy(Request $request)
     {
         DB::beginTransaction();
@@ -716,5 +730,34 @@ class PpmpTransactionController extends Controller
             ->where('ppmp_type', 'individual')
             ->where('ppmp_status', $request['ppmpStatus'])
             ->get();
+    }
+
+    private function fetchOfficeWithPpmp($ppmpType, $year) {
+        return PpmpTransaction::where('ppmp_year', $year)
+                            ->where('ppmp_type', $ppmpType)
+                            ->get();
+    }
+
+    private function fetchOfficeList() {
+        return Office::where('office_status', 'active')
+            ->orderBy('office_name', 'asc')
+            ->get()
+            ->map(fn($office) => [
+                'id' => $office->id,
+                'name' => $office->office_name,
+            ]);
+    }
+
+    private function getOfficesWithNoPpmp($ppmpType, $year) {
+        $ppmpTransactions = $this->fetchOfficeWithPpmp($ppmpType, $year);
+        $officeList = $this->fetchOfficeList();
+
+        $officesWithPpmp = $ppmpTransactions->pluck('office_id')->toArray();
+
+        $officesWithoutPpmp = $officeList->filter(function ($office) use ($officesWithPpmp) {
+            return !in_array($office['id'], $officesWithPpmp);
+        });
+
+        return $officesWithoutPpmp;
     }
 }

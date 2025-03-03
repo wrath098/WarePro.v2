@@ -131,6 +131,9 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::put('/consolidated-particular/update/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'update'])->name('conso-particular-update');
     Route::delete('/consolidated-particular/destroy/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'destroy'])->name('conso-particular-update');
     Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
+
+    #AJAX
+    Route::get('/offices-with-no-ppmp', [PpmpTransactionController::class, 'showOfficeListWithNoPpmp'])->name('show.ppmp.withNoPpmp');
 });
 
 Route::middleware('auth')->prefix('pr')->group(function () {

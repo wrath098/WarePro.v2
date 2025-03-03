@@ -38,7 +38,7 @@
         </a>
         <div 
             v-if="tooltip && showTooltip" 
-            class="absolute z-10 w-auto p-1 text-sm text-white bg-green-700 rounded-lg tooltip"
+            class="absolute z-10 w-auto p-1 text-xs text-white bg-green-700 rounded-lg tooltip"
         >
             {{ tooltip }}
         </div>
