@@ -92,6 +92,9 @@ Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
     Route::post('/store-amount', [CapitalOutlayController::class, 'storeFund'])->name('general.fund.store.amount');
     Route::get('/edit-fund-allocations', [CapitalOutlayController::class, 'editFundAllocation'])->name('general.fund.editFundAllocation');
     Route::put('/update-fund-allocations', [CapitalOutlayController::class, 'updateFundAllocation'])->name('general.fund.updateFundAllocation');
+
+    #AJAX
+    Route::get('/show-fund-by-year', [CapitalOutlayController::class, 'showFundByYear'])->name('show.fundByYear');
 });
 
 Route::middleware('auth')->prefix('products')->group(function () {

@@ -20,24 +20,21 @@ const props = defineProps({
 
 const newBudgetInformation = ref([]);
 const isFetchClick = ref(false);
-const selectYear = (year) => {
-    searchProductInfo.prodId = product.prodId;
-    searchProductInfo.product = product.prodDesc;
-    productList.value = [];
-};
 
-const fetchNewBudgetInfo = async () => {
-    if (searchProductInfo.product && searchProductInfo.startDate && searchProductInfo.endDate) {
+const fetchNewBudgetInfo = async (year) => {
+    console.log(year);
+    if (year) {
         isLoading.value = true;
         try {
-            const response = await axios.get('../api/product-inventory-log', { 
-                params: { query: searchProductInfo},
+            const response = await axios.get('general-servies-fund/show-fund-by-year', { 
+                params: { year: year},
             });
-            productTransactions.value = response.data;
+            newBudgetInformation.value = response.data;
             isFetchClick.value = true;
             isLoading.value = false;
-            return productTransactions;
+            return newBudgetInformation;
         } catch (error) {
+            isFetchClick.value = false;
             isLoading.value = false;
             console.error('Error fetching product data:', error);
         }
@@ -139,7 +136,7 @@ const formatDecimal = (value) => {
                 </ol>
             </nav>
         </template>
-
+        {{ newBudgetInformation }}
         <div class="my-4 max-w-screen-2xl mb-8">
             <div class="overflow-hidden">
                 <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-4">
@@ -152,7 +149,7 @@ const formatDecimal = (value) => {
                             </div>
                             <div v-for="(year, index) in availableYears" :key="index" class="max-w-3xl mx-auto mt-2 space-y-4 md:mt-4">
                                 <div class="transition-all duration-200 bg-white border-2 border-indigo-400 shadow-lg cursor-pointer hover:bg-indigo-400">
-                                    <button type="button" class="flex items-center justify-between w-full px-4 py-3">
+                                    <button @click="fetchNewBudgetInfo(year)" type="button" class="flex items-center justify-between w-full px-4 py-3">
                                         <span class="flex text-lg font-semibold text-black">{{ year }}</span>
                                         <svg class="w-6 h-6 text-black" stroke="currentColor" viewBox="0 0 208 456" xmlns="http://www.w3.org/2000/svg">
                                             <path fill="currentColor" d="M9 388q8 4 15 4q11 0 17-6l162-186L41 14Q26-1 11 12Q-4 29 9 42l137 156L9 354q-13 19 0 34z"/>
