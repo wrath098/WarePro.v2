@@ -14,7 +14,7 @@
             <nav class="text-sm text-gray-700 mb-5">
                 <div class="overflow-y-auto py-3 px-3 h-full">
                     <ul class="space-y-2">
-                        <li class="px-5">
+                        <li>
                             <div class="flex flex-row items-center">
                                 <div class="text-sm font-light tracking-wide text-gray-500">Navigation</div>
                             </div>
@@ -35,7 +35,7 @@
                             </SidebarLink>
                         </li>
                         <li>
-                            <div class="px-5 pt-2">
+                            <div class="pt-2">
                                 <div class="flex flex-row items-center">
                                     <div class="text-sm font-light tracking-wide text-gray-500">Core</div>
                                 </div>
@@ -125,15 +125,15 @@
                             </SidebarDropdown>
                         </li>
                         <li>
-                            <div class="px-5 pt-2">
+                            <div class="pt-2">
                                 <div class="flex flex-row items-center">
-                                    <div class="text-sm font-light tracking-wide text-gray-500">PPMP</div>
+                                    <div class="text-sm font-light tracking-wide text-gray-500">Project Procurement Management Plan</div>
                                 </div>
                             </div>
-                            <SidebarLink :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index')">
+                            <SidebarLink :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')">
                                 <svg 
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{ 'text-white' : route().current('import.ppmp.index')}"
+                                    :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
                                     fill="currentColor" 
                                     aria-hidden="true" 
                                     xmlns="http://www.w3.org/2000/svg"
@@ -208,7 +208,7 @@
                             </SidebarDropdown>
                         </li>
                         <li>
-                            <div class="px-5 pt-2">
+                            <div class="pt-2">
                                 <div class="flex flex-row items-center">
                                     <div class="text-sm font-light tracking-wide text-gray-500">Procurement</div>
                                 </div>
@@ -257,7 +257,7 @@
                         </li>
                         
                         <li>
-                            <div class="px-5 pt-2">
+                            <div class="pt-2">
                                 <div class="flex flex-row items-center">
                                     <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
                                 </div>

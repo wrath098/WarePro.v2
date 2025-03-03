@@ -3,7 +3,6 @@
     import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -142,36 +141,73 @@
 
 <template>
     <Head title="PPMP" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">{{ ppmp.requestee.office_name }}</a></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Project Procurement Management Plan
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('import.ppmp.index')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Create
+                            </a>
+                        </div>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                {{ ppmp.requestee.office_name }}
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div class="flex-1 flex items-start justify-between bg-indigo-600 p-2 rounded-t-xl mb-2">
-                                <div class="flex flex-col gap-1">
+        <div class="my-4 max-w-screen-2xl mb-8">
+            <div class="overflow-hidden">
+                <div class="mx-4 lg:mx-0">
+                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-2">
+                        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div class="bg-indigo-600 text-white p-4 flex justify-between">
+                                    <div class="font-bold text-lg">PPMP Information</div>
+                                    <div class="flex items-center">
+                                        <div class="rounded-full mx-1">
+                                            <a :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" title="Print">
+                                                <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 384">
+                                                    <path fill="currentColor" d="M363 107q26 0 45 18.5t19 45.5v128h-86v85H85v-85H0V171q0-27 18.5-45.5T64 107h299zm-64 234V235H128v106h171zm63.5-149q8.5 0 15-6.5t6.5-15t-6.5-15t-15-6.5t-15 6.5t-6.5 15t6.5 15t15 6.5zM341 0v85H85V0h256z"/>
+                                                </svg>
+                                            </a>
+                                            <!-- <PrintIcon :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" class="bg-gray-50" ></PrintIcon> -->
+                                        </div>
+                                        <div class="rounded-full mx-1">
+                                            <button @click="showModal('add')" title="Add New Item">
+                                                <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                                                    <g id="galaAdd0" fill="none" stroke="currentColor" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="16">
+                                                        <circle id="galaAdd1" cx="128" cy="128" r="112"/>
+                                                        <path id="galaAdd2" d="M 79.999992,128 H 176.0001"/>
+                                                        <path id="galaAdd3" d="m 128.00004,79.99995 v 96.0001"/>
+                                                    </g>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- <div class="flex flex-col gap-1">
                                     <h2 class="text-lg justify-center font-semibold text-[#ededee] mb-4">PPMP Information</h2>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="rounded-full">
-                                        <PrintIcon :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" class="bg-gray-50" ></PrintIcon>
-                                    </div>
-                                    <div class="rounded-full">
-                                        <AddIcon @click="showModal('add')" class="bg-gray-50"></AddIcon>
-                                    </div>
-                                </div>
-                            </div>
+                                </div> -->
+
 
                             <div class="p-2">
                                 <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
@@ -215,7 +251,7 @@
                             </div>
                         </div>
 
-                        <div class="mx-2 w-full md:w-9/12 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
+                        <div class="col-span-3 mx-2 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
                             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
                                     <DataTable class="w-full text-gray-900 display">
@@ -406,6 +442,5 @@
             </form>
         </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>
  
