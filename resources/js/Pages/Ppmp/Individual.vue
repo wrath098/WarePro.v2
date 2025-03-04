@@ -8,8 +8,6 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
-    import AddIcon from '@/Components/Buttons/AddIcon.vue';
-    import PrintIcon from '@/Components/Buttons/PrintIcon.vue';
     import Swal from 'sweetalert2';
     
     const page = usePage();
@@ -137,6 +135,45 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'prodCode',
+            title: 'Stock No#',
+            width: '10%'
+        },
+        {
+            data: 'prodName',
+            title: 'Description',
+            width: '30%'
+        },
+        {
+            data: 'firstQty',
+            title: 'Jan (Qty)',
+            width: '10%',
+        },
+        {
+            data: 'secondQty',
+            title: 'May (Qty)',
+            width: '10%'
+        },
+        {
+            data: 'prodUnit',
+            title: 'Unit',
+            width: '10%'
+        },
+        {
+            data: 'prodPrice',
+            title: 'Price',
+            width: '10%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '20%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
@@ -180,108 +217,85 @@
                 <div class="mx-4 lg:mx-0">
                     <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-2">
                         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
-                                <div class="bg-indigo-600 text-white p-4 flex justify-between">
-                                    <div class="font-bold text-lg">PPMP Information</div>
-                                    <div class="flex items-center">
-                                        <div class="rounded-full mx-1">
-                                            <a :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" title="Print">
-                                                <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 384">
-                                                    <path fill="currentColor" d="M363 107q26 0 45 18.5t19 45.5v128h-86v85H85v-85H0V171q0-27 18.5-45.5T64 107h299zm-64 234V235H128v106h171zm63.5-149q8.5 0 15-6.5t6.5-15t-6.5-15t-15-6.5t-15 6.5t-6.5 15t6.5 15t15 6.5zM341 0v85H85V0h256z"/>
-                                                </svg>
-                                            </a>
-                                            <!-- <PrintIcon :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" class="bg-gray-50" ></PrintIcon> -->
-                                        </div>
-                                        <div class="rounded-full mx-1">
-                                            <button @click="showModal('add')" title="Add New Item">
-                                                <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                                                    <g id="galaAdd0" fill="none" stroke="currentColor" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="16">
-                                                        <circle id="galaAdd1" cx="128" cy="128" r="112"/>
-                                                        <path id="galaAdd2" d="M 79.999992,128 H 176.0001"/>
-                                                        <path id="galaAdd3" d="m 128.00004,79.99995 v 96.0001"/>
-                                                    </g>
-                                                </svg>
-                                            </button>
-                                        </div>
+                            <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
+                                <div class="font-bold text-lg">PPMP Information</div>
+                                <div class="flex items-center">
+                                    <div class="rounded-full mx-1">
+                                        <a :href="route('generatePdf.IndividualPpmp', { ppmp: ppmp.id})" target="_blank" title="Print">
+                                            <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 384">
+                                                <path fill="currentColor" d="M363 107q26 0 45 18.5t19 45.5v128h-86v85H85v-85H0V171q0-27 18.5-45.5T64 107h299zm-64 234V235H128v106h171zm63.5-149q8.5 0 15-6.5t6.5-15t-6.5-15t-15-6.5t-15 6.5t-6.5 15t6.5 15t15 6.5zM341 0v85H85V0h256z"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                    <div class="rounded-full mx-1">
+                                        <button @click="showModal('add')" title="Add New Item">
+                                            <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                                                <g id="galaAdd0" fill="none" stroke="currentColor" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="16">
+                                                    <circle id="galaAdd1" cx="128" cy="128" r="112"/>
+                                                    <path id="galaAdd2" d="M 79.999992,128 H 176.0001"/>
+                                                    <path id="galaAdd3" d="m 128.00004,79.99995 v 96.0001"/>
+                                                </g>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
-                                <!-- <div class="flex flex-col gap-1">
-                                    <h2 class="text-lg justify-center font-semibold text-[#ededee] mb-4">PPMP Information</h2>
-                                </div> -->
+                            </div>
 
+                            <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
+                                <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">Requestee</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.requestee.office_name }}</dd>
+                                    </div>
 
-                            <div class="p-2">
-                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
-                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Requestee</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.requestee.office_name }}</dd>
-                                        </div>
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">Transaction No.</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.ppmp_code }}</dd>
+                                    </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Transaction No.</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_code }}</dd>
-                                        </div>
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">Type</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.ppmp_type }}</dd>
+                                    </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Type</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_type }}</dd>
-                                        </div>
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">Price Adjustment</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.price_adjustment * 100}}%</dd>
+                                    </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Price Adjustment</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.price_adjustment * 100}}%</dd>
-                                        </div>
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">PPMP for Year</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.ppmp_year }}</dd>
+                                    </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Calendar Year</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_year }}</dd>
-                                        </div>
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">Total Items Listed</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.totalItems }}</dd>
+                                    </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Total Items Listed</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalItems }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Total Amount</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.formattedOverallPrice }}</dd>
-                                        </div>
-                                    </dl>
-                                </div>
+                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <dt class="font-medium text-gray-900">Total Amount</dt>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.formattedOverallPrice }}</dd>
+                                    </div>
+                                </dl>
                             </div>
                         </div>
 
-                        <div class="col-span-3 mx-2 bg-white p-4 rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                                <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <DataTable class="w-full text-gray-900 display">
-                                        <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
-                                            <tr class="text-center">
-                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Stock No.</th>
-                                                <th scope="col" class="px-6 py-3 w-3/12">Description</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Jan (Qty)</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">May (Qty)</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Unit</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Price</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(particular, index) in ppmpParticulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                                <td class="px-6 py-3">{{ ++index }}</td>
-                                                <td class="px-6 py-3">{{ particular.prodCode }}</td>
-                                                <td class="px-6 py-3">{{ particular.prodName }}</td>
-                                                <td class="px-6 py-3">{{ particular.firstQty }}</td>
-                                                <td class="px-6 py-3">{{ particular.secondQty }}</td>
-                                                <td class="px-6 py-3">{{ particular.prodUnit }}</td>
-                                                <td class="px-6 py-3">{{ particular.prodPrice }}</td>
-                                                <td class="px-6 py-3 text-center">
-                                                    <EditButton @click="openEditPpmpModal(particular)" tooltip="Edit"/>
-                                                    <RemoveButton @click="openDropPpmpModal(particular)" tooltip="Remove"/>
-                                                </td>
-                                            </tr>
-                                        </tbody>
+                        <div class="col-span-3 p-2 bg-white rounded-md shadow mt-5 lg:mt-0">
+                            <div class="bg-white p-2 overflow-hidden">
+                                <div class="relative overflow-x-auto">
+                                    <DataTable
+                                        class="display table-hover table-striped shadow-lg rounded-lg"
+                                        :columns="columns"
+                                        :data="ppmpParticulars"
+                                        :options="{  paging: true,
+                                            searching: true,
+                                            ordering: false
+                                        }">
+                                            <template #action="props">
+                                                <EditButton @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>
+                                                <RemoveButton @click="openDropPpmpModal(props.cellData)" tooltip="Remove"/>
+                                            </template>
                                     </DataTable>
                                 </div>
                             </div>
@@ -443,4 +457,40 @@
         </Modal>
     </AuthenticatedLayout>
 </template>
- 
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-1a3dacf3] table.dataTable tbody > tr > td:nth-child(2)) {
+        text-align: left !important;
+    }
+</style>

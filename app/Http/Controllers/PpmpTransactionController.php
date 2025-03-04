@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Rap2hpoutre\FastExcel\FastExcel;
@@ -459,12 +460,14 @@ class PpmpTransactionController extends Controller
             $qty = $items->qty_first + $items->qty_second;
             $amount = $firstAmount + $secondAmount;
             $totalAmount += $amount;
+            $prodDesc = $this->productService->getProductName($items->prod_id);
+            $limitedDescription = Str::limit($prodDesc, 90, '...');
 
             return [
                 'pId' => $items->id, 
                 'prodId' => $items->prod_id,
                 'prodCode' => $this->productService->getProductCode($items->prod_id),
-                'prodName' => $this->productService->getProductName($items->prod_id),
+                'prodName' => $limitedDescription,
                 'prodUnit' => $this->productService->getProductUnit($items->prod_id),
                 'prodPrice' => number_format($prodPrice, 2,'.','.'),
                 'qtyFirst' => number_format($items->qty_first, 0, '.', ','),
@@ -514,7 +517,7 @@ class PpmpTransactionController extends Controller
         $ppmpTransactions = PpmpTransaction::with('requestee', 'updater')
             ->where('ppmp_type', $request->type)
             ->where('ppmp_status', $request->status)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('ppmp_code', 'desc')
             ->get();
 
         $request['status'] = ucfirst($request['status']);
@@ -558,7 +561,7 @@ class PpmpTransactionController extends Controller
                 'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
                 'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
                 'version' => $transaction->ppmp_version ?? 'N/A',
-                'createdAt' => $transaction->created_at->format('Y-m-d H:i:s'),
+                'createdAt' => $transaction->created_at->format('F d, Y'),
                 'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
             ];
         });

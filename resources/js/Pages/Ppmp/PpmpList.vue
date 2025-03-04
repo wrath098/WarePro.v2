@@ -74,58 +74,109 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'ppmp_code',
+            title: 'Transaction No#',
+            width: '15%'
+        },
+        {
+            data: 'requestee.office_code',
+            title: 'Office Code',
+            width: '10%'
+        },
+        {
+            data: 'requestee.office_name',
+            title: 'Office Name',
+            width: '25%',
+        },
+        {
+            data: 'ppmp_year',
+            title: 'PPMP for Year',
+            width: '10%'
+        },
+        {
+            data: 'ppmp_version',
+            title: 'Version',
+            width: '5%'
+        },
+        {
+            data: 'updater.name',
+            title: 'Updated By',
+            width: '20%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '15%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
-    <Head title="Office" />
-    <div>
-    <Sidebar/>
+    <Head title="PPMP" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2 leading-none">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Project Procurement Management Plan</a></li>
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Individual</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">{{ props.ppmp.status }}</li>
-                    <li v-if="ppmp.status == 'Draft'"><Copy @click="showModal('copy')" class="mr-10" tooltip="Quantity Adjustment"/></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Project Procurement Management Plan
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('indiv.ppmp.type', { type: 'individual' , status: 'draft'})" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Office's PPMP List
+                            </a>
+                        </div>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                {{ props.ppmp.status }}
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol v-if="props.ppmp.status == 'Draft'">
+                    <li class="flex flex-col lg:flex-row justify-center items-center">
+                        <button @click="showModal('copy')" class="flex items-center rounded-md text-white bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 hover:bg-gradient-to-br hover:text-gray-200 p-1 group">
+                            <svg class="w-5 h-5 text-gray-100 group-hover:text-gray-200" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M5.503 4.627L5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Zm0 1.5h-9a.75.75 0 0 0-.75.75v13c0 .414.336.75.75.75h9a.75.75 0 0 0 .75-.75v-13a.75.75 0 0 0-.75-.75Z"/>
+                            </svg>
+                            <span class="mx-1 text-gray-100 text-sm group-hover:text-gray-200">Make A Copy</span>
+                        </button>
+                    </li>
                 </ol>
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="relative overflow-x-auto text-center">
-                        <DataTable class="w-full text-gray-900 display">
-                            <thead class="text-sm text-gray-100 uppercase bg-indigo-600 text-left">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 w-1/12 text-left">No#</th>
-                                    <th scope="col" class="px-6 py-3 w-2/12 text-left">Transaction No.</th>
-                                    <th scope="col" class="px-6 py-3 w-1/12 text-left">Office Code</th>
-                                    <th scope="col" class="px-6 py-3 w-3/12 text-left">Office Name</th>
-                                    <th scope="col" class="px-6 py-3 w-1/12 text-left">Calendar Year</th>
-                                    <th scope="col" class="px-6 py-3 w-1/12 text-left">Version</th>
-                                    <th scope="col" class="px-6 py-3 w-2/12 text-left">Created/Updated By</th>
-                                    <th scope="col" class="px-6 py-3 w-1/12 text-left">Action/s</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(transaction, index) in ppmpTransaction" :key="transaction.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                    <td class="px-6 py-3">{{ index + 1 }}</td>
-                                    <td class="px-6 py-3">{{ transaction.ppmp_code }}</td>
-                                    <td class="px-6 py-3 text-left">{{ transaction.requestee.office_code }}</td>
-                                    <td class="px-6 py-3 text-left">{{ transaction.requestee.office_name }}</td>
-                                    <td class="px-6 py-3">{{ transaction.ppmp_year }}</td>
-                                    <td class="px-6 py-3">v.{{ transaction.ppmp_version }}</td>
-                                    <td class="px-6 py-3">{{ transaction.updater.name }}</td>
-                                    <td class="px-6 py-3 text-center">
-                                        <Print :href="route('generatePdf.IndividualPpmp', { ppmp: transaction.id})" tooltip="Initial"></Print>
-                                        <Print v-if="transaction.tresh_adjustment > 0 && transaction.tresh_adjustment < 1" :href="route('generatePdf.IndividualPpmp.withAdjustment', { ppmp: transaction.id})" tooltip="Adjusted"></Print>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </DataTable>
-                    </div>
+        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="ppmpTransaction"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <Print :href="route('generatePdf.IndividualPpmp', { ppmp: props.cellData.id})" tooltip="Initial" />
+                                <Print v-if="props.cellData.tresh_adjustment > 0 && props.cellData.tresh_adjustment < 1" :href="route('generatePdf.IndividualPpmp.withAdjustment', { ppmp: props.cellData.id})" tooltip="Adjusted" />
+                            </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
@@ -140,8 +191,8 @@
                             </svg>                                            
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Quantity Adjustment</h3>
-                            <p class="text-sm text-gray-500"> Enter the details to create a copy of the Individual PPMP with Quantity Adjustment. This will serve as the threshold for releasing items per office.</p>
+                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Make A Copy</h3>
+                            <p class="text-sm text-gray-500"> Enter the details to create a copy of the Individual PPMP and adjust its original quantity. This will serve as the threshold for releasing items per office.</p>
                             <div class="mt-5">
                                 <p class="text-sm text-[#86591e]">PPMP Information</p>
                                 <div class="relative z-0 w-full my-3 group">
@@ -186,6 +237,58 @@
                 </div>
             </form>
         </Modal>
-    </div>
 </template>
  
+<style scoped>
+    .upload-area {
+        border: 2px dashed #007BFF;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+    .upload-area:hover {
+        border-color: #08396d;
+    }
+
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-0737ed87] table.dataTable tbody > tr > td:nth-child(2)) {
+        text-align: left !important;
+    }
+
+    :deep([data-v-0737ed87] table.dataTable tbody > tr > td:nth-child(3)) {
+        text-align: left !important;
+    }
+</style>

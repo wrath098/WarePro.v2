@@ -341,19 +341,19 @@
 </template>
  
 <style scoped>
-.upload-area {
-    border: 2px dashed #007BFF;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-}
-.upload-area:hover {
-    border-color: #08396d;
-}
+    .upload-area {
+        border: 2px dashed #007BFF;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+    .upload-area:hover {
+        border-color: #08396d;
+    }
 
-:deep(table.dataTable) {
+    :deep(table.dataTable) {
         border: 2px solid #7393dc;
     }
 

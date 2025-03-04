@@ -84,7 +84,7 @@ class ProductListActiveController extends Controller
     {
         $text = '';
         $count = 0;
-        $productList = $this->productService->getAllProduct_Category();
+        $productList = $this->productService->getAllActiveProduct_Category();
 
         foreach ($productList as $category) {
             if ($category->items->isNotEmpty()) {
