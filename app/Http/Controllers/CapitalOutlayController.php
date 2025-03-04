@@ -179,13 +179,14 @@ class CapitalOutlayController extends Controller
 
     public function showFundByYear(Request $request)
     {
-        $query = CapitalOutlay::where('year', $request->year)
-        ->with('allocations')
-        ->get();
+        $year = $request->year;
+        $query = CapitalOutlay::where('year', $year)
+            ->with('allocations')
+            ->get();
 
         $totalAmount = $query->sum('amount');
 
-        $result = $query->map(function ($fund) use ($totalAmount) {
+        $result = $query->map(function ($fund) use ($totalAmount, $year) {
             $allocationsData = $fund->allocations->map(function ($allotment) {
                 return [
                     'id' => $allotment->id,
@@ -194,19 +195,23 @@ class CapitalOutlayController extends Controller
                     'amount' => $allotment->amount,
                 ];
             });
-    
+
             return [
-                'totalAmount' => $totalAmount,
-                'funds' => [
-                    'id' => $fund->id,
-                    'amount' => $fund->amount,
-                    'accountClass' => $this->getAccountClassName($fund->fund_id),
-                    'allocation' => $allocationsData,
-                ],
+                'id' => $fund->id,
+                'amount' => $fund->amount,
+                'accountClass' => $this->getAccountClassName($fund->fund_id),
+                'allocations' => $allocationsData,
             ];
         });
 
-        return response()->json(['data' => $result]);
+        $response = [
+            $year => [
+                'totalAmount' => $totalAmount,
+                'funds' => $result,
+            ],
+        ];
+
+        return response()->json(['data' => $response]);
     }
 
     /**
