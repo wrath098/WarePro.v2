@@ -17,6 +17,8 @@ class PpmpParticular extends Model
     protected $fillable = [
         'qty_first',
         'qty_second',
+        'adjusted_firstQty',
+        'adjusted_secondQty',
         'tresh_first_qty',
         'tresh_second_qty',
         'released_qty',

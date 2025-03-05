@@ -20,6 +20,8 @@
         user: Number,
     });
 
+    const ppmpParticularsArray = Object.values(props.ppmpParticulars);
+
     const stockNo = ref('');
     const stockData = ref(null);
 
@@ -287,7 +289,7 @@
                                     <DataTable
                                         class="display table-hover table-striped shadow-lg rounded-lg"
                                         :columns="columns"
-                                        :data="ppmpParticulars"
+                                        :data="ppmpParticularsArray"
                                         :options="{  paging: true,
                                             searching: true,
                                             ordering: false

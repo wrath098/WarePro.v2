@@ -4,8 +4,6 @@
     import { reactive, ref, computed, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
-    import Generate from '@/Components/Buttons/Generate.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -39,8 +37,8 @@
         selectedType: '',
         selectedYear: '',
         selectedVersion: '',
-        selectedCopy: '',
-        priceAdjust:''
+        priceAdjust:100,
+        qtyAdjust:100,
     });
 
     const openDropPpmpModal = (ppmp) => {
@@ -250,24 +248,24 @@
                             <div class="relative z-0 w-full my-3 group" v-if="filteredVersion.length">
                                 <select v-model="generateConsolidated.selectedVersion" name="selectedVersion" id="selectedVersion" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                     <option value="" disabled selected>Select Version</option>
-                                    <option v-for="version in filteredVersion" :key="version.version" :value="version.version">{{ version.version }}</option>
+                                    <option value="original">Original Quantity</option>
+                                    <option value="adjustment">Adjust Quantity</option>
                                 </select>
                                 <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Version</label>
                             </div>
-                            <div class="relative z-0 w-full my-3 group" v-if="filteredVersion.length">
-                                <select v-model="generateConsolidated.selectedCopy" name="selectedCopy" id="selectedCopy" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                    <option value="" disabled selected>Select Copy</option>
-                                    <option :value="'Initial'">Initial</option>
-                                    <option :value="'Adjusted'">Adjusted</option>
-                                </select>
-                                <label for="selectedCopy" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Copy</label>
+                        </div>
+                        <div v-if="generateConsolidated.selectedVersion == 'adjustment'" class="mt-5">
+                            <p class="text-sm text-[#86591e]"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Percentage</span></p>
+                            <div class="relative z-0 w-full group my-2">
+                                <input v-model="generateConsolidated.qtyAdjust" type="number" min="50" max="99" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
                             </div>
                         </div>
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]"> Price Adjustment: <span class="text-sm text-[#8f9091]">Value: 100% - 120%</span></p>
+                            <p class="text-sm text-[#86591e]"> Price Adjustment: <span class="text-sm text-[#8f9091]">Percentage</span></p>
                             <div class="relative z-0 w-full group my-2">
                                 <input v-model="generateConsolidated.priceAdjust" type="number" min="100" max="120" name="priceAdjust" id="priceAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label for="priceAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Percentage</label>
+                                <label for="priceAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 100 to 120</label>
                             </div>
                         </div>
                     </div>

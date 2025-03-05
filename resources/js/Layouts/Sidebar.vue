@@ -40,10 +40,10 @@
                                     <div class="text-sm font-light tracking-wide text-gray-500">Core</div>
                                 </div>
                             </div>
-                            <SidebarDropdown :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')">
+                            <SidebarDropdown :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display') || route().current('general.fund.editFundAllocation')">
                                 <svg 
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}"
+                                    :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display') || route().current('general.fund.editFundAllocation')}"
                                     fill="currentColor" 
                                     aria-hidden="true" 
                                     viewBox="0 0 20 20" 
@@ -52,11 +52,11 @@
                                     <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
-                                <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display')}" />
+                                <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display') || route().current('general.fund.editFundAllocation')}" />
                                 <template #dropdown-items>
                                     <li>
-                                        <SubSidebarLink :href="route('general.fund.display')" :active="route().current('general.fund.display')">
-                                            <ArrowHeadRight :class="{ 'text-white ': route().current('general.fund.display')}"/>
+                                        <SubSidebarLink :href="route('general.fund.display')" :active="route().current('general.fund.display') || route().current('general.fund.editFundAllocation')">
+                                            <ArrowHeadRight :class="{ 'text-white ': route().current('general-servies-fund')}"/>
                                             Proposed Budget 
                                         </SubSidebarLink>
                                     </li>
@@ -180,7 +180,7 @@
                             <SidebarDropdown :active="route().current('conso.ppmp.type') || route().current('conso.ppmp.show')">
                                 <svg 
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{'text-white': route().current('conso.ppmp.type')}"
+                                    :class="{'text-white': route().current('conso.ppmp.type') || route().current('conso.ppmp.show')}"
                                     fill="currentColor" 
                                     aria-hidden="true" 
                                     xmlns="http://www.w3.org/2000/svg"
@@ -189,7 +189,7 @@
                                     <path fill="currentColor" fill-rule="evenodd" d="M1.5 1h2v1H2v12h1.5v1h-2l-.5-.5v-13l.5-.5zm6 6h-2L5 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 6h1V5H6v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 11h1v-1H6v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 12h2v-2h-2v2zm-1-2H8v1h2v-1zm0-5H8v1h2V5z" clip-rule="evenodd"/>
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated PPMP List</span>
-                                <ArrowDown :class="{'text-white': route().current('conso.ppmp.type')}" />
+                                <ArrowDown :class="{'text-white': route().current('conso.ppmp.type') || route().current('conso.ppmp.show')}" />
 
                                 <template #dropdown-items>
                                     <li>

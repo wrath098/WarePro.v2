@@ -1,9 +1,8 @@
 <script setup>
     import { Head, usePage} from '@inertiajs/vue3';
-    import { reactive, ref, watch, computed, onMounted } from 'vue';
+    import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -188,8 +187,6 @@
 
 <template>
     <Head title="PPMP" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
             <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
@@ -227,8 +224,8 @@
         <div class="my-4 max-w-screen-2xl mb-8">
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
-                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-2">
-                        <div class="mx-2 transition-shadow duration-300">
+                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-4">
+                        <div class="transition-shadow duration-300">
                             <div class="bg-white rounded-lg shadow-md hover:shadow-lg">
                                 <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
                                     <div class="font-bold text-lg">PPMP Information</div>
@@ -521,7 +518,6 @@
             </div>
         </form>
     </Modal>
-    </div>
 </template>
 <style scoped>
     :deep(table.dataTable) {
