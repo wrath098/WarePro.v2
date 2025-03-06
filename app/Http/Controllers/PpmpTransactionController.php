@@ -199,7 +199,6 @@ class PpmpTransactionController extends Controller
     public function storeConsolidated(Request $request)
     {
         DB::beginTransaction();
-
         try {
             $countUnavailableProduct = 0;
 
@@ -524,7 +523,7 @@ class PpmpTransactionController extends Controller
                 'ppmpYear' => $transaction->ppmp_year,
                 'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
                 'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
-                'version' => $transaction->ppmp_version ?? 'N/A',
+                'threshold' => $transaction->tresh_adjustment ? ((float)$transaction->tresh_adjustment * 100) : 0,
                 'createdAt' => $transaction->created_at->format('F d, Y'),
                 'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
             ];
@@ -734,12 +733,11 @@ class PpmpTransactionController extends Controller
         return $officesWithoutPpmp;
     }
 
-    private function updateIndividualPpmp($transactions, $adjustment, $year)
+    private function updateIndividualPpmp($transactions, $adjustment)
     {
         foreach ($transactions as $transaction) {
             foreach ($transaction->particulars as $particular) {
-                $isProductExempted = $this->productService->validateProductExcemption($particular->id, $year);
-    
+                $isProductExempted = $this->productService->validateProductExcemption($particular->prod_id);
                 $adjustFirstQty = $this->calculateAdjustedQty($particular->qty_first, $adjustment, $isProductExempted);
                 $adjustSecondQty = $this->calculateAdjustedQty($particular->qty_second, $adjustment, $isProductExempted);
     
@@ -780,6 +778,7 @@ class PpmpTransactionController extends Controller
             'ppmpStatus' => 'draft',
             'basePrice' => $request->selectedVersion == "original" ? $queryTransaction->price_adjustment : ((float)$request->priceAdjust / 100),
             'qtyAdjust' => $request->selectedVersion == "original" ? 1.00 : ((float)$request->qtyAdjust / 100),
+            'threshold' => ((float)$request->threshold / 100),
             'office' => null,
             'user' => Auth::id(),
         ];
@@ -815,9 +814,16 @@ class PpmpTransactionController extends Controller
             }
 
             $prodPriceId = $this->productService->getLatestPriceIdentification($items->first()->prod_id);
-            $qtyFirst = (int) $items->sum('qty_first');
-            $qtySecond = (int) $items->sum('qty_second');
 
+            if ($data['qtyAdjust'] == 1)
+            {
+                $qtyFirst = (int) $items->sum('qty_first');
+                $qtySecond = (int) $items->sum('qty_second');
+            } else {
+                $qtyFirst = (int) $items->sum('adjusted_firstQty');
+                $qtySecond = (int) $items->sum('adjusted_secondQty');
+            }
+            
             PpmpConsolidated::create([
                 'qty_first' => $qtyFirst,
                 'qty_second' => $qtySecond,
@@ -835,6 +841,7 @@ class PpmpTransactionController extends Controller
         $createConsolidation->update([
             'price_adjustment' => $data['basePrice'],
             'qty_adjustment' => $data['qtyAdjust'],
+            'tresh_adjustment' => $data['threshold'],
             'ppmp_version' => $data['newVersion'],
         ]);
     }

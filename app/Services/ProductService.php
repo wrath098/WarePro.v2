@@ -243,10 +243,9 @@ class ProductService
         return $category;
     }
 
-    public function validateProductExcemption($prodId, $year)
+    public function validateProductExcemption($prodId)
     {
         return ProductPpmpException::where('prod_id', $prodId)
-            ->where('year', $year)
             ->where('status', 'active')
             ->exists();
     }

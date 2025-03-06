@@ -17,7 +17,70 @@ class IndividualPpmpController extends Controller
         $this->productService = $productService;
     }
 
-    public function generatePdf_IndividualPpmp(PpmpTransaction $ppmp)
+    public function generatePdf_IndividualPpmp(Request $request)
+    {
+        $ppmp = $this->getPpmp($request->transactionNo);
+        $ppmp->load('particulars', 'requestee');
+        $totalQtySecond = $ppmp->particulars()->sum('qty_second');
+        
+        $pdf = new PpmpPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false, $ppmp->ppmp_code);
+        $logoPath = public_path('assets/images/benguet_logo.png');
+        $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');
+
+        $pdf->SetCreator(SYSTEM_GENERATOR);
+        $pdf->SetAuthor(SYSTEM_DEVELOPER);
+        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code));
+        $pdf->SetSubject('Individual PPMP Particulars');
+        $pdf->SetKeywords('Benguet, WarePro, Individual List');
+
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(true);
+
+        $pdf->SetFooterMargin(10);
+        $pdf->SetAutoPageBreak(TRUE, 10);
+
+        $pdf->AddPage();
+
+        $pdf->Image($logoPath, 110, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
+        $pdf->Image($pilipinasPath, 205, 15, 15, '', '', '', '', false, 300, '', false, false, 0, false, false, false);
+
+        $html = '
+            <div style="line-height: 0.01;">
+                <div style="line-height: 0.5; text-align: center; font-size: 10px;">
+                    <p>Republic of the Philippines</p>
+                    <p>PROVINCE OF BENGUET</p>
+                    <p>La Trinidad</p>
+                    <h5>PROVINCIAL GENERAL SERVICES OFFICE</h5>
+                </div>
+                <div style="line-height: 0.60; text-align: center; font-size: 10px;">
+                    <h4>PROJECT PROCUREMENT MANAGEMENT PLAN '. $ppmp->ppmp_year.'</h4>
+                    <h5>OFFICE & JANITORIAL SUPPLIES</h5>
+                </div>
+            </div>
+            <div style="line-height: 0.80;">
+                <h5>FPP CODE: <u> </u></h5>
+                <h5>END USER / OFFICE: ' . strtoupper($ppmp->requestee->office_name) . '</h5>
+            </div>
+            <br>
+            ';     
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $table = '<table border="1" cellpadding="2" cellspacing="0">';
+        $table .= '<thead>';
+        $table .= $this->tableHeader($totalQtySecond);
+        $table .= '</thead>';
+        $table .= '<tbody>';
+        $table .= $this->tableContent($ppmp, $totalQtySecond, $request);
+        $table .= '</tbody>';
+        $table .= '</table>';
+        $pdf->writeHTML($table, true, false, true, false, '');
+
+        $table2 = '<p style="font-size: 10px; line-height: 0.0001;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>';     
+        $pdf->writeHTML($table2, true, false, true, false, '');
+
+        $pdf->Output(strtoupper($ppmp->requestee->office_name) . '.pdf', 'I');
+    }
+
+    public function generatePdf_IndividualPpmp_newlyImported(PpmpTransaction $ppmp)
     {
         $ppmp->load('particulars', 'requestee');
         $totalQtySecond = $ppmp->particulars()->sum('qty_second');
@@ -68,7 +131,7 @@ class IndividualPpmpController extends Controller
         $table .= $this->tableHeader($totalQtySecond);
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($ppmp, $totalQtySecond);
+        $table .= $this->tableContentForNewImport($ppmp, $totalQtySecond);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -143,153 +206,61 @@ class IndividualPpmpController extends Controller
                 </tr>';        
     }
 
-    protected function tableContent($ppmp, $totalQtySecond)
+    protected function tableContent($ppmp, $totalQtySecond, $request)
     {
         $text = '';
 
-        $ppmpParticulars = $ppmp->particulars->map(function($particular) {
-            return [
-                'id' => $particular->id,
-                'qtyFirst' => $particular->qty_first,
-                'qtySecond' => $particular->qty_second,
-                'prodCode' => $this->productService->getProductCode($particular->prod_id),
-                'prodName' => $this->productService->getProductName($particular->prod_id),
-                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id)
-            ];
-        });
+        $sortedParticulars = $this->formattedAndSortedParticulars($ppmp);
 
-        $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
         $funds = $this->productService->getAllProduct_FundModel();
+
         $categories = $this->productService->getAllProduct_Category();
 
-        $productsOnCategory = $categories->mapWithKeys(function ($category) use ($sortedParticulars) {
-            $totalMatchedItems = 0;
-
-            foreach ($category->items as $item) {
-                foreach ($item->products as $product) {
-                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
-                        return $particular['prodCode'] === $product->prod_newNo;
-                    });
-                    $totalMatchedItems += $matchedParticulars->count();
-                }
-            }
-            return [$category->cat_code => $totalMatchedItems];
-        });
+        $productsOnCategory = $this->countProductsWithinCategory($categories, $sortedParticulars);
 
         if ($totalQtySecond != 0) {
-            foreach ($funds as $fund) {
-                if ($fund->categories->isNotEmpty()) {
-                    $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                                <td width="100%">' . strtoupper($fund->fund_name) . '</td>
-                                </tr>';
-    
-                $fundFirstTotal = 0; 
-                $fundSecondTotal = 0;
-                $fundTotal = 0;
-    
-                    foreach ($fund->categories as $category) {
-                        $matchedCount = $productsOnCategory->get($category->cat_code, 0);
-                        if ($category->items->isNotEmpty()) {
-                            if($matchedCount  > 0 ) {
-                                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                                            <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
-                                            </tr>';
-                            }
-
-                            $catFirstTotal = 0; 
-                            $catSecondTotal = 0;
-                            $catTotal = 0;
-            
-                            foreach ($category->items as $item) {
-                                if ($item->products->isNotEmpty()) {  
-                                    foreach ($item->products as $product) {
-                                        $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
-                                            return $particular['prodCode'] === $product->prod_newNo;
-                                        });
-    
-                                        if ($matchedParticulars->isNotEmpty()) {
-                                            foreach ($matchedParticulars as $particular) {
-                                                $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
-                                                $firstQtyAmount = (float) $particular['qtyFirst'] * (float) $particular['prodPrice'];
-                                                $secondQtyAmount = (float) $particular['qtySecond'] * (float) $particular['prodPrice'];
-                                                $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                                $text .= '<tr style="font-size: 9px; text-align: center;">
-                                                    <td width="40px">' . $product->prod_oldNo . '</td>
-                                                    <td width="45px">' . $product->prod_newNo . '</td>
-                                                    <td width="195px" style="text-align: left;">('. $item->item_name .') ' . $product->prod_desc . '</td>
-                                                    <td width="45px">' . $product->prod_unit. '</td>
-                                                    <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, '.', ',') . '</td>
-                                                    <td width="40px" style="text-align: right;">' . $prodQty . '</td>
-                                                    <td width="50px" style="text-align: right;">' . number_format($prodQtyAmount, 2, '.', ',') . '</td>
-                                                    <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? number_format($particular['qtyFirst'], 0, '.', ',') : '-') . '</td>
-                                                    <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? number_format($firstQtyAmount, 2, '.', ',') : '-') . '</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="32px" style="text-align: right;">' . ($particular['qtySecond'] != 0 ? number_format($particular['qtySecond'], 0, '.', ',') : '-') . '</td>
-                                                    <td width="50px" style="text-align: right;">' . ($secondQtyAmount != 0 ? number_format($secondQtyAmount, 2, '.', ',') : '-') . '</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                    <td width="25px">-</td>
-                                                </tr>';
-    
-                                                $catFirstTotal += $firstQtyAmount; 
-                                                $catSecondTotal += $secondQtyAmount;
-                                                $catTotal += $prodQtyAmount;
-                                            }
-                                        }
-                                    }  
-                                }         
-                            }
-                            $fundFirstTotal += $catFirstTotal; 
-                            $fundSecondTotal += $catSecondTotal;
-                            $fundTotal += $catTotal;
-                        }
-
-                    if ($matchedCount  > 0 ) {
-                        $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                                <td width="375px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
-                                <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
-                                <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="82px" style="text-align: right;">' . ($catSecondTotal != 0 ? number_format($catSecondTotal, 2, '.', ',') : '-') . '</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                            </tr>';}
-                    }
-                }
-                $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                                <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
-                                <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
-                                <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="82px" style="text-align: right;">' . ($fundSecondTotal != 0 ? number_format($fundSecondTotal, 2, '.', ',') : '-') . '</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                                <td width="25px">-</td>
-                            </tr>';
+            if ($request['printType'] == "original" && $request['threshold'] == 100) {
+                $this->generateAllData($funds, $text, $productsOnCategory, $sortedParticulars);
+                return $text;
+            } else {
+                $this->generateAllDataWithAdjustment($funds, $text, $productsOnCategory, $sortedParticulars, $request);
+                return $text;
             }
+            
+        }
+
+        if ($request['printType'] == "original" && $request['threshold'] == 100) {
+            $this->generateFirstSemData($funds, $text, $productsOnCategory, $sortedParticulars);
+            return $text;
+        } else {
+            $this->generateFirstSemDataWithAdjustment($funds, $text, $productsOnCategory, $sortedParticulars, $request);
+            return $text;
+        }
+    }
+
+    protected function tableContentForNewImport($ppmp, $totalQtySecond)
+    {
+        $text = '';
+
+        $sortedParticulars = $this->formattedAndSortedParticulars($ppmp);
+
+        $funds = $this->productService->getAllProduct_FundModel();
+
+        $categories = $this->productService->getAllProduct_Category();
+
+        $productsOnCategory = $this->countProductsWithinCategory($categories, $sortedParticulars);
+
+        if ($totalQtySecond != 0) {
+            $this->generateAllData($funds, $text, $productsOnCategory, $sortedParticulars);
             return $text;
         }
 
+        $this->generateFirstSemData($funds, $text, $productsOnCategory, $sortedParticulars);
+        return $text;
+    }
+
+    public function generateFirstSemData($funds, &$text, $productsOnCategory, $sortedParticulars)
+    {
         foreach ($funds as $fund) {
             if ($fund->categories->isNotEmpty()) {
                 $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
@@ -297,7 +268,6 @@ class IndividualPpmpController extends Controller
                             </tr>';
 
             $fundFirstTotal = 0; 
-            $fundSecondTotal = 0;
             $fundTotal = 0;
 
                 foreach ($fund->categories as $category) {
@@ -309,7 +279,6 @@ class IndividualPpmpController extends Controller
                                 </tr>';
                         }
                     $catFirstTotal = 0; 
-                    $catSecondTotal = 0;
                     $catTotal = 0;
                         
                         foreach ($category->items as $item) {
@@ -394,6 +363,399 @@ class IndividualPpmpController extends Controller
                         </tr>';
             }
         }
-        return $text;
+    }
+
+    public function generateFirstSemDataWithAdjustment($funds, &$text, $productsOnCategory, $sortedParticulars, $request)
+    {
+        $adjustment = ((int)$request['qtyAdjust'] / 100);
+        $threshold = ((int)$request['threshold'] / 100);
+        foreach ($funds as $fund) {
+            if ($fund->categories->isNotEmpty()) {
+                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                            <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+                            </tr>';
+
+            $fundFirstTotal = 0; 
+            $fundTotal = 0;
+
+                foreach ($fund->categories as $category) {
+                    if ($category->items->isNotEmpty()) {
+                        $matchedCount = $productsOnCategory->get($category->cat_code, 0);
+                        if($matchedCount  > 0 ) {
+                            $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                                <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+                                </tr>';
+                        }
+                    $catFirstTotal = 0; 
+                    $catTotal = 0;
+                        
+                        foreach ($category->items as $item) {
+                            if ($item->products->isNotEmpty()) {  
+                                foreach ($item->products as $product) {
+                                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
+                                        return $particular['prodCode'] === $product->prod_newNo;
+                                    });
+
+                                    if ($matchedParticulars->isNotEmpty()) {
+                                        foreach ($matchedParticulars as $particular) {
+                                            $isProductExempted = $this->productService->validateProductExcemption($product->id);
+                                            $adjustFirstQty = $this->calculateAdjustedQty($particular['qtyFirst'], $adjustment, $threshold, $isProductExempted);
+                                            $firstQtyAmount =  $adjustFirstQty * (float) $particular['prodPrice'];
+                                            $text .= '<tr style="font-size: 9px; text-align: center;">
+                                                <td width="40px">' . $product->prod_oldNo . '</td>
+                                                <td width="45px">' . $product->prod_newNo . '</td>
+                                                <td width="252px" style="text-align: left;">('. $item->item_name .') ' . $product->prod_desc . '</td>
+                                                <td width="45px">' . $product->prod_unit. '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, '.', ',') . '</td>
+                                                <td width="40px" style="text-align: right;">' . $adjustFirstQty . '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($firstQtyAmount, 2, '.', ',') . '</td>
+                                                <td width="32px" style="text-align: right;">' . ($adjustFirstQty != 0 ? number_format($adjustFirstQty, 0, '.', ',') : '-') . '</td>
+                                                <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? number_format($firstQtyAmount, 2, '.', ',') : '-') . '</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                            </tr>';
+
+                                            $catFirstTotal += $firstQtyAmount; 
+                                            $catTotal += $firstQtyAmount;
+                                        }
+                                    }
+                                }  
+                            }         
+                        }
+                    }
+                    if ($catTotal > 0) {
+                        $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                                <td width="432px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                                <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
+                                <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                                <td width="25px">-</td>
+                            </tr>';
+                    }
+
+                    $fundFirstTotal += $catFirstTotal; 
+                    $fundTotal += $catTotal;
+                }
+                $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td width="432px">Total Amount for ' . $fund->fund_name . '</td>
+                            <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                        </tr>';
+            }
+        }
+    }
+
+    private function generateAllDataWithAdjustment($funds, &$text, $productsOnCategory, $sortedParticulars, $request)
+    {
+        $adjustment = ((int)$request['qtyAdjust'] / 100);
+        $threshold = ((int)$request['threshold'] / 100);
+
+        foreach ($funds as $fund) {
+            if ($fund->categories->isNotEmpty()) {
+                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                            <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+                            </tr>';
+
+            $fundFirstTotal = 0; 
+            $fundSecondTotal = 0;
+            $fundTotal = 0;
+
+                foreach ($fund->categories as $category) {
+                    $matchedCount = $productsOnCategory->get($category->cat_code, 0);
+                    if ($category->items->isNotEmpty()) {
+                        if($matchedCount  > 0 ) {
+                            $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                                        <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+                                        </tr>';
+                        }
+
+                        $catFirstTotal = 0; 
+                        $catSecondTotal = 0;
+                        $catTotal = 0;
+        
+                        foreach ($category->items as $item) {
+                            if ($item->products->isNotEmpty()) {  
+                                foreach ($item->products as $product) {
+                                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
+                                        return $particular['prodCode'] === $product->prod_newNo;
+                                    });
+
+                                    if ($matchedParticulars->isNotEmpty()) {
+                                        foreach ($matchedParticulars as $particular) {
+                                            $isProductExempted = $this->productService->validateProductExcemption($product->id);
+                                            $adjustFirstQty = $this->calculateAdjustedQty($particular['qtyFirst'], $adjustment, $threshold, $isProductExempted);
+                                            $adjustSecondQty = $this->calculateAdjustedQty($particular['qtySecond'], $adjustment, $threshold, $isProductExempted);
+
+                                            $prodQty = $adjustFirstQty + $adjustSecondQty;
+                                            $firstQtyAmount = (float) $adjustFirstQty * (float) $particular['prodPrice'];
+                                            $secondQtyAmount = (float) $adjustSecondQty * (float) $particular['prodPrice'];
+                                            $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
+                                            $text .= '<tr style="font-size: 9px; text-align: center;">
+                                                <td width="40px">' . $product->prod_oldNo . '</td>
+                                                <td width="45px">' . $product->prod_newNo . '</td>
+                                                <td width="195px" style="text-align: left;">('. $item->item_name .') ' . $product->prod_desc . '</td>
+                                                <td width="45px">' . $product->prod_unit. '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, '.', ',') . '</td>
+                                                <td width="40px" style="text-align: right;">' . $prodQty . '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($prodQtyAmount, 2, '.', ',') . '</td>
+                                                <td width="32px" style="text-align: right;">' . ($adjustFirstQty != 0 ? number_format($adjustFirstQty, 0, '.', ',') : '-') . '</td>
+                                                <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? number_format($firstQtyAmount, 2, '.', ',') : '-') . '</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="32px" style="text-align: right;">' . ($adjustSecondQty != 0 ? number_format($adjustSecondQty, 0, '.', ',') : '-') . '</td>
+                                                <td width="50px" style="text-align: right;">' . ($secondQtyAmount != 0 ? number_format($secondQtyAmount, 2, '.', ',') : '-') . '</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                            </tr>';
+
+                                            $catFirstTotal += $firstQtyAmount; 
+                                            $catSecondTotal += $secondQtyAmount;
+                                            $catTotal += $prodQtyAmount;
+                                        }
+                                    }
+                                }  
+                            }         
+                        }
+                        $fundFirstTotal += $catFirstTotal; 
+                        $fundSecondTotal += $catSecondTotal;
+                        $fundTotal += $catTotal;
+                    }
+
+                if ($matchedCount  > 0 ) {
+                    $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td width="375px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                            <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="82px" style="text-align: right;">' . ($catSecondTotal != 0 ? number_format($catSecondTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                        </tr>';}
+                }
+            }
+            $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
+                            <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="82px" style="text-align: right;">' . ($fundSecondTotal != 0 ? number_format($fundSecondTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                        </tr>';
+        }
+    }
+
+    private function generateAllData($funds, &$text, $productsOnCategory, $sortedParticulars)
+    {
+        foreach ($funds as $fund) {
+            if ($fund->categories->isNotEmpty()) {
+                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                            <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+                            </tr>';
+
+            $fundFirstTotal = 0; 
+            $fundSecondTotal = 0;
+            $fundTotal = 0;
+
+                foreach ($fund->categories as $category) {
+                    $matchedCount = $productsOnCategory->get($category->cat_code, 0);
+                    if ($category->items->isNotEmpty()) {
+                        if($matchedCount  > 0 ) {
+                            $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
+                                        <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+                                        </tr>';
+                        }
+
+                        $catFirstTotal = 0; 
+                        $catSecondTotal = 0;
+                        $catTotal = 0;
+        
+                        foreach ($category->items as $item) {
+                            if ($item->products->isNotEmpty()) {  
+                                foreach ($item->products as $product) {
+                                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
+                                        return $particular['prodCode'] === $product->prod_newNo;
+                                    });
+
+                                    if ($matchedParticulars->isNotEmpty()) {
+                                        foreach ($matchedParticulars as $particular) {
+                                            $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
+                                            $firstQtyAmount = (float) $particular['qtyFirst'] * (float) $particular['prodPrice'];
+                                            $secondQtyAmount = (float) $particular['qtySecond'] * (float) $particular['prodPrice'];
+                                            $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
+                                            $text .= '<tr style="font-size: 9px; text-align: center;">
+                                                <td width="40px">' . $product->prod_oldNo . '</td>
+                                                <td width="45px">' . $product->prod_newNo . '</td>
+                                                <td width="195px" style="text-align: left;">('. $item->item_name .') ' . $product->prod_desc . '</td>
+                                                <td width="45px">' . $product->prod_unit. '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, '.', ',') . '</td>
+                                                <td width="40px" style="text-align: right;">' . $prodQty . '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($prodQtyAmount, 2, '.', ',') . '</td>
+                                                <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? number_format($particular['qtyFirst'], 0, '.', ',') : '-') . '</td>
+                                                <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? number_format($firstQtyAmount, 2, '.', ',') : '-') . '</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="32px" style="text-align: right;">' . ($particular['qtySecond'] != 0 ? number_format($particular['qtySecond'], 0, '.', ',') : '-') . '</td>
+                                                <td width="50px" style="text-align: right;">' . ($secondQtyAmount != 0 ? number_format($secondQtyAmount, 2, '.', ',') : '-') . '</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                                <td width="25px">-</td>
+                                            </tr>';
+
+                                            $catFirstTotal += $firstQtyAmount; 
+                                            $catSecondTotal += $secondQtyAmount;
+                                            $catTotal += $prodQtyAmount;
+                                        }
+                                    }
+                                }  
+                            }         
+                        }
+                        $fundFirstTotal += $catFirstTotal; 
+                        $fundSecondTotal += $catSecondTotal;
+                        $fundTotal += $catTotal;
+                    }
+
+                if ($matchedCount  > 0 ) {
+                    $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td width="375px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                            <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="82px" style="text-align: right;">' . ($catSecondTotal != 0 ? number_format($catSecondTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                        </tr>';}
+                }
+            }
+            $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
+                            <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="82px" style="text-align: right;">' . ($fundSecondTotal != 0 ? number_format($fundSecondTotal, 2, '.', ',') : '-') . '</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                            <td width="25px">-</td>
+                        </tr>';
+        }
+    }
+
+    private function countProductsWithinCategory($categories, $sortedParticulars){
+        $productsOnCategory = $categories->mapWithKeys(function ($category) use ($sortedParticulars) {
+            $totalMatchedItems = 0;
+
+            foreach ($category->items as $item) {
+                foreach ($item->products as $product) {
+                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
+                        return $particular['prodCode'] === $product->prod_newNo;
+                    });
+                    $totalMatchedItems += $matchedParticulars->count();
+                }
+            }
+            return [$category->cat_code => $totalMatchedItems];
+        });
+
+        return $productsOnCategory;
+    }
+    
+    private function formattedAndSortedParticulars($ppmp)
+    {
+        $ppmpParticulars = $ppmp->particulars->map(function($particular) {
+            return [
+                'id' => $particular->id,
+                'qtyFirst' => $particular->qty_first,
+                'qtySecond' => $particular->qty_second,
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id)
+            ];
+        });
+
+        $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
+
+        return $sortedParticulars;
+    }
+
+    private function calculateAdjustedQty($qty, $adjustment, $threshold, $isExempted)
+    {
+        if (!$isExempted && $qty > 1) {
+            return floor(((int)$qty * (float)$adjustment) * (float)$threshold);
+        }
+
+        return (int)$qty;
+    }
+
+    private function getPpmp($transactionId)
+    {
+        return PpmpTransaction::findOrFail($transactionId);
     }
 }
+

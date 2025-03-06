@@ -39,6 +39,7 @@
         selectedVersion: '',
         priceAdjust:100,
         qtyAdjust:100,
+        threshold: 100,
     });
 
     const openDropPpmpModal = (ppmp) => {
@@ -109,29 +110,29 @@
             width: '10%'
         },
         {
-            data: 'version',
-            title: 'Version',
-            width: '10%',
-        },
-        {
             data: 'priceAdjust',
-            title: 'Price Adjustment',
+            title: 'Price Adjustment <br><span class="text-xs">(Percentage)</span>',
             width: '10%'
         },
         {
             data: 'qtyAdjust',
-            title: 'Quantity Adjustment',
-            width: '5%'
+            title: 'Quantity Adjustment <br><span class="text-xs">(Percentage)</span>',
+            width: '10%'
+        },
+        {
+            data: 'threshold',
+            title: 'Threshold <br><span class="text-xs">(Percentage)</span>',
+            width: '10%',
         },
         {
             data: 'updatedBy',
             title: 'Updated By',
-            width: '20%'
+            width: '15%'
         },
         {
             data: 'createdAt',
             title: 'Updated At',
-            width: '20%'
+            width: '15%'
         },
         {
             data: null,
@@ -254,15 +255,24 @@
                                 <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Version</label>
                             </div>
                         </div>
-                        <div v-if="generateConsolidated.selectedVersion == 'adjustment'" class="mt-5">
-                            <p class="text-sm text-[#86591e]"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Percentage</span></p>
-                            <div class="relative z-0 w-full group my-2">
-                                <input v-model="generateConsolidated.qtyAdjust" type="number" min="50" max="99" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
+                        <div v-if="generateConsolidated.selectedVersion" >
+                            <div v-if="generateConsolidated.selectedVersion == 'adjustment'" class="mt-5">
+                                <p class="text-sm text-[#86591e]"> Adjustment: <span class="text-sm text-[#8f9091]">This will adjust the quantity of each item requested by the various offices.</span></p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="generateConsolidated.qtyAdjust" type="number" min="50" max="99" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
+                                </div>
+                            </div>
+                            <div class="mt-5">
+                                <p class="text-sm text-[#86591e]"> Threshold: <span class="text-sm text-[#8f9091]">This will set the quantity limit for each item requested by the various offices.</span></p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="generateConsolidated.threshold" type="number" min="50" max="100" name="threshold" id="threshold" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="threshold" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>
+                                </div>
                             </div>
                         </div>
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]"> Price Adjustment: <span class="text-sm text-[#8f9091]">Percentage</span></p>
+                            <p class="text-sm text-[#86591e]"> Price Adjustment: <span class="text-sm text-[#8f9091]">This will increase the latest prices of product items by a percentage.</span></p>
                             <div class="relative z-0 w-full group my-2">
                                 <input v-model="generateConsolidated.priceAdjust" type="number" min="100" max="120" name="priceAdjust" id="priceAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                 <label for="priceAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 100 to 120</label>

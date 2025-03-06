@@ -3,12 +3,8 @@
     import { ref, computed, reactive, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
-    import Copy from '@/Components/Buttons/Copy.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import Print from '@/Components/Buttons/Print.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
-    import { Inertia } from '@inertiajs/inertia';
     import Swal from 'sweetalert2';
     
     const page = usePage();
@@ -23,35 +19,26 @@
     const modalState = ref(null);
     const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
-    const isCopyModalOpen = computed(() => modalState.value === 'copy');
+    const isPrintModalOpen = computed(() => modalState.value === 'print');
 
-    const filteredYears = ref([]);
-    const makeCopy = reactive({
-        selectedType: '',
-        selectedYear: '',
-        qtyAdjust: '',
+    const printPpmp = reactive({
+        transactionNo: '',
+        printType: '',
+        qtyAdjust: 100,
+        threshold: 100,
     });
 
-    const onTypeChange = (context) => {
-        const type = props.types.find(typ => typ.ppmp_type === context.selectedType);
-        filteredYears.value = type ? type.years : [];
-        makeCopy.selectedYear = '';
-    };
+    const openPrintModal = (transactId) => {
+        printPpmp.transactionNo = transactId;
+        modalState.value = 'print';
+    }
 
-    const submitForm = (url, data) => {
-        isLoading.value = true;
-        Inertia.post(url, data, {
-            onSuccess: () => {
-                closeModal();
-                isLoading.value = false;
-            },
-            onError: (errors) => {
-                console.error(`Form submission failed for ${url}`, errors);
-                isLoading.value = false;
-            },
-        });
+    const submitPrint = () => {
+        const queryString = new URLSearchParams(printPpmp).toString();
+        const url = `../pdf/individual-ppmp-list?${queryString}`;
+        window.open(url, '_blank');
+        window.location.reload();
     };
-    const submitCopy = () => submitForm('copy-ppmp', makeCopy);
 
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
@@ -148,16 +135,6 @@
                         </div>
                     </li>
                 </ol>
-                <ol v-if="props.ppmp.status == 'Draft'">
-                    <li class="flex flex-col lg:flex-row justify-center items-center">
-                        <button @click="showModal('copy')" class="flex items-center rounded-md text-white bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 hover:bg-gradient-to-br hover:text-gray-200 p-1 group">
-                            <svg class="w-5 h-5 text-gray-100 group-hover:text-gray-200" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M5.503 4.627L5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Zm0 1.5h-9a.75.75 0 0 0-.75.75v13c0 .414.336.75.75.75h9a.75.75 0 0 0 .75-.75v-13a.75.75 0 0 0-.75-.75Z"/>
-                            </svg>
-                            <span class="mx-1 text-gray-100 text-sm group-hover:text-gray-200">Make A Copy</span>
-                        </button>
-                    </li>
-                </ol>
             </nav>
         </template>
 
@@ -173,70 +150,99 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <Print :href="route('generatePdf.IndividualPpmp', { ppmp: props.cellData.id})" tooltip="Initial" />
-                                <Print v-if="props.cellData.tresh_adjustment > 0 && props.cellData.tresh_adjustment < 1" :href="route('generatePdf.IndividualPpmp.withAdjustment', { ppmp: props.cellData.id})" tooltip="Adjusted" />
+                                <button v-if="ppmp.status == 'Draft'" @click="openPrintModal(props.cellData.id)" title="Print">
+                                    <svg class="w-6 h-6 text-gray-800 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                                    </svg>
+                                </button>
+                                <ul v-if="ppmp.status == 'Approved'">
+                                    <li>
+                                        <details class="group">
+                                            <summary class="flex items-center justify-center gap-2 p-2 marker:content-none hover:cursor-pointer bg-gray-700 hover:bg-gray-900 rounded-md">
+                                                <span class="flex gap-2 text-sm text-gray-100">Print</span>
+                                                <svg class="w-3 h-3 text-gray-100 transition group-open:rotate-90" xmlns="http://www.w3.org/2000/svg"
+                                                    width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                    <path fill-rule="evenodd"
+                                                        d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z">
+                                                    </path>
+                                                </svg>
+                                            </summary>
+
+                                            <article class="pb-2">
+                                                <ul class="flex flex-col">
+                                                    <li class="hover:bg-gray-300 my-1 rounded-md"><a href="">Original Qty</a></li>
+                                                    <li v-if="props.cellData.qty_adjustment < 1" class="hover:bg-gray-300 my-1 rounded-md"><a href="">Adjustment Qty</a></li>
+                                                    <li v-if="props.cellData.tresh_adjustment < 1" class="hover:bg-gray-300 my-1 rounded-md"><a href="">Office Limit Qty</a></li>
+                                                </ul>
+                                            </article>
+
+                                        </details>
+                                    </li>
+                                </ul>
                             </template>
                     </DataTable>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
-        <Modal :show="isCopyModalOpen" @close="closeModal"> 
-            <form @submit.prevent="submitCopy">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
-                            </svg>                                            
-                        </div>
-                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Make A Copy</h3>
-                            <p class="text-sm text-gray-500"> Enter the details to create a copy of the Individual PPMP and adjust its original quantity. This will serve as the threshold for releasing items per office.</p>
-                            <div class="mt-5">
-                                <p class="text-sm text-[#86591e]">PPMP Information</p>
-                                <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="makeCopy.selectedType" @change="onTypeChange(makeCopy)" name="selectedType" id="selectedType" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Select the PPMP Type</option>
-                                        <option v-for="type in props.types" :key="type.ppmp_type" :value="type.ppmp_type">{{ type.ppmp_type }}</option>
-                                    </select>
-                                    <label for="selectedType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
-                                </div>
-                                <div class="relative z-0 w-full my-3 group" v-if="filteredYears.length">
-                                    <select v-model="makeCopy.selectedYear" name="selectedYear" id="selectedYear" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Select the PPMP Year</option>
-                                        <option v-for="year in filteredYears" :key="year.ppmp_year" :value="year.ppmp_year">{{ year.ppmp_year }}</option>
-                                    </select>
-                                    <label for="selectedYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Year</label>
-                                </div>
+    <Modal :show="isPrintModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitPrint">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Print Project Procurement Management Plan</h3>
+                        <p class="text-sm text-gray-500"> Please select the version of the ppmp.</p>
+                        <div class="mt-5">
+                            <div class="relative z-0 w-full my-3 group">
+                                <select v-model="printPpmp.printType" name="selectedVersion" id="selectedVersion" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <option value="" disabled selected>Select Version</option>
+                                    <option value="original">Original Quantity</option>
+                                    <option value="adjustment">Adjust Quantity</option>
+                                </select>
+                                <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Version</label>
                             </div>
-                            <div class="mt-5">
-                                <p class="text-sm text-[#86591e]"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span></p>
-                                <div class="relative z-0 w-full group my-2">
-                                    <input v-model="makeCopy.qtyAdjust" type="number" min="50" max="100" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                    <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Qty Adjustment</label>
+                            <div v-if="printPpmp.printType" >
+                                <div v-if="printPpmp.printType == 'adjustment'" class="mt-5">
+                                    <p class="text-sm text-[#86591e]"> Adjustment: <span class="text-sm text-[#8f9091]">This will adjust the quantity of each item requested by the various offices.</span></p>
+                                    <div class="relative z-0 w-full group my-2">
+                                        <input v-model="printPpmp.qtyAdjust" type="number" min="50" max="99" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                        <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
+                                    </div>
+                                </div>
+                                <div class="mt-5">
+                                    <p class="text-sm text-[#86591e]"> Threshold: <span class="text-sm text-[#8f9091]">This will set the quantity limit for each item requested by the various offices.</span></p>
+                                    <div class="relative z-0 w-full group my-2">
+                                        <input v-model="printPpmp.threshold" type="number" min="50" max="100" name="threshold" id="threshold" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                        <label for="threshold" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                        Confirm 
-                    </SuccessButton>
+            </div>
+            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Print 
+                </SuccessButton>
 
-                    <DangerButton @click="closeModal"> 
-                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                        Cancel
-                    </DangerButton>
-                </div>
-            </form>
-        </Modal>
+                <DangerButton @click="closeModal"> 
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Cancel
+                </DangerButton>
+            </div>
+        </form>
+    </Modal>
 </template>
  
 <style scoped>

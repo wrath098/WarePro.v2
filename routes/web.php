@@ -185,7 +185,8 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
     Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
-    Route::get('/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
+    Route::get('/individual-ppmp-list', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp');
+    Route::get('/import/individual-ppmp-list/{ppmp}', [IndividualPpmpController::class, 'generatePdf_IndividualPpmp_newlyImported'])->name('generatePdf.IndividualPpmp.Newly.Import');
     Route::get('/adjusted-individual-ppmp-list/{ppmp}', [AdjustedIndividualPpmpController::class, 'generatePdf_IndividualPpmp'])->name('generatePdf.IndividualPpmp.withAdjustment');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');

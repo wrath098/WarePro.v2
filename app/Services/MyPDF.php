@@ -15,7 +15,7 @@ class MyPDF extends TCPDF
 
         $pageNumber = 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages();
 
-        $footerText = 'PGSO-WarePro-GC';
+        $footerText = 'PGSO-WarePro';
 
         $totalWidth = $this->getPageWidth();
 
