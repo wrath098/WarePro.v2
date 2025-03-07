@@ -35,7 +35,7 @@
 
     const submitPrint = () => {
         const queryString = new URLSearchParams(printPpmp).toString();
-        const url = `../pdf/individual-ppmp-list?${queryString}`;
+        const url = `../pdf/draft-adjusted-ppmp-list?${queryString}`;
         window.open(url, '_blank');
         window.location.reload();
     };
@@ -148,13 +148,14 @@
                         :options="{  paging: true,
                             searching: true,
                             ordering: false
-                        }">
+                        }"> 
                             <template #action="props">
                                 <button v-if="ppmp.status == 'Draft'" @click="openPrintModal(props.cellData.id)" title="Print">
                                     <svg class="w-6 h-6 text-gray-800 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
                                     </svg>
                                 </button>
+
                                 <ul v-if="ppmp.status == 'Approved'">
                                     <li>
                                         <details class="group">
@@ -170,9 +171,21 @@
 
                                             <article class="pb-2">
                                                 <ul class="flex flex-col">
-                                                    <li class="hover:bg-gray-300 my-1 rounded-md"><a href="">Original Qty</a></li>
-                                                    <li v-if="props.cellData.qty_adjustment < 1" class="hover:bg-gray-300 my-1 rounded-md"><a href="">Adjustment Qty</a></li>
-                                                    <li v-if="props.cellData.tresh_adjustment < 1" class="hover:bg-gray-300 my-1 rounded-md"><a href="">Office Limit Qty</a></li>
+                                                    <li class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
+                                                        <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'original', ppmp: props.cellData.id})" target="_blank">
+                                                            Original Qty
+                                                        </a>
+                                                    </li>
+                                                    <li v-if="props.cellData.qty_adjustment < 1" class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
+                                                        <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'adjusted', ppmp: props.cellData.id})" target="_blank">
+                                                            Adjustment Qty
+                                                        </a>
+                                                    </li>
+                                                    <li v-if="props.cellData.tresh_adjustment < 1" class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
+                                                        <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'threshold', ppmp: props.cellData.id})" target="_blank">
+                                                            Maximum Allowed Qty
+                                                        </a>
+                                                    </li>
                                                 </ul>
                                             </article>
 
@@ -215,7 +228,7 @@
                                     </div>
                                 </div>
                                 <div class="mt-5">
-                                    <p class="text-sm text-[#86591e]"> Threshold: <span class="text-sm text-[#8f9091]">This will set the quantity limit for each item requested by the various offices.</span></p>
+                                    <p class="text-sm text-[#86591e]"> Set Maximum Allowed Quantity: <span class="text-sm text-[#8f9091]">This will set the quantity limit for each item requested by the various offices.</span></p>
                                     <div class="relative z-0 w-full group my-2">
                                         <input v-model="printPpmp.threshold" type="number" min="50" max="100" name="threshold" id="threshold" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                         <label for="threshold" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>

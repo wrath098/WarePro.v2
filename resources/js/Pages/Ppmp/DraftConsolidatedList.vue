@@ -121,7 +121,7 @@
         },
         {
             data: 'threshold',
-            title: 'Threshold <br><span class="text-xs">(Percentage)</span>',
+            title: 'Maximum Allowed Quantity <br><span class="text-xs">(Percentage)</span>',
             width: '10%',
         },
         {
