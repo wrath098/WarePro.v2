@@ -239,141 +239,45 @@ class PpmpTransactionController extends Controller
     {
         DB::beginTransaction();
 
-        $adjustment = (float) $ppmpTransaction->qty_adjustment == 1.00 ? 'qty_adjustment' : 'tresh_adjustment';
-        $individualPpmp = PpmpTransaction::where('ppmp_type', 'individual')
-            ->where('ppmp_year', $ppmpTransaction->ppmp_year)
-            ->where('ppmp_status', $ppmpTransaction->ppmp_status)
-            ->where($adjustment, $ppmpTransaction->qty_adjustment)
-            ->get();
-
+        $officePpmpStatus = 'individual';
         $year = $ppmpTransaction->ppmp_year;
         $type = $ppmpTransaction->ppmp_type;
         $status = $ppmpTransaction->ppmp_status;
+        $qtyAdjustment = $ppmpTransaction->qty_adjustment;
+        $qtyThreshold = $ppmpTransaction->tresh_adjustment;
         $userId = $request->user;
         $recapitulation = [];
-        $ppmpTransaction->load('consolidated');
+
+        $officePpmp = $this->fetchOfficeWithPpmp($officePpmpStatus, $year);
 
         try {
-            $existTransaction = PpmpTransaction::where('ppmp_year', $year)
-                    ->where('ppmp_type', $type)
-                    ->where('ppmp_status', 'approved')
-                    ->first();
 
-            if ($existTransaction) {
+            $isTransactionExist = $this->fetchApprovedConsolidatedPpmp($year, $type);
+
+            if ($isTransactionExist) {
                 DB::rollBack();
                 return redirect()->back()->with([
-                    'error' => 'Approved PPMP already exist! Transaction No.' . $existTransaction->ppmp_code
+                    'error' => 'Approved PPMP already exist with transaction No.' . $isTransactionExist->ppmp_code
                 ]);
             }
 
-            
-            $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
-                $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
-                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
-    
-                $qtyFirst = (int) $items->qty_first;
-                $qtySecond = (int) $items->qty_second;
-    
-                return [
-                    'prodId' => $items->prod_id,
-                    'prodCode' => $this->productService->getProductCode($items->prod_id),
-                    'prodName' => $this->productService->getProductName($items->prod_id),
-                    'prodUnit' => $this->productService->getProductUnit($items->prod_id),
-                    'prodPrice' => $prodPrice,
-                    'qtyFirst' => $qtyFirst,
-                    'qtySecond' => $qtySecond,
-                ];
-            });
-
-            $sortedParticulars = $groupParticulars->sortBy('prodCode');
+            $sortedParticulars = $this->formattedAndSortedParticulars($ppmpTransaction);
             $funds = $this->productService->getAllProduct_FundModel();
 
-            foreach ($funds as $fund) {
-            if ($fund->categories->isNotEmpty()) {
+            $this->recapitulation($sortedParticulars, $funds, $recapitulation, $year);
+            $this->processFundAllocations($recapitulation, $year);
+            $this->updateOfficePpmpAdjustmentAndThreshold($officePpmp, $userId, $qtyAdjustment, $qtyThreshold);
 
-            $fundFirstTotal = 0; 
-            $fundSecondTotal = 0;
-            $fundTotal = 0;
-                foreach ($fund->categories as $category) {
-                    if ($category->items->isNotEmpty()) {
-                       
-                    $catFirstTotal = 0; 
-                    $catSecondTotal = 0;
-                    $catTotal = 0;
-        
-                        foreach ($category->items as $item) {
-                            if ($item->products->isNotEmpty()) {  
-                                foreach ($item->products as $product) {
-                                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
-                                        return $particular['prodCode'] === $product->prod_newNo;
-                                    });
+            $ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
+            DB::commit();
+            return redirect()->route('conso.ppmp.type', ['type' => $type, 'status' => $status])->with('message', 'Proceeding to Approved PPMP successfully executed');
 
-                                    if ($matchedParticulars->isNotEmpty()) {
-                                        foreach ($matchedParticulars as $particular) {
-                                            $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
-                                            $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
-                                            $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                            
-                                            $catFirstTotal += $firstQtyAmount; 
-                                            $catSecondTotal += $secondQtyAmount;
-                                            $catTotal += $prodQtyAmount;
-                                        }
-                                    }
-                                }  
-                            }         
-                        }
-                        $recapitulation[$fund->fund_name][] =  [
-                            'name' => $category->cat_name,
-                            'total' => $catTotal,
-                            'firstSem' => $catFirstTotal,
-                            'secondSem' => $catSecondTotal,
-                        ];
-                    }
-                    
-                    $fundFirstTotal += $catFirstTotal; 
-                    $fundSecondTotal += $catSecondTotal;
-                    $fundTotal += $catTotal;
-                }
-            }
-            
-            $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id);
-            $contingency = $capitalOutlay - $fundTotal;
-            $wholeNumber = floor($contingency);
-            $cents = $contingency - $wholeNumber;
-            $halfWholeNumber = floor($wholeNumber / 2);
-
-            $contingencyFirst = $wholeNumber - $halfWholeNumber;
-            $contingencySecond = $halfWholeNumber + $cents;
-
-            $recapitulation[$fund->fund_name][] = [
-                'name' => 'Contingency',
-                'total' => $contingency,
-                'firstSem' => $contingencyFirst,
-                'secondSem' => $contingencySecond,
-            ];
-        }
-
-        foreach($recapitulation as $expenses => $fund) {
-            $fundId = Fund::where('fund_name', $expenses)->value('id');
-            $capitalId = CapitalOutlay::where('year', $year)->where('fund_id', $fundId)->value('id');
-            foreach($fund as $category) {
-                $this->createFundAllocation($category['name'], '1st',  $category['firstSem'], $capitalId);
-                $this->createFundAllocation($category['name'], '2nd',  $category['secondSem'], $capitalId);
-            }
-        }
-
-        foreach($individualPpmp as $ppmp) {
-            $ppmp->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
-        }
-
-        $ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
-        DB::commit();
-        return redirect()->route('conso.ppmp.type', ['type' => $type, 'status' => $status])->with('message', 'Proceeding to Approved PPMP successfully executed');
         } catch (\Exception $e) {
+            
             DB::rollBack();
             Log::error('Proceed to Final PPMP error: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Proceeding to final ppmp failed. Please contact your system administrator.');
+                ->with('error', $e->getMessage());
         }
     }
 
@@ -719,6 +623,14 @@ class PpmpTransactionController extends Controller
             ]);
     }
 
+    private function fetchApprovedConsolidatedPpmp($year, $type)
+    {
+        return PpmpTransaction::where('ppmp_year', $year)
+            ->where('ppmp_type', $type)
+            ->where('ppmp_status', 'approved')
+            ->first();
+    }
+
     private function getOfficesWithNoPpmp($ppmpType, $year)
     {
         $ppmpTransactions = $this->fetchOfficeWithPpmp($ppmpType, $year);
@@ -844,5 +756,173 @@ class PpmpTransactionController extends Controller
             'tresh_adjustment' => $data['threshold'],
             'ppmp_version' => $data['newVersion'],
         ]);
+    }
+
+    private function formattedAndSortedParticulars($ppmpTransaction) {
+        $ppmpTransaction->load('consolidated');
+        $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
+            $prodPrice = (float)$this->productService->getLatestPrice($items->prod_id) * (float)$ppmpTransaction->price_adjustment;
+            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            $latestPriceId = $this->productService->getLatestPriceIdentification($items->prod_id);
+
+            if ($items->price_id !== $latestPriceId) {
+                $items->update(['price_id' => $latestPriceId]);
+            }
+
+            $qtyFirst = (int) $items->qty_first;
+            $qtySecond = (int) $items->qty_second;
+
+            return [
+                'prodId' => $items->prod_id,
+                'prodCode' => $this->productService->getProductCode($items->prod_id),
+                'prodName' => $this->productService->getProductName($items->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($items->prod_id),
+                'prodPrice' => $prodPrice,
+                'qtyFirst' => $qtyFirst,
+                'qtySecond' => $qtySecond,
+            ];
+        });
+        
+        $sortedParticulars = $groupParticulars->sortBy('prodCode');
+
+        return $sortedParticulars;
+    }
+
+    private function recapitulation($sortedParticulars, $funds, &$recapitulation, $year)
+    {
+        foreach ($funds as $fund) {
+
+            if ($fund->categories->isEmpty()) {
+                continue;
+            }
+
+            $fundFirstTotal = 0; 
+            $fundSecondTotal = 0;
+            $fundTotal = 0;
+
+            foreach ($fund->categories as $category) {
+
+                if ($category->items->isEmpty()) {
+                    continue;
+                }
+
+                $catFirstTotal = 0; 
+                $catSecondTotal = 0;
+                $catTotal = 0;
+    
+                foreach ($category->items as $item) {
+                    $this->processItemProducts($item, $sortedParticulars, $catFirstTotal, $catSecondTotal, $catTotal);
+                }
+
+                $recapitulation[$fund->fund_name][] =  $this->formatCategoryData($category->cat_name, $catTotal, $catFirstTotal, $catSecondTotal);
+                
+                $fundFirstTotal += $catFirstTotal; 
+                $fundSecondTotal += $catSecondTotal;
+                $fundTotal += $catTotal;
+            }
+
+            $this->addContingencyToRecapitulation($fund, $fundTotal, $recapitulation, $year);
+        }
+            
+        return $recapitulation;
+    }
+
+    private function processItemProducts($item, $sortedParticulars, &$catFirstTotal, &$catSecondTotal, &$catTotal)
+    {
+        if ($item->products->isEmpty()) {
+            return;
+        }
+
+        foreach ($item->products as $product) {
+            $matchedParticulars = $sortedParticulars->where('prodCode', $product->prod_newNo);
+
+            if ($matchedParticulars->isEmpty()) {
+                continue;
+            }
+
+            foreach ($matchedParticulars as $particular) {
+                $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
+                $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
+                $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
+                
+                $catFirstTotal += $firstQtyAmount; 
+                $catSecondTotal += $secondQtyAmount;
+                $catTotal += $prodQtyAmount;
+            }
+        }
+    }
+
+    private function formatCategoryData($categoryName, $catTotal, $catFirstTotal, $catSecondTotal)
+    {
+        return [
+            'name' => $categoryName,
+            'total' => $catTotal,
+            'firstSem' => $catFirstTotal,
+            'secondSem' => $catSecondTotal,
+        ];
+    }
+
+    private function addContingencyToRecapitulation($fund, $fundTotal, &$recapitulation, $year)
+    {
+        $capitalOutlay = $this->productService->getCapitalOutlay($year, $fund->id);
+
+        if ($capitalOutlay <= 0) {
+            throw new \Exception("No budget allotted to {$fund->fund_name}! Please check and try again!");
+        }
+
+        $contingency = $capitalOutlay - $fundTotal;
+        $wholeNumber = floor($contingency);
+        $cents = $contingency - $wholeNumber;
+        $halfWholeNumber = floor($wholeNumber / 2);
+
+        $contingencyFirst = $wholeNumber - $halfWholeNumber;
+        $contingencySecond = $halfWholeNumber + $cents;
+
+        $recapitulation[$fund->fund_name][] = [
+            'name' => 'Contingency',
+            'total' => $contingency,
+            'firstSem' => $contingencyFirst,
+            'secondSem' => $contingencySecond,
+        ];
+    }
+
+    private function processFundAllocations($recapitulation, $year)
+    {
+        foreach($recapitulation as $expenses => $fund) {
+            $fundId = Fund::where('fund_name', $expenses)->value('id');
+            $capitalId = CapitalOutlay::where('year', $year)->where('fund_id', $fundId)->value('id');
+            foreach($fund as $category) {
+                $this->createFundAllocation($category['name'], '1st',  $category['firstSem'], $capitalId);
+                $this->createFundAllocation($category['name'], '2nd',  $category['secondSem'], $capitalId);
+            }
+        }
+    }
+
+    private function updateOfficePpmpAdjustmentAndThreshold($officePpmp, $userId, float $qtyAdjustment, float $qtyThreshold)
+    {
+        foreach ($officePpmp as $ppmp) {
+            foreach ($ppmp->particulars as $particular) {
+                $isProductExempted = $this->productService->validateProductExcemption($particular->prod_id);
+                $adjustedFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyAdjustment, $isProductExempted);
+                $adjustedSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyAdjustment, $isProductExempted);
+
+                $thresholdFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyThreshold, $isProductExempted);
+                $thresholdSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyThreshold, $isProductExempted);
+
+                $particular->update([
+                    'adjusted_firstQty' => $adjustedFirstQty,
+                    'adjusted_secondQty' => $adjustedSecondQty,
+                    'tresh_first_qty' => $thresholdFirstQty,
+                    'tresh_second_qty' => $thresholdSecondQty , 
+                ]);
+            }
+
+            $ppmp->update([
+                'qty_adjustment' => $qtyAdjustment,
+                'tresh_adjustment' => $qtyThreshold,
+                'ppmp_status' => 'approved',
+                'updated_by' => $userId , 
+            ]);
+        }
     }
 }

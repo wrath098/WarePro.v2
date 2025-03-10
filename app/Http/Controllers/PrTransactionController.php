@@ -10,6 +10,7 @@ use App\Services\ProductService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,29 +51,35 @@ class PrTransactionController extends Controller
 
     public function showProcurementBasis() {
         $ppmpList = PpmpTransaction::with(['purchaseRequests', 'updater'])
-                ->where(function($query) {
-                    $query->where('ppmp_type', 'consolidated')
-                        ->orWhere('ppmp_type', 'contingency');
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            ->whereIn('ppmp_type', ['consolidated', 'contingency'])
+            ->orderBy('created_at', 'desc')
+            ->limit(500)
+            ->get();
 
-        $ppmpList = $ppmpList->map(function ($transaction) {
+        $ppmpListWithRequests = $ppmpList->filter(function ($ppmp) {
+            return $ppmp->purchaseRequests->isNotEmpty();
+        });
+
+        $formattedList = $ppmpListWithRequests->map(function ($transaction) {
+            $qtyAdjustment = (int) ((float) $transaction->qty_adjustment * 100);
+            $treshAdjustment = (int) ((float) $transaction->tresh_adjustment * 100);
+
             return [
                 'id' => $transaction->id,
                 'code' => $transaction->ppmp_code,
+                'type' => ucfirst($transaction->ppmp_type),
                 'ppmpYear' => $transaction->ppmp_year,
-                'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
-                'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
-                'version' => $transaction->ppmp_version ?? 'N/A',
+                'ppmpStatus' => ucfirst($transaction->ppmp_status),
+                'qtyAdjust' => $qtyAdjustment,
+                'threshold' => $treshAdjustment,
                 'pr' => $transaction->purchaseRequests->count(),
-                'createdAt' => $transaction->created_at->format('Y-m-d H:i:s'),
-                'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
+                'createdAt' => $transaction->updated_at->format('F d, Y'),
+                'updatedBy' => optional($transaction->updater)->name ?? null,
             ];
         });
 
         return Inertia::render('Pr/ProcurementBasis', [
-            'ppmpList' => $ppmpList,
+            'ppmpList' => $formattedList,
         ]);
     }
 
@@ -94,25 +101,38 @@ class PrTransactionController extends Controller
         ];
 
         $particulars = $transaction->consolidated->map(function ($particular) {
+            $totalQtyRequested = ($particular->qty_first + $particular->qty_second);
+
             $totalOnPr = $this->getPrUnderPpmpParticular($particular->id);
-            $availableQty = ($particular->qty_first + $particular->qty_second) - $totalOnPr;
+            $firstRemaining = $particular->qty_first >= $totalOnPr ? $particular->qty_first - $totalOnPr : 0;
+            $secondRemaining = $firstRemaining > 0 ? $particular->qty_second : $totalQtyRequested - $totalOnPr;
+            $availableQty = $totalQtyRequested - $totalOnPr;
+            
+            $description = $this->productService->getProductName($particular->prod_id);
 
             return [
                 'prodId' => $particular->id,
                 'prodCode' => $this->productService->getProductCode($particular->prod_id),
-                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodName' => Str::limit($description, 90, '...'),
                 'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-                'firstQty' => $particular->qty_first,
-                'secondQty' => $particular->qty_second,
-                'onPrQty' => $totalOnPr,
-                'availableQty' => $availableQty,
+                'totalQtyRequested' => number_format($totalQtyRequested, 0, '.', ','),
+                'firstQty' => number_format($particular->qty_first, 0, '.', ','),
+                'secondQty' => number_format($particular->qty_second, 0, '.', ','),
+                'firstRemaining' => number_format($firstRemaining, 0, '.', ','),
+                'secondRemaining' => number_format($secondRemaining, 0, '.', ','),
+                'availableQty' => number_format($availableQty, 0, '.', ','),
             ];
         });
+
+        $countAvailableToPr = $particulars->filter(function ($item) {
+            return $item['availableQty'] > 0;
+        })->count();
         
         return Inertia::render('Pr/MonitorParticular', [
             'ppmp' => $ppmp,
             'transaction' => $transaction->purchaseRequests,
             'particulars' => $particulars,
+            'countAvailableToPr' => $countAvailableToPr,
         ]);
     }
 
@@ -238,5 +258,4 @@ class PrTransactionController extends Controller
 
         return $qtyOnPr ?? 0;
     }
-
 }

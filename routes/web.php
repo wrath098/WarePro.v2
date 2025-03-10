@@ -18,7 +18,7 @@ use App\Http\Controllers\Forms\PrMultiStepFormController;
 use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ApprovedOfficePpmpQuantityController;
-use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
+use App\Http\Controllers\Pdf\DraftConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\DraftOfficePpmpController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
@@ -182,7 +182,7 @@ Route::middleware('auth')->prefix('ris')->group(function () {
 Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
     Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
-    Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
+    Route::get('/consolidated-ppmp-list/{ppmp}', [DraftConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
     Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
     Route::get('/draft-adjusted-ppmp-list', [DraftAdjustedOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftAdjustedPpmp');

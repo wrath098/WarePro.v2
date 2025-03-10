@@ -210,10 +210,9 @@ class ProductService
     public function getCapitalOutlay($year, $fundId)
     {
         $capital = CapitalOutlay::where('year', $year)
-        ->where('fund_id', $fundId)
-        ->first();
-        $amount = $capital->amount;
-        return $amount ?? null;
+            ->where('fund_id', $fundId)
+            ->first();
+        return optional($capital)->amount;
     }
 
     public function getCapitalOutlayContingency($year, $fundId, $sem)

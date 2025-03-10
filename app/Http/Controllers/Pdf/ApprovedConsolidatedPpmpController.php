@@ -392,6 +392,5 @@ class ApprovedConsolidatedPpmpController extends Controller
                 </tr>';
         
         return $text;
-    
     }
 }
