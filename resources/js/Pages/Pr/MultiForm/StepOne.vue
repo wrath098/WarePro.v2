@@ -3,7 +3,6 @@
     import { Head, usePage } from '@inertiajs/vue3';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';   
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import Swal from 'sweetalert2';
     
     const page = usePage();
@@ -63,91 +62,133 @@
     });
 </script>
 <template>
-    <Head title="PR" />
-    <Sidebar/>
+    <Head title="Purchase Request" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Purchase Request</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">New</li> 
-                    <li class="text-[#86591e]" aria-current="page">MultiForm - Step One</li> 
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Purchase Request
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('pr.form.step1')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Create
+                            </a>
+                        </div>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Step 1
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex flex-col md:flex-row items-start justify-center">
-
-                        <div class="mx-2 w-full bg-white p-4 rounded-md shadow mt-5 md:mt-0 flex justify-center">
-                            <div class="bg-white w-1/3 p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                                <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <form @submit.prevent="nextStep" class="space-y-5 mx-2">
-                                        <h3 class="my-2 text-[#07074D]">
-                                            Step 1: Project Procurement Management Plan Information
-                                        </h3>
-                                        <div>
-                                            <select v-model="generatePr.selectedType" @change="onTypeChange(generatePr)" id="ppmpType" class="pl-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500 text-gray-800" required>
-                                                <option value="" selected>Please choose PPMP Type</option>
-                                                <option v-for="type in props.toPr" :key="type.ppmp_type" :value="type.ppmp_type">
-                                                    {{ type.ppmp_type }}
-                                                </option>
-                                            </select>
-
-                                            <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" v-if="filteredYear.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                                <option value="" disabled>Please choose the PPMP Year</option>
-                                                <option v-for="year in filteredYear" :key="year.ppmp_year" :value="year.ppmp_year">
-                                                    {{ year.ppmp_year }}
-                                                </option>
-                                            </select>
-                                            
-                                            <select v-model="generatePr.selectedppmpCode" v-if="filteredPpmpList.length" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                                <option value="" disabled>Please choose the Consolidated PPMP</option>
-                                                <option v-for="code in filteredPpmpList" :key="code" :value="code">
-                                                    {{ code }}
-                                                </option>
-                                            </select>
-                                        </div>
-
-                                        <div v-if="generatePr.selectedType == 'consolidated'" class="mt-5" >
-                                            <select v-model="generatePr.semester" class="mb-1 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                                <option value="" disabled>Select Semester</option>
-                                                <option value="qty_first">1st</option>
-                                                <option value="qty_second">2nd</option>
-                                            </select> 
-
-                                            <select v-model="generatePr.prDesc" class="mb-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
-                                                <option value="" disabled>Purchase Request Description</option>
-                                                <option value="nc">For Bidding</option>
-                                                <option value="dc">Direct Contract</option>
-                                                <option value="psdbm">PS-DBM</option>
-                                            </select>  
-
-                                            <p class="text-sm text-gray-500"> Quantity Adjustment: <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span></p>
-                                            <input 
-                                                v-model="generatePr.qtyAdjust"
-                                                type="number"
-                                                id="qtyAdjust"
-                                                min="50"
-                                                max="100"
-                                                placeholder="Enter from 50 to 100"
-                                                class="w-full rounded-md border border-[#e0e0e0] bg-white py-2 px-4 text-base font-medium text-[#2c2d30] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                                                />
-                                        </div>
-
-                                        <div>
-                                            <button
-                                                class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none">
-                                                Next
-                                            </button>
-                                        </div>
-                                    </form>
+        <div class="flex items-center justify-center mt-5 rounded-md bg-white shadow-md">
+            <div class="mx-auto w-full max-w-[550px] bg-white rounded-md border-2 border-indigo-900 shadow-lg my-4">
+                <form @submit.prevent="nextStep">
+                    <div class="px-6 py-4 bg-indigo-900 text-white rounded-t">
+                        <h1 class="text-lg font-bold">Step 1: Project Procurement Management Plan Information</h1>
+                    </div>
+                    <div class="p-4 rounded-md">
+                        <div class="mb-5">
+                            <label for="ppmpType" class="mb-3 block text-base font-medium text-[#07074D]">
+                                PPMP Type
+                            </label>
+                            <select v-model="generatePr.selectedType" @change="onTypeChange(generatePr)" id="ppmpType" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                <option value="" selected disabled>Select PPMP Type</option>
+                                <option v-for="type in props.toPr" :key="type.ppmp_type" :value="type.ppmp_type">
+                                    {{ type.ppmp_type }}
+                                </option>
+                            </select>
+                        </div>
+                        <div v-if="filteredYear.length" class="mb-5">
+                            <label for="ppmpYear" class="mb-3 block text-base font-medium text-[#07074D]">
+                                PPMP Year
+                            </label>
+                            <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" id="ppmpYear" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                <option value="" disabled>Select PPMP Year</option>
+                                <option v-for="year in filteredYear" :key="year.ppmp_year" :value="year.ppmp_year">
+                                    {{ year.ppmp_year }}
+                                </option>
+                            </select>
+                        </div>
+                        <div v-if="filteredPpmpList.length" class="mb-5">
+                            <label for="ppmpCode" class="mb-3 block text-base font-medium text-[#07074D]">
+                                PPMP Transaction No#
+                            </label>
+                            <select v-model="generatePr.selectedppmpCode"  id="ppmpCode" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                <option value="" disabled>Select Consolidated PPMP</option>
+                                <option v-for="code in filteredPpmpList" :key="code" :value="code">
+                                    {{ code }}
+                                </option>
+                            </select>
+                        </div>
+                        <div v-if="generatePr.selectedType == 'consolidated'" class="-mx-3 flex flex-wrap">
+                            <div class="w-full px-3 sm:w-1/2">
+                                <div class="mb-5">
+                                    <label for="semester" class="mb-3 block text-base font-medium text-[#07074D]">
+                                        Procurement
+                                    </label>
+                                    <select v-model="generatePr.semester" id="semester" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                        <option value="" disabled>Select to Procure</option>
+                                        <option value="qty_first">January (1st Semester)</option>
+                                        <option value="qty_second">May (2nd Semester)</option>
+                                    </select> 
+                                </div>
+                            </div>
+                            <div class="w-full px-3 sm:w-1/2">
+                                <div class="mb-5">
+                                    <label for="prDescription" class="mb-3 block text-base font-medium text-[#07074D]">
+                                        PR Description
+                                    </label>
+                                    <select v-model="generatePr.prDesc" id="prDescription" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                        <option value="" disabled>Select Description</option>
+                                        <option value="nc">For Bidding</option>
+                                        <option value="dc">Direct Contract</option>
+                                        <option value="psdbm">PS-DBM</option>
+                                    </select> 
+                                </div>
+                            </div>
+                            <div class="w-full px-3">
+                                <div class="mb-5">
+                                    <label for="qtyAdjust" class="mb-3 block text-base font-medium text-[#07074D]">
+                                        Quantity Adjustment:
+                                        <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span>
+                                    </label>
+                                    <input 
+                                        v-model="generatePr.qtyAdjust"
+                                        type="number"
+                                        id="qtyAdjust"
+                                        min="50"
+                                        max="100"
+                                        placeholder="Enter from 50 to 100"
+                                        class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
+                                    />
                                 </div>
                             </div>
                         </div>
+
+                        <div>
+                            <button
+                                class="hover:shadow-form w-full rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none">
+                                Next
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </AuthenticatedLayout>

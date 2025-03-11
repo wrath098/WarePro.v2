@@ -150,6 +150,7 @@ Route::middleware('auth')->prefix('pr')->group(function () {
     Route::put('/particular/approve/{prParticular}', [PrParticularController::class, 'approve'])->name('pr.particular.approve');
     Route::put('/particular/failedAll/{prTransaction}', [PrTransactionController::class, 'failedAll'])->name('pr.particular.failedAll');
     Route::put('/particular/approvedAll/{prTransaction}', [PrTransactionController::class, 'approvedAll'])->name('pr.particular.approvedAll');
+    Route::get('/show-on-progress', [PrTransactionController::class, 'showOnProgress'])->name('pr.show.onProcess');
 });
 
 Route::middleware('auth')->prefix('iar')->group(function () {

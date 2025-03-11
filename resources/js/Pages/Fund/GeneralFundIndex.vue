@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 
 const page = usePage();
 const isLoading = ref(false);
+const activeYear = ref('');
 
 const props = defineProps({
     generalFund: Object,
@@ -24,6 +25,7 @@ const isFetchClick = ref(false);
 const fetchNewBudgetInfo = async (year) => {
     if (year) {
         isLoading.value = true;
+        activeYear.value = year;
         try {
             const response = await axios.get('general-servies-fund/show-fund-by-year', { 
                 params: { year: year},
@@ -146,7 +148,10 @@ const formatDecimal = (value) => {
                                 </h2>
                             </div>
                             <div v-for="(year, index) in availableYears" :key="index" class="max-w-3xl mx-auto mt-2 space-y-4 md:mt-4">
-                                <div class="transition-all duration-200 bg-white border-2 border-indigo-400 shadow-lg cursor-pointer hover:bg-indigo-400">
+                                <div 
+                                    class="transition-all duration-200 bg-white border-2 border-indigo-400 shadow-lg cursor-pointer hover:bg-indigo-400"
+                                    :class="{'border-indigo-600 bg-indigo-400': activeYear === year}"
+                                >
                                     <button @click="fetchNewBudgetInfo(year)" type="button" class="flex items-center justify-between w-full px-4 py-3">
                                         <span class="flex text-lg font-semibold text-black">{{ year }}</span>
                                         <svg class="w-6 h-6 text-black" stroke="currentColor" viewBox="0 0 208 456" xmlns="http://www.w3.org/2000/svg">
@@ -160,7 +165,6 @@ const formatDecimal = (value) => {
                             </p>
                         </div>
                     </section>
-                    
                     <ul v-if="!isFetchClick" class="col-span-3 bg-white rounded-md">
                         <li v-for="(yearData, year) in generalFund" :key="year" class="bg-white rounded-md pb-2 mb-2">
                             <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">

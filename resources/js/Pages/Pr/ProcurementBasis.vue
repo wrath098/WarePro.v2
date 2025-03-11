@@ -52,7 +52,7 @@
         },
         {
             data: 'ppmpStatus',
-            title: 'Status',
+            title: 'PPMP Status',
             width: '10%',
             render: (data, type, row) => {
                 return `

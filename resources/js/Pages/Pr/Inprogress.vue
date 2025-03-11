@@ -1,7 +1,6 @@
 <script setup>
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import Print from '@/Components/Buttons/Print.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
@@ -38,93 +37,31 @@
 </script>
 
 <template>
-    <Head title="PPMP" />
-    <div>
-    <Sidebar/>
+    <Head title="Purchase Request" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Purchase Request</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Transactions</li> 
-                    <li class="text-[#86591e]" aria-current="page">Pending Approval</li> 
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Purchase Request
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('pr.show.onProcess')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                On Process
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
-
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="mx-2 w-full bg-white p-4 rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                                <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <DataTable class="w-full text-gray-900 display">
-                                        <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
-                                            <tr>
-                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Pr No.</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">PPMP No.</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Description</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Supplier</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Created At</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Created / Update By</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Status</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(transaction, index) in pendingPr" :key="transaction.id">
-                                                <td class="px-6 py-3">{{ index + 1 }}</td>
-                                                <td class="px-6 py-3">{{ transaction.pr_no }}</td>
-                                                <td class="px-6 py-3">{{ transaction.ppmp_controller.ppmp_code }}</td>
-                                                <td class="px-6 py-3">{{ transaction.semester }} - {{ transaction.qty_adjustment }}%</td>
-                                                <td class="px-6 py-3">{{ transaction.pr_desc }}</td>
-                                                <td class="px-6 py-3">{{ transaction.formatted_created_at }}</td>
-                                                <td class="px-6 py-3">{{ transaction.updater.name }}</td>
-                                                <td class="px-6 py-3">
-                                                    <span :class="{
-                                                        'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300': transaction.pr_status === 'Draft',
-                                                        }">
-                                                        {{ transaction.pr_status }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-3">
-                                                    <ViewButton :href="route('pr.show.particular', { prTransaction: transaction.id})" tooltip="View"></ViewButton>
-                                                    <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: transaction.id})" tooltip="Print"></Print>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </DataTable>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </AuthenticatedLayout>
-    </div>
 </template>
-<style scoped>
-    .badge-pending {
-    background-color: yellow;
-    color: black;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
-    }
-
-    .badge-approved {
-    background-color: green;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
-    }
-
-    .badge-rejected {
-    background-color: red;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
-    }
-</style>

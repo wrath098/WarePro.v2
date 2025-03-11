@@ -25,11 +25,7 @@ class PrTransactionController extends Controller
 
     public function index(): Response
     {
-        $descriptionMap = [
-            'nc' => 'Non-Contract/Bidding',
-            'dc' => 'Direct Contract',
-            'psdbm' => 'PS-DBM',
-        ];
+        $descriptionMap = $this->procurementType();
 
         $pendingPr = PrTransaction::with('ppmpController', 'updater')
             ->where('pr_status', 'draft')
@@ -40,7 +36,7 @@ class PrTransactionController extends Controller
                 $pr->pr_desc = $descriptionMap[$pr->pr_desc] ?? null;
                 $pr->qty_adjustment = $pr->qty_adjustment * 100;
                 $pr->pr_status = ucfirst($pr->pr_status);
-                $pr->formatted_created_at = $pr->created_at->format('m-d-Y');
+                $pr->formatted_created_at = $pr->created_at->format('F d, Y');
                 return $pr;
             });
 
@@ -138,11 +134,7 @@ class PrTransactionController extends Controller
 
     public function showParticulars(PrTransaction $prTransaction)
     {
-        $descriptionMap = [
-            'nc' => 'Non-Contract/Bidding',
-            'dc' => 'Direct Contract',
-            'psdbm' => 'PS-DBM',
-        ];
+        $descriptionMap = $this->procurementType();
 
         $prTransaction->load('prParticulars', 'ppmpController', 'updater');
         $prTransaction->semester = $prTransaction->semester === 'qty_first' ? 'First Semester' : 'Second Semester';        
@@ -174,6 +166,14 @@ class PrTransactionController extends Controller
             'particulars' => $reformatParticular,
             'trashed' => $resultTrashedParticular,
         ]);
+    }
+    
+    public function showOnProgress()
+    {
+        $approved = 'approved';
+        $prOnProgress = $this->getPrTransactionWithParticulars($approved);
+        dd($prOnProgress->toArray());
+        return Inertia::render('Pr/Inprogress');
     }
 
     public function approvedAll(PrTransaction $prTransaction) {
@@ -257,5 +257,45 @@ class PrTransactionController extends Controller
         $qtyOnPr = $pr->purchaseRequest->sum('qty');
 
         return $qtyOnPr ?? 0;
+    }
+
+    private function getPrTransaction($status)
+    {
+        return PrTransaction::where('pr_status', $status)->get();
+    }
+
+    private function getPrTransactionWithParticulars($status)
+    {
+        $query = $this->getPrTransaction($status);
+        $query->load(['prParticulars', 'ppmpController']);
+
+        $descriptionMap = $this->procurementType();
+
+        $reformatQuery = $query->map(function($transaction) use ($descriptionMap) {
+            $countItem = $transaction->prParticulars->count();
+            return [
+                'id' => $transaction->id,
+                'prNo' => $transaction->pr_no,
+                'ppmpNo' => $transaction->ppmpController->ppmp_code,
+                'prType' => $descriptionMap[$transaction->pr_desc] ?? null,
+                'qtyAdjustment' => (int)((float)$transaction->qty_adjustment * 100),
+                'semester' => $transaction->semester === 'qty_first' ? 'First Semester' : 'Second Semester',
+                // 'transaction' => $transaction,
+                // 'transaction' => $transaction,
+                // 'transaction' => $transaction,
+                'noOfItems' => $countItem,
+            ];
+        });
+
+        return $reformatQuery;
+    }
+
+    private function procurementType()
+    {
+        return [
+            'nc' => 'For Bidding',
+            'dc' => 'Direct Contract',
+            'psdbm' => 'PS-DBM',
+        ];
     }
 }

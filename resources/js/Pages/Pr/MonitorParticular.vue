@@ -45,12 +45,12 @@
         {
             data: 'prodName',
             title: 'Product Description',
-            width: '22%'
+            width: '20%'
         },
         {
             data: 'prodUnit',
             title: 'Unit of Measurement',
-            width: '8%',
+            width: '10%',
         },
         {
             data: 'totalQtyRequested',
@@ -182,8 +182,8 @@
                                             <dt class="font-medium text-gray-900">{{ ppmp.prCount }} Purchase Request/s</dt>
                                             <dd class="text-gray-700 sm:col-span-2">
                                                 <ul>
-                                                    <li v-for="pr in transaction" :key="pr.id" class="cursor-pointer relative">
-                                                        <a class="relative">: {{ pr.pr_no }}</a>
+                                                    <li v-for="pr in transaction" :key="pr.id" class="cursor-pointer relative my-1">
+                                                        <a :href="route('pr.show.particular', { prTransaction: pr.id})" class="relative inline-flex font-medium text-gray-800 hover:underline">: {{ pr.pr_no }}</a>
                                                     </li>
                                                 </ul>
                                             </dd>

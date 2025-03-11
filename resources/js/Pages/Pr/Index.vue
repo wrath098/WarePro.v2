@@ -1,7 +1,6 @@
 <script setup>
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import Print from '@/Components/Buttons/Print.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
@@ -35,96 +34,143 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'pr_no',
+            title: 'Purchase Request No#',
+            width: '10%'
+        },
+        {
+            data: 'ppmp_controller.ppmp_code',
+            title: 'PPMP No#',
+            width: '10%'
+        },
+        {
+            data: 'pr_desc',
+            title: 'Type of Procurement',
+            width: '15%'
+        },
+        {
+            data: function(row) {
+                return `${row.qty_adjustment}% of ${row.semester}`;
+            },
+            title: 'Procured Items',
+            width: '15%'
+        },
+        {
+            data: 'formatted_created_at',
+            title: 'Created At',
+            width: '10%'
+        },
+        {
+            data: 'updater.name',
+            title: 'Update By',
+            width: '15%'
+        },
+        {
+            data: 'pr_status',
+            title: 'Status',
+            width: '10%',
+            render: (data, type, row) => {
+                return `
+                <span class="${data === 'Draft' 
+                    ? 'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300' 
+                    : 'bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-green-300'}">
+                    ${data}
+                </span>
+                `;
+            },
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '15%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
     <Head title="PPMP" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Purchase Request</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">Transactions</li> 
-                    <li class="text-[#86591e]" aria-current="page">Pending Approval</li> 
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Purchase Request
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('pr.display.transactions')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Pending For Approval
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="mx-2 w-full bg-white p-4 rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                                <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <DataTable class="w-full text-gray-900 display">
-                                        <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
-                                            <tr>
-                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Pr No.</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">PPMP No.</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Description</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Supplier</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Created At</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Created / Update By</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Status</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(transaction, index) in pendingPr" :key="transaction.id">
-                                                <td class="px-6 py-3">{{ index + 1 }}</td>
-                                                <td class="px-6 py-3">{{ transaction.pr_no }}</td>
-                                                <td class="px-6 py-3">{{ transaction.ppmp_controller.ppmp_code }}</td>
-                                                <td class="px-6 py-3">{{ transaction.semester }} - {{ transaction.qty_adjustment }}%</td>
-                                                <td class="px-6 py-3">{{ transaction.pr_desc }}</td>
-                                                <td class="px-6 py-3">{{ transaction.formatted_created_at }}</td>
-                                                <td class="px-6 py-3">{{ transaction.updater.name }}</td>
-                                                <td class="px-6 py-3">
-                                                    <span :class="{
-                                                        'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300': transaction.pr_status === 'Draft',
-                                                        }">
-                                                        {{ transaction.pr_status }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-3">
-                                                    <ViewButton :href="route('pr.show.particular', { prTransaction: transaction.id})" tooltip="View"></ViewButton>
-                                                    <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: transaction.id})" tooltip="Print"></Print>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </DataTable>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="props.pendingPr"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <ViewButton :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
+                                <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" />
+                            </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
-    </div>
 </template>
 <style scoped>
-    .badge-pending {
-    background-color: yellow;
-    color: black;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
     }
 
-    .badge-approved {
-    background-color: green;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
     }
 
-    .badge-rejected {
-    background-color: red;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
     }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
 </style>

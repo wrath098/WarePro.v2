@@ -3,14 +3,11 @@
     import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
-    import PrintIcon from '@/Components/Buttons/PrintIcon.vue';
-    import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
     import ApprovedButton from '@/Components/Buttons/ApprovedButton.vue';
     import Swal from 'sweetalert2';
 
@@ -33,11 +30,9 @@
     };
 
     const modalState = ref(null);
-    const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
     const isEditPPModalOpen = computed(() => modalState.value === 'edit');
     const isDropPrModalOpen = computed(() => modalState.value === 'drop');
-    const isRestorePrModalOpen = computed(() => modalState.value === 'restore');
     const isApprovedPrModalOpen = computed(() => modalState.value === 'approved');
     const isFailedAllModalOpen = computed(() => modalState.value === 'failedAll');
     const isApprovedAllModalOpen = computed(() => modalState.value === 'approvedAll');
@@ -64,7 +59,6 @@
     }
 
     const dropParticular = reactive({pId: '',});
-    const restoreParticular = reactive({pId: ''});
     const approveParticular = reactive({pId: ''});
     const failedAllParticular = reactive({pId: ''});
     const approvedAllParticular = reactive({pId: ''});
@@ -72,11 +66,6 @@
     const openDropModal = (particular) => {
         dropParticular.pId = particular.id;
         modalState.value = 'drop';
-    }
-
-    const openRestoreModal = (particular) => {
-        restoreParticular.pId = particular.id;
-        modalState.value = 'restore';
     }
 
     const openApprovedModal = (particular) => {
@@ -126,11 +115,6 @@
         submitForm('delete', `../particular/trash/${prParticular}`, null)
     };
 
-    const submitRestore = () => {
-        const prParticular = restoreParticular.pId;
-        submitForm('post', `../particular/restore/${prParticular}`, null)
-    };
-
     const submitApproved = () => {
         const prParticular = approveParticular.pId;
         submitForm('put', `../particular/approve/${prParticular}`, null)
@@ -167,19 +151,85 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'prodCode',
+            title: 'Stock No#',
+            width: '10%'
+        },
+        {
+            data: 'revised_specs',
+            title: 'Description',
+            width: '20%',
+        },
+        {
+            data: 'unitMeasure',
+            title: 'Unit Of Measurement',
+            width: '10%'
+        },
+        {
+            data: 'qty',
+            title: 'Quantity',
+            width: '10%'
+        },
+        {
+            data: function(row) {
+                return `${formatDecimal(row.unitPrice)}`;
+            },
+            title: 'Price',
+            width: '10%'
+        },
+        {
+            data: function(row) {
+                return `${formatDecimal(row.qty * row.unitPrice)}`;
+            },
+            title: 'Total Amount',
+            width: '15%'
+        },
+        {
+            data: null,
+            title: 'Action/s',
+            width: '25%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
-    <Head title="PPMP" />
-    <div>
-    <Sidebar/>
+    <Head title="Purchase Request" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Purchase Request</a></li>
-                    <li class="after:content-[':'] after:ml-2 text-[#86591e]" aria-current="page">Transaction No.</li> 
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">{{ pr.pr_no }}</li> 
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Purchase Request
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('pr.display.transactions')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Pending For Approval
+                            </a>
+                        </div>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                PR No# {{ pr.pr_no }}
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
                     <li class="flex flex-col lg:flex-row">
                         <button @click="openApprovedAllModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
                             Accept All
@@ -192,58 +242,62 @@
             </nav>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="overflow-hidden sm:rounded-lg">
-                    <div class="flex flex-col md:flex-row items-start justify-center">
-                        <div class="w-full md:w-3/12 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div class="flex-1 flex items-start justify-between bg-indigo-300 p-2 rounded-t-xl md:mb-10">
-                                <div class="flex flex-col gap-1">
-                                    <h2 class="text-lg justify-center font-semibold text-[#161555] mb-4">Purchase Request Information</h2>
-                                </div>
+        <div class="my-4 w-full mb-8">
+            <div class="overflow-hidden">
+                <div class="mx-4 lg:mx-0">
+                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-4">
+                        <div class="w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
+                                <div class="font-bold text-lg">Purchase Request Information</div>
+
                                 <div class="flex items-center">
-                                    <div class="rounded-full">
-                                        <PrintIcon :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id})" target="_blank" class="bg-gray-50" ></PrintIcon>
+                                    <div class="rounded-full p-1 hover:bg-white transition-colors duration-500">
+                                        <a :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id})" target="_blank" class="flex items-center rounded-full transition">
+                                            <span class="sr-only">Open options</span>
+                                            <svg class="w-7 h-7 text-indigo-100 hover:text-indigo-600 transition duration-75" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                                            </svg>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="m-2">
-                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
-                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Purchase Request No.:</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ pr.pr_no }}</dd>
+                            <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
+                                <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">PR No#</dt>
+                                            <dd class="text-gray-700">: {{ pr.pr_no }}</dd>
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Consolidated PPMP No.:</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ pr.ppmp_controller.ppmp_code }}</dd>
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Consolidated PPMP No#</dt>
+                                            <dd class="text-gray-700">: {{ pr.ppmp_controller.ppmp_code }}</dd>
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Description:</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{  pr.semester }} - {{ pr.qty_adjustment }}% <br> {{ pr.pr_desc }}</dd>
+                                            <dd class="text-gray-700">: {{ pr.pr_desc }} <br> Procurement of the {{ pr.qty_adjustment }}% of {{  pr.semester }}</dd>
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Total Items Listed:</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ pr.totalItems }}</dd>
+                                            <dd class="text-gray-700">: {{ pr.totalItems }}</dd>
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Total Amount:</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ pr.formattedOverallPrice }}</dd>
+                                            <dd class="text-gray-700">: {{ pr.formattedOverallPrice }}</dd>
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Create/Updated By:</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ pr.updater.name }}</dd>
+                                            <dd class="text-gray-700">: {{ pr.updater.name }}</dd>
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-2 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Status</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">
+                                            <dd class="text-gray-700">
+                                                : 
                                                 <span :class="{
                                                     'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300': pr.pr_status === 'Draft',
                                                     'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': pr.pr_status === 'Approved',
@@ -255,78 +309,33 @@
                                     </dl>
                                 </div>                               
                             </div>
-                        </div>
                         
-                        <div class="mx-2 w-full md:w-9/12 bg-white rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-indigo-300 p-2 rounded-t-xl">
-                                <h2 class="text-lg font-semibold text-[#171858] mb-4">Purchase Request Particulars</h2>
-                            </div>
+                        <div class="w-full col-span-3 bg-white rounded-md shadow mt-5 lg:mt-0">
                             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg px-4 mt-5">
                                 <div class="relative overflow-x-auto md:overflow-hidden">
-                                    <DataTable class="w-full text-gray-900 display">
-                                        <thead class="text-sm text-gray-50 uppercase bg-indigo-600">
-                                            <tr class="text-center">
-                                                <th scope="col" class="px-6 py-3 w-1/12">No#</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Stock No.</th>
-                                                <th scope="col" class="px-6 py-3 w-3/12">Description</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Unit of Measure</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Quantity</th>
-                                                <th scope="col" class="px-6 py-3 w-1/12">Price</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Total Amount</th>
-                                                <th scope="col" class="px-6 py-3 w-2/12">Action/s</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(particular, index) in particulars" :key="particular.id" class="odd:bg-white even:bg-gray-50 border-b text-base">
-                                                <td class="px-6 py-3">{{ ++index }}</td>
-                                                <td class="px-6 py-3">{{ particular.prodCode }}</td>
-                                                <td class="px-6 py-3">{{ particular.revised_specs }}</td>
-                                                <td class="px-6 py-3">{{ particular.unitMeasure }}</td>
-                                                <td class="px-6 py-3">{{ particular.qty }}</td>
-                                                <td class="px-6 py-3">{{ formatDecimal(particular.unitPrice) }}</td>
-                                                <td class="px-6 py-3">{{ formatDecimal(particular.qty * particular.unitPrice) }}</td>
-                                                <td v-if="particular.status != 'approved'" class="px-6 py-3 text-center">
-                                                    <EditButton @click="openEditModal(particular)" tooltip="Edit" />
-                                                    <ApprovedButton @click="openApprovedModal(particular)" tooltip="Approved" />
-                                                    <RemoveButton @click="openDropModal(particular)" tooltip="Failed" />
-                                                </td>
-                                                <td v-else class="px-6 py-3 text-center">
+                                    <DataTable
+                                        class="display table-hover table-striped shadow-lg rounded-lg"
+                                        :columns="columns"
+                                        :data="props.particulars"
+                                        :options="{  
+                                            paging: true,
+                                            searching: true,
+                                            ordering: false
+                                        }">
+                                            <template #action="props">
+                                                <div v-if="props.cellData.status != 'approved'" class="px-6 py-3 text-center">
+                                                    <EditButton @click="openEditModal(props.cellData)" tooltip="Edit" />
+                                                    <ApprovedButton @click="openApprovedModal(props.cellData)" tooltip="Approved" />
+                                                    <RemoveButton @click="openDropModal(props.cellData)" tooltip="Failed" />
+                                                </div>
+                                                <div v-else class="px-6 py-3 text-center">
                                                     <span class='bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300'>
                                                         In Progress
                                                     </span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
+                                                </div>
+                                            </template>
                                     </DataTable>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="w-full md:w-2/12 bg-white rounded-md shadow mt-5 md:mt-0">
-                            <div class="bg-red-300 p-2 rounded-t-xl">
-                                <h2 class="text-lg font-semibold text-[#862020] mb-4">Trashed Particulars</h2>
-                            </div>
-                            <div class="overflow-x-auto bg-white shadow-md">
-                                <table class="w-full text-sm text-gray-700">
-                                    <thead class="bg-gray-200 text-gray-700 text-sm uppercase">
-                                        <tr>
-                                            <th class="w-2/3 px-6 py-3 text-left font-medium">Stock No.</th>
-                                            <th class="w-1/3 px-6 py-3 text-left font-medium">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-if="trashed.length > 0" v-for="(particular, index) in trashed" :key="particular.id" class="border-b hover:bg-gray-50">
-                                            <td class="px-6 py-4">{{ particular.prodCode }}</td>
-                                            <td class="px-6 py-4 flex space-x-2">
-                                                <RecycleIcon @click="openRestoreModal(particular)" tooltip="Restore"/>
-                                            </td>
-                                        </tr>
-                                        <tr v-else class="text-gray-400">
-                                            <td class="px-6 py-4 text-right">No Data Found</td>
-                                            <td class="px-6 py-4"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </div>
                     </div>
@@ -357,7 +366,7 @@
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Description: </span>
                                     </div>
-                                    <textarea v-model="editParticular.prodDesc" type="text" id="description" class="pl-20 p-2.5 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500"></textarea>
+                                    <textarea v-model="editParticular.prodDesc" type="text" id="description" class="pl-20 p-2.5 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required></textarea>
                                 </div>
                                 <div class="md:flex">
                                     <div class="relative mt-1 md:w-1/2 md:mr-1">
@@ -414,38 +423,6 @@
                         <div class="text-center">
                             <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Move to Trash!</h3>
                             <p class="text-gray-600 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
-                            <p> Please confirm if you wish to proceed.  </p>
-                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                    </svg>
-                                    Confirm 
-                                </SuccessButton>
-
-                                <DangerButton @click="closeModal"> 
-                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                    </svg>
-                                    Cancel
-                                </DangerButton>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </Modal>
-        <Modal :show="isRestorePrModalOpen" @close="closeModal"> 
-            <form @submit.prevent="submitRestore">
-                <div class="bg-gray-100 h-auto">
-                    <div class="bg-white p-6  md:mx-auto">
-                        <svg class="text-green-600 w-16 h-16 mx-auto my-6" fill="currentColor" viewBox="0 -0.5 25 25" xmlns="http://www.w3.org/2000/svg">
-                            <path d="m11.538 16.444-.211 5.178-.028.31-5.91-.408c-.37-.039-.696-.201-.943-.443-.277-.253-.501-.56-.654-.905l-.007-.017c-.095-.225-.167-.486-.202-.759l-.002-.015c-.009-.085-.014-.184-.014-.284 0-.223.026-.441.074-.65l-.004.019q.106-.521.165-.774c.102-.368.205-.667.324-.959l-.021.059q.239-.647.267-.743 1.099.167 7.164.392zm-5.447-8.245 2.533 5.333-2.068-1.294c-.536.606-1.051 1.269-1.524 1.964l-.044.069c-.352.503-.692 1.08-.986 1.682l-.034.077q-.338.743-.555 1.33c-.104.251-.194.548-.255.856l-.005.031-.056.295-2.673-5.023c-.15-.222-.243-.493-.253-.786v-.003c-.003-.039-.005-.085-.005-.131 0-.19.032-.372.091-.541l-.003.012.112-.253q.495-.886 1.604-2.641l-1.967-1.215zm17.32 7.275-2.641 5.051c-.109.268-.286.49-.509.652l-.004.003c-.172.136-.378.236-.602.286l-.01.002-.253.056q-.999.098-3.081.165l.112 2.311-3.236-5.164 2.971-5.094.098 2.434c.711.083 1.534.131 2.368.131.568 0 1.131-.022 1.687-.065l-.074.005c.875-.058 1.69-.224 2.462-.485l-.068.02zm-11.042-13.002q-.66.886-3.729 6.121l-4.457-2.631-.267-.165 3.166-5.009c.2-.298.49-.521.831-.632l.011-.003c.261-.097.562-.152.876-.152.088 0 .175.004.261.013l-.011-.001c.251.022.483.081.698.171l-.015-.006c.227.092.419.192.601.306l-.016-.009c.218.146.409.299.585.466l-.002-.002q.338.31.507.485t.507.555q.341.38.454.493zm9.216 4.319 2.983 5.108c.122.238.194.519.194.817 0 .09-.007.179-.019.266l.001-.01c-.058.392-.194.744-.393 1.052l.006-.01c-.133.199-.286.371-.461.518l-.004.003c-.158.137-.333.267-.517.383l-.018.01c-.194.115-.42.219-.656.301l-.027.008q-.429.155-.66.225t-.725.197l-.647.165q-.479-1.013-3.729-6.135l4.404-2.744zm-2.012-3.18 1.998-1.168-3.095 5.249-5.897-.281 2.125-1.21c-.355-.933-.71-1.702-1.109-2.443l.054.11c-.348-.671-.701-1.239-1.091-1.779l.028.041q-.485-.655-.908-1.126c-.204-.238-.42-.452-.652-.648l-.008-.007-.239-.183 5.695.014c.047-.005.101-.008.157-.008.24 0 .468.058.668.16l-.008-.004c.217.098.4.234.55.401l.001.002.155.211q.549.854 1.576 2.669z"/>
-                        </svg>
-
-                        <div class="text-center">
-                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Restore Purchase Request Particular!</h3>
-                            <p class="text-gray-600 my-2">Confirming this action will restore the selected Product from the trash list. <br> Are you sure you want to restore?</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
@@ -564,6 +541,49 @@
             </form>
         </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>
- 
+<style scoped>
+:deep(table.dataTable) {
+    border: 2px solid #7393dc;
+}
+
+:deep(table.dataTable thead > tr > th) {
+    background-color: #d8d8f6;
+    border: 2px solid #7393dc;
+    text-align: center;
+    color: #03244d;
+}
+
+:deep(table.dataTable tbody > tr > td) {
+    border-right: 2px solid #7393dc;
+    text-align: center;
+}
+
+:deep(div.dt-container select.dt-input) {
+    border: 1px solid #03244d;
+    margin-left: 1px;
+    width: 75px;
+}
+
+:deep(div.dt-container .dt-search input) {
+    border: 1px solid #03244d;
+    margin-right: 1px;
+    width: 250px;
+}
+
+:deep(div.dt-length > label) {
+    display: none;
+}
+
+:deep([data-v-bec10953] table.dataTable tbody > tr > td:nth-child(2)) {
+    text-align: left !important;
+}
+
+:deep([data-v-bec10953] table.dataTable tbody > tr > td:nth-child(5)) {
+    text-align: right !important;
+}
+
+:deep([data-v-bec10953] table.dataTable tbody > tr > td:nth-child(6)) {
+    text-align: right !important;
+}
+</style>
