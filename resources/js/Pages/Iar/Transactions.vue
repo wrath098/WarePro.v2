@@ -2,7 +2,6 @@
     import { Head, usePage } from '@inertiajs/vue3';
     import { computed, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
 
@@ -34,67 +33,144 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'airId',
+            title: 'Inspection and Acceptance No#',
+            width: '10%'
+        },
+        {
+            data: 'poId',
+            title: 'Purchase Order No#',
+            width: '15%'
+        },
+        {
+            data: 'supplier',
+            title: 'Supplier',
+            width: '25%'
+        },
+        {
+            data: 'date',
+            title: 'Inspection and Acceptance Date',
+            width: '10%'
+        },
+        {
+            data: 'status',
+            title: 'Transaction Status',
+            width: '10%',
+            render: (data, type, row) => {
+                return `
+                <span class="${data === 'Pending' 
+                    ? 'bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-300' 
+                    : 'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300'}">
+                    ${data}
+                </span>
+                `;
+            },
+        },
+        {
+            data: 'updater',
+            title: 'Updated By',
+            width: '10%'
+        },
+        {
+            data: 'date',
+            title: 'Updated At',
+            width: '10%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '10%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
-    <Head title="PPMP" />
-    <div>
-    <Sidebar/>
+    <Head title="Inspection and Acceptance" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg"> 
-                <ol class="flex space-x-2 leading-tight">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Inspection and Acceptance</a></li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">All Transactions</li> 
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Inspection and Acceptance
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('show.iar.transactions')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                All Transactions
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 lg:overflow-hidden shadow-sm sm:rounded-lg">
-                    <DataTable class="w-full text-gray-900 display">
-                        <thead class="text-sm text-gray-100 uppercase bg-indigo-600">
-                            <tr>
-                                <th class="px-6 py-3 w-1/12">No.</th>
-                                <th class="px-6 py-3 w-1/12">IAR No.</th>
-                                <th class="px-6 py-3 w-1/12">PO No.</th>
-                                <th class="px-6 py-3 w-3/12">Supplier</th>
-                                <th class="px-6 py-3 w-1/12">IAR Date</th>
-                                <th class="px-6 py-3 w-1/12">Status</th>
-                                <th class="px-6 py-3 w-1/12">Updated By</th>
-                                <th class="px-6 py-3 w-1/12">Date Updated</th>
-                                <th class="px-6 py-3 w-1/12">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(transaction, index) in props.transactions" :key="transaction.air_id">
-                                <td>{{ ++index }}</td>
-                                <td>{{ transaction.airId }}</td>
-                                <td>{{ transaction.poId }}</td>
-                                <td>{{ transaction.supplier }}</td>
-                                <td>{{ transaction.date }}</td>
-                                <td>
-                                    <span :class="{
-                                        'bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-300': transaction.status === 'Pending',
-                                        'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': transaction.status === 'Completed',
-                                        }">
-                                        {{ transaction.status }}
-                                    </span>
-                                </td>
-                                <td>{{ transaction.updater }}</td>
-                                <td>{{ transaction.dateUpdated }}</td>
-                                <td v-if="transaction.status === 'Pending'">
-                                    <ViewButton :href="route('iar.particular', { iar: transaction.id})" tooltip="View"/>
-                                </td>
-                                <td v-if="transaction.status === 'Completed'">
-                                    <ViewButton :href="route('iar.particular.completed', { iar: transaction.id})" tooltip="View"/>
-                                </td>
-                            </tr>
-                        </tbody>
+        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="props.transactions"
+                        :options="{ 
+                            paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <ViewButton v-if="props.cellData.status === 'Pending'" :href="route('iar.particular', { iar: props.cellData.id})" tooltip="View"/>
+                                <ViewButton v-if="props.cellData.status === 'Completed'" :href="route('iar.particular.completed', { iar: props.cellData.id})" tooltip="View"/>
+                            </template>
                     </DataTable>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
-    </div>
 </template>
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-b08024b2] table.dataTable tbody > tr > td:nth-child(3)) {
+        text-align: left !important;
+    }
+</style>

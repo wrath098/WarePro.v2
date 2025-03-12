@@ -3,7 +3,6 @@
     import { Inertia } from '@inertiajs/inertia';
     import { computed, onMounted, reactive, ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
@@ -150,16 +149,39 @@
 </script>
 
 <template>
-    <Head title="PPMP" />
-    <div>
-    <Sidebar/>
+    <Head title="Inspection and Acceptance" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg md:leading-6"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Inspection and Acceptance</a></li>
-                    <li class="after:content-[':'] after:ml-2 text-[#86591e]" aria-current="page">Transactions</li>
-                    <li class="after:content-['/'] after:ml-2 text-[#86591e]" aria-current="page">IAR No. {{ iar.sdi_iar_id }} - P.O. No. {{ iar.po_no }}</li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Inspection and Acceptance
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('iar')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Pending Transactions
+                            </a>
+                        </div>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                IAR No# {{ iar.sdi_iar_id }} with P.O. No# {{ iar.po_no }}
+                            </a>
+                        </div>
+                    </li>
+                </ol>
+                <ol>
                     <li class="flex flex-col lg:flex-row">
                         <button @click="openAcceptAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
                             Accept All
@@ -171,64 +193,64 @@
                 </ol>
             </nav>
         </template>
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="bg-white p-2 overflow-hidden shadow-sm sm:rounded-lg">
-                    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
-                        <li v-for="particular in particulars" :key="particular.pId" class="gap-4 p-4 justify-center h-auto rounded-lg  bg-gray-100 shadow-md transition-transform transform">
-                            <div class="flex-1 flex items-start justify-between bg-gray-50 p-4 rounded-lg">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                                        Item No. {{ particular.itemNo }}
-                                        <div class="flex items-center">
-                                            <button @click="openEditModal(particular)" class="text-indigo-500 p-2 rounded-full hover:text-gray-50  hover:bg-indigo-500 transition">
-                                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
-                                                    <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium">Stock No: </span> {{ particular.stockNo }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium ">Description: </span> {{ particular.specs }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium">Quantity: </span> {{ particular.quantity }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium">Unit: </span> {{ particular.unit }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium">Price: </span> {{ particular.price }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium">Total Cost: </span> {{ particular.cost }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span class="font-medium ">Expiry Date: </span> {{ particular.expiry }}
-                                    </p>
+        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
+            <div class="px-6 py-4 bg-indigo-900 text-white rounded-t">
+                <h1 class="text-lg font-bold">Product Items for Receipt</h1>
+            </div>
+
+            <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 m-4">
+                <li v-for="particular in particulars" :key="particular.pId" class="p-4 justify-center h-auto rounded-lg bg-gray-200 shadow-md transition-transform transform">
+                    <div class="flex-1 flex items-start justify-between bg-gray-100 p-4 rounded-lg">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                Item No. {{ particular.itemNo }}
+                                <div class="flex items-center">
+                                    <button @click="openEditModal(particular)" class="text-emerald-500 p-2 rounded-full hover:text-gray-50  hover:bg-indigo-500 transition">
+                                        <svg class="w-4 h-4" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 1025 1023">
+                                            <path fill="currentColor" d="M896.428 1023h-768q-53 0-90.5-37.5T.428 895V127q0-53 37.5-90t90.5-37h576l-128 127h-384q-27 0-45.5 19t-18.5 45v640q0 27 19 45.5t45 18.5h640q27 0 45.5-18.5t18.5-45.5V447l128-128v576q0 53-37.5 90.5t-90.5 37.5zm-576-464l144 144l-208 64zm208 96l-160-159l479-480q17-16 40.5-16t40.5 16l79 80q16 16 16.5 39.5t-16.5 40.5z"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="flex md:flex-row justify-end mt-2">
-                                <button @click="openDenyModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-gray-600 rounded-lg hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300">
-                                    Denied
-                                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
-                                    </svg>
-                                </button>
-                                <button @click="openAcceptModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-indigo-600 rounded-lg hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300">
-                                    Receive
-                                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium">Stock No: </span> {{ particular.stockNo }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium ">Description: </span> {{ particular.specs }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium">Quantity: </span> {{ particular.quantity }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium">Unit: </span> {{ particular.unit }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium">Price: </span> {{ particular.price }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium">Total Cost: </span> {{ particular.cost }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <span class="font-medium ">Expiry Date: </span> {{ particular.expiry }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex md:flex-row justify-end mt-2">
+                        <button @click="openDenyModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-gray-600 rounded-lg hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300">
+                            Denied
+                            <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                            </svg>
+                        </button>
+                        <button @click="openAcceptModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-indigo-600 rounded-lg hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300">
+                            Receive
+                            <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                            </svg>
+                        </button>
+                    </div>
+                </li>
+            </ul>
         </div>
         <Modal :show="isAcceptModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitAcceptance">
@@ -432,5 +454,4 @@
         </form>
     </Modal>
     </AuthenticatedLayout>
-    </div>
 </template>

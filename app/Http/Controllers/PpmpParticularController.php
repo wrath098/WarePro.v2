@@ -116,6 +116,11 @@ class PpmpParticularController extends Controller
     public function getOfficePpmpParticulars(Request $request)
     {
         try {
+            if($request['officeId'] == 'others')
+            {
+                Log::info('The selected office is: ' . $request->toArray());
+            }
+
             $officePpmp = $this->officePpmpWithParticulars($request->officeId, $request->year);
             return response()->json(['data' => $officePpmp]);
         } catch(\Exception $e) {
@@ -130,11 +135,13 @@ class PpmpParticularController extends Controller
         $officePpmp = PpmpTransaction::with('particulars')->where('office_id', $officeId)->where('ppmp_year', $year)->get();
         $officePpmp = $officePpmp->map( function ($transactions) use (&$availableItems) {
             $transactions->particulars = $transactions->particulars->map(function($particular) use (&$availableItems) {
+                $remainingQty =( $particular->tresh_first_qty + $particular->tresh_second_qty) - $particular->released_qty;
                 $items = [
                     'id' => $particular->id,
                     'treshFirstQty' => $particular->tresh_first_qty,
                     'treshSecondQty' => $particular->tresh_second_qty,
                     'releasedQty' => $particular->released_qty,
+                    'remainingQty' => $remainingQty,
                     'prodId' => $particular->prod_id,
                     'prodInvId' => $this->getProductInventoryId($particular->prod_id),
                     'availableStock' => $this->getProductAvailableStock($particular->prod_id),

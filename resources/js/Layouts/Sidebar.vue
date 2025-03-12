@@ -213,11 +213,11 @@
                                     <div class="text-sm font-light tracking-wide text-gray-500">Procurement</div>
                                 </div>
                             </div>
-                            <SidebarDropdown :active="$page.url.includes('pr')">
+                            <SidebarDropdown :active="$page.url.includes('/pr')">
 
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{'text-white': $page.url.includes('pr')}"
+                                    :class="{'text-white': $page.url.includes('/pr')}"
                                     fill="currentColor" 
                                     aria-hidden="true" 
                                     xmlns="http://www.w3.org/2000/svg" 
@@ -226,56 +226,63 @@
                                     <path fill="currentColor" fill-rule="evenodd" d="M10 2.25a1.75 1.75 0 0 0-1.582 1c-.684.006-1.216.037-1.692.223A3.25 3.25 0 0 0 5.3 4.563c-.367.493-.54 1.127-.776 1.998l-.047.17l-.513 2.964c-.185.128-.346.28-.486.459c-.901 1.153-.472 2.87.386 6.301c.545 2.183.818 3.274 1.632 3.91C6.31 21 7.435 21 9.685 21h4.63c2.25 0 3.375 0 4.189-.635c.814-.636 1.086-1.727 1.632-3.91c.858-3.432 1.287-5.147.386-6.301a2.186 2.186 0 0 0-.487-.46l-.513-2.962l-.046-.17c-.237-.872-.41-1.506-.776-2a3.25 3.25 0 0 0-1.426-1.089c-.476-.186-1.009-.217-1.692-.222A1.75 1.75 0 0 0 14 2.25h-4Zm8.418 6.896l-.362-2.088c-.283-1.04-.386-1.367-.56-1.601a1.75 1.75 0 0 0-.768-.587c-.22-.086-.486-.111-1.148-.118A1.75 1.75 0 0 1 14 5.75h-4a1.75 1.75 0 0 1-1.58-.998c-.663.007-.928.032-1.148.118a1.75 1.75 0 0 0-.768.587c-.174.234-.277.56-.56 1.6l-.362 2.089C6.58 9 7.91 9 9.685 9h4.63c1.775 0 3.105 0 4.103.146ZM8 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Zm8.75.75a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4ZM12 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request</span>
-                                <ArrowDown :class="{'text-white': $page.url.includes('pr')}" />
+                                <ArrowDown :class="{'text-white': $page.url.includes('/pr')}" />
                                 <template #dropdown-items>
                                     <li>
-                                        <SubSidebarLink :href="route('pr.display.procurementBasis')" :active="$page.url.includes('pr/procurement-basis')">
-                                            <ArrowHeadRight :class="{ 'text-white' : $page.url.includes('pr/procurement-basis')}"/>
+                                        <SubSidebarLink :href="route('pr.display.procurementBasis')" :active="$page.url.includes('/pr/procurement-basis')">
+                                            <ArrowHeadRight :class="{ 'text-white' : $page.url.includes('/pr/procurement-basis')}"/>
                                             Procurement Basis
                                         </SubSidebarLink>
                                     </li>
                                     <li>
-                                        <SubSidebarLink :href="route('pr.form.step1')" :active="$page.url.includes('pr/create')">
-                                            <ArrowHeadRight :class="{ 'text-white' : $page.url.includes('pr/create')}"/>
+                                        <SubSidebarLink :href="route('pr.form.step1')" :active="$page.url.includes('/pr/create')">
+                                            <ArrowHeadRight :class="{ 'text-white' : $page.url.includes('/pr/create')}"/>
                                             Create
                                         </SubSidebarLink>
                                     </li>
                                     <li>
-                                        <SubSidebarLink :href="route('pr.display.transactions')" :active="route().current('pr.display.transactions') || $page.url.includes('pr/show-pr-particular/')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('pr.display.transactions') || $page.url.includes('pr/show-pr-particular/')}"/>
+                                        <SubSidebarLink :href="route('pr.display.transactions')" :active="route().current('pr.display.transactions') || $page.url.includes('/pr/show-pr-particular/')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('/pr.display.transactions') || $page.url.includes('/pr/show-pr-particular/')}"/>
                                             Pending Approval
-                                        </SubSidebarLink>
-                                    </li>
-                                    <li>
-                                        <SubSidebarLink :href="route('pr.show.onProcess')" :active="route().current('pr.show.onProcess')">
-                                            <ArrowHeadRight :class="{'text-white' : route().current('pr.show.onProcess')}"/>
-                                            In Progress
                                         </SubSidebarLink>
                                     </li>
                                 </template>
                             </SidebarDropdown>
                         </li>
-                        
+                        <li>
+                            <SidebarLink :href="route('pr.show.onProcess')" :active="route().current('pr.show.onProcess')">
+                                <svg 
+                                    class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                    :class="{ 'text-white' : route().current('pr.show.onProcess') }"
+                                    fill="currentColor" 
+                                    aria-hidden="true" 
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M1 20v-2h5v-2H2v-2h4v-2H3.05v-2H6V7.05l-1.95-4.2L5.85 2L8.2 7h11.6l-1.95-4.15l1.8-.85L22 7v13zm11-7h4q.425 0 .713-.288T17 12t-.288-.712T16 11h-4q-.425 0-.712.288T11 12t.288.713T12 13"/>
+                                </svg>
+                                <span class="ml-3">Purchase Order</span>
+                            </SidebarLink>
+                        </li>
                         <li>
                             <div class="pt-2">
                                 <div class="flex flex-row items-center">
                                     <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
                                 </div>
                             </div>
-                            <SidebarDropdown :active="route().current('iar') || route().current('show.iar.transactions')" class="mb-1">
-                                    <Inspect :class="{ 'text-white' : route().current('iar') || route().current('show.iar.transactions')}"/>
+                            <SidebarDropdown :active="$page.url.includes('/iar')" class="mb-1">
+                                    <Inspect :class="{ 'text-white' : $page.url.includes('/iar')}"/>
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Inspection and Acceptance</span>
-                                    <ArrowDown :class="{'text-white': route().current('iar') || route().current('show.iar.transactions')}" />
+                                    <ArrowDown :class="{'text-white': $page.url.includes('/iar')}" />
                                 <template #dropdown-items>
                                     <li>
-                                        <SubSidebarLink :href="route('iar')" :active="route().current('iar')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('iar')}"/>
-                                            Pending Status
+                                        <SubSidebarLink :href="route('iar')" :active="route().current('iar') || $page.url.includes('/iar/particulars')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('iar') || $page.url.includes('/iar/particulars')}"/>
+                                            Pending Transactions
                                         </SubSidebarLink>
                                     </li>
                                     <li>
-                                        <SubSidebarLink :href="route('show.iar.transactions')" :active="route().current('show.iar.transactions')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('show.iar.transactions')}"/>
+                                        <SubSidebarLink :href="route('show.iar.transactions')" :active="route().current('show.iar.transactions') || route().current('iar.particular.completed')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('iar.particular.completed')}"/>
                                             All Transactions
                                         </SubSidebarLink>
                                     </li>
@@ -298,7 +305,7 @@
                                     <li>
                                         <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
-                                            Create New
+                                            Releasing
                                         </SubSidebarLink>
                                     </li>
                                     <li>

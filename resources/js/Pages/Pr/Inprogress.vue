@@ -9,8 +9,7 @@
     const page = usePage();
 
     const props = defineProps({
-        toPr: Object,
-        pendingPr: Object
+        prOnProgress: Object,
     });
 
     const message = computed(() => page.props.flash.message);
@@ -34,6 +33,59 @@
             });
         }
     });
+
+    const columns = [
+        {
+            data: 'prNo',
+            title: 'Purchase Request No#',
+            width: '10%'
+        },
+        {
+            data: 'ppmpNo',
+            title: 'PPMP No#',
+            width: '10%'
+        },
+        {
+            data: 'prType',
+            title: 'Type of Procurement',
+            width: '15%'
+        },
+        {
+            data: 'prStatus',
+            title: 'Status',
+            width: '10%',
+            render: (data, type, row) => {
+                return `
+                <span class="${data === 'approved' 
+                    ? 'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300' 
+                    : 'bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-green-300'}">
+                    On Process
+                </span>
+                `;
+            },
+        },
+        {
+            data: 'noOfItems',
+            title: 'No. of Product Items',
+            width: '10%'
+        },
+        {
+            data: 'updatedAt',
+            title: 'Updated At',
+            width: '15%'
+        },
+        {
+            data: 'updatedBy',
+            title: 'Update By',
+            width: '15%'
+        },
+        {
+            data: null,
+            title: 'Action',
+            width: '15%',
+            render: '#action',
+        },
+    ];
 </script>
 
 <template>
@@ -63,5 +115,58 @@
                 </ol>
             </nav>
         </template>
+        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="props.prOnProgress"
+                        :options="{  paging: true,
+                            searching: true,
+                            ordering: false
+                        }">
+                            <template #action="props">
+                                <!-- <ViewButton :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
+                                <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" /> -->
+                                No Available Action
+                            </template>
+                    </DataTable>
+                </div>
+            </div>
+        </div>
     </AuthenticatedLayout>
 </template>
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+</style>

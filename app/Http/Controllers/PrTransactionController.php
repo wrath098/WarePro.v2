@@ -172,8 +172,8 @@ class PrTransactionController extends Controller
     {
         $approved = 'approved';
         $prOnProgress = $this->getPrTransactionWithParticulars($approved);
-        dd($prOnProgress->toArray());
-        return Inertia::render('Pr/Inprogress');
+
+        return Inertia::render('Pr/Inprogress', ['prOnProgress' => $prOnProgress]);
     }
 
     public function approvedAll(PrTransaction $prTransaction) {
@@ -267,22 +267,23 @@ class PrTransactionController extends Controller
     private function getPrTransactionWithParticulars($status)
     {
         $query = $this->getPrTransaction($status);
-        $query->load(['prParticulars', 'ppmpController']);
+        $query->load(['prParticulars', 'ppmpController', 'updater']);
 
-        $descriptionMap = $this->procurementType();
+        $procurementDescriptions = $this->procurementType();
 
-        $reformatQuery = $query->map(function($transaction) use ($descriptionMap) {
+        $reformatQuery = $query->map(function($transaction) use ($procurementDescriptions) {
             $countItem = $transaction->prParticulars->count();
+            $semester = $transaction->semester === 'qty_first' ? 'First Semester' : 'Second Semester';
             return [
                 'id' => $transaction->id,
                 'prNo' => $transaction->pr_no,
                 'ppmpNo' => $transaction->ppmpController->ppmp_code,
-                'prType' => $descriptionMap[$transaction->pr_desc] ?? null,
+                'prType' => $procurementDescriptions[$transaction->pr_desc] ?? null,
                 'qtyAdjustment' => (int)((float)$transaction->qty_adjustment * 100),
-                'semester' => $transaction->semester === 'qty_first' ? 'First Semester' : 'Second Semester',
-                // 'transaction' => $transaction,
-                // 'transaction' => $transaction,
-                // 'transaction' => $transaction,
+                'semester' => $semester,
+                'updatedAt' => $transaction->updated_at->format('F d, Y'),
+                'updatedBy' => $transaction->updater->name ?? '',
+                'prStatus' => $transaction->pr_status,
                 'noOfItems' => $countItem,
             ];
         });

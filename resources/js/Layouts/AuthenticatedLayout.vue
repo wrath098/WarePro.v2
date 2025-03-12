@@ -20,8 +20,9 @@ const showingAppSideBar = ref(true);
                     </svg>
                 </button>
                 <a :href="route('dashboard')" class="inline-flex items-center text-2xl rounded text-gray-700 font-medium gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 text-indigo-700">
-                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 7.485c0-1.098 0-1.646-.276-2.11S19.939 4.609 18.922 4l-1.294-.774c-1.597-.956-2.396-1.434-3.012-1.138S14 3.245 14 4.967V22h7zM22 22H2M14 9h-4m4 6h-4M3 7.485c0-1.098 0-1.646.276-2.11S4.061 4.609 5.078 4l1.294-.774C7.97 2.269 8.768 1.79 9.384 2.087S10 3.245 10 4.967V22H3zM6.501 8h-.009m.01 4h-.01m.01 4h-.01m11.009-8h-.009m.01 4h-.01m.01 4h-.01" color="currentColor"/>
+                    <svg class="w-8 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32">
+                        <path fill="currentColor" d="m22.504 17.636l-6-3.5a1 1 0 0 0-1.008 0l-6 3.5A1 1 0 0 0 9 18.5v7a1 1 0 0 0 .496.864l6 3.5a1 1 0 0 0 1.008 0l6-3.5A1 1 0 0 0 23 25.5v-7a1 1 0 0 0-.496-.864ZM21 23.834l-2.532-1.519c.013-.104.032-.207.032-.315a2.502 2.502 0 0 0-1.5-2.288v-2.97l4 2.332v4.76Zm-6-7.093v2.97A2.502 2.502 0 0 0 13.5 22c0 .108.019.21.032.315L11 23.834v-4.76l4-2.333Zm1 11.101l-3.952-2.305l2.507-1.504c.41.291.906.467 1.445.467s1.036-.176 1.445-.467l2.507 1.504L16 27.842Z"/>
+                        <path fill="currentColor" d="M24.8 9.14C23.93 5.02 20.28 2 16 2S8.07 5.02 7.2 9.14C4.23 9.74 2 12.4 2 15.5c0 3.07 2.14 5.63 5 6.31V19.7c-1.74-.62-3-2.24-3-4.2c0-2.33 1.82-4.31 4.14-4.49l.82-.06l.1-.81C9.49 6.64 12.47 4 16 4s6.51 2.64 6.94 6.14l.1.81l.82.06c2.32.19 4.14 2.16 4.14 4.49c0 1.95-1.26 3.59-3 4.21v2.11c2.86-.68 5-3.26 5-6.32c0-3.11-2.23-5.76-5.2-6.36Z"/>
                     </svg>
                     <span>WarePro</span>
                 </a>
