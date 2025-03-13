@@ -32,10 +32,15 @@ class ProductInventoryController extends Controller
             return $transaction['status'] === 'Available';
         })->count();
 
+        $countReorder = $products->filter(function($transaction) {
+            return $transaction['status'] === 'Re-order';
+        })->count();
+
         return Inertia::render('Inventory/Index', [
             'inventory' => $products,
             'countOutOfStock' => $countOutOfStock,
             'countAvailable' => $countAvailable,
+            'countReorder' => $countReorder,
         ]);
     }
 
@@ -138,6 +143,7 @@ class ProductInventoryController extends Controller
 
         $products = $products->map(function($product) {
             $inventory = $product->inventory;
+
             $currentStock = $inventory ? $inventory->qty_on_stock : 0;
             $status = 'Out of Stock';
             $qty_on_stock = 0;
@@ -147,9 +153,10 @@ class ProductInventoryController extends Controller
                 return null;
             } else {
                 if ($inventory) {
-                    $qty_on_stock = $inventory->qty_on_stock;
+                    $qty_on_stock = (int) $inventory->qty_on_stock;
                     $reorder_level = $inventory->reorder_level;
-                    $status = $qty_on_stock <= $reorder_level ? 'Out of Stock' : 'Available';
+
+                    $status = $this->getStockStatus($qty_on_stock, $reorder_level);
                 }
             
                 return [
@@ -157,6 +164,7 @@ class ProductInventoryController extends Controller
                     'stockNo' => $product->prod_newNo,
                     'prodDesc' => $product->prod_desc,
                     'prodUnit' => $product->prod_unit,
+                    'reorderLevel' => $reorder_level,
                     'beginningBalance' => $inventory->qty_physical_count ?? 0,
                     'stockAvailable' => $qty_on_stock,
                     'purchases' => $inventory->qty_purchase ?? 0,
@@ -185,5 +193,15 @@ class ProductInventoryController extends Controller
         }
 
         return [];
+    }
+
+    private function getStockStatus(int $qty_on_stock, int $reorder_level)
+    {
+        if ($qty_on_stock === 0) {
+            return 'Out of Stock';
+        } elseif ($qty_on_stock <= $reorder_level) {
+            return 'Re-order';
+        }
+        return 'Available';
     }
 }

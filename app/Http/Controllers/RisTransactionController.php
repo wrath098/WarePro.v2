@@ -52,8 +52,15 @@ class RisTransactionController extends Controller
             'risNo' => $request->risNo,
             'officeId' => $request->officeId,
             'receivedBy' => $request->receivedBy,
+            'remarks' => $request->remarks,
             'user' => Auth::id(),
         ];
+
+        if ($risData['officeId'] == "others") {
+            $this->storeOtherOfficeRequest($risData, $products);
+            DB::commit();
+            return redirect()->route('ris.display.logs')->with(['message' => 'RIS created successfully!']);
+        }
 
         if ($request->file) {
             try {
@@ -85,6 +92,7 @@ class RisTransactionController extends Controller
                     DB::rollback();
                     throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
                 }
+
                 $currentStock = (int)$this->getCurrentStockInventory($product['prodId']) - $product['qty'];
                 $createRisTransaction = $this->createRis($risData);
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
@@ -103,6 +111,28 @@ class RisTransactionController extends Controller
         }
     }
 
+    private function storeOtherOfficeRequest($risData, $requestedProducts)
+    {
+        foreach ($requestedProducts as $product) {
+            $risData['qty'] = $product['qty'];
+            $risData['unit'] = $product['prodUnit'];
+            $risData['prodId'] = $product['prodId'];
+            
+            $isProductAvailable = $this->validateAvailability($risData);
+            if($isProductAvailable !== true) {
+                DB::rollback();
+                return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
+            }
+
+            $currentStock = (int) $this->getCurrentStockInventory($product['prodId']) - $product['qty'];
+            $createRisTransaction = $this->createRis($risData);
+            $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
+            $this->updateQuantity($risData);
+            $this->updateInventoryTransaction($risData);
+            $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
+        }
+    }
+
     private function handleFileUpload($file)
     {
         $path = $file->storeAs('uploads/ris', $file->getClientOriginalName());
@@ -110,13 +140,15 @@ class RisTransactionController extends Controller
     }
 
     private function createRis($requestData) {
+        $officeId = $requestData['officeId'] == "others" ? null : $requestData['officeId'];
         return RisTransaction::create([
             'ris_no' => $requestData['risNo'],
             'qty' => $requestData['qty'],
             'unit' => $requestData['unit'],
             'issued_to' => $requestData['receivedBy'],
+            'remarks' => $requestData['remarks'],
             'prod_id' => $requestData['prodId'],
-            'office_id' => $requestData['officeId'],
+            'office_id' => $officeId,
             'created_by' => $requestData['user'],
             'attachment' => $requestData['path'] ?? null,
         ]);
@@ -176,21 +208,28 @@ class RisTransactionController extends Controller
             ->limit(100)
             ->get();
 
-        $transactions = $transactions->map(fn($transaction) => [
-            'id' => $transaction->id,
-            'risNo' => $transaction->ris_no,
-            'stockNo' => $transaction->productDetails->prod_newNo,
-            'prodDesc' => $transaction->productDetails->prod_desc,
-            'qty' => $transaction->qty,
-            'unit' => $transaction->unit,
-            'issuedTo' => $transaction->issued_to,
-            'officeRequestee' => $transaction->requestee->office_code,
-            'dateReleased'=> $transaction->created_at->format('Y-m-d H:i:s'),
-            'releasedBy' => $transaction->creator->name,
-            'attachment' => $transaction->attachment ?? null,
-        ]);
+        $transactions = $transactions->map(function ($transaction){
 
-        return $transactions ?? '';
+            $requestee = $transaction->requestee;
+            $productDetails = $transaction->productDetails;
+            $creator = $transaction->creator;
+
+            return [
+                'id' => $transaction->id,
+                'risNo' => $transaction->ris_no,
+                'stockNo' => $productDetails->prod_newNo,
+                'prodDesc' => $productDetails->prod_desc,
+                'qty' => $transaction->qty,
+                'unit' => $transaction->unit,
+                'issuedTo' => $transaction->issued_to,
+                'officeRequestee' => $requestee ? $requestee->office_code : 'Other',
+                'dateReleased'=> $transaction->created_at->format('F d, Y'),
+                'releasedBy' => $creator->name,
+                'attachment' => $transaction->attachment ?? null,
+            ];
+        });
+
+        return $transactions;
     }
 
     private function updateInventoryTransaction($requestData)
@@ -271,8 +310,8 @@ class RisTransactionController extends Controller
             'qty' => $transaction->qty,
             'unit' => $transaction->unit,
             'issuedTo' => $transaction->issued_to,
-            'officeRequestee' => $transaction->requestee->office_code,
-            'dateReleased'=> $transaction->created_at->format('Y-m-d H:i:s'),
+            'officeRequestee' => $transaction->requestee ? $transaction->requestee->office_code : 'Others',
+            'dateReleased'=> $transaction->created_at->format('F d, Y'),
             'releasedBy' => $transaction->creator->name,
             'attachment' => $transaction->attachment ?? null,
         ]);

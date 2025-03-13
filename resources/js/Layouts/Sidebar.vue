@@ -277,7 +277,7 @@
                                     <li>
                                         <SubSidebarLink :href="route('iar')" :active="route().current('iar') || $page.url.includes('/iar/particulars')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('iar') || $page.url.includes('/iar/particulars')}"/>
-                                            Pending Transactions
+                                            Receiving
                                         </SubSidebarLink>
                                     </li>
                                     <li>
@@ -318,7 +318,7 @@
                             </SidebarDropdown>
                             <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
                                 <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
-                                <span class="ml-3">Current Stock</span>
+                                <span class="ml-3">Item Inventory</span>
                             </SidebarLink>
                             <SidebarLink :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
                                 <svg 

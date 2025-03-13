@@ -118,7 +118,7 @@ class PpmpParticularController extends Controller
         try {
             if($request['officeId'] == 'others')
             {
-                Log::info('The selected office is: ' . $request->toArray());
+                return response()->json(['data' => $this->getProductsAvailable()]);
             }
 
             $officePpmp = $this->officePpmpWithParticulars($request->officeId, $request->year);
@@ -131,12 +131,17 @@ class PpmpParticularController extends Controller
 
     private function officePpmpWithParticulars($officeId, $year)
     {   
-        $availableItems = [];
-        $officePpmp = PpmpTransaction::with('particulars')->where('office_id', $officeId)->where('ppmp_year', $year)->get();
-        $officePpmp = $officePpmp->map( function ($transactions) use (&$availableItems) {
-            $transactions->particulars = $transactions->particulars->map(function($particular) use (&$availableItems) {
-                $remainingQty =( $particular->tresh_first_qty + $particular->tresh_second_qty) - $particular->released_qty;
-                $items = [
+        $officePpmp = PpmpTransaction::with('particulars')
+            ->where('office_id', $officeId)
+            ->where('ppmp_year', $year)
+            ->get();
+    
+
+        $availableItems = $officePpmp->flatMap(function ($transactions) {
+            return $transactions->particulars->map(function ($particular) {
+                $remainingQty = ($particular->tresh_first_qty + $particular->tresh_second_qty) - $particular->released_qty;
+
+                return [
                     'id' => $particular->id,
                     'treshFirstQty' => $particular->tresh_first_qty,
                     'treshSecondQty' => $particular->tresh_second_qty,
@@ -149,13 +154,39 @@ class PpmpParticularController extends Controller
                     'prodDesc' => $this->productService->getProductName($particular->prod_id),
                     'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
                 ];
-
-                $availableItems[] = $items;
-                return $items;
-            })->sortBy('prodDesc');
-
-            return $transactions;
+            });
         });
+
+        $availableItems = $availableItems->sortBy('prodDesc')->values()->all();
+
+        return $availableItems;
+    }
+
+    private function getProductsAvailable()
+    {
+        $query = ProductInventory::select('id', 'qty_on_stock', 'prod_id')
+            ->with(['productInfo' => function($q) {
+                $q->withTrashed()->select('id', 'prod_newNo', 'prod_desc', 'prod_unit');
+            }])->get();
+
+        $availableItems = $query->map(function($particular) {
+            $productInfo = $particular->productInfo;
+                return [
+                    'id' => $particular->id,
+                    'treshFirstQty' => 0,
+                    'treshSecondQty' => 0,
+                    'releasedQty' => 0,
+                    'remainingQty' => $particular->qty_on_stock,
+                    'prodId' => $particular->prod_id,
+                    'prodInvId' => $this->getProductInventoryId($particular->prod_id),
+                    'availableStock' => $particular->qty_on_stock,
+                    'prodStockNo' => $productInfo->prod_newNo,
+                    'prodDesc' => $productInfo->prod_desc,
+                    'prodUnit' => $productInfo->prod_unit
+                ];
+            });
+
+        $availableItems = $availableItems->sortBy('prodDesc')->values()->all();
 
         return $availableItems;
     }

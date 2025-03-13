@@ -119,6 +119,6 @@ class ProductInventoryTransactionController extends Controller
             return 'Expiring';
         }
 
-        return null;
+        return true;
     }
 }

@@ -25,7 +25,7 @@ class ProductInventory extends Model
         'updated_by',
     ];
 
-    public function product(): BelongsTo
+    public function productInfo(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'prod_id');
     }

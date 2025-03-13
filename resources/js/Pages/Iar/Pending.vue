@@ -98,7 +98,7 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="route('iar')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                Pending Transactions
+                                Receiving
                             </a>
                         </div>
                     </li>

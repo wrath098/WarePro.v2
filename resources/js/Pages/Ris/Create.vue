@@ -124,6 +124,7 @@
     const create = reactive({
         risNo: '',
         receivedBy: '',
+        remarks: '',
     });
 
     const submit = () => {
@@ -136,6 +137,7 @@
             formData.append('officeId', searchOfficePpmp.officeId);
             formData.append('ppmpYear', searchOfficePpmp.year);
             formData.append('receivedBy', create.receivedBy);
+            formData.append('remarks', create.remarks);
             formData.append('requestProducts', JSON.stringify(requestData.value));
             formData.append('file', file.value);
 
@@ -178,10 +180,8 @@
         <div class="w-full my-4 bg-white shadow rounded-md">
             <div class="bg-indigo-800 text-white p-4 flex justify-between rounded-t-md">
                 <div class="flex flex-wrap">
-                    <p class="text-base text-gray-100">
+                    <p class="text-lg text-gray-100">
                         <strong class="font-semibold">Requested Product Information</strong>
-                        <svg viewBox="0 0 2 2" class="mx-2 inline size-0.5 fill-current" aria-hidden="true"><circle cx="1" cy="1" r="1" /></svg>
-                        <span class="text-sm">Please enter the required data in the input field.</span>
                     </p>
                 </div>
             </div>
@@ -274,6 +274,7 @@
                             </button>
                         </div>
                     </div>
+                    
                     <div v-else-if="stockData && stockData.availableStock == 0" class="mt-5">
                         <div class="w-full mx-auto bg-indigo-600 shadow-lg rounded-lg">
                             <div class="px-6 py-5">
@@ -293,68 +294,14 @@
                         </div>
                     </div>
 
-                    <div v-if="requestData.length > 0">
-                        <form @submit.prevent="submit" class="mx-auto mt-10">
-                            <div class="grid grid-cols-2 gap-6">
-                                <div class="relative z-0 w-full mb-5 group">
-                                    <input v-model="create.risNo" type="text" name="risNo" id="risNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                    <label for="risNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">RIS Number</label>
-                                </div>
-                                <div class="relative z-0 w-full mb-5 group">
-                                    <input v-model="create.receivedBy" type="text" name="receivedBy" id="receivedBy" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                    <label for="receivedBy" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Issued To (Name of the Person)</label>
-                                </div>
-
-                                <!-- UPLOAD FILES -->
-                                <!-- <div class="px-5">
-                                    <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
-                                        <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".pdf"/>
-                                        <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
-                                            <div class="cursor-pointer">
-                                                <span class="mb-2 block text-base font-semibold text-[#545557]">
-                                                    Drop a PDF file
-                                                </span>
-                                                <span class="mb-2 block text-base font-medium text-[#6B7280]">
-                                                    Or
-                                                </span>
-                                                <span class="inline-flex rounded border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 text-gray-400 hover:bg-gray-100 hover:text-[#1f2024] py-2 px-7 text-base font-medium">
-                                                    Browse
-                                                </span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div v-if="file">
-                                        <h4 class="text-lg font-semibold">Selected Files:</h4>
-                                        <ul class="mt-2">
-                                            <li class="text-[#07074D]">
-                                                {{ file.name }}
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div> -->
-                            </div>       
-
-                            <div class="my-10 px-5">
-                                <div class="flex justify-center">
-                                    <button type="submit" class="w-1/2 inline-flex items-center justify-center rounded cursor-pointer bg-[#273ef1] px-6 py-3 font-semibold text-white transition [box-shadow:rgb(171,_196,245)-8px_8px] hover:[box-shadow:rgb(171,_196,_245)0px_0px]">
-                                        <span class="mr-2">Submit Form</span>
-                                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 15 16">
-                                            <path fill="currentColor" d="M12.49 7.14L3.44 2.27c-.76-.41-1.64.3-1.4 1.13l1.24 4.34c.05.18.05.36 0 .54l-1.24 4.34c-.24.83.64 1.54 1.4 1.13l9.05-4.87a.98.98 0 0 0 0-1.72Z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
             </div>
         </div>
 
-        <div v-if="requestData.length > 0" class="w-full my-4 bg-white shadow rounded-md mb-8">
-            <div class="bg-indigo-300 text-white p-4 flex justify-between rounded-t-md">
+        <div v-if="requestData.length > 0" class="w-full my-4 bg-white shadow rounded-md">
+            <div class="p-4 flex justify-between rounded-t-md">
                 <div class="flex flex-wrap">
-                    <p class="text-base text-indigo-900">
-                        <strong class="font-semibold">Product in Cart</strong>
+                    <p class="text-lg text-indigo-700">
+                        <strong class="font-semibold">List of Products Item on Cart</strong>
                     </p>
                 </div>
             </div>
@@ -386,6 +333,64 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <div v-if="requestData.length > 0" class="w-full my-4 p-4 bg-white shadow rounded-md mb-8">
+            <form @submit.prevent="submit" class="mx-auto mt-10">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="relative z-0 w-full mb-5 group">
+                        <input v-model="create.risNo" type="text" name="risNo" id="risNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                        <label for="risNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">RIS Number</label>
+                    </div>
+                    <div class="relative z-0 w-full mb-5 group">
+                        <input v-model="create.receivedBy" type="text" name="receivedBy" id="receivedBy" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                        <label for="receivedBy" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Issued To (Name of the Person)</label>
+                    </div>
+                    <!-- UPLOAD FILES -->
+                    <!-- <div class="px-5">
+                        <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
+                            <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".pdf"/>
+                            <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
+                                <div class="cursor-pointer">
+                                    <span class="mb-2 block text-base font-semibold text-[#545557]">
+                                        Drop a PDF file
+                                    </span>
+                                    <span class="mb-2 block text-base font-medium text-[#6B7280]">
+                                        Or
+                                    </span>
+                                    <span class="inline-flex rounded border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 text-gray-400 hover:bg-gray-100 hover:text-[#1f2024] py-2 px-7 text-base font-medium">
+                                        Browse
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div v-if="file">
+                            <h4 class="text-lg font-semibold">Selected Files:</h4>
+                            <ul class="mt-2">
+                                <li class="text-[#07074D]">
+                                    {{ file.name }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div> -->
+                </div>
+                <div v-if="searchOfficePpmp.officeId == 'others'" class="relative z-0 w-full mb-5 group">
+                    <input v-model="create.remarks" type="text" name="remarks" id="remarks" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                    <label for="remarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Remarks/Description</label>
+                </div>
+
+                <div class="my-10 px-5">
+                    <div class="flex justify-center">
+                        <button type="submit" class="w-1/2 inline-flex items-center justify-center rounded cursor-pointer bg-[#6427f1] px-6 py-3 font-semibold text-white transition [box-shadow:rgb(171,_196,245)-8px_8px] hover:[box-shadow:rgb(171,_196,_245)0px_0px]">
+                            <span class="mr-2">Submit Form</span>
+                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 15 16">
+                                <path fill="currentColor" d="M12.49 7.14L3.44 2.27c-.76-.41-1.64.3-1.4 1.13l1.24 4.34c.05.18.05.36 0 .54l-1.24 4.34c-.24.83.64 1.54 1.4 1.13l9.05-4.87a.98.98 0 0 0 0-1.72Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <Modal :show="modalState" @close="closeModal">
