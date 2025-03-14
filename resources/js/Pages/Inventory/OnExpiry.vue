@@ -1,11 +1,8 @@
 <script setup>
-    import { computed, onMounted, reactive, ref, watch } from 'vue';
+    import { computed, onMounted} from 'vue';
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import { DataTable } from 'datatables.net-vue3';
-    import axios from 'axios';
-    import { debounce } from 'lodash';
     import Swal from 'sweetalert2';
 
     const props = defineProps({
@@ -42,12 +39,11 @@
     const columns = [
         {
             data: null,
-            title: 'Transaction #',
-            width: '5%',
-            render: function(data, type, row, meta) {
-                return meta.row + 1;
-            },
-            className: 'text-center',
+            title: 'Transaction',
+            width: '20%',
+            render: function(data, type, row) {
+                return `<span>IAR No# ${row.description.sdi_iar_id}</span> <br> <span>PO No# ${row.description.po_no}</span>`;
+            }
         },
         {
             data: 'stockNo',
@@ -86,35 +82,49 @@
         },
         {
             data: 'dateExpired',
-            title: 'Expiry Date',
+            title: 'Expiration Date',
         },
     ];
 </script>
 
 <template>
     <Head title="PPMP" />
-    <div>
-    <Sidebar/>
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Product Inventory</a></li>
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Expiring Products</a></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Product Inventory
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('show.expiry.products')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Expiring Products
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
-        <div class="py-8">
-            <div class="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:px-8">
-                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+        <div class="py-4 w-full px-4 lg:px-0">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow"><div class="flex items-center bg-white border rounded-sm overflow-hidden shadow"></div>
                     <div class="p-4 bg-yellow-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 20 20" stroke="currentColor">
                             <path fill="currentColor" d="M19.59 15.86L12.007 1.924C11.515 1.011 10.779.5 9.989.5c-.79 0-1.515.521-2.016 1.434L.409 15.861c-.49.901-.544 1.825-.138 2.53c.405.707 1.216 1.109 2.219 1.109h15.02c1.003 0 1.814-.402 2.22-1.108c.405-.706.351-1.619-.14-2.531ZM10 4.857c.395 0 .715.326.715.728v6.583c0 .402-.32.728-.715.728a.721.721 0 0 1-.715-.728V5.584c0-.391.32-.728.715-.728Zm0 11.624c-.619 0-1.11-.51-1.11-1.14c0-.63.502-1.141 1.11-1.141c.619 0 1.11.51 1.11 1.14c0 .63-.502 1.141-1.11 1.141Z"/>
                         </svg>
                     </div>
                     <div class="px-4 text-gray-700">
-                        <h3 class="text-sm tracking-wider">Total Expiring Items</h3>
-                        <p class="text-3xl">{{ countExpired }}</p>
+                        <h3 class="text-sm tracking-wider">Items Due to Expire Within 90 Days</h3>
+                        <p class="text-3xl">{{ countExpiring }}</p>
                     </div>
                 </div>
                 <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
@@ -124,13 +134,13 @@
                         </svg>
                     </div>
                     <div class="px-4 text-gray-700">
-                        <h3 class="text-sm tracking-wider">Total Expired Items</h3>
-                        <p class="text-3xl">{{ countExpiring }}</p>
+                        <h3 class="text-sm tracking-wider">Items Exceeding the Expiration Date</h3>
+                        <p class="text-3xl">{{ countExpired }}</p>
                     </div>
                 </div>
             </div>
-            <div class="mt-8 sm:px-6 lg:px-8">
-                <div class="bg-white p-2 lg:overflow-hidden shadow-md sm:rounded-lg">
+            <div class="my-4">
+                <div class="bg-white relative p-4 overflow-x-auto md:overflow-hidden shadow-md rounded-md">
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
@@ -144,20 +154,45 @@
             </div>
         </div>
     </AuthenticatedLayout>
-    </div>
 </template>
 <style scoped>
 :deep(table.dataTable) {
-    border: 2px solid #555555;
-}
+        border: 2px solid #7393dc;
+    }
 
-:deep(table.dataTable thead > tr > th) {
-    background-color: #555555;
-    text-align: center;
-    color: aliceblue;
-}
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
 
-:deep(table.dataTable tbody > tr > td) {
-    text-align: center;
-}
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
+
+    :deep([data-v-410c3140] table.dataTable tbody > tr > td:nth-child(1)) {
+            text-align: left !important;
+    }
+
+    :deep([data-v-410c3140] table.dataTable tbody > tr > td:nth-child(3)) {
+            text-align: left !important;
+    }
 </style>

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IarTransaction;
+use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Services\ProductService;
@@ -78,6 +80,33 @@ class ProductInventoryTransactionController extends Controller
             return redirect()->back()->with(['error' => $e->getMessage()]);
         }
     }
+    
+    public function updateReOrderLevel(Request $request)
+    {
+        $validated = $request->validate([
+            'prodId' => 'required|exists:products,id',
+            'reorder' => 'required|numeric|min:1', 
+            'stockNo' => 'required|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $productInventory = ProductInventory::updateOrCreate(
+                ['prod_id' => $validated['prodId']],
+                [
+                    'reorder_level' => $validated['reorder'],
+                    'updated_by' => Auth::id(),
+                ]
+            );
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Successfully updated the quantity re-order level of Product code# ' . $validated['stockNo']]);
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("Error during updating of the quantity re-order level of Product code# " . $validated['stockNo'] . " : " . $e->getMessage());
+            return redirect()->back()->with(['error' => 'Faile to update the quantity re-order level of Product code# ' . $validated['stockNo']]);
+        }
+    }
 
     private function getProductsWithExpiry()
     {   
@@ -90,6 +119,7 @@ class ProductInventoryTransactionController extends Controller
                 $status = $this->verifyExpiryDateStatus($query->date_expiry);
                 $productName = Str::limit($this->productService->getProductName($query->prod_id), 75, '...');
                 $productCode = $this->productService->getProductCode($query->prod_id);
+                $description = $this->getPurchaseDetails($query->ref_no);
                 return [
                     'tId' => $query->id,
                     'prodId' => $query->prod_id,
@@ -97,6 +127,7 @@ class ProductInventoryTransactionController extends Controller
                     'stockNo' => $productCode,
                     'qtyLeft' => $query->stock_qty,
                     'status' => $status,
+                    'description' => $description,
                     'dateExpired' => $query->date_expiry,
                 ];
             });
@@ -115,10 +146,15 @@ class ProductInventoryTransactionController extends Controller
             return 'Expired';
         }
 
-        if ($dateToCheck->diffInDays($currentDate) <= 30) {
+        if ($dateToCheck->diffInDays($currentDate) <= 90) {
             return 'Expiring';
         }
 
         return true;
+    }
+
+    private function getPurchaseDetails($refNo)
+    {
+        return IarTransaction::findOrFail($refNo)->select('sdi_iar_id', 'po_no')->first();
     }
 }

@@ -2,15 +2,10 @@
     import { computed, onMounted, reactive, ref, watch } from 'vue';
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Sidebar from '@/Layouts/Sidebar.vue';
     import { DataTable } from 'datatables.net-vue3';
     import axios from 'axios';
     import { debounce } from 'lodash';
     import Swal from 'sweetalert2';
-
-    const props = defineProps({
-        availableProducts: Object,
-    }); 
 
     const page = usePage();
     const message = computed(() => page.props.flash.message);
@@ -87,15 +82,6 @@
 
     const columns = [
         {
-            data: null,
-            title: 'Transaction #',
-            width: '5%',
-            render: function(data, type, row, meta) {
-                return meta.row + 1;
-            },
-            className: 'text-center',
-        },
-        {
             data: 'created',
             title: 'Date of Issuance/Acceptance',
             width: '10%',
@@ -129,37 +115,48 @@
 </script>
 
 <template>
-    <Head title="PPMP" />
-    <div>
-    <Sidebar/>
+    <Head title="Product Inventory" />
     <AuthenticatedLayout>
         <template #header>
-            <nav aria-label="breadcrumb" class="font-semibold text-lg leading-3"> 
-                <ol class="flex space-x-2">
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Product Inventory</a></li>
-                    <li><a class="after:content-['/'] after:ml-2 text-[#86591e]">Stock Card</a></li>
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
+                    <li class="inline-flex items-center" aria-current="page">
+                        <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Product Inventory
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('show.stockCard')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Stock Card
+                            </a>
+                        </div>
+                    </li>
                 </ol>
             </nav>
         </template>
-        <div class="py-8">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-2">
-                <div class="w-full bg-white h-auto mb-2 rounded-md shadow-md">
-                    <div class="relative isolate flex overflow-hidden bg-indigo-500 px-6 py-2.5 rounded-md">
-                        <div class="flex flex-wrap">
-                            <p class="text-base text-gray-100">
-                                <strong class="font-semibold">Product Information and Date of Duration</strong>
-                                <svg viewBox="0 0 2 2" class="mx-2 inline size-0.5 fill-current" aria-hidden="true"><circle cx="1" cy="1" r="1" /></svg>
-                                <span class="text-sm">Please enter the required data in the input field.</span>
-                            </p>
-                        </div>
+        <div class="w-full px-4 lg:px-0 my-4">
+            <div class="w-full bg-white h-auto mb-2 rounded-md shadow-md">
+                <div class="bg-indigo-800 text-white p-4 flex justify-between rounded-t-md">
+                    <div class="flex flex-wrap">
+                        <p class="text-lg text-gray-100">
+                            <strong class="font-semibold">Product Information and Date of Duration</strong>
+                        </p>
                     </div>
-                    <form @submit.prevent="fetchproductTransactions">
-                        <div class="grid lg:grid-cols-4 lg:gap-6 my-5 mx-3">
-                            <div class="relative z-0 w-full group my-5">
-                                <input v-model="searchProductInfo.product" @input="debouncedFetchProduct" type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                <label for="fetchProduct" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
-                            </div>
-                            <ul v-if="productList.data" class="absolute w-3/4 h-60 bg-white border border-gray-500 mt-16 z-10 overflow-y-scroll rounded-lg">
+                </div>
+                <form @submit.prevent="fetchproductTransactions">
+                    <div class="grid gap-2 grid-cols-1 lg:grid-cols-4 lg:gap-6 my-5 mx-3">
+                        <div class="lg:col-span-4 relative z-50 w-full group my-3">
+                            <input v-model="searchProductInfo.product" @input="debouncedFetchProduct" type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-medium text-gray-700 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                            <label for="fetchProduct" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
+                            
+                            <ul v-if="productList.data" class="absolute w-full h-auto bg-white border border-gray-500 rounded-b-lg">
                                 <li
                                     v-for="product in productList.data"
                                     :key="product.prodId"
@@ -169,40 +166,66 @@
                                 {{ product.prodStockNo }} - {{ product.prodDesc }}
                                 </li>
                             </ul>
-
-                            <div class="relative z-0 w-full my-5 group">
-                                <input v-model="searchProductInfo.startDate" type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                <label for="from" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
-                            </div>
-
-                            <div class="relative z-0 w-full my-5 group">
-                                <input v-model="searchProductInfo.endDate" type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                <label for="to" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
-                            </div>
-
-                            <div class="relative z-0 w-full my-5 group text-center">
-                                <button type="submit" class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px">
-                                    Filter
-                                </button>
-                                <a 
-                                    :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard', { productDetails: searchProductInfo }) : '#'" 
-                                    target="_blank"
-                                    class="inline-block w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
-                                    :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"
-                                    @click="!(productTransactions.data && productTransactions.data.length > 0) && $event.preventDefault()"
-                                    >
-                                    Print
-                                </a>
-                            </div>
                         </div>
-                    </form>
-                </div>
-                <div class="bg-white p-2 lg:overflow-hidden shadow-md sm:rounded-lg">
+                        <div class="relative z-0 my-5 group">
+                            <input v-model="searchProductInfo.startDate" type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                            <label for="from" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
+                        </div>
+
+                        <div class="relative z-0 my-5 group">
+                            <input v-model="searchProductInfo.endDate" type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                            <label for="to" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
+                        </div>
+
+                        <div class="lg:col-span-2 relative z-0 w-full my-5 lg:flex justify-around items-center group">
+                            <button type="submit" class="flex w-auto justify-center items-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px">
+                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 16 16">
+                                    <path fill="currentColor" d="M1 2h14v2L9 9v7l-2-2V9L1 4V2zm0-2h14v1H1V0z"/>
+                                </svg>
+                                Filter
+                            </button>
+                            <a 
+                                :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard', { productDetails: searchProductInfo }) : '#'" 
+                                target="_blank"
+                                class="flex w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
+                                :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"
+                                @click="!(productTransactions.data && productTransactions.data.length > 0) && $event.preventDefault()"
+                                >
+                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 17 16">
+                                    <g fill="currentColor" fill-rule="evenodd">
+                                        <path d="M6 12v3.98h5.993V12H6zM5 1h7.948v2.96H5z"/>
+                                        <path d="M1.041 5.016v9h3.91V11.01H13v3.006h4.041v-9h-16zm2.975 2.013H2.969V5.953h1.047v1.076zm2-.06H4.969v-1h1.047v1z"/>
+                                    </g>
+                                </svg>
+                                Print (Duration)
+                            </a>
+                            <a 
+                                :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard', { productDetails: searchProductInfo }) : '#'" 
+                                target="_blank"
+                                class="flex text-center mx-1 min-w-[125px] px-6 py-3 my-1 lg:my-0 text-white transition-all bg-gray-600 rounded-md shadow-xl hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
+                                :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"
+                                @click="!(productTransactions.data && productTransactions.data.length > 0) && $event.preventDefault()"
+                                >
+                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 17 16">
+                                    <g fill="currentColor" fill-rule="evenodd">
+                                        <path d="M6 12v3.98h5.993V12H6zM5 1h7.948v2.96H5z"/>
+                                        <path d="M1.041 5.016v9h3.91V11.01H13v3.006h4.041v-9h-16zm2.975 2.013H2.969V5.953h1.047v1.076zm2-.06H4.969v-1h1.047v1z"/>
+                                    </g>
+                                </svg>
+                                Print (As Of)
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-white shadow-md sm:rounded-lg p-4">
+                <div class="relative overflow-x-auto md:overflow-hidden">
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
                         :data="productTransactions.data"
-                        :options="{  paging: true,
+                        :options="{  
+                            paging: true,
                             searching: true,
                             ordering: true
                         }"
@@ -211,20 +234,37 @@
             </div>
         </div>
     </AuthenticatedLayout>
-    </div>
 </template>
 <style scoped>
-:deep(table.dataTable) {
-    border: 2px solid #555555;
-}
+ :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
 
-:deep(table.dataTable thead > tr > th) {
-    background-color: #555555;
-    text-align: center;
-    color: aliceblue;
-}
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
 
-:deep(table.dataTable tbody > tr > td) {
-    text-align: center;
-}
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep(div.dt-container select.dt-input) {
+        border: 1px solid #03244d;
+        margin-left: 1px;
+        width: 75px;
+    }
+
+    :deep(div.dt-container .dt-search input) {
+        border: 1px solid #03244d;
+        margin-right: 1px;
+        width: 250px;
+    }
+
+    :deep(div.dt-length > label) {
+        display: none;
+    }
 </style>

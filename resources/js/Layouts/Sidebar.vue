@@ -318,7 +318,7 @@
                             </SidebarDropdown>
                             <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
                                 <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
-                                <span class="ml-3">Item Inventory</span>
+                                <span class="ml-3">Inventory</span>
                             </SidebarLink>
                             <SidebarLink :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
                                 <svg 

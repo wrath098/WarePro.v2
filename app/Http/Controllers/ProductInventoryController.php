@@ -44,10 +44,9 @@ class ProductInventoryController extends Controller
         ]);
     }
 
-    public function showStockCard(Request $request)
+    public function showStockCard()
     {
-        $productList = $this->productListInventory();
-        return Inertia::render('Inventory/StockCard', ['productList' => $productList]);
+        return Inertia::render('Inventory/StockCard');
     }
 
     public function getProductInventoryLogs(Request $request)
@@ -61,7 +60,9 @@ class ProductInventoryController extends Controller
     public function productListInventory()
     {
         $productList = [];
-        $groupOfProductId = ProductInventory::pluck('prod_id')->all();
+        $groupOfProductId = ProductInventory::pluck('prod_id')->filter(function ($value) {
+            return !is_null($value);
+        })->all();
 
         foreach($groupOfProductId as $productId) {
             $product = $this->getProductDetails($productId);
@@ -181,14 +182,15 @@ class ProductInventoryController extends Controller
     private function getIssuanceTypeDetails(int $id): array
     {
         $risTransaction = RisTransaction::withTrashed()
-            ->select('ris_no', 'office_id')
+            ->select('ris_no', 'office_id', 'remarks')
             ->find($id);
 
         if($risTransaction) {
             $requestee = $risTransaction->requestee()->select('office_code')->first();
             return [
                 'risNo' => $risTransaction->ris_no,
-                'officeCode' => $requestee ? $requestee->office_code : null,
+                'officeCode' => $requestee ? $requestee->office_code : 'Others',
+                'remarks' => $risTransaction->remarks ?? '',
             ];
         }
 

@@ -172,6 +172,7 @@ Route::middleware('auth')->prefix('iar')->group(function () {
 Route::middleware('auth')->prefix('inventory')->group(function () {
     Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
+    Route::post('/edit-re-order-level', [ProductInventoryTransactionController::class, 'updateReOrderLevel'])->name('update.reorder.level');
     Route::get('/stock-card', [ProductInventoryController::class, 'showStockCard'])->name('show.stockCard');
     Route::get('/expiry-products', [ProductInventoryTransactionController::class, 'showProductsOnExpired'])->name('show.expiry.products');
 });

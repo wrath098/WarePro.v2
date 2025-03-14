@@ -55,18 +55,22 @@
         editParticular.reorder = item.reorderLevel;
         editParticular.stockNo = item.stockNo,
         editParticular.desc = item.prodDesc,
+        editParticular.prodId = item.prodId;
         modalState.value = 'edit';
     }
 
-    const submitAdd = () => {
+    const submitForm = (action, url, data) => {
         isLoading.value = true;
-        Inertia.post('inventory/store', addParticular, {
+        Inertia[action](url, data, {
             onSuccess: () => {
                 closeModal();
                 isLoading.value = false;
             },
         });
-    }
+    };
+
+    const submitAdd = () => submitForm('post', 'inventory/store', addParticular);
+    const submitEdit = () => submitForm('post', 'inventory/edit-re-order-level', editParticular);
 
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);

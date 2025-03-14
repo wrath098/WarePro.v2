@@ -9,6 +9,7 @@ use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
 use App\Services\MyPDF;
 use App\Services\ProductService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class StockCardController extends Controller
@@ -27,6 +28,29 @@ class StockCardController extends Controller
         $query['stockNo'] = $this->productService->getProductCode($query['prodId']);
         $query['reorder'] = $this->productService->getProductReorderPoint($query['prodId']);
         $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $query['startDate'], $query['endDate']);
+
+        $startDate = Carbon::parse($request->productDetails['startDate']);
+        $endDate = Carbon::parse($request->productDetails['endDate']);
+
+        if(strtoupper($startDate->format('F')) === strtoupper($endDate->format('F'))) {
+            $month = strtoupper($startDate->format('F'));
+            $from = $startDate->format('j');
+            $to = $endDate->format('j');
+            $year = $endDate->format('Y');
+
+            $duration = $month. ' ' . $from . '-' . $to . ',' .  ' ' . $year;
+        } else {
+            $startMonth = strtoupper($startDate->format('F'));
+            $startDay = $startDate->format('j');
+            $startYear = $startDate->format('Y');
+
+            $endMonth = strtoupper($endDate->format('F'));
+            $endDay = $endDate->format('j');
+            $endYear = $endDate->format('Y');
+
+            $duration = $startMonth. ' ' . $startDay . ',' .  ' ' . $startYear . ' - ' . $endMonth. ' ' . $endDay . ',' .  ' ' . $endYear ;
+        }
+
         $totalRequest = count($inventoryTransactions);
 
         $pdf = new MyPDF('P', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
@@ -60,6 +84,7 @@ class StockCardController extends Controller
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>STOCK CARD</h4>
+                    <h5>For the Period of '. $duration .'</h5>
                 </div>
             </div>
             <br>
@@ -106,12 +131,12 @@ class StockCardController extends Controller
     protected function tableHeader()
     {
         return '<tr style="font-size: 9px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
-                    <th width="60px" rowspan="2">Date</th>
-                    <th width="150px" rowspan="2">Reference</th>
+                    <th width="60px" rowspan="2">DATE</th>
+                    <th width="150px" rowspan="2">REFERENCE</th>
                     <th width="87px" colspan="2">RECEIPT</th>
                     <th width="87px" colspan="2">ISSUANCE</th>
                     <th width="87px" rowspan="2">BALANCE</th>
-                    <th width="48px" rowspan="2">REMARKS</th>
+                    <th width="48px" rowspan="2">REMARK/S</th>
                 </tr>
                 <tr style="font-size: 8px; font-weight:bold; background-color: #EEEEEE;">
                     <th width="35px" style="text-align:center;">Qty</th>
@@ -140,7 +165,7 @@ class StockCardController extends Controller
         $text .= '
                     <tr style="font-size: 9px; font-weight:bold;">
                         <td width="60px"></td>
-                        <td width="150px">Beginning Balance</td>
+                        <td width="150px" style="text-align:center;">**** Beginning Balance ****</td>
                         <td width="35px" style="text-align:center;">'. number_format($beginningBalance, 0, '.', ',') .'</td>
                         <td width="52px"></td>
                         <td width="35px"></td>
@@ -169,8 +194,8 @@ class StockCardController extends Controller
                     <td width="52px"style="text-align:right;">' . ($transaction['type'] == 'purchase' ? $transaction['iarDetails']['price'] : '') . '</td>
                     <td width="35px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? number_format($transaction['qty'], 0, '.', ',') : '') . '</td>
                     <td width="52px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? $transaction['risDetails']['officeCode'] : '') . '</td>
-                    <td width="87px" style="text-align:center;">' . $transaction['currentStock'] . '</td>
-                    <td width="48px"></td>
+                    <td width="87px" style="text-align:center;">' . number_format($transaction['currentStock'], 0, '.', ',') . '</td>
+                    <td width="48px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? $transaction['risDetails']['remarks'] : '') . '</td>
                 </tr>
             ';
         }
@@ -178,7 +203,7 @@ class StockCardController extends Controller
         $text .= '
                     <tr style="font-size: 9px; font-weight:bold;">
                         <td width="60px"></td>
-                        <td width="150px">Ending Balance</td>
+                        <td width="150px" style="text-align:center;">**** Ending Balance ****</td>
                         <td width="35px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
                         <td width="52px"></td>
                         <td width="35px"></td>
@@ -255,14 +280,15 @@ class StockCardController extends Controller
     private function getIssuanceTypeDetails(int $id): array
     {
         $risTransaction = RisTransaction::withTrashed()
-            ->select('ris_no', 'office_id')
+            ->select('ris_no', 'office_id', 'remarks')
             ->find($id);
 
         if($risTransaction) {
             $requestee = $risTransaction->requestee()->select('office_code')->first();
             return [
                 'risNo' => $risTransaction->ris_no,
-                'officeCode' => $requestee ? $requestee->office_code : null,
+                'officeCode' => $requestee ? $requestee->office_code : 'Others',
+                'remarks' => $risTransaction->remarks ?? '',
             ];
         }
 
