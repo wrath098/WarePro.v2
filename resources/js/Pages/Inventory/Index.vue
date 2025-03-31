@@ -27,7 +27,8 @@
         qty: '',
         remarks: '',
         prodId: '',
-        type: 'adjustment'
+        type: 'adjustment',
+        dateOfAdjustment: '',
     });
 
     const editParticular = reactive({
@@ -299,6 +300,12 @@
                                         <span class="text-gray-600 text-sm font-semibold">Remarks: </span>
                                     </div>
                                     <input v-model="addParticular.remarks" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Reconciled Quantity" required>
+                                </div>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
+                                        <span class="text-gray-600 text-sm font-semibold">Date: </span>
+                                    </div>
+                                    <input v-model="addParticular.dateOfAdjustment" type="date" id="dateOfAdjustment" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="" required>
                                 </div>
                             </div>
                         </div>

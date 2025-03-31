@@ -33,8 +33,14 @@
         }
     };
 
-    const acceptParticular = reactive({pid: ''});
-    const acceptAllParticular = reactive({particulars: ''});
+    const acceptParticular = reactive({
+        pid: '',
+        dateReceive: ''
+    });
+    const acceptAllParticular = reactive({
+        particulars: '',
+        dateReceive: ''
+    });
     const denyParticular = reactive({pid: ''});
     const denyAllParticular = reactive({particulars: ''});
     const editParticular = reactive({
@@ -260,10 +266,16 @@
                         <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
                     </svg>
 
-                    <div class="text-center">
+                    <div class="text-center">dateReceive
                         <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept Product!</h3>
                         <p class="text-gray-600 my-2">Confirming this action will add the selected Product to the Product Inventory. <br> This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
+                        <p class="mb-5"> Please confirm if you wish to proceed.  </p>
+
+                        <label for="dateReceive" class="input">
+                            Date Recieved
+                            <input v-model="acceptParticular.dateReceive"  type="date" id="dateReceive" class="grow peer mt-0.5 w-1/2 rounded border-gray-300 shadow-sm sm:text-sm" placeholder="" required />
+                        </label>
+
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -400,7 +412,13 @@
                     <div class="text-center">
                         <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept All Product!</h3>
                         <p class="text-gray-600 my-2">Confirming this action will add all the Product within the list to the Product Inventory. <br> This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
+                        <p class="mb-5"> Please confirm if you wish to proceed.  </p>
+
+                        <label for="dateReceiveAll" class="input">
+                            Date Recieved
+                            <input v-model="acceptAllParticular.dateReceive"  type="date" id="dateReceiveAll" class="grow peer mt-0.5 w-1/2 rounded border-gray-300 shadow-sm sm:text-sm" placeholder="" required />
+                        </label>
+
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">

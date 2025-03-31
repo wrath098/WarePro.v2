@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\ProductPrice;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,17 @@ class IarTransactionController extends Controller
 {
     public function index()
     {
+        #THIS WILL BE USED FOR TESTING CONNECTION FROM OTHER DEVICE XAMPP SERVER
+        #DELETE AFTER THE TEST IS GOOD
+        // $results2 = DB::connection('pgso-pms')
+        // ->table('sdi_air')
+        // ->select('sdi_air.air_id', 'sdi_air.po_no', 'psu_suppliers.name', 'sdi_air.air_date', 'sdi_air.warehouse')
+        // ->join('psu_suppliers', 'sdi_air.supplier_id', '=', 'psu_suppliers.supplier_id')
+        // ->where('warehouse', 1)
+        // ->get();
+
+        // dd($results2);
+
         $lists = IarTransaction::where('status', 'pending')
             ->orderBy('sdi_iar_id', 'desc')
             ->get();
@@ -174,6 +186,7 @@ class IarTransactionController extends Controller
         try {
             $particular = IarParticular::findOrFail($request->pid);
             $productDetails = $this->validateProduct($particular->stock_no);
+            $formattedDate = $this->defaultDateFormat($request->dateReceive);
 
             if(!$productDetails) {
                 throw new \Exception('Product Item/Stock No. not found. Please update the product code and try again!');
@@ -189,6 +202,12 @@ class IarTransactionController extends Controller
                 throw new \Exception('The unit of measurement of the particular differs from the one in the product record: ' . $productDetails->prod_unit);
             }
 
+            $isDateValid = $this->risDateValidation($productDetails->id, $formattedDate);
+            if(!$isDateValid) {
+                DB::rollback();
+                throw new \Exception('Please check the Date Received. Product/s latest transaction is later than the inputted Date Received!');
+            }
+
             $currentStock = (int)$this->getCurrentStockInventory($productDetails->id) + (int)$particular->qty;
             $productInventoryInfo = [
                 'type' => 'purchase',
@@ -198,6 +217,7 @@ class IarTransactionController extends Controller
                 'price' => $productDetails->price,
                 'date_expiry' => $particular->date_expiry,
                 'currentStock' => $currentStock,
+                'dateReceived' => $formattedDate,
                 'user' => $userId,
             ];
 
@@ -231,6 +251,8 @@ class IarTransactionController extends Controller
     public function acceptIarParticularAll(Request $request)
     {
         DB::beginTransaction();
+
+        $formattedDate = $this->defaultDateFormat($request->dateReceive);
         $countParticularsToUpdated = 0;
 
         try {
@@ -252,7 +274,13 @@ class IarTransactionController extends Controller
                 if(strtolower($productDetails->prod_unit) !== strtolower($particular['unit'])) {
                     $countParticularsToUpdated += 1;
                     continue;
-                }                
+                }
+                
+                $isDateValid = $this->risDateValidation($productDetails->id, $formattedDate);
+                if(!$isDateValid) {
+                    DB::rollback();
+                    throw new \Exception('Please check the Date Received. Product/s latest transaction is later than the inputted Date Received!');
+                }
                 
                 $currentStock = (int)$this->getCurrentStockInventory($productDetails->id) + (int)$particular['quantity'];
                 $productInventoryInfo = [
@@ -264,6 +292,7 @@ class IarTransactionController extends Controller
                     'date_expiry' => $particular['expiry'],
                     'currentStock' => $currentStock,
                     'user' => $userId,
+                    'dateReceived' => $formattedDate,
                 ];
 
                 $this->createInventoryTransaction($productInventoryInfo);
@@ -426,6 +455,7 @@ class IarTransactionController extends Controller
             'date_expiry' => $request['date_expiry'],
             'current_stock' => $request['currentStock'],
             'created_by' => $request['user'],
+            'created_at' => $request['dateReceived'],
         ]);
     }
 
@@ -488,5 +518,26 @@ class IarTransactionController extends Controller
 
     private function getProductInventoryId($productId) {
         return ProductInventory::where('prod_id', $productId)->first();
+    }
+
+    private function defaultDateFormat($inputDate)
+    {
+        $date = $inputDate;
+        $currentTime = Carbon::now()->toTimeString();
+
+        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
+        
+        return $combinedDateTime;
+    }
+
+    private function risDateValidation($prodId, $date)
+    {
+        $query = ProductInventoryTransaction::withTrashed()->where('prod_id', $prodId)->orderBy('created_at', 'desc')->first();
+
+        if(!$query) {
+            return true;
+        }
+
+        return $date > $query->created_at;
     }
 }

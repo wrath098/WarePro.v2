@@ -124,6 +124,7 @@
     const create = reactive({
         risNo: '',
         receivedBy: '',
+        risDate: '',
         remarks: '',
     });
 
@@ -137,6 +138,7 @@
             formData.append('officeId', searchOfficePpmp.officeId);
             formData.append('ppmpYear', searchOfficePpmp.year);
             formData.append('receivedBy', create.receivedBy);
+            formData.append('risDate', create.risDate);
             formData.append('remarks', create.remarks);
             formData.append('requestProducts', JSON.stringify(requestData.value));
             formData.append('file', file.value);
@@ -346,6 +348,14 @@
                         <input v-model="create.receivedBy" type="text" name="receivedBy" id="receivedBy" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                         <label for="receivedBy" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Issued To (Name of the Person)</label>
                     </div>
+                    <div v-if="searchOfficePpmp.officeId == 'others'" class="relative z-0 w-full mb-5 group">
+                        <input v-model="create.remarks" type="text" name="remarks" id="remarks" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                        <label for="remarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Remarks/Description</label>
+                    </div>
+                    <div class="relative z-0 w-full mb-5 group">
+                        <input v-model="create.risDate" type="date" name="risDate" id="risDate" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                        <label for="risDate" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Date of Issuance</label>
+                    </div>
                     <!-- UPLOAD FILES -->
                     <!-- <div class="px-5">
                         <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
@@ -375,11 +385,6 @@
                         </div>
                     </div> -->
                 </div>
-                <div v-if="searchOfficePpmp.officeId == 'others'" class="relative z-0 w-full mb-5 group">
-                    <input v-model="create.remarks" type="text" name="remarks" id="remarks" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                    <label for="remarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Remarks/Description</label>
-                </div>
-
                 <div class="my-10 px-5">
                     <div class="flex justify-center">
                         <button type="submit" class="w-1/2 inline-flex items-center justify-center rounded cursor-pointer bg-[#6427f1] px-6 py-3 font-semibold text-white transition [box-shadow:rgb(171,_196,245)-8px_8px] hover:[box-shadow:rgb(171,_196,_245)0px_0px]">

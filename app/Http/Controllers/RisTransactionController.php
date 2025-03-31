@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,7 @@ class RisTransactionController extends Controller
             'risNo' => $request->risNo,
             'officeId' => $request->officeId,
             'receivedBy' => $request->receivedBy,
+            'risDate' => $this->defaultDateFormat($request->risDate),
             'remarks' => $request->remarks,
             'user' => Auth::id(),
         ];
@@ -93,6 +95,12 @@ class RisTransactionController extends Controller
                     throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
                 }
 
+                $isDateValid = $this->risDateValidation($product['prodId'], $risData['risDate']);
+                if(!$isDateValid) {
+                    DB::rollback();
+                    throw new \Exception('Please check the RIS Date. Product/s latest transaction is later than the inputted RIS Date!');
+                }
+
                 $currentStock = (int)$this->getCurrentStockInventory($product['prodId']) - $product['qty'];
                 $createRisTransaction = $this->createRis($risData);
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
@@ -124,6 +132,12 @@ class RisTransactionController extends Controller
                 return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
             }
 
+            $isDateValid = $this->risDateValidation($product['prodId'], $risData['risDate']);
+            if(!$isDateValid) {
+                DB::rollback();
+                throw new \Exception('Please check the RIS Date. Product/s latest transaction is later than the inputted RIS Date!');
+            }
+
             $currentStock = (int) $this->getCurrentStockInventory($product['prodId']) - $product['qty'];
             $createRisTransaction = $this->createRis($risData);
             $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
@@ -141,6 +155,7 @@ class RisTransactionController extends Controller
 
     private function createRis($requestData) {
         $officeId = $requestData['officeId'] == "others" ? null : $requestData['officeId'];
+
         return RisTransaction::create([
             'ris_no' => $requestData['risNo'],
             'qty' => $requestData['qty'],
@@ -150,6 +165,7 @@ class RisTransactionController extends Controller
             'prod_id' => $requestData['prodId'],
             'office_id' => $officeId,
             'created_by' => $requestData['user'],
+            'created_at' => $requestData['risDate'],
             'attachment' => $requestData['path'] ?? null,
         ]);
     }
@@ -164,6 +180,7 @@ class RisTransactionController extends Controller
             'ref_no' => $risId,
             'prod_id' => $product['prodId'],
             'created_by' => $risData['user'] ?? null,
+            'created_at' => $risData['risDate'],
         ]);
     }
 
@@ -182,7 +199,16 @@ class RisTransactionController extends Controller
     public function getIssuanceLogs(Request $request)
     {
         $query = $request->input('query');
-        $resultLogs = $this->getFilteredIssuanceLogs($query['startDate'], $query['endDate']);
+
+        $startDate = Carbon::parse($query['startDate']);
+        $endDate = Carbon::parse($query['endDate']);
+
+        $customEndDate = $endDate->setTime(23, 59, 59);
+        
+        $formattedStartDate = $startDate->format('Y-m-d H:i:s');
+        $formattedEndDate = $customEndDate->format('Y-m-d H:i:s');
+
+        $resultLogs = $this->getFilteredIssuanceLogs($formattedStartDate, $formattedEndDate);
         return response()->json(['data' => $resultLogs]);
     }
 
@@ -317,5 +343,21 @@ class RisTransactionController extends Controller
         ]);
 
         return $logs ?? '';
+    }
+
+    private function risDateValidation($prodId, $date)
+    {
+        $query = ProductInventoryTransaction::where('prod_id', $prodId)->orderBy('created_at', 'desc')->first();
+        return $date > $query->created_at;
+    }
+
+    private function defaultDateFormat($inputDate)
+    {
+        $date = $inputDate;
+        $currentTime = Carbon::now()->toTimeString();
+
+        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
+        
+        return $combinedDateTime;
     }
 }

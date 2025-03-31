@@ -47,10 +47,12 @@ class ProductInventoryTransactionController extends Controller
     {
         DB::beginTransaction();
         $currentInventory = $request->qty;
+        $formattedDate = $this->defaultDateFormat($request->dateOfAdjustment);
         
         try {
+            $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
+
             if($request->pid) {
-                $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
                 $currentInventory = $productInventory->qty_on_stock + $request->qty;
                 $productInventory->qty_on_stock += $request->qty;
                 $productInventory->updated_by = Auth::id();
@@ -63,6 +65,12 @@ class ProductInventoryTransactionController extends Controller
                 ]);
             }
 
+            $isDateValid = $this->prodDateValidation($request->prodId, $formattedDate);
+            if(!$isDateValid) {
+                DB::rollback();
+                throw new \Exception('Please check the Date. Product/s latest transaction is later than the inputted Date!');
+            }
+
             ProductInventoryTransaction::create([
                 'type' => $request->type,
                 'qty' => $request->qty,
@@ -70,6 +78,7 @@ class ProductInventoryTransactionController extends Controller
                 'prod_id' => $request->prodId,
                 'current_stock' => $currentInventory,
                 'created_by' => Auth::id(),
+                'created_at' => $formattedDate,
             ]);
             
             DB::commit();
@@ -156,5 +165,26 @@ class ProductInventoryTransactionController extends Controller
     private function getPurchaseDetails($refNo)
     {
         return IarTransaction::findOrFail($refNo)->select('sdi_iar_id', 'po_no')->first();
+    }
+
+    private function defaultDateFormat($inputDate)
+    {
+        $date = $inputDate;
+        $currentTime = Carbon::now()->toTimeString();
+
+        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
+        
+        return $combinedDateTime;
+    }
+
+    private function prodDateValidation($prodId, $date)
+    {
+        $query = ProductInventoryTransaction::withTrashed()->where('prod_id', $prodId)->orderBy('created_at', 'desc')->first();
+
+        if(!$query) {
+            return true;
+        }
+
+        return $date > $query->created_at;
     }
 }

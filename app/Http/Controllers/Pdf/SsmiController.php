@@ -25,7 +25,13 @@ class SsmiController extends Controller
 
         $startDate = Carbon::parse($query['startDate']);
         $endDate = Carbon::parse($query['endDate']);
-        $filteredIssuanceLogs = $this->getFilteredIssuanceLogs($query['startDate'], $query['endDate']);
+
+        $customEndDate = $endDate->setTime(23, 59, 59);
+        
+        $formattedStartDate = $startDate->format('Y-m-d H:i:s');
+        $formattedEndDate = $customEndDate->format('Y-m-d H:i:s');
+
+        $filteredIssuanceLogs = $this->getFilteredIssuanceLogs($formattedStartDate, $formattedEndDate);
 
         if(strtoupper($startDate->format('F')) === strtoupper($endDate->format('F'))) {
             $month = strtoupper($startDate->format('F'));

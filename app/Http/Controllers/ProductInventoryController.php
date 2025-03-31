@@ -7,6 +7,7 @@ use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
 use App\Services\ProductService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -52,7 +53,15 @@ class ProductInventoryController extends Controller
     public function getProductInventoryLogs(Request $request)
     {
         $query = $request->input('query');
-        $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $query['startDate'], $query['endDate']);
+        $startDate = Carbon::parse($query['startDate']);
+        $endDate = Carbon::parse($query['endDate']);
+
+        $customEndDate = $endDate->setTime(23, 59, 59);
+        
+        $formattedStartDate = $startDate->format('Y-m-d H:i:s');
+        $formattedEndDate = $customEndDate->format('Y-m-d H:i:s');
+
+        $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $formattedStartDate, $formattedEndDate);
 
        return response()->json(['data' => $inventoryTransactions], 200);
     }

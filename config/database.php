@@ -72,6 +72,20 @@ return [
             // Additional configuration options
         ],
 
+        #THIS WILL BE USED FOR TESTING CONNECTION FROM OTHER DEVICE XAMPP SERVER
+        // 'pgso-pms' => [
+        //     'driver' => 'mysql',
+        //     'host' => env('DB_HOST_DEVICE_2', '192.168.2.16'), // Device 2 IP address
+        //     'port' => env('DB_PORT_DEVICE_2', '3306'),
+        //     'database' => env('DB_DATABASE_DEVICE_2', 'pgso-pms'),
+        //     'username' => env('DB_USERNAME_DEVICE_2', 'pgso'),
+        //     'password' => env('DB_PASSWORD_DEVICE_2', 'enterpgsodb'),
+        //     'unix_socket' => env('DB_SOCKET', ''),
+        //     'charset' => 'utf8mb4',
+        //     'collation' => 'utf8mb4_unicode_ci',
+        //     'prefix' => '',
+        // ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

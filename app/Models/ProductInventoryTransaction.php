@@ -11,6 +11,8 @@ class ProductInventoryTransaction extends Model
 {
     use HasFactory, SoftDeletes;
 
+    //public $timestamps = false;
+
     protected $table = 'product_inventory_transactions';
 
     protected $fillable = [
@@ -25,6 +27,8 @@ class ProductInventoryTransaction extends Model
         'current_stock',
         'prodInv_id',
         'created_by',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [

@@ -23,6 +23,7 @@ class RisTransaction extends Model
         'office_id',
         'created_by',
         'attachment',
+        'created_at',
     ];
 
     protected $cast = [
