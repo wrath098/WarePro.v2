@@ -62,10 +62,17 @@ class ProductInventoryTransactionController extends Controller
 
             $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($request->prodId, $formattedDate);
 
-            if($request->pid) {
+            if($request->pid && $previousTransaction->qty_physical_count) {
                 $currentInventory = $previousInventory + $request->qty;
                 $productInventory->qty_on_stock += $request->qty;
                 $productInventory->qty_purchase += $request->qty;
+                $productInventory->updated_by = Auth::id();
+                $productInventory->save();
+            } elseif(!$previousTransaction->qty_physical_count){
+                $currentInventory = $previousInventory + $request->qty;
+                $productInventory->qty_on_stock += $request->qty;
+                $productInventory->qty_purchase += $request->qty;
+                $productInventory->qty_physical_count = $request->qty;
                 $productInventory->updated_by = Auth::id();
                 $productInventory->save();
             } else {
@@ -80,6 +87,7 @@ class ProductInventoryTransactionController extends Controller
             ProductInventoryTransaction::create([
                 'type' => $request->type,
                 'qty' => $request->qty,
+                'stock_qty' => $request->qty,
                 'notes' => $request->remarks,
                 'prod_id' => $request->prodId,
                 'current_stock' => $currentInventory,

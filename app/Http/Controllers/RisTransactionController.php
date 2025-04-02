@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
+use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,13 @@ use Inertia\Inertia;
 
 class RisTransactionController extends Controller
 {
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
+
     public function create()
     {
         $office = Office::where('office_status', 'active')->select('id', 'office_code')->orderBy('office_code', 'asc')->get();
@@ -48,18 +56,24 @@ class RisTransactionController extends Controller
     {
         DB::beginTransaction();
         $products = json_decode($request->requestProducts, true);
+        $formattedDate = $this->productService->defaultDateFormat($request->risDate);
+
+        if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
+            DB::rollBack();
+            return redirect()->back()->with(['error' => 'Invalid date format or year!']);
+        }
 
         $risData = [
             'risNo' => $request->risNo,
             'officeId' => $request->officeId,
             'receivedBy' => $request->receivedBy,
-            'risDate' => $this->defaultDateFormat($request->risDate),
+            'risDate' => $formattedDate,
             'remarks' => $request->remarks,
             'user' => Auth::id(),
         ];
 
         if ($risData['officeId'] == "others") {
-            $this->storeOtherOfficeRequest($risData, $products);
+            $this->storeOtherOfficeRequest($risData, $products, $formattedDate);
             DB::commit();
             return redirect()->route('ris.display.logs')->with(['message' => 'RIS created successfully!']);
         }
@@ -95,15 +109,13 @@ class RisTransactionController extends Controller
                     throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
                 }
 
-                $isDateValid = $this->risDateValidation($product['prodId'], $risData['risDate']);
-                if(!$isDateValid) {
-                    DB::rollback();
-                    throw new \Exception('Please check the RIS Date. Product/s latest transaction is later than the inputted RIS Date!');
-                }
+                $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
+                $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) + (int)$product['qty'];
 
-                $currentStock = (int)$this->getCurrentStockInventory($product['prodId']) - $product['qty'];
+                $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
+
                 $createRisTransaction = $this->createRis($risData);
-                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
+                $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
                 $this->updateQuantity($risData);
                 $this->updateInventoryTransaction($risData);
                 $this->updateReleasedItemQtyOnPpmp($product);
@@ -119,7 +131,7 @@ class RisTransactionController extends Controller
         }
     }
 
-    private function storeOtherOfficeRequest($risData, $requestedProducts)
+    private function storeOtherOfficeRequest(iterable $risData, iterable $requestedProducts, string $formattedDate)
     {
         foreach ($requestedProducts as $product) {
             $risData['qty'] = $product['qty'];
@@ -132,15 +144,13 @@ class RisTransactionController extends Controller
                 return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
             }
 
-            $isDateValid = $this->risDateValidation($product['prodId'], $risData['risDate']);
-            if(!$isDateValid) {
-                DB::rollback();
-                throw new \Exception('Please check the RIS Date. Product/s latest transaction is later than the inputted RIS Date!');
-            }
+            $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
+            $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) + (int)$product['qty'];
 
-            $currentStock = (int) $this->getCurrentStockInventory($product['prodId']) - $product['qty'];
+            $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
+
             $createRisTransaction = $this->createRis($risData);
-            $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock);
+            $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock, $succeedingTransactions);
             $this->updateQuantity($risData);
             $this->updateInventoryTransaction($risData);
             $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
@@ -170,9 +180,9 @@ class RisTransactionController extends Controller
         ]);
     }
 
-    private function createInventoryTransaction($product, $risData, $risId, $currentStock)
+    private function createInventoryTransaction(iterable $product, iterable $risData, int $risId, int $currentStock, iterable $transactions)
     {
-        return ProductInventoryTransaction::create([
+        $query = ProductInventoryTransaction::create([
             'type' => 'issuance',
             'qty' => $product['qty'],
             'current_stock' => $currentStock,
@@ -182,6 +192,10 @@ class RisTransactionController extends Controller
             'created_by' => $risData['user'] ?? null,
             'created_at' => $risData['risDate'],
         ]);
+
+        $this->productService->updateInventoryTransactionsCurrentStock($transactions, $currentStock);
+
+        return $query;
     }
 
     public function validateAvailability($requestData)

@@ -196,7 +196,6 @@ class IarTransactionController extends Controller
             $formattedDate = $this->productService->defaultDateFormat($request->dateReceive);
 
             if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
-                DB::rollBack();
                 throw new \Exception('Invalid date format or year!');
             }
 
