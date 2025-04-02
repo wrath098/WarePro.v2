@@ -45,30 +45,36 @@ class ProductInventoryTransactionController extends Controller
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
-        $currentInventory = $request->qty;
-        $formattedDate = $this->defaultDateFormat($request->dateOfAdjustment);
-        
+        DB::beginTransaction();        
         try {
+            $currentInventory = $request->qty;
+            $formattedDate = $this->productService->defaultDateFormat($request->dateOfAdjustment);
+
+            if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Invalid date format or year!');
+            }
+
             $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
+            
+            $previousTransaction = $this->productService->getPreviousProductInventoryTransaction($request->prodId, $formattedDate);
+            $previousInventory = $previousTransaction->current_stock ?? 0;
+
+            $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($request->prodId, $formattedDate);
 
             if($request->pid) {
-                $currentInventory = $productInventory->qty_on_stock + $request->qty;
+                $currentInventory = $previousInventory + $request->qty;
                 $productInventory->qty_on_stock += $request->qty;
+                $productInventory->qty_purchase += $request->qty;
                 $productInventory->updated_by = Auth::id();
                 $productInventory->save();
             } else {
                 ProductInventory::create([
-                    'qty_on_stock' => $request->qty,
+                    'qty_on_stock' => $currentInventory,
+                    'qty_physical_count' => $currentInventory,
                     'prod_id' => $request->prodId,
                     'updated_by' => Auth::id(),
                 ]);
-            }
-
-            $isDateValid = $this->prodDateValidation($request->prodId, $formattedDate);
-            if(!$isDateValid) {
-                DB::rollback();
-                throw new \Exception('Please check the Date. Product/s latest transaction is later than the inputted Date!');
             }
 
             ProductInventoryTransaction::create([
@@ -81,12 +87,15 @@ class ProductInventoryTransactionController extends Controller
                 'created_at' => $formattedDate,
             ]);
             
+
+            $this->productService->updateInventoryTransactionsCurrentStock($succeedingTransactions, $currentInventory);
+            
             DB::commit();
             return redirect()->back()->with(['message' => 'Successfully added the quantity to Product code ' . $request->stockNo]);
         } catch(\Exception $e) {
             DB::rollBack();
-            Log::error("Error during transaction: " . $e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            Log::error("Inventory adjustment failed: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update inventory. Please try again.');
         }
     }
     
@@ -165,26 +174,5 @@ class ProductInventoryTransactionController extends Controller
     private function getPurchaseDetails($refNo)
     {
         return IarTransaction::findOrFail($refNo)->select('sdi_iar_id', 'po_no')->first();
-    }
-
-    private function defaultDateFormat($inputDate)
-    {
-        $date = $inputDate;
-        $currentTime = Carbon::now()->toTimeString();
-
-        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
-        
-        return $combinedDateTime;
-    }
-
-    private function prodDateValidation($prodId, $date)
-    {
-        $query = ProductInventoryTransaction::withTrashed()->where('prod_id', $prodId)->orderBy('created_at', 'desc')->first();
-
-        if(!$query) {
-            return true;
-        }
-
-        return $date > $query->created_at;
     }
 }

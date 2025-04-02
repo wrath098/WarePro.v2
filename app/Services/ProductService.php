@@ -9,8 +9,10 @@ use App\Models\ItemClass;
 use App\Models\PpmpConsolidated;
 use App\Models\Product;
 use App\Models\ProductInventory;
+use App\Models\ProductInventoryTransaction;
 use App\Models\ProductPpmpException;
 use App\Models\ProductPrice;
+use Carbon\Carbon;
 
 class ProductService 
 {
@@ -272,5 +274,60 @@ class ProductService
     public function verifyProductIfActive(int $id): bool
     {
         return Product::where('id', $id)->where('prod_status', 'active')->exists();
+    }
+
+    public function getEarlistProductInvetoryTransaction(int $id)
+    {
+        return Product::where('id', $id)->where('prod_status', 'active')->exists();
+    }
+
+    public function defaultDateFormat($inputDate)
+    {
+        $date = $inputDate;
+        $currentTime = Carbon::now()->toTimeString();
+
+        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
+        
+        return $combinedDateTime;
+    }
+
+    public function getPreviousProductInventoryTransaction(int $prodId, string  $date)
+    {
+        return ProductInventoryTransaction::withTrashed()
+            ->where('prod_id', $prodId)
+            ->where('created_at', '<', $date)
+            ->latest('created_at')
+            ->first();
+    }
+
+    public function getSucceedingProductInventoryTransaction(int $prodId, string  $date)
+    {
+        return ProductInventoryTransaction::withTrashed()
+            ->where('prod_id', $prodId)
+            ->where('created_at', '>', $date)
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
+
+    public function updateInventoryTransactionsCurrentStock(iterable $transactions, int  $currentStock): void
+    {
+        $runningStock = $currentStock;
+        $updates = [];
+        
+        foreach ($transactions as $transaction) {
+            $runningStock += ($transaction->type === 'issuance') ? -$transaction->qty : $transaction->qty;
+            $updates[] = ['id' => $transaction->id, 'current_stock' => $runningStock];
+        }
+
+        ProductInventoryTransaction::upsert($updates, ['id'], ['current_stock']);
+    }
+
+    public function isDateValid(string $date): bool
+    {
+        $parsedDate = Carbon::createFromFormat('Y-m-d H:i:s', $date);
+        $year = $parsedDate->year;
+        $currentYear = Carbon::now()->year;
+
+        return ($year === $currentYear && Carbon::now() > $parsedDate) || $year === ($currentYear - 1);
     }
 }
