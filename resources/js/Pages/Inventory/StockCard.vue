@@ -73,7 +73,15 @@
                     params: { query: searchProductInfo},
                 });
                 productTransactions.value = response.data;
-                return productTransactions;
+                if (productTransactions.value.data.length == 0) {
+                    Swal.fire({
+                        title: 'Warning',
+                        text: 'No products found.',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 1500,
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching product data:', error);
             }
@@ -178,7 +186,7 @@
                         </div>
 
                         <div class="lg:col-span-2 relative z-0 w-full my-5 lg:flex justify-around items-center group">
-                            <button type="submit" class="flex w-auto justify-center items-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px">
+                            <button type="submit" class="flex w-auto justify-center items-center mx-1 min-w-[150px] px-6 py-3 my-1 lg:my-0 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px">
                                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 16 16">
                                     <path fill="currentColor" d="M1 2h14v2L9 9v7l-2-2V9L1 4V2zm0-2h14v1H1V0z"/>
                                 </svg>
@@ -200,7 +208,7 @@
                                 Print (Duration)
                             </a>
                             <a 
-                                :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard', { productDetails: searchProductInfo }) : '#'" 
+                                :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard.AsOf', { productDetails: searchProductInfo }) : '#'" 
                                 target="_blank"
                                 class="flex text-center mx-1 min-w-[125px] px-6 py-3 my-1 lg:my-0 text-white transition-all bg-gray-600 rounded-md shadow-xl hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
                                 :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"

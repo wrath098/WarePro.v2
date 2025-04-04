@@ -60,7 +60,7 @@ class RisTransactionController extends Controller
 
         if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
             DB::rollBack();
-            return redirect()->back()->with(['error' => 'Invalid date format or year!']);
+            return back()->with(['error' => 'Invalid date. Please try again!']);
         }
 
         $risData = [
@@ -75,7 +75,7 @@ class RisTransactionController extends Controller
         if ($risData['officeId'] == "others") {
             $this->storeOtherOfficeRequest($risData, $products, $formattedDate);
             DB::commit();
-            return redirect()->route('ris.display.logs')->with(['message' => 'RIS created successfully!']);
+            return redirect()->back()->with(['message' => 'RIS created successfully!']);
         }
 
         if ($request->file) {
@@ -123,11 +123,14 @@ class RisTransactionController extends Controller
             }   
 
         DB::commit();
-        return redirect()->route('ris.display.logs')->with(['message' => 'RIS created successfully!']);
+        return redirect()->back()->with(['message' => 'RIS created successfully!']);
         } catch (\Exception $e) {
-            DB::rollback();
-            Log::error("Error creating RIS transaction: " . $e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            Log::error("Proccess RIS Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Proccessing RIS Failed. Please try again!']);
         }
     }
 
@@ -327,22 +330,16 @@ class RisTransactionController extends Controller
         return $productInventory->delete();
     }
 
-    private function getCurrentStockInventory($prodId)
-    {
-        $inventoryDetails = ProductInventory::where('prod_id', $prodId)->first();
-        return $inventoryDetails->qty_on_stock ?? 0;
-    }
-
     private function getFilteredIssuanceLogs($fromDate, $toDate)
     {
         $resultLogs = RisTransaction::whereBetween('created_at', [$fromDate, $toDate])
             ->with(['creator', 'requestee', 'productDetails' => function($query) {
                 $query->withTrashed();
             }])
-            ->orderBy('created_at', 'desc')
+            ->latest('created_at')
             ->get();
 
-        $logs = $resultLogs->map(fn($transaction) => [
+        return $resultLogs->map(fn($transaction) => [
             'id' => $transaction->id,
             'risNo' => $transaction->ris_no,
             'stockNo' => $transaction->productDetails->prod_newNo,
@@ -354,24 +351,6 @@ class RisTransactionController extends Controller
             'dateReleased'=> $transaction->created_at->format('F d, Y'),
             'releasedBy' => $transaction->creator->name,
             'attachment' => $transaction->attachment ?? null,
-        ]);
-
-        return $logs ?? '';
-    }
-
-    private function risDateValidation($prodId, $date)
-    {
-        $query = ProductInventoryTransaction::where('prod_id', $prodId)->orderBy('created_at', 'desc')->first();
-        return $date > $query->created_at;
-    }
-
-    private function defaultDateFormat($inputDate)
-    {
-        $date = $inputDate;
-        $currentTime = Carbon::now()->toTimeString();
-
-        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
-        
-        return $combinedDateTime;
+        ])->values();
     }
 }

@@ -281,17 +281,14 @@ class ProductService
         return Product::where('id', $id)->where('prod_status', 'active')->exists();
     }
 
-    public function defaultDateFormat($inputDate)
+    public function defaultDateFormat(string $inputDate): string
     {
-        $date = $inputDate;
-        $currentTime = Carbon::now()->toTimeString();
-
-        $combinedDateTime = Carbon::parse($date . ' ' . $currentTime)->format('Y-m-d H:i:s');
-        
-        return $combinedDateTime;
+        return Carbon::parse($inputDate)
+            ->setTimeFrom(Carbon::now())
+            ->format('Y-m-d H:i:s');
     }
 
-    public function getPreviousProductInventoryTransaction(int $prodId, string  $date)
+    public function getPreviousProductInventoryTransaction(int $prodId, string  $date): ?ProductInventoryTransaction
     {
         return ProductInventoryTransaction::withTrashed()
             ->where('prod_id', $prodId)
@@ -305,7 +302,7 @@ class ProductService
         return ProductInventoryTransaction::withTrashed()
             ->where('prod_id', $prodId)
             ->where('created_at', '>', $date)
-            ->orderBy('created_at', 'asc')
+            ->oldest('created_at')
             ->get();
     }
 
@@ -324,10 +321,12 @@ class ProductService
 
     public function isDateValid(string $date): bool
     {
-        $parsedDate = Carbon::createFromFormat('Y-m-d H:i:s', $date);
-        $year = $parsedDate->year;
-        $currentYear = Carbon::now()->year;
+        $parsedDate = Carbon::parse($date);
+        $now = Carbon::now();
 
-        return ($year === $currentYear && Carbon::now() > $parsedDate) || $year === ($currentYear - 1);
+        return $parsedDate->between(
+            $now->copy()->subDays(120),
+            $now
+        );
     }
 }

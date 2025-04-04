@@ -47,12 +47,13 @@ class ProductInventoryTransactionController extends Controller
     {
         DB::beginTransaction();        
         try {
+            $userId = Auth::id();
             $currentInventory = $request->qty;
             $formattedDate = $this->productService->defaultDateFormat($request->dateOfAdjustment);
 
             if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
                 DB::rollBack();
-                return redirect()->back()->with('error', 'Invalid date format or year!');
+                return redirect()->back()->with('error', 'Please verify the entered date and try again!');
             }
 
             $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
@@ -62,47 +63,39 @@ class ProductInventoryTransactionController extends Controller
 
             $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($request->prodId, $formattedDate);
 
-            if($request->pid && $previousTransaction->qty_physical_count) {
+            if($request->pid) {
                 $currentInventory = $previousInventory + $request->qty;
                 $productInventory->qty_on_stock += $request->qty;
-                $productInventory->qty_purchase += $request->qty;
-                $productInventory->updated_by = Auth::id();
-                $productInventory->save();
-            } elseif(!$previousTransaction->qty_physical_count){
-                $currentInventory = $previousInventory + $request->qty;
-                $productInventory->qty_on_stock += $request->qty;
-                $productInventory->qty_purchase += $request->qty;
-                $productInventory->qty_physical_count = $request->qty;
-                $productInventory->updated_by = Auth::id();
+                
+                if ($productInventory->qty_physical_count > 0) {
+                    $productInventory->qty_purchase += $request->qty;
+                } else {
+                    $productInventory->qty_physical_count = $request->qty;
+                }
+
+                $productInventory->updated_by = $userId;
                 $productInventory->save();
             } else {
                 ProductInventory::create([
                     'qty_on_stock' => $currentInventory,
                     'qty_physical_count' => $currentInventory,
                     'prod_id' => $request->prodId,
-                    'updated_by' => Auth::id(),
+                    'updated_by' => $userId,
                 ]);
             }
 
-            ProductInventoryTransaction::create([
-                'type' => $request->type,
-                'qty' => $request->qty,
-                'stock_qty' => $request->qty,
-                'notes' => $request->remarks,
-                'prod_id' => $request->prodId,
-                'current_stock' => $currentInventory,
-                'created_by' => Auth::id(),
-                'created_at' => $formattedDate,
-            ]);
-            
-
+            $this->createInventoryTransaction($request , $userId, $currentInventory, $formattedDate);
             $this->productService->updateInventoryTransactionsCurrentStock($succeedingTransactions, $currentInventory);
             
             DB::commit();
-            return redirect()->back()->with(['message' => 'Successfully added the quantity to Product code ' . $request->stockNo]);
+            return redirect()->back()->with(['message' => 'Successfully added quantity to Product Code# ' . $request->stockNo]);
         } catch(\Exception $e) {
             DB::rollBack();
-            Log::error("Inventory adjustment failed: " . $e->getMessage());
+            Log::error("Product Inventory adjustment failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return redirect()->back()->with('error', 'Failed to update inventory. Please try again.');
         }
     }
@@ -117,7 +110,7 @@ class ProductInventoryTransactionController extends Controller
 
         DB::beginTransaction();
         try {
-            $productInventory = ProductInventory::updateOrCreate(
+            ProductInventory::updateOrCreate(
                 ['prod_id' => $validated['prodId']],
                 [
                     'reorder_level' => $validated['reorder'],
@@ -126,11 +119,15 @@ class ProductInventoryTransactionController extends Controller
             );
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Successfully updated the quantity re-order level of Product code# ' . $validated['stockNo']]);
+            return redirect()->back()->with(['message' => 'Successfully updated the reorder quantity level for Product Code# ' . $validated['stockNo']]);
         } catch(\Exception $e) {
             DB::rollBack();
-            Log::error("Error during updating of the quantity re-order level of Product code# " . $validated['stockNo'] . " : " . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Faile to update the quantity re-order level of Product code# ' . $validated['stockNo']]);
+            Log::error("Product Inventory Threshold failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Failed to update product inventory reorder level. Please try again!']);
         }
     }
 
@@ -163,7 +160,7 @@ class ProductInventoryTransactionController extends Controller
             });
     }
 
-    private function verifyExpiryDateStatus($date): string
+    private function verifyExpiryDateStatus(string $date)
     {
         $dateToCheck = Carbon::parse($date);
         $currentDate = Carbon::now();
@@ -179,8 +176,22 @@ class ProductInventoryTransactionController extends Controller
         return true;
     }
 
-    private function getPurchaseDetails($refNo)
+    private function getPurchaseDetails(int $refNo): ?IarTransaction
     {
         return IarTransaction::findOrFail($refNo)->select('sdi_iar_id', 'po_no')->first();
+    }
+
+    private function createInventoryTransaction(object $request, int $userId, int $currentInventory, string $formattedDate): ?ProductInventoryTransaction
+    {
+        return ProductInventoryTransaction::create([
+            'type' => $request->type ?? 'adjustment',
+            'qty' => $request->qty,
+            'stock_qty' => $request->qty,
+            'notes' => $request->remarks,
+            'prod_id' => $request->prodId,
+            'current_stock' => $currentInventory,
+            'created_by' => $userId,
+            'created_at' => $formattedDate,
+        ]);
     }
 }

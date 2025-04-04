@@ -18,6 +18,7 @@ use App\Http\Controllers\Forms\PrMultiStepFormController;
 use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ApprovedOfficePpmpQuantityController;
+use App\Http\Controllers\Pdf\AsOfStockCardController;
 use App\Http\Controllers\Pdf\DraftConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\DraftOfficePpmpController;
@@ -196,6 +197,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
+    Route::get('/stock-card-as-of', [AsOfStockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard.AsOf');
     Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
 });
 

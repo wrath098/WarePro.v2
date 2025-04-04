@@ -118,11 +118,9 @@ class ProductInventoryController extends Controller
         $productUnit = $this->productService->getProductUnit($productId);
 
         return ProductInventoryTransaction::withTrashed()
-                ->where(function($query) use ($productId, $fromDate, $toDate) {
-                    $query->where('prod_id', $productId)
-                        ->whereBetween('created_at', [$fromDate, $toDate]);
-                })
-                ->orderBy('created_at', 'desc')
+                ->where('prod_id', $productId)
+                ->whereBetween('created_at', [$fromDate, $toDate])
+                ->latest('created_at')
                 ->get()
                 ->map(function($transaction) use ($productUnit) {
                     $issuanceDetails = '';
@@ -139,7 +137,7 @@ class ProductInventoryController extends Controller
                         'risNo' => $issuanceDetails ? $issuanceDetails['risNo'] : '',
                         'requestee' => $issuanceDetails ? $issuanceDetails['officeCode'] : '',
                     ];
-                });
+                })->values();
     }
 
     private function fetchAllProductsWithQuantity()

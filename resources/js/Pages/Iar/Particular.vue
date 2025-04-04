@@ -19,7 +19,7 @@
     const stockData = ref(null);
 
     const fetchProduct = () => {
-        if (editParticular.stockNo.length > 0) {
+        if (editParticular.stockNo && editParticular.stockNo.length > 0) {
             const foundStock = props.productList.find(item => item.stockNo === editParticular.stockNo);
             if (foundStock) {
             stockData.value = {
@@ -338,8 +338,8 @@
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update Product Item</h3>
-                        <p class="text-sm text-gray-500">Enter the proper stock no. of the product.</p>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update IAR Particular</h3>
+                        <p class="text-sm text-gray-500">Please input the correct Stock No# that corresponds to the item description shown below..</p>
                         <div class="mt-5">
                             <p class="text-sm text-[#86591e]"> Product Information</p>
                             <div class="relative z-0 w-full group my-2">
@@ -366,8 +366,8 @@
 
                         <div class="mt-5">
                             <p class="text-sm text-[#86591e]">Particular Information</p>
-                            <div class="relative z-0 w-full my-5 group">
-                                <textarea v-model="editParticular.parDesc" type="text" name="parDesc" id="parDesc" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-gray-300 bg-opacity-30 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled></textarea>
+                            <div class="relative z-0 w-full my-5 group h-auto">
+                                <textarea v-model="editParticular.parDesc" type="text" name="parDesc" id="parDesc" class="block py-2.5 px-1 w-full text-sm bg-gray-300 bg-opacity-30 text-gray-900 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled></textarea>
                                 <label for="parDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
                             </div>
                             <div class="grid lg:grid-cols-2 lg:gap-6">

@@ -24,10 +24,25 @@
                 const response = await axios.get('../api/issuances-log', { 
                     params: { query: filterLogs},
                 });
+                
                 filteredLogs.value = response.data;
-                return filteredLogs;
+
+                if (filteredLogs.value.data.length == 0) {
+                    Swal.fire({
+                        title: 'Warning',
+                        text: 'No Data Found!',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+                }
             } catch (error) {
-                console.error('Error fetching product data:', error);
+                Swal.fire({
+                    title: 'Failed',
+                    text: 'Error fetching product data:' + error,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             }
         }
     };

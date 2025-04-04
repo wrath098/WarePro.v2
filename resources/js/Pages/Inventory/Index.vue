@@ -271,9 +271,9 @@
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update Product Inventory</h3>
-                            <p class="text-sm text-gray-500">Enter the proper stock no. of the product.</p>
+                            <p class="text-sm text-gray-500">This function is dedicated solely to data initialization, such as inputting the beginning balance or reconciling product items quantity.</p>
                             <div class="mt-3">
-                                <p class="text-sm text-gray-500"> Product Information: </p>
+                                <p class="text-sm text-[#86591e]"> Product Information: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Stock No: </span>
@@ -284,11 +284,11 @@
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Description: </span>
                                     </div>
-                                    <input v-model="addParticular.desc" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
+                                    <textarea v-model="addParticular.desc" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full h-auto focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly> </textarea>
                                 </div>
                             </div>
                             <div class="mt-5">
-                                <p class="text-sm text-gray-500"> Product Quantity: </p>
+                                <p class="text-sm text-[#86591e]"> Product Quantity: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Quantity: </span>
@@ -299,7 +299,7 @@
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Remarks: </span>
                                     </div>
-                                    <input v-model="addParticular.remarks" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Reconciled Quantity" required>
+                                    <input v-model="addParticular.remarks" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Beginning Balance" required>
                                 </div>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
@@ -338,10 +338,10 @@
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Update Product Inventory Reorder Level</h3>
-                            <p class="text-sm text-gray-500">This will adjust the number of the reorder level of a specific product.</p>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Update Product Item Inventory Reorder Level / Threshold</h3>
+                            <p class="text-sm text-gray-500">This functionality is designed exclusively for configuring item reorder levels.</p>
                             <div class="mt-3">
-                                <p class="text-sm text-gray-500"> Product Information: </p>
+                                <p class="text-sm text-[#86591e]"> Product Information: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Stock No: </span>
@@ -356,7 +356,7 @@
                                 </div>
                             </div>
                             <div class="mt-5">
-                                <p class="text-sm text-gray-500"> Product Reorder Level: </p>
+                                <p class="text-sm text-[#86591e]"> Product Reorder Level: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-600 text-sm font-semibold">Quantity: </span>

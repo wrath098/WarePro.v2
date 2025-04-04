@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pdf;
 use App\Http\Controllers\Controller;
 use App\Models\IarParticular;
 use App\Models\IarTransaction;
+use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
 use App\Services\MyPDF;
@@ -12,7 +13,7 @@ use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class StockCardController extends Controller
+class AsOfStockCardController extends Controller
 {
     protected $productService;
 
@@ -24,39 +25,19 @@ class StockCardController extends Controller
     public function generatePdf_StockCard(Request $request)
     {
         $query = $request->productDetails;
+
         $query['prodUnit'] = $this->productService->getProductUnit($query['prodId']);
         $query['stockNo'] = $this->productService->getProductCode($query['prodId']);
         $query['reorder'] = $this->productService->getProductReorderPoint($query['prodId']);
 
-        $startDate = Carbon::parse($request->productDetails['startDate']);
+        $startDate =  Carbon::now()->firstOfYear();
         $endDate = Carbon::parse($request->productDetails['endDate']);
-
         $customEndDate = $endDate->setTime(23, 59, 59);
-        
-        $formattedStartDate = $startDate->format('Y-m-d H:i:s');
         $formattedEndDate = $customEndDate->format('Y-m-d H:i:s');
+        
+        $duration = $endDate->format('F d, Y') ;
 
-        $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $formattedStartDate, $formattedEndDate);
-
-        if(strtoupper($startDate->format('F')) === strtoupper($endDate->format('F'))) {
-            $month = strtoupper($startDate->format('F'));
-            $from = $startDate->format('j');
-            $to = $endDate->format('j');
-            $year = $endDate->format('Y');
-
-            $duration = $month. ' ' . $from . '-' . $to . ',' .  ' ' . $year;
-        } else {
-            $startMonth = strtoupper($startDate->format('F'));
-            $startDay = $startDate->format('j');
-            $startYear = $startDate->format('Y');
-
-            $endMonth = strtoupper($endDate->format('F'));
-            $endDay = $endDate->format('j');
-            $endYear = $endDate->format('Y');
-
-            $duration = $startMonth. ' ' . $startDay . ',' .  ' ' . $startYear . ' - ' . $endMonth. ' ' . $endDay . ',' .  ' ' . $endYear ;
-        }
-
+        $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $startDate, $formattedEndDate);
         $totalRequest = count($inventoryTransactions);
 
         $pdf = new MyPDF('P', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
@@ -90,7 +71,7 @@ class StockCardController extends Controller
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>STOCK CARD</h4>
-                    <h5>For the Period of '. $duration .'</h5>
+                    <h5>As of '. $duration .'</h5>
                 </div>
             </div>
             <br>
@@ -126,7 +107,7 @@ class StockCardController extends Controller
         $table .= $this->tableHeader();
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($inventoryTransactions);
+        $table .= $this->tableContent($inventoryTransactions, $query['prodId']);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -152,21 +133,12 @@ class StockCardController extends Controller
                 </tr>';
     }
 
-    protected function tableContent($inventoryTransactions)
+    protected function tableContent(iterable $inventoryTransactions, int $prodId)
     {
         $text = '';
-
-        $firstTransaction = $inventoryTransactions->first();
+        
         $lastTransaction  = $inventoryTransactions->last();
-        $beginningBalance = 0;
-
-        if ($firstTransaction) {
-            if ($firstTransaction['type'] == 'purchase' || $firstTransaction['type'] == 'adjustment') {
-                $beginningBalance = $firstTransaction['currentStock'] - $firstTransaction['qty'];
-            } elseif ($firstTransaction['type'] == 'issuance') {
-                $beginningBalance = $firstTransaction['currentStock'] + $firstTransaction['qty'];
-            }
-        }
+        $beginningBalance = $this->getBeginningBalance($prodId);
 
         $text .= '
                     <tr style="font-size: 9px; font-weight:bold;">
@@ -227,11 +199,9 @@ class StockCardController extends Controller
         $productUnit = $this->productService->getProductUnit($productId);
 
         return ProductInventoryTransaction::withTrashed()
-                ->where(function($query) use ($productId, $fromDate, $toDate) {
-                    $query->where('prod_id', $productId)
-                        ->whereBetween('created_at', [$fromDate, $toDate]);
-                })
-                ->orderBy('created_at', 'asc')
+                ->where('prod_id', $productId)
+                ->whereBetween('created_at', [$fromDate, $toDate])
+                ->oldest('created_at')
                 ->get()
                 ->map(function($transaction) use ($productUnit) {
                     $issuanceDetails = '';
@@ -299,5 +269,12 @@ class StockCardController extends Controller
         }
 
         return [];
+    }
+
+    private function getBeginningBalance(int $id): int
+    {
+        return ProductInventory::withTrashed()
+            ->where('prod_id', $id)
+            ->value('qty_physical_count') ?? 0;
     }
 }
