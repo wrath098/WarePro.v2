@@ -1,38 +1,41 @@
 <script setup>
-    import { Line } from "vue-chartjs";
-    import { Chart, registerables } from "chart.js";
+    import { defineProps } from 'vue';
+    import { Line } from 'vue-chartjs';
+    import {
+        Chart as ChartJS,
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Title,
+        Tooltip,
+        Legend
+    } from 'chart.js';
 
-    Chart.register(...registerables);
-
+    ChartJS.register(
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Title,
+        Tooltip,
+        Legend
+    );
+    
     const props = defineProps({
-        chartData: {
+        data: {
             type: Object,
-            required: true,
+            required: true
         },
-        chartOptions: {
+        options: {
             type: Object,
-            default: () => ({
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: "top",
-                    },
-                },
-            }),
-        },
+            required: true
+        }
     });
 </script>
 
 <template>
-    <div class="chart-container">
-      <Line :chart-data="chartData" :chart-options="chartOptions" />
+    <div>
+        <Line :data="data" :options="options" />
     </div>
 </template>
-
-<style scoped>
-    .chart-container {
-        position: relative;
-        height: 300px;
-        width: 100%;
-    }
-</style>

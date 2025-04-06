@@ -2,62 +2,46 @@
 import LineChart from '@/Components/LineChart.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import axios from "axios";
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps({
     core: Object,
 });
 
 const chartData = ref({
-    labels: [],
+    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
     datasets: [
         {
-            label: "Price History",
-            data: [],
-            borderColor: "#3e95cd",
+            label: 'Up',
+            backgroundColor: '#f87979',
+            borderColor: '#f87979',
+            data: [40, 39, 10, 40, 39, 80, 40],
             fill: false,
+            tension: 0.4
         },
-    ],
-});
+        {
+            label: 'Stable',
+            backgroundColor: '#f87333',
+            borderColor: '#f87333',
+            data: [35, 30, 20, 25, 35, 45, 55],
+            fill: false,
+            tension: 0.4
+        },
+        {
+            label: 'Down',
+            backgroundColor: '#221979',
+            borderColor: '#221979',
+            data: [10, 20, 30, 15, 20, 10, 5],
+            fill: false,
+            tension: 0.4
+        }
+    ]
+})
 
-async function fetchData() {
-    try {
-        // const { data } = await axios.get("/api/product-prices");
+const chartOptions = ref({
+    responsive: true,
+})
 
-        const mockData = [
-            { date: '2024-01-01', price: 100 },
-            { date: '2024-01-02', price: 150 },
-            { date: '2024-01-03', price: 200 },
-        ];
-
-        chartData.value = {
-            labels: mockData.map(item => item.date),
-            datasets: [{
-            data: mockData.map(item => item.price),
-            label: 'Price History',
-            borderColor: '#3e95cd',
-            }]
-        };
-
-        // chartData.value = {
-        //     labels: data.map((item) => item.date),
-        //     datasets: [
-        //         {
-        //             ...chartData.value.datasets[0],
-        //             data: data.map((item) => item.price),
-        //         },
-        //     ],
-        // };
-    } catch (error) {
-        console.error("Failed to fetch chart data:", error);
-    }
-}
-
-onMounted(() => {
-    console.log('Component mounted!');
-    fetchData();
-});
 </script>
 
 <template>
@@ -234,10 +218,7 @@ onMounted(() => {
 
         <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md">
             <div class="overflow-hidden shadow-sm sm:rounded-lg">
-                <LineChart 
-                    :chart-data="chartData" 
-                    :chart-options="{ plugins: { title: { text: 'Product Prices' } } }" 
-                />
+                <LineChart :data="chartData" :options="chartOptions" />
             </div>
         </div>
     </AuthenticatedLayout>
