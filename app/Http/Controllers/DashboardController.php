@@ -12,6 +12,8 @@ use App\Models\PrTransaction;
 use App\Models\RisTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,9 +33,12 @@ class DashboardController extends Controller
             'availableProductItem' => $this->countAvailableProductItem(),
             'expiringProduct' => $this->countExpiringProductItem(),
             'outOfStockProducts' => $this->countOutOfStockProductItem(),
+            'pastMonths' => $this->pastMonths(),
         ];
+
+        $products = $this->monitorProductItemsPriceStatus();
         
-        return Inertia::render('Dashboard', ['core' => $core]);
+        return Inertia::render('Dashboard', ['core' => $core, 'products' => $products]);
     }
 
     private function countIarPendingTransactions(): int
@@ -88,12 +93,69 @@ class DashboardController extends Controller
             ->count();
     }
 
-    // public function fetchLatestProductsWithPrices()
-    // {
-    //         return ProductPrice::query()
-    //             ->selectRaw('DATE(created_at) as date, AVG(price) as price')
-    //             ->groupBy('date')
-    //             ->orderBy('date')
-    //             ->get();
-    // }
+    private function pastMonths(int $months = 6): Collection
+    {
+        return collect(range(0, $months))
+            ->map(fn ($m) => now()->subMonths($m))
+            ->sort()
+            ->map(fn ($date) => [
+                'date' => $date->format('Y-m'),
+                'month' => $date->format('F Y'),
+                'itemPriceHike' => 0,
+                'itemPriceStable' => 0,
+                'itemPriceDown' => 0,
+            ]);
+    }
+
+    private function monitorProductItemsPriceStatus()
+    {
+        $months = $this->pastMonths();
+        $monthDates = $months->pluck('date')->all();
+        
+        Product::with(['prices' => function ($query) use ($monthDates) {
+            $query->whereIn(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m')"), 
+                $monthDates
+            )->orderBy('created_at');
+        }])
+        ->where('prod_status', 'active')
+        ->chunk(200, function ($products) use (&$months) {
+            foreach ($products as $product) {
+                $this->processProductPrices($product, $months);
+            }
+        });
+
+        return $months;
+    }
+
+    private function processProductPrices(Product $product, Collection &$months): void
+    {
+        $lastPrice = null;
+        
+        foreach ($months as &$month) {
+            $price = $product->prices->firstWhere(function ($price) use ($month) {
+                $monthKey = Carbon::parse($price->created_at)->startOfMonth()->format('Y-m');
+                return $monthKey == $month['date'];
+            });
+
+            if ($price) {
+                $this->categorizePriceChange($month, $lastPrice, (float)$price->prod_price);
+                $lastPrice = (float)$price->prod_price;
+            }
+        }
+    }
+
+    private function categorizePriceChange(array &$month, ?float $lastPrice, float $currentPrice): void
+    {
+        if ($lastPrice === null) {
+            $month['itemPriceStable']++;
+            return;
+        }
+
+        match (true) {
+            $currentPrice > $lastPrice => $month['itemPriceHike']++,
+            $currentPrice < $lastPrice => $month['itemPriceDown']++,
+            default => $month['itemPriceStable']++
+        };
+    }
 }

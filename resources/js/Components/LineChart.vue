@@ -1,5 +1,4 @@
 <script setup>
-    import { defineProps } from 'vue';
     import { Line } from 'vue-chartjs';
     import {
         Chart as ChartJS,
@@ -27,6 +26,10 @@
             type: Object,
             required: true
         },
+        height: {
+            type: String,
+            default: '400px'
+        },
         options: {
             type: Object,
             required: true
@@ -35,7 +38,7 @@
 </script>
 
 <template>
-    <div>
+    <div :style="{ height: height }">
         <Line :data="data" :options="options" />
     </div>
 </template>

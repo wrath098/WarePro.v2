@@ -6,6 +6,7 @@ import { ref } from 'vue';
 
 const props = defineProps({
     core: Object,
+    products: Object
 });
 
 const chartData = ref({
@@ -17,7 +18,7 @@ const chartData = ref({
             borderColor: '#f87979',
             data: [40, 39, 10, 40, 39, 80, 40],
             fill: false,
-            tension: 0.4
+            tension: 0.2
         },
         {
             label: 'Stable',
@@ -25,7 +26,7 @@ const chartData = ref({
             borderColor: '#f87333',
             data: [35, 30, 20, 25, 35, 45, 55],
             fill: false,
-            tension: 0.4
+            tension: 0.2
         },
         {
             label: 'Down',
@@ -33,13 +34,14 @@ const chartData = ref({
             borderColor: '#221979',
             data: [10, 20, 30, 15, 20, 10, 5],
             fill: false,
-            tension: 0.4
+            tension: 0.2
         }
     ]
 })
 
 const chartOptions = ref({
     responsive: true,
+    maintainAspectRatio: false
 })
 
 </script>
@@ -220,6 +222,11 @@ const chartOptions = ref({
             <div class="overflow-hidden shadow-sm sm:rounded-lg">
                 <LineChart :data="chartData" :options="chartOptions" />
             </div>
+        </div>
+
+        <div>
+            {{ core.pastMonths }}
+            {{ products }}
         </div>
     </AuthenticatedLayout>
 </template>
