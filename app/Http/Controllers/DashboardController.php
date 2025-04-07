@@ -93,7 +93,7 @@ class DashboardController extends Controller
             ->count();
     }
 
-    private function pastMonths(int $months = 6): Collection
+    private function pastMonths(int $months = 5): Collection
     {
         return collect(range(0, $months))
             ->map(fn ($m) => now()->subMonths($m))
@@ -112,11 +112,13 @@ class DashboardController extends Controller
         $months = $this->pastMonths();
         $monthDates = $months->pluck('date')->all();
         
-        Product::with(['prices' => function ($query) use ($monthDates) {
+        Product::select('id')
+        ->with(['prices' => function ($query) use ($monthDates) {
             $query->whereIn(
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m')"), 
                 $monthDates
-            )->orderBy('created_at');
+            )->latest('created_at')
+            ->take(1);
         }])
         ->where('prod_status', 'active')
         ->chunk(200, function ($products) use (&$months) {
@@ -129,33 +131,35 @@ class DashboardController extends Controller
     }
 
     private function processProductPrices(Product $product, Collection &$months): void
-    {
-        $lastPrice = null;
-        
+    {        
         foreach ($months as &$month) {
             $price = $product->prices->firstWhere(function ($price) use ($month) {
-                $monthKey = Carbon::parse($price->created_at)->startOfMonth()->format('Y-m');
+                $monthKey = Carbon::parse($price->created_at)->format('Y-m');
                 return $monthKey == $month['date'];
             });
 
-            if ($price) {
-                $this->categorizePriceChange($month, $lastPrice, (float)$price->prod_price);
-                $lastPrice = (float)$price->prod_price;
+            $lastPrice = $this->getPreviousPrice($product, $month['date']);
+
+            if (!$price) {
+                $month['itemPriceStable'] += 1;
+            } elseif ($price && (float) $price->prod_price > $lastPrice) {
+                $month['itemPriceHike'] += 1;
+            } elseif ($price && (float) $price->prod_price < $lastPrice) {
+                $month['itemPriceDown'] += 1;
             }
         }
     }
 
-    private function categorizePriceChange(array &$month, ?float $lastPrice, float $currentPrice): void
+    private function getPreviousPrice($product, $month)
     {
-        if ($lastPrice === null) {
-            $month['itemPriceStable']++;
-            return;
-        }
+        $latestPrice = $product->load(['prices' => function($price) use ($month) {
+            $price->where(DB::raw("DATE_FORMAT(created_at, '%Y-%m')"), '<', $month)
+            ->orderBy('created_at', 'desc')
+            ->take(1);
+        }]);
 
-        match (true) {
-            $currentPrice > $lastPrice => $month['itemPriceHike']++,
-            $currentPrice < $lastPrice => $month['itemPriceDown']++,
-            default => $month['itemPriceStable']++
-        };
+        $latestPrice = $product->prices->first(); 
+        
+        return $latestPrice ? (float) $latestPrice->prod_price : 0;
     }
 }
