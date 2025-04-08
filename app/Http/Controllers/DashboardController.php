@@ -8,6 +8,7 @@ use App\Models\ItemClass;
 use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
+use App\Models\ProductPrice;
 use App\Models\PrTransaction;
 use App\Models\RisTransaction;
 use Carbon\Carbon;
@@ -33,12 +34,20 @@ class DashboardController extends Controller
             'availableProductItem' => $this->countAvailableProductItem(),
             'expiringProduct' => $this->countExpiringProductItem(),
             'outOfStockProducts' => $this->countOutOfStockProductItem(),
-            'pastMonths' => $this->pastMonths(),
         ];
 
-        $products = $this->monitorProductItemsPriceStatus();
+        $priceEvaluation = $this->monitorProductItemsPriceStatus() ?? collect();
+    
+        $monthlyPriceEvaluation = [
+            'labels' => $priceEvaluation->pluck('month')->toArray() ?? [],
+            'datasets' => [
+                'hikes' => $priceEvaluation->pluck('itemPriceHike')->toArray() ?? [],
+                'stable' => $priceEvaluation->pluck('itemPriceStable')->toArray() ?? [],
+                'drops' => $priceEvaluation->pluck('itemPriceDown')->toArray() ?? []
+            ]
+        ];
         
-        return Inertia::render('Dashboard', ['core' => $core, 'products' => $products]);
+        return Inertia::render('Dashboard', ['core' => $core, 'monthlyPriceEvaluation' => $monthlyPriceEvaluation]);
     }
 
     private function countIarPendingTransactions(): int
@@ -109,45 +118,52 @@ class DashboardController extends Controller
 
     private function monitorProductItemsPriceStatus()
     {
-        $months = $this->pastMonths();
-        $monthDates = $months->pluck('date')->all();
+        $months = $this->pastMonths(6);
         
         Product::select('id')
-        ->with(['prices' => function ($query) use ($monthDates) {
-            $query->whereIn(
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m')"), 
-                $monthDates
-            )->latest('created_at')
-            ->take(1);
-        }])
-        ->where('prod_status', 'active')
-        ->chunk(200, function ($products) use (&$months) {
-            foreach ($products as $product) {
-                $this->processProductPrices($product, $months);
+            ->where('prod_status', 'active')
+            ->chunk(200, function ($products) use (&$months) {
+                foreach ($products as $product) {
+                    $this->processProductPrices($product, $months);
+                }
             }
-        });
+        );
 
         return $months;
     }
 
     private function processProductPrices(Product $product, Collection &$months): void
-    {        
-        foreach ($months as &$month) {
-            $price = $product->prices->firstWhere(function ($price) use ($month) {
-                $monthKey = Carbon::parse($price->created_at)->format('Y-m');
-                return $monthKey == $month['date'];
-            });
+    {   
+        $month['itemPriceHike'] = $month['itemPriceHike'] ?? 0;
+        $month['itemPriceDown'] = $month['itemPriceDown'] ?? 0;
+        $month['itemPriceStable'] = $month['itemPriceStable'] ?? 0;
 
+        $months = $months->map(function ($month) use ($product) {
+            $currentPrice = ProductPrice::where('prod_id', $product->id)
+                ->whereYear('created_at', Carbon::parse($month['date'])->year)
+                ->whereMonth('created_at', Carbon::parse($month['date'])->month)
+                ->latest('created_at')
+                ->first();
+    
             $lastPrice = $this->getPreviousPrice($product, $month['date']);
-
-            if (!$price) {
+    
+            if (!$currentPrice) {
                 $month['itemPriceStable'] += 1;
-            } elseif ($price && (float) $price->prod_price > $lastPrice) {
-                $month['itemPriceHike'] += 1;
-            } elseif ($price && (float) $price->prod_price < $lastPrice) {
-                $month['itemPriceDown'] += 1;
+            } else {
+                $currentPriceValue = (float)($currentPrice->prod_price ?? 0);
+                $lastPriceValue = (float)($lastPrice ?? 0);
+        
+                if ($currentPriceValue > $lastPriceValue) {
+                    $month['itemPriceHike'] += 1;
+                } elseif ($currentPriceValue < $lastPriceValue) {
+                    $month['itemPriceDown'] += 1;
+                } else {
+                    $month['itemPriceStable'] += 1;
+                }
             }
-        }
+
+            return $month;
+        });
     }
 
     private function getPreviousPrice($product, $month)

@@ -11,7 +11,7 @@ const showingAppSideBar = ref(true);
 
 <template>
     <div>
-        <nav class="flex items-center fixed w-screen h-16 z-40 top-0 left-0 bg-white transition px-8">
+        <nav class="flex items-center fixed w-screen h-16 z-40 top-0 left-0 bg-slate-50 transition px-8">
             <div class="w-80 flex items-center">
                 <button class="inline-flex justify-center place-items-center rounded-lg hover:bg-indigo-200 mr-2 w-10 h-10 transition cursor-pointer lg:hidden"
                         @click="showingAppSideBar = !showingAppSideBar">
@@ -137,7 +137,7 @@ const showingAppSideBar = ref(true);
         <!-- Page Content -->
         <main class="lg:ml-96 flex flex-col justify-between mt-16 lg:mr-8 transition">
             <header
-                class="bg-white shadow mt-8 rounded-md"
+                class="bg-slate-50 shadow mt-8 rounded-md"
                 v-if="$slots.header"
             >
                 <div class="mx-auto px-6 py-2 sm:px-4 lg:px-2">

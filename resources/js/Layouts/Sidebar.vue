@@ -10,7 +10,7 @@
 
 <template>
     <div class="lg:block">
-        <aside class="fixed w-80 h-[calc(100vh-8rem)] z-50 overflow-y-auto select-none top-24 lg:left-8 transition-all rounded-lg p-2 bg-white">
+        <aside class="fixed w-80 h-[calc(100vh-8rem)] z-50 overflow-y-auto select-none top-24 lg:left-8 transition-all rounded-lg p-2 bg-slate-50">
             <nav class="text-sm text-gray-700 mb-5">
                 <div class="overflow-y-auto py-3 px-3 h-full">
                     <ul class="space-y-2">

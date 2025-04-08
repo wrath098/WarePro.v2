@@ -2,48 +2,117 @@
 import LineChart from '@/Components/LineChart.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 
 const props = defineProps({
-    core: Object,
-    products: Object
+    core: {
+        type: Object,
+        required: true,
+        default: () => ({})
+    },
+    monthlyPriceEvaluation: {
+        type: Object,
+        default: () => ({
+            labels: [],
+            datasets: {
+                hikes: [],
+                stable: [],
+                drops: []
+            }
+        })
+    }
 });
 
 const chartData = ref({
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-        {
-            label: 'Up',
-            backgroundColor: '#f87979',
-            borderColor: '#f87979',
-            data: [40, 39, 10, 40, 39, 80, 40],
-            fill: false,
-            tension: 0.2
-        },
-        {
-            label: 'Stable',
-            backgroundColor: '#f87333',
-            borderColor: '#f87333',
-            data: [35, 30, 20, 25, 35, 45, 55],
-            fill: false,
-            tension: 0.2
-        },
-        {
-            label: 'Down',
-            backgroundColor: '#221979',
-            borderColor: '#221979',
-            data: [10, 20, 30, 15, 20, 10, 5],
-            fill: false,
-            tension: 0.2
-        }
-    ]
-})
+    labels: [],
+    datasets: []
+});
 
 const chartOptions = ref({
     responsive: true,
-    maintainAspectRatio: false
-})
+    scales: {
+        x: {
+            display: true,
+            title: {
+                display: true,
+                text: 'Months',
+                font: {
+                    family: 'Oswald',
+                    size: 20,
+                    lineHeight: 1.2,
+                },
+                padding: {top: 5, left: 0, right: 0, bottom: 0}
+            }
+        },
+        y: {
+            display: true,
+            title: {
+                display: true,
+                text: 'No. of Product Items',
+                font: {
+                    family: 'Oswald',
+                    size: 20,
+                    style: 'normal',
+                    lineHeight: 1.2
+                },
+                padding: {top: 10, left: 0, right: 0, bottom: 0}
+            }
+        }
+    },
+    maintainAspectRatio: false,
+    plugins: {
+        title: {
+            display: true,
+            text: 'Price Adjustment Monitoring',
+            font: {
+                family: 'Oswald',
+                size: 20,
+                style: 'normal',
+                weight: 'bold',
+                lineHeight: 1.2
+            },
+            padding: {top: 10, left: 0, right: 0, bottom: 5}
+        },
+    },
+});
 
+watchEffect(() => {
+    chartData.value = {
+        labels: props.monthlyPriceEvaluation?.labels || [],
+        datasets: [
+            {
+                label: 'Stable',
+                data: props.monthlyPriceEvaluation?.datasets?.stable || [],
+                fill: true,
+                backgroundColor: '#2302A9',
+                borderColor: '#2302A9',
+                tension: 0.2,
+                pointRadius: 5,
+                pointHoverRadius: 10
+            },
+            {
+                label: 'Hikes',
+                data: props.monthlyPriceEvaluation?.datasets?.hikes || [],
+                backgroundColor: '#A82D37',
+                borderColor: '#A82D37',
+                fill: false,
+                tension: 0.2,
+                pointRadius: 5,
+                pointHoverRadius: 10
+            },
+            {
+                label: 'Drops',
+                data: props.monthlyPriceEvaluation?.datasets?.drops || [],
+                backgroundColor: '#27B78A',
+                borderColor: '#27B78A',
+                fill: false,
+                tension: 0.2,
+                pointRadius: 5,
+                pointHoverRadius: 10
+            }
+        ]
+    };
+});
 </script>
 
 <template>
@@ -66,7 +135,7 @@ const chartOptions = ref({
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md">
+        <div class="my-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
             <div class="overflow-hidden shadow-sm sm:rounded-lg">
 
                 <!-- TRANSACTIONS -->
@@ -218,15 +287,10 @@ const chartOptions = ref({
             </div>
         </div>
 
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md">
-            <div class="overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="my-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
+            <div class="p-2 overflow-hidden shadow-sm sm:rounded-lg">
                 <LineChart :data="chartData" :options="chartOptions" />
             </div>
-        </div>
-
-        <div>
-            {{ core.pastMonths }}
-            {{ products }}
         </div>
     </AuthenticatedLayout>
 </template>
