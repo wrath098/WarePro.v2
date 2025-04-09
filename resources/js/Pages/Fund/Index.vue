@@ -210,7 +210,7 @@ const columns = [
 </script>
 
 <template>
-    <Head title="Fund" />
+    <Head title="Account Classification" />
     <AuthenticatedLayout>
         <template #header>
             <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">

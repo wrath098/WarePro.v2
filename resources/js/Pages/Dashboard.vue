@@ -2,7 +2,8 @@
 import LineChart from '@/Components/LineChart.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, watchEffect } from 'vue';
+import axios from 'axios';
+import { onMounted, ref, watchEffect } from 'vue';
 
 const props = defineProps({
     core: {
@@ -81,11 +82,11 @@ watchEffect(() => {
         labels: props.monthlyPriceEvaluation?.labels || [],
         datasets: [
             {
-                label: 'Stable',
-                data: props.monthlyPriceEvaluation?.datasets?.stable || [],
+                label: 'Drops',
+                data: props.monthlyPriceEvaluation?.datasets?.drops || [],
                 fill: true,
-                backgroundColor: '#2302A9',
-                borderColor: '#2302A9',
+                backgroundColor: 'rgba(39, 183, 138, 0.1)',
+                borderColor: 'rgba(39, 183, 138, 1)',
                 tension: 0.2,
                 pointRadius: 5,
                 pointHoverRadius: 10
@@ -93,26 +94,74 @@ watchEffect(() => {
             {
                 label: 'Hikes',
                 data: props.monthlyPriceEvaluation?.datasets?.hikes || [],
-                backgroundColor: '#A82D37',
-                borderColor: '#A82D37',
-                fill: false,
+                backgroundColor: 'rgba(168, 45, 55, 0.1)',
+                borderColor: 'rgba(168, 45, 55, 1)',
+                fill: true,
                 tension: 0.2,
                 pointRadius: 5,
                 pointHoverRadius: 10
             },
             {
-                label: 'Drops',
-                data: props.monthlyPriceEvaluation?.datasets?.drops || [],
-                backgroundColor: '#27B78A',
-                borderColor: '#27B78A',
-                fill: false,
+                label: 'Stable',
+                data: props.monthlyPriceEvaluation?.datasets?.stable || [],
+                fill: true,
+                backgroundColor: 'rgba(35, 2, 169, 0.1)',
+                borderColor: 'rgba(35, 2, 169, 1)',
                 tension: 0.2,
                 pointRadius: 5,
                 pointHoverRadius: 10
-            }
+            },
         ]
     };
 });
+
+const fastMovingItems = ref([]);
+
+const fetchData = async () => {
+    try {
+        const response = await axios.get('api/fast-moving-items');
+        fastMovingItems.value = response.data;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+onMounted(() => {
+    fetchData();
+});
+
+const columns = [
+    {
+        data: 'code',
+        title: 'Stock No#',
+        width: '10%'
+    },
+    {
+        data: 'description',
+        title: 'Description',
+        width: '50%'
+    },
+    {
+        data: 'unit',
+        title: 'Unit of Measurement',
+        width: '10%'
+    },
+    {
+        data: 'count',
+        title: 'No. of Transactions',
+        width: '10%'
+    },
+    {
+        data: 'total_quantity',
+        title: 'Quantity Issued',
+        width: '10%'
+    },
+    {
+        data: 'average',
+        title: 'Average',
+        width: '10%'
+    }
+];
 </script>
 
 <template>
@@ -147,7 +196,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">IAR Transaction</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('iar')">IAR Transaction</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.iarTransaction }}</p>
                                 <p class="text-sm text-gray-400">Pending</p>
@@ -161,7 +212,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">RIS Transaction</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('ris.display.logs')">RIS Transaction</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.risTransaction }}</p>
                                 <p class="text-sm text-gray-400">Issued Today</p>
@@ -178,7 +231,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">Purchase Request</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('pr.display.transactions')">Purchase Request</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.prTransaction }}</p>
                                 <p class="text-sm text-gray-400">Pending</p>
@@ -192,7 +247,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">Purchase Order</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('pr.show.onProcess')">Purchase Order</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">0</p>
                                 <p class="text-sm text-gray-400">On Process</p>
@@ -213,7 +270,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">Available On Inventory</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('inventory.index')">Available On Inventory</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.availableProductItem }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
@@ -227,7 +286,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">Expiring Product Items</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('show.expiry.products')">Expiring Product Items</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.expiringProduct }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
@@ -244,7 +305,10 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">Re-Order Product Items</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('inventory.index')">Re-Order Product Items</a>
+                            </h3>
+                            <h3 class="text-sm tracking-wider"></h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.redorder }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
@@ -276,7 +340,9 @@ watchEffect(() => {
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
-                            <h3 class="text-sm tracking-wider">Out Of Stock</h3>
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="route('inventory.index')">Out Of Stock</a>
+                            </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.outOfStockProducts }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
@@ -287,10 +353,56 @@ watchEffect(() => {
             </div>
         </div>
 
-        <div class="my-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
+        <div class="my-2 max-w-screen-2xl bg-slate-50 shadow rounded-md">
             <div class="p-2 overflow-hidden shadow-sm sm:rounded-lg">
                 <LineChart :data="chartData" :options="chartOptions" />
             </div>
         </div>
+
+        <div class="mt-4 max-w-screen-2xl bg-white shadow rounded-md mb-4">
+            <div class="flex justify-center my-4">
+                <h4 class="text-xl font-bold text-gray-500">Fast Moving Product Items</h4>
+            </div>
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto">
+                    <DataTable
+                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        :columns="columns"
+                        :data="fastMovingItems.products"
+                        :options="{  
+                            paging: false,
+                            searching: false,
+                            ordering: false,
+                            info: false
+                        }">
+                    </DataTable>
+                </div>
+            </div>
+        </div>
     </AuthenticatedLayout>
 </template>
+<style scoped>
+    :deep(table.dataTable) {
+        border: 2px solid #7393dc;
+    }
+
+    :deep(table.dataTable thead > tr > th) {
+        background-color: #d8d8f6;
+        border: 2px solid #7393dc;
+        text-align: center;
+        color: #03244d;
+    }
+
+    :deep(table.dataTable tbody > tr > td) {
+        border-right: 2px solid #7393dc;
+        text-align: center;
+    }
+
+    :deep([data-v-8e8f4dea] table.dataTable tbody > tr > td:nth-child(2)) {
+        text-align: left !important;
+    }
+
+    :deep([data-v-8e8f4dea] table.dataTable tbody > tr > td:nth-child(6)) {
+        text-align: right !important;
+    }
+</style>

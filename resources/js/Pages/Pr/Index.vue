@@ -92,7 +92,7 @@
 </script>
 
 <template>
-    <Head title="PPMP" />
+    <Head title="Purchase Request" />
     <AuthenticatedLayout>
         <template #header>
             <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">

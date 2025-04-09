@@ -207,7 +207,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
     Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
     Route::get('/issuances-log', [RisTransactionController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
-    Route::get('/price-stability', [DashboardController::class, 'evaluatePriceStability'])->name('get.price.stability');
+    Route::get('/fast-moving-items', [DashboardController::class, 'getFastMovingItems'])->name('get.fast.moving.items');
 });
 
 

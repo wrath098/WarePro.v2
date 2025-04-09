@@ -11,8 +11,10 @@ use App\Models\ProductInventoryTransaction;
 use App\Models\ProductPrice;
 use App\Models\PrTransaction;
 use App\Models\RisTransaction;
+use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +23,13 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
+
     public function index(): Response
     {
         $products = Product::where('prod_status', 'active')->count();
@@ -48,6 +57,37 @@ class DashboardController extends Controller
         ];
         
         return Inertia::render('Dashboard', ['core' => $core, 'monthlyPriceEvaluation' => $monthlyPriceEvaluation]);
+    }
+
+    public function getFastMovingItems()
+    {
+        $year = Carbon::now()->startOfYear();
+
+        $queryIssuances = Cache::remember('fast_moving_items_' . $year, 10, function() use ($year) {
+            return RisTransaction::select('prod_id', 
+                                            DB::raw('count(*) as count'),  
+                                            DB::raw('SUM(qty) as total_quantity'),
+                                            DB::raw('SUM(qty) / count(*) as avg_qty_per_transaction'))
+            ->where('created_at', '>=', $year)
+            ->groupBy('prod_id')
+            ->orderBy(DB::raw('SUM(qty) / count(*)'), 'desc')
+            ->take(20)
+            ->with('productDetails')
+            ->get()
+            ->map(function($product) {
+                $productDetails = $product->productDetails;
+                return [
+                    'code' => $productDetails->prod_newNo,
+                    'description' => $productDetails->prod_desc,
+                    'unit' => $productDetails->prod_unit,
+                    'count' => $product->count,
+                    'total_quantity' => $product->total_quantity,
+                    'average' => $product->avg_qty_per_transaction,
+                ];
+            });
+        }) ?? [];
+
+        return response()->json(['products' => $queryIssuances]);
     }
 
     private function countIarPendingTransactions(): int
@@ -118,7 +158,7 @@ class DashboardController extends Controller
 
     private function monitorProductItemsPriceStatus()
     {
-        $months = $this->pastMonths(6);
+        $months = $this->pastMonths(5);
         
         Product::select('id')
             ->where('prod_status', 'active')

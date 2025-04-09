@@ -89,7 +89,7 @@
 </script>
 
 <template>
-    <Head title="Purchase Request" />
+    <Head title="Purchase Order" />
     <AuthenticatedLayout>
         <template #header>
             <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
