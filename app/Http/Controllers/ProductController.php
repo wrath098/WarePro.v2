@@ -114,11 +114,14 @@ class ProductController extends Controller
                 ->with(['message' => 'New Product has been successfully added.']);
 
         } catch (\Exception $e) {
-            
+
             DB::rollBack();
-            Log::error('Creating product failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Creation of new product failed.']);
+            Log::error("Creation of New Product Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Creation of New Product Failed. Please try again!']);
         }
     }
 
@@ -162,13 +165,15 @@ class ProductController extends Controller
 
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Product has been updated successfully.']);
+                ->with(['message' => 'Product Information updated successfully.']);
         } catch (\Exception $e) {
-
             DB::rollBack();
-            Log::error('Product update failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An error occurred while updating the product.']);
+            Log::error("Updating Product Information Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Updating Product Information Failed. Please try again!']);
         }
     }
 
@@ -205,11 +210,14 @@ class ProductController extends Controller
                 return redirect()->back()
                     ->with(['message' => 'Product has been move successfully.']);
         } catch (\Exception $e) {
-            
+
             DB::rollBack();
-            Log::error('Product modified failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Modifying the product failed.']);
+            Log::error("Modifying Product Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Modifying Product Failed. Please try again!']);
         }
     }
 
@@ -266,9 +274,12 @@ class ProductController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error('Product restoration failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Product restoration failed!']);
+            Log::error("Restoring Product Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Restoring Product Failed. Please try again!']);
         }
     }
 
@@ -305,11 +316,13 @@ class ProductController extends Controller
                 ->with(['warning' => 'The product has been moved to the trash. Unable to delete!']);
             }
 
-            Log::error('Failed to deactivate product ID ' . $product->prod_newNo . ': ' . $e->getMessage());
-
             DB::rollBack();
-            return redirect()->route('product.display.active')
-                ->with(['error' => 'Unable to remove the product no#' . $product->prod_newNo . ' Please refer this to your system administrator!']);
+            Log::error("Deletion of Product Failed: " . $product->prod_newNo, [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Deletion of Product Failed. Please try again!']);
         }
     }
 

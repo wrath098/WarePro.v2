@@ -64,22 +64,21 @@ return [
 
         'pgso-pms' => [
             'driver' => 'mysql',
-            'host' => '127.0.0.1',
+            'host' => '192.168.5.146',
             'port' => '3306',
             'database' => 'pgso', //pgso-pms
-            'username' => 'root', //pgso
-            'password' => '', //enterpgsodb
-            // Additional configuration options
+            'username' => 'warehouse', //pgso warehouse
+            'password' => '!c0nn3ct3d', //enterpgsodb !c0nn3ct3d
         ],
 
         #THIS WILL BE USED FOR TESTING CONNECTION FROM OTHER DEVICE XAMPP SERVER
         // 'pgso-pms' => [
         //     'driver' => 'mysql',
-        //     'host' => env('DB_HOST_DEVICE_2', '192.168.2.16'), // Device 2 IP address
+        //     'host' => env('DB_HOST_DEVICE_2', '192.168.5.146'), // Device 2 IP address
         //     'port' => env('DB_PORT_DEVICE_2', '3306'),
-        //     'database' => env('DB_DATABASE_DEVICE_2', 'pgso-pms'),
-        //     'username' => env('DB_USERNAME_DEVICE_2', 'pgso'),
-        //     'password' => env('DB_PASSWORD_DEVICE_2', 'enterpgsodb'),
+        //     'database' => env('DB_DATABASE_DEVICE_2', 'pgso'),
+        //     'username' => env('DB_USERNAME_DEVICE_2', 'root'),
+        //     'password' => env('DB_PASSWORD_DEVICE_2', ''),
         //     'unix_socket' => env('DB_SOCKET', ''),
         //     'charset' => 'utf8mb4',
         //     'collation' => 'utf8mb4_unicode_ci',

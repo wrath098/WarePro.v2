@@ -91,19 +91,14 @@ class CapitalOutlayController extends Controller
             return redirect()->back()->with(['message' => 'Designated amount in selected Account Class created successfully!']);
 
         } catch(\Exception $e) {
-            
             DB::rollBack();
-            Log::error('Error creating fund account budget: '.$e->getMessage());
-            return redirect()->back()->with(['error' => 'An error occurred while creating the fund account budget.']);
+            Log::error("Designating Account Fund Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Designating Account Fund Failed. Please try again!']);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(CapitalOutlay $capitalOutlay)
-    {
-        //
     }
 
     /**
@@ -168,12 +163,16 @@ class CapitalOutlayController extends Controller
             }
     
             DB::commit();
-            return redirect()->route('general.fund.display')->with(['message' => 'Annual Budget updated successfully!']);
+            return redirect()->route('general.fund.display')->with(['message' => 'Proposed Budget updated successfully!']);
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error("Error in updating Annual budget: " . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to update fund allocations. Please try again.']);
+            Log::error("Updating Account Fund Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Updating Proposed Budget Failed. Please try again!']);
         }
     }
 
@@ -214,14 +213,6 @@ class CapitalOutlayController extends Controller
         return response()->json(['data' => $response]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(CapitalOutlay $capitalOutlay)
-    {
-        //
-    }
-
     private function getAccountClassName($id) {
         $accountClass = Fund::findOrFail($id);
         $name = $accountClass ? $accountClass->fund_name : '';
@@ -235,11 +226,6 @@ class CapitalOutlayController extends Controller
                 'id' => $class->id,
                 'account' => $class->fund_name,
             ]);
-    }
-
-    private function getAccountClassDetails($id) {
-        $accountClass = Fund::findOrFail($id);
-        return $accountClass;
     }
 
     private function verifyAccountBudget(int $fundId, int $year): bool

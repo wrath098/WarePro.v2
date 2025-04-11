@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use stdClass;
 
 class IarTransactionController extends Controller
 {
@@ -546,7 +547,7 @@ class IarTransactionController extends Controller
             ->get();
     }
 
-    private function processCreationOfIarTransaction(iterable $iar): ?IarTransaction
+    private function processCreationOfIarTransaction(stdClass $iar): ?IarTransaction
     {
         return IarTransaction::create([
             'sdi_iar_id' => $iar->air_id,
@@ -556,7 +557,7 @@ class IarTransactionController extends Controller
         ]);
     }
 
-    private function processCreationOfIarParticulars(iterable $particular, int $IarId): ?IarParticular
+    private function processCreationOfIarParticulars(stdClass $particular, int $IarId): ?IarParticular
     {
         return IarParticular::create([
             'item_no' => $particular->item_no,

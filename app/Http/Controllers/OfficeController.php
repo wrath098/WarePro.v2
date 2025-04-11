@@ -69,10 +69,15 @@ class OfficeController extends Controller
             return redirect()->back()
                 ->with(['message' => 'New office has been successfully added.']);
         }catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Creation of Office: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.']);
+
+            DB::rollBack();
+            Log::error("Creation of New Office Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with(['error' => 'Creation of New Office failed. Please try again!']);
         }
     }
 
@@ -115,10 +120,15 @@ class OfficeController extends Controller
             return redirect()->back()
                 ->with(['message' => 'Office has been successfully updated.']);
         } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Update of Office: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An error occurred while adding the new office. Please contact your administrator.']);
+
+            DB::rollBack();
+            Log::error("Updating Office Information  Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with(['error' => 'Updating Office Information failed. Please try again!']);
         }
     }
 
@@ -151,9 +161,14 @@ class OfficeController extends Controller
             return redirect()->back()
                 ->with(['error' => 'Unable to removed the Office due to dependencies. ']);
         } catch (\Exception $e) {
-            Log::error('Deletion of Office: ' . $e->getMessage());
-            return redirect()->back()
-            ->with(['error' => 'An error occurred while removing the office. Please contact your administrator.']);
+            DB::rollBack();
+            Log::error("Deletion of Office Information Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with(['error' => 'Deletion Office Information failed. Please try again!']);
         }
     }
 }

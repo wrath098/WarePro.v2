@@ -54,7 +54,11 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [],
+            "commands": [
+                "App\\Console\\Commands\\NewYearLogic",
+                "App\\Console\\Commands\\BackupDatabase"
+            ]
         }
     },
     "config": {

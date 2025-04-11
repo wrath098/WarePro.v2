@@ -121,7 +121,7 @@ class PpmpTransactionController extends Controller
 
                 DB::commit();
                 return redirect()->route('import.ppmp.index')
-                    ->with(['message' => 'PPMP creation was successful! You can now check the list to add products.']);
+                    ->with(['message' => 'Successfully create PPMP! You can now check the list to add products.']);
             } elseif ($validatedData['ppmpType'] == 'contingency') {
 
                 DB::rollback();
@@ -134,10 +134,14 @@ class PpmpTransactionController extends Controller
                 ->with(['error' => '404 - Not Found!']);
             }
         } catch (\Exception $e) {
+
             DB::rollBack();
-            Log::error('File create ppmp error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'PPMP creation was failed. Please contact your system administrator.']);
+            Log::error("Creation of PPMP Transaction Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Creation of PPMP Transaction. Please try again!']);
         }
     }
 
@@ -186,13 +190,16 @@ class PpmpTransactionController extends Controller
 
             DB::commit();
             return redirect()->route('indiv.ppmp.type', ['type' => 'individual' , 'status' => 'draft'])
-                ->with(['message' => 'Acopy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
+                ->with(['message' => 'A copy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error('Make a copy for PPMP error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'A copy of the PPMP generated failed. Please contact your system administrator.']);
+            Log::error("Making a copy of PPMP Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Making a copy of PPMP Failed. Please try again!']);
         }
     }
 
@@ -229,9 +236,12 @@ class PpmpTransactionController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error('Consolidation error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Consolidated generation failed. Please contact your system administrator.']);
+            Log::error("Consolidating PPMP Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Consolidating PPMP Failed. Please try again!']);
         }
     }
 
@@ -273,11 +283,14 @@ class PpmpTransactionController extends Controller
             return redirect()->route('conso.ppmp.type', ['type' => $type, 'status' => $status])->with('message', 'Proceeding to Approved PPMP successfully executed');
 
         } catch (\Exception $e) {
-            
+
             DB::rollBack();
-            Log::error('Proceed to Final PPMP error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+            Log::error("Finalization of APP/ Consolidated PPMP Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Finalization of Consolidated PPMP Failed. Please try again!']);
         }
     }
 
@@ -510,10 +523,13 @@ class PpmpTransactionController extends Controller
             
         } catch (\Exception $e) {
 
-            DB::rollback();
-            Log::error('File delete ppmp error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'PPMP deletion failed. Please contact your system administrator']);
+            DB::rollBack();
+            Log::error("Deletion of PPMP Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'PPMP deletion failed. Please try again!']);
         }
     }
 

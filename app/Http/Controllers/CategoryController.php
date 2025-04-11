@@ -82,8 +82,12 @@ class CategoryController extends Controller
             return redirect()->back()->with(['message' => 'New Category was created successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to create category: ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to create New Category']);
+            Log::error("Creating Category Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Creating New Category Failed. Please try again!']);
         }
     }
 
@@ -118,9 +122,12 @@ class CategoryController extends Controller
                     ->with(['message' => 'Category was updated successfully.']);
             });
         } catch (\Exception $e) {
-            Log::error('Failed to update the category: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Failed to update the category.']);
+            Log::error("Updating Category Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Updating Category Information Failed. Please try again!']);
         }
     }
 
@@ -158,12 +165,16 @@ class CategoryController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'A category was activated.']);
+            return redirect()->back()->with(['message' => 'Category was activated.']);
 
         } catch (\Exception $e) {
-            
             DB::rollBack();
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            Log::error("Restoring Category Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Restoring Category Failed. Please try again!']);
         }       
     }
 
@@ -221,12 +232,12 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error('Failed to remove the category: ' . $e->getMessage(), [
-                'category_id' => $catId,
+            Log::error("Deletion of Category Failed: ", [
+                'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()
-                ->with(['error' => 'Failed to remove the category.']);
+            return redirect()->back()->with(['error' => 'Deletion of a Category Failed. Please try again!']);
         }
     }
 

@@ -158,7 +158,7 @@ const columns = [
     },
     {
         data: 'average',
-        title: 'Average',
+        title: 'Average <br> <span class="text-xs">( Current Year )</span>',
         width: '10%'
     }
 ];
@@ -353,13 +353,13 @@ const columns = [
             </div>
         </div>
 
-        <div class="my-2 max-w-screen-2xl bg-slate-50 shadow rounded-md">
+        <div class="mb-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
             <div class="p-2 overflow-hidden shadow-sm sm:rounded-lg">
                 <LineChart :data="chartData" :options="chartOptions" />
             </div>
         </div>
 
-        <div class="mt-4 max-w-screen-2xl bg-white shadow rounded-md mb-4">
+        <div class="max-w-screen-2xl bg-white shadow rounded-md mb-4">
             <div class="flex justify-center my-4">
                 <h4 class="text-xl font-bold text-gray-500">Fast Moving Product Items</h4>
             </div>

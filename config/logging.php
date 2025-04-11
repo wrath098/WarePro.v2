@@ -127,6 +127,13 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'backups' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/backup.log'),
+            'days' => 3,
+            'permission' => 0666,
+        ],
+
     ],
 
 ];

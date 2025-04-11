@@ -79,9 +79,12 @@ class ItemClassController extends Controller
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Creation of Item Class: ' . $e->getMessage());
-            return redirect()
-                ->with(['error' => 'An error occurred while adding the new item class.']);
+            Log::error("Creating New Item Class Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Creation of New Item Class Failed. Please try again!']);
         }
     }
 
@@ -113,9 +116,12 @@ class ItemClassController extends Controller
                 ->with(['message' => 'Item Class name was updated successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Update of Item Class: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An error occurred while adding the new item class.']);
+            Log::error("Updating Item Class Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Updating Item Class Failed. Please try again!']);
         }
     }
 
@@ -151,11 +157,14 @@ class ItemClassController extends Controller
             return redirect()->back()
                 ->with(['message' => 'Item Class has been restored!.']);
         } catch(\Exception $e) {
-            
+
             DB::rollBack();
-            Log::error('Restoration of Item Class failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An error occurred while restoring the item class.']);
+            Log::error("Restoring Item Class Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Restoring Item Class Failed. Please try again!']);
         }
     }
 
@@ -209,9 +218,12 @@ class ItemClassController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error('Deletion of Item Class: ' . $e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An error occurred while removing the new item class.']);
+            Log::error("Deletion of Item Class Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Deleting Item Class Failed. Please try again!']);
         }
     }
 
