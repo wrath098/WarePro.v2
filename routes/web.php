@@ -31,6 +31,7 @@ use App\Http\Controllers\Pdf\StockCardController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\ProductInventoryTransactionController;
 use App\Http\Controllers\RisTransactionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,10 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
+
+Route::middleware(['auth', 'superadmin'])->prefix('users')->group(function () {
+    Route::get('/accounts', [UserController::class, 'index'])->name('user.accounts');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

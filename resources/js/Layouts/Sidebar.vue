@@ -1,11 +1,24 @@
-<script setup>
-    import SidebarLink from '@/Components/Buttons/SidebarLink.vue';
-    import SidebarDropdown from '@/Components/Buttons/SidebarDropdown.vue';
-    import SubSidebarLink from '@/Components/Buttons/SubSidebarLink.vue';
-    import ArrowDown from '@/Components/Svgs/ArrowDown.vue';
-    import Inspect from '@/Components/Svgs/Inspect.vue';
-    import ArrowHeadRight from '@/Components/Svgs/ArrowHeadRight.vue';
-    import Stock from '@/Components/Svgs/Stock.vue';
+<script setup lang="ts">
+import SidebarLink from '@/Components/Buttons/SidebarLink.vue';
+import SidebarDropdown from '@/Components/Buttons/SidebarDropdown.vue';
+import SubSidebarLink from '@/Components/Buttons/SubSidebarLink.vue';
+import ArrowDown from '@/Components/Svgs/ArrowDown.vue';
+import Inspect from '@/Components/Svgs/Inspect.vue';
+import ArrowHeadRight from '@/Components/Svgs/ArrowHeadRight.vue';
+import Stock from '@/Components/Svgs/Stock.vue';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+
+
+const userRoles = computed<string[]>(() => {
+    return page.props.auth.user?.roles || [];
+});
+
+const hasAnyRole = (rolesToCheck: string[]): boolean => {
+    return rolesToCheck.some(role => userRoles.value.includes(role));
+};
 </script>
 
 <template>
@@ -363,13 +376,43 @@
                                 <span class="ml-3">Reports</span>
                             </SidebarLink>
                         </li> -->
-                        <li>
-                            <SidebarLink :href="route('dashboard')" :active="false">
-                                <svg class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 640 512" aria-hidden="true">
-                                    <path fill="currentColor" d="M144 0a80 80 0 1 1 0 160a80 80 0 1 1 0-160zm368 0a80 80 0 1 1 0 160a80 80 0 1 1 0-160zM0 298.7C0 239.8 47.8 192 106.7 192h42.7c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96H21.3C9.6 320 0 310.4 0 298.7zM405.3 320h-.7c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7h42.7c58.9 0 106.7 47.8 106.7 106.7c0 11.8-9.6 21.3-21.3 21.3H405.3zM224 224a96 96 0 1 1 192 0a96 96 0 1 1-192 0zm-96 261.3c0-73.6 59.7-133.3 133.3-133.3h117.4c73.6 0 133.3 59.7 133.3 133.3c0 14.7-11.9 26.7-26.7 26.7H154.7c-14.7 0-26.7-11.9-26.7-26.7z"/>
-                                </svg>
-                                <span class="ml-3">User Accounts</span>
-                            </SidebarLink>
+                        <li  v-if="hasAnyRole(['Super Admin'])">
+                            <SidebarDropdown :active="route().current('user.accounts') || route().current('user.accounts')" class="mb-1">
+                                    <svg 
+                                        class="w-7 h-7 text-indigo-900 transition duration-75 group-hover:text-white"
+                                        :class="{ 'text-white' : route().current('user.accounts') || route().current('user.accounts')}"
+                                        fill="currentColor"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="200"
+                                        height="200"
+                                        viewBox="0 0 24 24"
+                                        aria-hidden="true"
+                                    >
+                                        <path fill="currentColor" fill-rule="evenodd" d="M17 10v1.1l1 .5l.8-.8l1.4 1.4l-.8.8l.5 1H21v2h-1.1l-.5 1l.8.8l-1.4 1.4l-.8-.8a4 4 0 0 1-1 .5V20h-2v-1.1a4 4 0 0 1-1-.5l-.8.8l-1.4-1.4l.8-.8a4 4 0 0 1-.5-1H11v-2h1.1l.5-1l-.8-.8l1.4-1.4l.8.8a4 4 0 0 1 1-.5V10zm.4 3.6c.4.4.6.8.6 1.4a2 2 0 0 1-3.4 1.4A2 2 0 0 1 16 13c.5 0 1 .2 1.4.6M5 8a4 4 0 1 1 8 .7a7 7 0 0 0-3.3 3.2A4 4 0 0 1 5 8m4.3 5H7a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h6.1a7 7 0 0 1-1.8-7" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Accounts Setting</span>
+                                    <ArrowDown :class="{'text-white': route().current('user.accounts') || route().current('user.accounts')}" />
+                                <template #dropdown-items>
+                                    <li>
+                                        <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
+                                            Roles
+                                        </SubSidebarLink>
+                                    </li>
+                                    <li>
+                                        <SubSidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
+                                            Permissions
+                                        </SubSidebarLink>
+                                    </li>
+                                    <li>
+                                        <SubSidebarLink :href="route('user.accounts')" :active="route().current('user.accounts')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user.accounts')}"/>
+                                            Users
+                                        </SubSidebarLink>
+                                    </li>
+                                </template>
+                            </SidebarDropdown>
                         </li>
                         <li>
                             <SidebarLink :href="route('dashboard')" :active="false">
