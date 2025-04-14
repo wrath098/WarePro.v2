@@ -1,10 +1,11 @@
 <script setup>
     import { Head, usePage } from '@inertiajs/vue3';
-    import { computed, onMounted } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Refresh from '@/Components/Buttons/Refresh.vue';
     import Swal from 'sweetalert2';
+    import axios from 'axios';
 
     const page = usePage();
     const props = defineProps({
@@ -14,25 +15,47 @@
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
 
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
 
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
+    const API_BASE_URL = 'http://192.168.2.20/api';
+    const tdrpData = ref([]);
+    const fetchArchives = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/archives`, {
+                params: {
+                    search_tdrp: '95-007-00544',
+                    municipality: null
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000
             });
+
+            if (!response.data) {
+                throw new Error('No data received from server');
+            }
+
+            tdrpData.value = response.data;
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 
+                            error.message || 
+                            'Failed to fetch archives';
+            
+            console.error('Error:', {
+                message: errorMessage,
+                status: error.response?.status,
+                url: error.config?.url
+            });
+
+            throw {
+                userMessage: 'Failed to load TDRP data. Please try again later.',
+                technicalMessage: errorMessage,
+                code: error.response?.status || 'NETWORK_ERROR'
+            };
         }
-    });
+    }
 
     const columns = [
         {
@@ -76,6 +99,28 @@
             render: '#action',
         },
     ];
+
+    onMounted(() => {
+        fetchArchives();
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
+
 </script>
 
 <template>
