@@ -28,10 +28,12 @@ use App\Http\Controllers\Pdf\PurchaseRequestController;
 use App\Http\Controllers\Pdf\SsmiController;
 use App\Http\Controllers\Pdf\SummaryOfConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\StockCardController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\ProductInventoryTransactionController;
 use App\Http\Controllers\RisTransactionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 
@@ -43,8 +45,16 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 
 Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
 
-Route::middleware(['auth', 'superadmin'])->prefix('users')->group(function () {
-    Route::get('/accounts', [UserController::class, 'index'])->name('user.accounts');
+Route::middleware(['auth', 'developer'])->prefix('users')->group(function () {
+    Route::get('/', [UserController::class, 'index'])->name('user');
+
+    Route::get('/roles', [RoleController::class, 'index'])->name('user.roles');
+    Route::post('/roles/store', [RoleController::class, 'store'])->name('user.roles.store');
+    Route::delete('/roles/delete/{role}', [RoleController::class, 'destroy'])->name('user.roles.destroy');
+
+    Route::get('/permissions', [PermissionController::class, 'index'])->name('user.permissions');
+    Route::post('/permissions/store', [PermissionController::class, 'store'])->name('user.permissions.store');
+    Route::delete('/permissions/delete/{permission}', [PermissionController::class, 'destroy'])->name('user.permissions.destroy');
 });
 
 Route::middleware('auth')->group(function () {

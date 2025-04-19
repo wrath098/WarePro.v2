@@ -64,11 +64,11 @@ return [
 
         'pgso-pms' => [
             'driver' => 'mysql',
-            'host' => '192.168.5.146',
+            'host' => '127.0.0.1',
             'port' => '3306',
             'database' => 'pgso', //pgso-pms
-            'username' => 'warehouse', //pgso warehouse
-            'password' => '!c0nn3ct3d', //enterpgsodb !c0nn3ct3d
+            'username' => 'root', //pgso warehouse
+            'password' => '', //enterpgsodb !c0nn3ct3d
         ],
 
         #THIS WILL BE USED FOR TESTING CONNECTION FROM OTHER DEVICE XAMPP SERVER

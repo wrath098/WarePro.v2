@@ -10,7 +10,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $query = User::all()
+        $users = User::all()
             ->map(fn($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -18,6 +18,6 @@ class UserController extends Controller
                 'roles' => $user->getRoleNames(),
             ]);
 
-        return Inertia::render('Users/UserIndex', ['user' => $query]);
+        return Inertia::render('Users/UserIndex', ['users' => $users]);
     }
 }

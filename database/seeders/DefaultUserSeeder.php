@@ -14,35 +14,26 @@ class DefaultUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $superAdmin = User::create([
+        $developer = User::create([
             'name' => 'Christopher Guzman', 
-            'email' => 'christ@gmail.com',
+            'email' => 'dev@gmail.com',
             'password' => Hash::make('12345678')
         ]);
-        $superAdmin->assignRole('Super Admin');
+        $developer->assignRole('Developer');
+
+        $sysAdmin = User::create([
+            'name' => 'System Admin', 
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('12345678')
+        ]);
+        $sysAdmin->assignRole('System Administrator');
 
         // Creating Admin User
-        $admin = User::create([
-            'name' => 'Syed Ahsan Kamal', 
-            'email' => 'ahsan@allphptricks.com',
-            'password' => Hash::make('ahsan1234')
+        $custodian = User::create([
+            'name' => 'Property Costudian', 
+            'email' => 'custodian@gmail.com',
+            'password' => Hash::make('pc1234')
         ]);
-        $admin->assignRole('Admin');
-
-        // Creating Product Manager User
-        $productManager = User::create([
-            'name' => 'Abdul Muqeet', 
-            'email' => 'muqeet@allphptricks.com',
-            'password' => Hash::make('muqeet1234')
-        ]);
-        $productManager->assignRole('Product Manager');
-
-        // Creating Application User
-        $user = User::create([
-            'name' => 'Naghman Ali', 
-            'email' => 'naghman@allphptricks.com',
-            'password' => Hash::make('naghman1234')
-        ]);
-        $user->assignRole('User');
+        $custodian->assignRole('Custodian');
     }
 }

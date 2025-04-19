@@ -11,7 +11,6 @@ import { computed } from 'vue';
 
 const page = usePage();
 
-
 const userRoles = computed<string[]>(() => {
     return page.props.auth.user?.roles || [];
 });
@@ -376,11 +375,11 @@ const hasAnyRole = (rolesToCheck: string[]): boolean => {
                                 <span class="ml-3">Reports</span>
                             </SidebarLink>
                         </li> -->
-                        <li  v-if="hasAnyRole(['Super Admin'])">
-                            <SidebarDropdown :active="route().current('user.accounts') || route().current('user.accounts')" class="mb-1">
+                        <li  v-if="hasAnyRole(['Developer', 'System Administrator'])">
+                            <SidebarDropdown :active="route().current('user') || route().current('user.roles') || route().current('user.permissions')" class="mb-1">
                                     <svg 
                                         class="w-7 h-7 text-indigo-900 transition duration-75 group-hover:text-white"
-                                        :class="{ 'text-white' : route().current('user.accounts') || route().current('user.accounts')}"
+                                        :class="{ 'text-white' : route().current('user') || route().current('user.roles') || route().current('user.permissions')}"
                                         fill="currentColor"
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="200"
@@ -391,23 +390,23 @@ const hasAnyRole = (rolesToCheck: string[]): boolean => {
                                         <path fill="currentColor" fill-rule="evenodd" d="M17 10v1.1l1 .5l.8-.8l1.4 1.4l-.8.8l.5 1H21v2h-1.1l-.5 1l.8.8l-1.4 1.4l-.8-.8a4 4 0 0 1-1 .5V20h-2v-1.1a4 4 0 0 1-1-.5l-.8.8l-1.4-1.4l.8-.8a4 4 0 0 1-.5-1H11v-2h1.1l.5-1l-.8-.8l1.4-1.4l.8.8a4 4 0 0 1 1-.5V10zm.4 3.6c.4.4.6.8.6 1.4a2 2 0 0 1-3.4 1.4A2 2 0 0 1 16 13c.5 0 1 .2 1.4.6M5 8a4 4 0 1 1 8 .7a7 7 0 0 0-3.3 3.2A4 4 0 0 1 5 8m4.3 5H7a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h6.1a7 7 0 0 1-1.8-7" clip-rule="evenodd"/>
                                     </svg>
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Accounts Setting</span>
-                                    <ArrowDown :class="{'text-white': route().current('user.accounts') || route().current('user.accounts')}" />
+                                    <ArrowDown :class="{'text-white': route().current('user') || route().current('user.roles') || route().current('user.permissions')}" />
                                 <template #dropdown-items>
                                     <li>
-                                        <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
+                                        <SubSidebarLink :href="route('user.roles')" :active="route().current('user.roles')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user.roles')}"/>
                                             Roles
                                         </SubSidebarLink>
                                     </li>
                                     <li>
-                                        <SubSidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
+                                        <SubSidebarLink :href="route('user.permissions')" :active="route().current('user.permissions')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user.permissions')}"/>
                                             Permissions
                                         </SubSidebarLink>
                                     </li>
                                     <li>
-                                        <SubSidebarLink :href="route('user.accounts')" :active="route().current('user.accounts')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user.accounts')}"/>
+                                        <SubSidebarLink :href="route('user')" :active="route().current('user')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user')}"/>
                                             Users
                                         </SubSidebarLink>
                                     </li>

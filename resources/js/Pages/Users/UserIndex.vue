@@ -1,9 +1,11 @@
 <script setup>
+import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
+import { render } from 'nprogress';
 
 const props = defineProps({
-    user: {
+    users: {
         type: Object,
         required: true,
         default: () => ({})
@@ -29,6 +31,7 @@ const columns = [
     {
         data: null,
         title: 'Action',
+        render: '#action',
         width: '20%'
     }
 ];
@@ -54,7 +57,7 @@ const columns = [
                     <li aria-current="page">
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
-                            <a :href="route('user.accounts')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <a :href="route('user')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
                                 Users
                             </a>
                         </div>
@@ -70,13 +73,16 @@ const columns = [
                         <DataTable
                             class="display table-hover table-striped shadow-lg rounded-lg"
                             :columns="columns"
-                            :data="user"
+                            :data="props.users"
                             :options="{  
                                 paging: true,
                                 searching: true,
                                 ordering: false,
                                 info: false
                             }">
+                            <template #action="props">
+                                <RemoveButton v-if="!props.cellData?.roles?.some(role => ['Developer'].includes(role))" @click="openDropModal(props.cellData.id)" tooltip="Remove"/>
+                            </template>
                         </DataTable>
                     </div>
                 </div>
