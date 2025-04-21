@@ -93,6 +93,24 @@ class UserController extends Controller
         return redirect()->back()->with('message', "Role '{$roleName}' has been successfully removed from the user.");
     }
 
+    public function updateUserInformation(Request $request)
+    {
+        $validated = $request->validate([
+            'param.id' => 'required|exists:users,id',
+            'param.name' => 'required|string',
+            'param.email' => 'required|string|email|unique:users,email,' . $request['param']['id'],
+        ]);
+
+        $userId = $validated['param']['id'];
+        $userName = $validated['param']['name'];
+        $userEmail = $validated['param']['email'];
+
+        $user = User::findOrFail($userId);
+        $user->update(['name' => $userName, 'email' => $userEmail]);
+
+        return redirect()->back()->with('message', "User has been successfully updated.");
+    }
+
     public function destroy(User $user)
     {   
         DB::transaction(function() use ($user) {
