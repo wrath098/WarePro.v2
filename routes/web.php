@@ -47,6 +47,10 @@ Route::any('/import', [ProductController::class, 'importProduct'])->name('produc
 
 Route::middleware(['auth', 'developer'])->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('user');
+    Route::get('/user-information/{user}', [UserController::class, 'userInformation'])->name('user.information');
+    Route::post('/assign-role', [UserController::class, 'assignRole'])->name('user.assign.role');
+    Route::delete('/revoke-role', [UserController::class, 'revokeRole'])->name('user.revoke.role');
+    Route::delete('/user-account/{user}', [UserController::class, 'destroy'])->name('user.account.destroy');
 
     Route::get('/roles', [RoleController::class, 'index'])->name('user.roles');
     Route::post('/roles/store', [RoleController::class, 'store'])->name('user.roles.store');

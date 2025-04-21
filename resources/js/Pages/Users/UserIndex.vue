@@ -7,12 +7,13 @@ import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import Swal from 'sweetalert2';
+import { Inertia } from '@inertiajs/inertia';
+import ViewButton from '@/Components/Buttons/ViewButton.vue';
 
 const page = usePage();
 const message = computed(() => page.props.flash.message);
-const errMessage = computed(() => page.props.flash.error);
 
 const props = defineProps({
     users: {
@@ -36,27 +37,70 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const formDelete = useForm({});
+const drop = reactive({
+    id: '',
+});
+
+const openDropModal = (id) => {
+    drop.id = id;
+    modalState.value = 'drop';
+};
+
 const submit = () => {
     isLoading.value = true;
 
     form.post(route('register'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
-
-        onSuccess: () => {
-            closeModal();
+        onFinish: () => {
             isLoading.value = false;
-
+        },
+        onSuccess: () => {
+            form.reset();
             Swal.fire({
                 title: 'Success',
-                text: 'User has been registered successfully!',
+                text: message.value,
                 icon: 'success',
                 confirmButtonText: 'OK',
+            }).then(() => {
+                isLoading.value = false;
+                closeModal();
             });
         },
-
         onError: (errors) => {
             isLoading.value = false;
         },
+    });
+};
+
+const submitDrop = async () => {
+    const confirm = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    });
+    
+    if (!confirm.isConfirmed) return;
+
+    formDelete.delete(route('user.account.destroy', { user: drop.id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            Swal.fire({
+                title: 'Success',
+                text: message.value || 'User account deleted successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            }).then(() => {
+                closeModal();
+            });
+        },
+        onError: (errors) => {
+            const errorMessage = Object.values(errors).flat().join('\n') || 'An error occurred.';
+            Swal.fire('Error!', errorMessage, 'error');
+        }
     });
 };
 
@@ -135,6 +179,7 @@ const columns = [
                                 info: false
                             }">
                             <template #action="props">
+                                <ViewButton :href="route('user.information', { user: props.cellData.id})" tooltip="View"/>
                                 <RemoveButton v-if="!props.cellData?.roles?.some(role => ['Developer'].includes(role))" @click="openDropModal(props.cellData.id)" tooltip="Remove"/>
                             </template>
                         </DataTable>
@@ -208,6 +253,38 @@ const columns = [
             </form>
         </Modal>
 
+        <Modal :show="isDropModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitDrop">
+                <div class="bg-gray-100 h-auto">
+                    <div class="bg-white p-6  md:mx-auto">
+                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
+                        </svg>
+
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Delete Role!</h3>
+                            <p class="text-gray-600 my-2">Confirming this action will remove the selected Role into the list. This action can't be undone.</p>
+                            <p> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
+
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </Modal>
     </AuthenticatedLayout>
 </template>
 <style scoped>

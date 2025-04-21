@@ -46,6 +46,6 @@ class RegisteredUserController extends Controller
 
         // Auth::login($user);
 
-        return redirect()->back()->with(['message' => 'User has been added successfully!']);
+        return redirect()->back()->with(['message' => 'User '. $user->name .' has been added successfully!']);
     }
 }
