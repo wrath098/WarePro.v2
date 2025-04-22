@@ -45,12 +45,16 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 
 Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
 
-Route::middleware(['auth', 'developer'])->prefix('users')->group(function () {
+Route::middleware('auth')->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('user');
     Route::get('/user-information/{user}', [UserController::class, 'userInformation'])->name('user.information');
     Route::post('/assign-role', [UserController::class, 'assignRole'])->name('user.assign.role');
+    Route::post('/assign-permission', [UserController::class, 'assignPermission'])->name('user.assign.permission');
     Route::delete('/revoke-role', [UserController::class, 'revokeRole'])->name('user.revoke.role');
+    Route::put('/update-user-information', [UserController::class, 'updateUserInformation'])->name('update.user.information');
+    Route::put('/user-new-password', [UserController::class, 'userNewPassword'])->name('user.new.password');
     Route::delete('/user-account/{user}', [UserController::class, 'destroy'])->name('user.account.destroy');
+    Route::delete('/revoke-permission', [UserController::class, 'revokePermission'])->name('user.revoke.permission');
 
     Route::get('/roles', [RoleController::class, 'index'])->name('user.roles');
     Route::post('/roles/store', [RoleController::class, 'store'])->name('user.roles.store');

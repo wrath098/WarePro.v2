@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'developer' => \App\Http\Middleware\IsNotDeveloper::class,
+            'can' => \Illuminate\Auth\Middleware\Authorize::class,
         ]);
 
         $middleware->web(append: [

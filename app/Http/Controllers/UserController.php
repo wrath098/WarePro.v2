@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -26,10 +30,20 @@ class UserController extends Controller
 
     public function userInformation(User $user)
     {
+        $authUser = $this->isDeveloper(Auth::id());
+        $viewedUser = $this->isDeveloper($user->id);
+
+        if(!$authUser && $viewedUser) {
+            return redirect()->route('user');
+        }
+
         $user->load(['roles.permissions', 'permissions']);
         $roleList = Role::where('name', '!=', 'Developer')
                ->select('id', 'name')
                ->get();
+        $permissionList = Permission::select('id', 'name')
+            ->get();
+        
         return Inertia::render('Users/UserInformation', [
             'user' => $user->only([
                 'id', 
@@ -46,8 +60,8 @@ class UserController extends Controller
                 ];
             }),
             'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
-            'all_permissions' => $user->getAllPermissions()->pluck('name'),
             'roleList' => $roleList,
+            'permissionList' => $permissionList,
         ]);
     }
 
@@ -75,6 +89,29 @@ class UserController extends Controller
 
     }
 
+    public function assignPermission(Request $request)
+    {
+        $validated = $request->validate([
+            'userId' => 'required|exists:users,id',
+            'permissionName' => [
+                'required',
+                'string',
+                'exists:permissions,name',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = User::find($request->userId);
+                    if ($user->hasPermissionTo($value)) {
+                        $fail("User already has the '{$value}' permission");
+                    }
+                },
+            ],
+        ]);
+    
+        $user = User::find($validated['userId']);
+        $user->givePermissionTo($validated['permissionName']);
+    
+        return redirect()->back()->with('message', "Permission '{$validated['permissionName']}' assigned successfully");
+    }
+
     public function revokeRole(Request $request)
     {
         $validated = $request->validate([
@@ -93,22 +130,48 @@ class UserController extends Controller
         return redirect()->back()->with('message', "Role '{$roleName}' has been successfully removed from the user.");
     }
 
+    public function revokePermission(Request $request) {
+        $validated = $request->validate([
+            'param.userId' => 'required|exists:users,id',
+            'param.permission' => 'required|string',
+        ]);
+
+        $userId = $validated['param']['userId'];
+        $permissionName = $validated['param']['permission'];
+
+        $user = User::findOrFail($userId);
+        $user->revokePermissionTo($permissionName);
+
+        return redirect()->back()->with('message', "Permission '{$permissionName}' has been successfully removed from the user.");
+    }
+
     public function updateUserInformation(Request $request)
     {
         $validated = $request->validate([
-            'param.id' => 'required|exists:users,id',
-            'param.name' => 'required|string',
-            'param.email' => 'required|string|email|unique:users,email,' . $request['param']['id'],
+            'id' => 'required|exists:users,id',
+            'name' => 'required|string',
+            'email' => 'required|string|email|unique:users,email,' . $request['id'],
         ]);
 
-        $userId = $validated['param']['id'];
-        $userName = $validated['param']['name'];
-        $userEmail = $validated['param']['email'];
-
-        $user = User::findOrFail($userId);
-        $user->update(['name' => $userName, 'email' => $userEmail]);
+        $user = User::findOrFail($validated['id']);
+        $user->update(['name' => $validated['name'], 'email' => $validated['email']]);
 
         return redirect()->back()->with('message', "User has been successfully updated.");
+    }
+
+    public function userNewPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'id' => 'required|exists:users,id',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+        
+        $user = User::findOrFail($validated['id']);
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return redirect()->back()->with('message', "User has been changed the password successfully.");
     }
 
     public function destroy(User $user)
@@ -126,5 +189,10 @@ class UserController extends Controller
     protected function getUserRoles($userId)
     {
         return User::find($userId)->roles->pluck('name')->toArray();
+    }
+
+    protected function isDeveloper($userId)
+    {
+        return in_array('Developer', $this->getUserRoles($userId));
     }
 }

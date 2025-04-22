@@ -6,18 +6,10 @@ import ArrowDown from '@/Components/Svgs/ArrowDown.vue';
 import Inspect from '@/Components/Svgs/Inspect.vue';
 import ArrowHeadRight from '@/Components/Svgs/ArrowHeadRight.vue';
 import Stock from '@/Components/Svgs/Stock.vue';
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import useAuthPermission from '@/Composables/useAuthPermission';
 
-const page = usePage();
+const { hasAnyRole, hasPermission} = useAuthPermission();
 
-const userRoles = computed<string[]>(() => {
-    return page.props.auth.user?.roles || [];
-});
-
-const hasAnyRole = (rolesToCheck: string[]): boolean => {
-    return rolesToCheck.some(role => userRoles.value.includes(role));
-};
 </script>
 
 <template>
@@ -392,13 +384,13 @@ const hasAnyRole = (rolesToCheck: string[]): boolean => {
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Accounts Setting</span>
                                     <ArrowDown :class="{'text-white': route().current('user') || route().current('user.roles') || route().current('user.permissions')}" />
                                 <template #dropdown-items>
-                                    <li>
+                                    <li v-if="hasAnyRole(['Developer'])">
                                         <SubSidebarLink :href="route('user.roles')" :active="route().current('user.roles')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('user.roles')}"/>
                                             Roles
                                         </SubSidebarLink>
                                     </li>
-                                    <li>
+                                    <li v-if="hasAnyRole(['Developer'])">
                                         <SubSidebarLink :href="route('user.permissions')" :active="route().current('user.permissions')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('user.permissions')}"/>
                                             Permissions
@@ -424,7 +416,7 @@ const hasAnyRole = (rolesToCheck: string[]): boolean => {
                                 >
                                     <path fill="currentColor" d="M8 18h10.237L20 19.385V9h1a1 1 0 0 1 1 1v13.5L17.546 20H9a1 1 0 0 1-1-1v-1Zm-2.545-2L1 19.5V4a1 1 0 0 1 1-1h15a1 1 0 0 1 1 1v12H5.455Z"/>
                                 </svg>
-                                <span class="ml-3">Frequently Question and Answer (FQA)</span>
+                                <span class="ml-3">FQA</span>
                             </SidebarLink>
                         </li>
                     </ul>
