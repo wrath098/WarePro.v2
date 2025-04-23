@@ -3,7 +3,9 @@
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Swal from 'sweetalert2';
     import { computed, onMounted, ref } from 'vue';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const show = ref(false);
 
@@ -183,7 +185,7 @@
                                             <dd class="text-gray-700 sm:col-span-2">
                                                 <ul>
                                                     <li v-for="pr in transaction" :key="pr.id" class="cursor-pointer relative my-1">
-                                                        <a :href="route('pr.show.particular', { prTransaction: pr.id})" class="relative inline-flex font-medium text-gray-800 hover:underline">: {{ pr.pr_no }}</a>
+                                                        <a :href="hasPermission('view-purchase-request') || hasAnyRole(['Developer']) ? route('pr.show.particular', { prTransaction: pr.id}) : '#'" class="relative inline-flex font-medium text-gray-800 hover:underline">: {{ pr.pr_no }}</a>
                                                     </li>
                                                 </ul>
                                             </dd>

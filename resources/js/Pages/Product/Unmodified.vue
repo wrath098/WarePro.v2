@@ -9,7 +9,9 @@
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import Swal from 'sweetalert2';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -163,12 +165,12 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="route('product.unmodified.list')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                Fixed Quantity (Unadjusted)
+                                Fixed Quantity (Unadjusted on APP)
                             </a>
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasPermission('create-product-exemption') ||  hasAnyRole(['Developer'])">
                     <li class="flex flex-col lg:flex-row">
                         <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Add Item</span>
@@ -189,7 +191,7 @@
                             ordering: false
                         }" >
                             <template #action="props">
-                                <RemoveButton @click="openDropUnmodifiedModal(props.cellData)" tooltip="Trash"/>
+                                <RemoveButton v-if="hasPermission('delete-product-exemption') ||  hasAnyRole(['Developer'])" @click="openDropUnmodifiedModal(props.cellData)" tooltip="Trash"/>
                             </template>
                     </DataTable>
                 </div>

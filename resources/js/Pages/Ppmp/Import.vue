@@ -9,7 +9,9 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import Swal from 'sweetalert2';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -272,7 +274,7 @@
                                     </div>
                                 </div>
 
-                                <div>
+                                <div v-if="hasPermission('create-office-ppmp') ||  hasAnyRole(['Developer'])">
                                     <button
                                         class="hover:shadow-form w-full rounded-md bg-indigo-500 hover:bg-indigo-700 py-3 text-center text-base font-semibold text-white outline-none"
                                         :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
@@ -294,8 +296,8 @@
                                             ordering: true
                                         }">
                                             <template #action="props">
-                                                <ViewButton :href="route('indiv.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
-                                                <RemoveButton @click="openDropPpmpModal(props.cellData)" tooltip="Trash"/>
+                                                <ViewButton v-if="hasPermission('view-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('indiv.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
+                                                <RemoveButton v-if="hasPermission('delete-office-ppmp') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Trash"/>
                                             </template>
                                     </DataTable>
                                 </div>

@@ -6,7 +6,9 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import Swal from 'sweetalert2';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
     
@@ -150,14 +152,16 @@
                             ordering: false
                         }"> 
                             <template #action="props">
-                                <button v-if="ppmp.status == 'Draft'" @click="openPrintModal(props.cellData.id)" title="Print">
-                                    <svg class="w-6 h-6 text-gray-800 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
-                                    </svg>
-                                </button>
+                                <div v-if="ppmp.status == 'Draft'">
+                                    <button v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" @click="openPrintModal(props.cellData.id)" title="Print">
+                                        <svg class="w-6 h-6 text-gray-800 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                                        </svg>
+                                    </button>
+                                </div>
 
                                 <ul v-if="ppmp.status == 'Approved'">
-                                    <li>
+                                    <li v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])">
                                         <details class="group">
                                             <summary class="flex items-center justify-center gap-2 p-2 marker:content-none hover:cursor-pointer bg-gray-700 hover:bg-gray-900 rounded-md">
                                                 <span class="flex gap-2 text-sm text-gray-100">Print</span>

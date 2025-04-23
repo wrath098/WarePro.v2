@@ -10,7 +10,9 @@ import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
 import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
 import Swal from 'sweetalert2';
 import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
+import useAuthPermission from '@/Composables/useAuthPermission';
 
+const {hasAnyRole, hasPermission} = useAuthPermission();
 const modalState = ref(null);
 const page = usePage();
 const isLoading = ref(false);
@@ -242,7 +244,7 @@ const columns = [
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasAnyRole(['Developer']) || hasPermission('view-trashed-account-class')">
                     <li class="flex flex-col lg:flex-row">
                         <TrashedButton @click="fetchTrashedFund" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
@@ -274,7 +276,7 @@ const columns = [
                                     <span class="font-medium">Added By: </span> {{ fund.nameOfCreator }}
                                 </p>
                             </div>
-                            <div class="flex items-center">
+                            <div v-if="hasAnyRole(['Developer']) || hasPermission('edit-account-class') || hasPermission('delete-account-class')" class="flex items-center">
                                 <Dropdown>
                                     <template #trigger>
                                         <button class="flex items-center bg-gray-700 text-indigo-100 p-2 rounded-full hover:text-gray-900  hover:bg-indigo-50 transition">
@@ -296,7 +298,11 @@ const columns = [
                             </div>
                         </div>
                     </li>
-                    <button @click="showModal('add')" class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md text-xl font-semibold text-indigo-600 hover:bg-indigo-400 hover:text-white transition-transform transform hover:scale-105">
+                    <button 
+                        v-if="hasAnyRole(['Developer']) || hasPermission('create-account-class')" 
+                        @click="showModal('add')" 
+                        class="flex items-center justify-center h-48 rounded-lg bg-gray-100 shadow-md text-xl font-semibold text-indigo-600 hover:bg-indigo-400 hover:text-white transition-transform transform hover:scale-105"
+                    >
                             Add New Account Classification
                     </button>
                 </ul>

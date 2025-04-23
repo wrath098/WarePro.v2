@@ -4,7 +4,9 @@
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
     import { computed, onMounted } from 'vue';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const props = defineProps({
         ppmpList: Object
@@ -138,7 +140,7 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <ViewButton :href="route('pr.display.availableToPurchase', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
+                                <ViewButton v-if="hasPermission('view-procurement-basis') ||  hasAnyRole(['Developer'])" :href="route('pr.display.availableToPurchase', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
                             </template>
                     </DataTable>
                 </div>

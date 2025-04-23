@@ -7,9 +7,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import Swal from 'sweetalert2';
-import useAuthPermission from '@/Composables/useAuthPermission';
-
-const { hasAnyRole, hasPermission} = useAuthPermission();
 
 const page = usePage();
 const message = computed(() => page.props.flash.message);

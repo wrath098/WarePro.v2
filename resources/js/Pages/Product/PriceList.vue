@@ -2,7 +2,9 @@
     import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const props = defineProps({
         products: Object,
     });
@@ -42,7 +44,7 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <PrintButton :href="route('generatePdf.PriceActiveList')" class="mx-1 my-1 lg:my-0" target="_blank">
+                        <PrintButton v-if="hasPermission('print-price-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.PriceActiveList')" class="mx-1 my-1 lg:my-0" target="_blank">
                             <span class="mr-2">Print List</span>
                         </PrintButton>
                     </li>

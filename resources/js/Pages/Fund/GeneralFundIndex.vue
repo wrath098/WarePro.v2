@@ -8,7 +8,9 @@ import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
 import DangerButton from '@/Components/Buttons/DangerButton.vue';
 import AddButton from '@/Components/Buttons/AddButton.vue';
 import Swal from 'sweetalert2';
+import useAuthPermission from '@/Composables/useAuthPermission';
 
+const {hasAnyRole, hasPermission} = useAuthPermission();
 const page = usePage();
 const isLoading = ref(false);
 const activeYear = ref('');
@@ -128,7 +130,7 @@ const formatDecimal = (value) => {
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasAnyRole(['Developer']) || hasPermission('create-new-budget')">
                     <li class="flex flex-col lg:flex-row">
                         <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Budget Allocation</span>
@@ -171,7 +173,7 @@ const formatDecimal = (value) => {
                                 <div class="flex flex-col gap-1">
                                     <h2 class="text-lg font-semibold text-gray-50">{{ year }} | Summary Overview</h2>
                                 </div>
-                                <div class="flex items-center">
+                                <div v-if="hasAnyRole(['Developer']) || hasPermission('edit-proposed-budget')" class="flex items-center">
                                     <a :href="route('general.fund.editFundAllocation', { budgetDetails: yearData, year: year})" class="flex items-center rounded-full transition" title="Edit">
                                         <span class="sr-only">Open options</span>
                                         <svg class="w-8 h-8 text-white hover:text-green-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">

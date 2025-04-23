@@ -9,7 +9,9 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Swal from 'sweetalert2';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -222,14 +224,14 @@
                             <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
                                 <div class="font-bold text-lg">PPMP Information</div>
                                 <div class="flex items-center">
-                                    <div class="rounded-full mx-1">
+                                    <div v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" class="rounded-full mx-1">
                                         <a :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id})" target="_blank" title="Print">
                                             <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 384">
                                                 <path fill="currentColor" d="M363 107q26 0 45 18.5t19 45.5v128h-86v85H85v-85H0V171q0-27 18.5-45.5T64 107h299zm-64 234V235H128v106h171zm63.5-149q8.5 0 15-6.5t6.5-15t-6.5-15t-15-6.5t-15 6.5t-6.5 15t6.5 15t15 6.5zM341 0v85H85V0h256z"/>
                                             </svg>
                                         </a>
                                     </div>
-                                    <div class="rounded-full mx-1">
+                                    <div v-if="hasPermission('create-office-ppmp-particular') ||  hasAnyRole(['Developer'])" class="rounded-full mx-1">
                                         <button @click="showModal('add')" title="Add New Item">
                                             <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                                                 <g id="galaAdd0" fill="none" stroke="currentColor" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="16">
@@ -295,8 +297,8 @@
                                             ordering: false
                                         }">
                                             <template #action="props">
-                                                <EditButton @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>
-                                                <RemoveButton @click="openDropPpmpModal(props.cellData)" tooltip="Remove"/>
+                                                <EditButton v-if="hasPermission('edit-office-ppmp-particular') ||  hasAnyRole(['Developer'])" @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>
+                                                <RemoveButton v-if="hasPermission('delete-office-ppmp-particular') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Remove"/>
                                             </template>
                                     </DataTable>
                                 </div>

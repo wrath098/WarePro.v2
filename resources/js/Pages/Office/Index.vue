@@ -10,7 +10,9 @@
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import Swal from 'sweetalert2';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -166,7 +168,7 @@
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasAnyRole(['Developer']) || hasPermission('create-office')">
                     <li class="flex flex-col lg:flex-row">
                         <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Office</span>
@@ -188,8 +190,8 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <EditButton @click="openEditModal(props.cellData)" tooltip="Edit"/>
-                                <RemoveButton @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
+                                <EditButton v-if="hasAnyRole(['Developer']) || hasPermission('edit-office')" @click="openEditModal(props.cellData)" tooltip="Edit"/>
+                                <RemoveButton v-if="hasAnyRole(['Developer']) || hasPermission('delete-office')" @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
                             </template>
                     </DataTable>
                 </div>

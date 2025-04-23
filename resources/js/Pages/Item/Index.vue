@@ -13,7 +13,9 @@
     import Swal from 'sweetalert2';
     import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
     import axios from 'axios';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -247,12 +249,12 @@
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasAnyRole(['Developer']) || hasPermission('create-item-class') || hasPermission('view-trashed-item-class')">
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                        <AddButton v-if="hasAnyRole(['Developer']) || hasPermission('create-item-class')" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Item Class</span>
                         </AddButton>
-                        <TrashedButton @click="fetchTrashedItemClass" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                        <TrashedButton v-if="hasAnyRole(['Developer']) || hasPermission('view-trashed-item-class')" @click="fetchTrashedItemClass" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
                         </TrashedButton>
                     </li>
@@ -273,8 +275,8 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <EditButton @click="openEditModal(props.cellData)" tooltip="Edit"/>
-                                <RemoveButton @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
+                                <EditButton v-if="hasAnyRole(['Developer']) || hasPermission('edit-item-class')" @click="openEditModal(props.cellData)" tooltip="Edit"/>
+                                <RemoveButton v-if="hasAnyRole(['Developer']) || hasPermission('delete-item-class')" @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
                             </template>
                     </DataTable>
 

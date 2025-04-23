@@ -10,8 +10,9 @@
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import ApprovedButton from '@/Components/Buttons/ApprovedButton.vue';
     import Swal from 'sweetalert2';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
-
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -231,10 +232,10 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <button @click="openApprovedAllModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
+                        <button v-if="hasPermission('accept-all-pr-particular') ||  hasAnyRole(['Developer'])" @click="openApprovedAllModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
                             Accept All
                         </button>
-                        <button @click="openFailedAllModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
+                        <button v-if="hasPermission('reject-all-pr-particular') ||  hasAnyRole(['Developer'])" @click="openFailedAllModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
                             Reject All
                         </button>
                     </li>
@@ -252,8 +253,7 @@
 
                                 <div class="flex items-center">
                                     <div class="rounded-full p-1 hover:bg-white transition-colors duration-500">
-                                        <a :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id})" target="_blank" class="flex items-center rounded-full transition">
-                                            <span class="sr-only">Open options</span>
+                                        <a v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id})" target="_blank" class="flex items-center rounded-full transition">
                                             <svg class="w-7 h-7 text-indigo-100 hover:text-indigo-600 transition duration-75" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                 <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
                                             </svg>
@@ -324,9 +324,9 @@
                                         }">
                                             <template #action="props">
                                                 <div v-if="props.cellData.status != 'approved'" class="px-6 py-3 text-center">
-                                                    <EditButton @click="openEditModal(props.cellData)" tooltip="Edit" />
-                                                    <ApprovedButton @click="openApprovedModal(props.cellData)" tooltip="Approved" />
-                                                    <RemoveButton @click="openDropModal(props.cellData)" tooltip="Failed" />
+                                                    <EditButton v-if="hasPermission('edit-pr-particular') ||  hasAnyRole(['Developer'])" @click="openEditModal(props.cellData)" tooltip="Edit" />
+                                                    <ApprovedButton v-if="hasPermission('accept-pr-particular') ||  hasAnyRole(['Developer'])" @click="openApprovedModal(props.cellData)" tooltip="Approved" />
+                                                    <RemoveButton v-if="hasPermission('reject-pr-particular') ||  hasAnyRole(['Developer'])" @click="openDropModal(props.cellData)" tooltip="Failed" />
                                                 </div>
                                                 <div v-else class="px-6 py-3 text-center">
                                                     <span class='bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300'>

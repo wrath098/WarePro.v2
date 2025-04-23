@@ -15,7 +15,9 @@
     import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
     import axios from 'axios';
     import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
     const props = defineProps({
@@ -326,15 +328,15 @@
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasPermission('create-product-item') || hasPermission('print-product-list') || hasPermission('view-trashed-product-items') || hasAnyRole(['Developer'])">
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                        <AddButton v-if="hasPermission('create-product-item') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Product Item</span>
                         </AddButton>
-                        <PrintButton :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1 my-1 lg:my-0">
+                        <PrintButton v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Print List</span>
                         </PrintButton>
-                        <TrashedButton @click="fetchTrashedItems" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                        <TrashedButton v-if="hasPermission('view-trashed-product-items') || hasAnyRole(['Developer'])" @click="fetchTrashedItems" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
                         </TrashedButton>
                     </li>
@@ -356,9 +358,9 @@
                             ordering: true
                         }">
                             <template #action="props">
-                                <EditButton @click="openEditModal(props.cellData)" tooltip="Edit"/>
-                                <ModifyButton @click="openModifyModal(props.cellData)" tooltip="Move"/>
-                                <RemoveButton @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
+                                <EditButton v-if="hasPermission('edit-product-item') ||  hasAnyRole(['Developer'])" @click="openEditModal(props.cellData)" tooltip="Edit"/>
+                                <ModifyButton v-if="hasPermission('modify-product-item') ||  hasAnyRole(['Developer'])" @click="openModifyModal(props.cellData)" tooltip="Move"/>
+                                <RemoveButton v-if="hasPermission('delete-product-item') ||  hasAnyRole(['Developer'])" @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
                             </template>
                     </DataTable>
 

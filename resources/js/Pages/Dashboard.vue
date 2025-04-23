@@ -4,7 +4,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import axios from 'axios';
 import { onMounted, ref, watchEffect } from 'vue';
+import useAuthPermission from '@/Composables/useAuthPermission';
 
+const {hasAnyRole, hasPermission} = useAuthPermission();
 const props = defineProps({
     core: {
         type: Object,
@@ -197,7 +199,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('iar')">IAR Transaction</a>
+                                <a class="hover:underline" :href="hasPermission('view-iar') || hasAnyRole(['Developer']) ? route('iar') : '#'">IAR Transaction</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.iarTransaction }}</p>
@@ -213,7 +215,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('ris.display.logs')">RIS Transaction</a>
+                                <a class="hover:underline" :href="hasPermission('view-ris') || hasAnyRole(['Developer']) ? route('ris.display.logs') : '#'">RIS Transaction</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.risTransaction }}</p>
@@ -232,7 +234,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('pr.display.transactions')">Purchase Request</a>
+                                <a class="hover:underline" :href="hasPermission('view-pr-transaction') || hasAnyRole(['Developer']) ? route('pr.display.transactions') : '#'">Purchase Request</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.prTransaction }}</p>
@@ -248,7 +250,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('pr.show.onProcess')">Purchase Order</a>
+                                <a class="hover:underline" :href="hasPermission('view-pr-transaction') || hasAnyRole(['Developer']) ? route('pr.show.onProcess') : '#'">Purchase Order</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">0</p>
@@ -271,7 +273,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('inventory.index')">Available On Inventory</a>
+                                <a class="hover:underline" :href="hasPermission('view-inventory') || hasAnyRole(['Developer']) ? route('inventory.index') : '#'">Available On Inventory</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.availableProductItem }}</p>
@@ -287,7 +289,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('show.expiry.products')">Expiring Product Items</a>
+                                <a class="hover:underline" :href="hasPermission('view-expired-products') || hasAnyRole(['Developer']) ? route('show.expiry.products') : '#'">Expiring Product Items</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.expiringProduct }}</p>
@@ -306,7 +308,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('inventory.index')">Re-Order Product Items</a>
+                                <a class="hover:underline" :href="hasPermission('view-inventory') || hasAnyRole(['Developer']) ? route('inventory.index') : '#'">Re-Order Product Items</a>
                             </h3>
                             <h3 class="text-sm tracking-wider"></h3>
                             <div class="flex justify-start items-center">
@@ -341,7 +343,7 @@ const columns = [
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="route('inventory.index')">Out Of Stock</a>
+                                <a class="hover:underline" :href="hasPermission('view-inventory') || hasAnyRole(['Developer']) ? route('inventory.index') : '#'">Out Of Stock</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.outOfStockProducts }}</p>

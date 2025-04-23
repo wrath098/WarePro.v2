@@ -11,7 +11,9 @@
     import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const modalState = ref(null);
     const page = usePage();
     const isLoading = ref(false);
@@ -214,12 +216,12 @@
                         </div>
                     </li>
                 </ol>
-                <ol>
+                <ol v-if="hasAnyRole(['Developer']) || hasPermission('create-category') || hasPermission('view-trashed-category')">
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                        <AddButton v-if="hasAnyRole(['Developer']) || hasPermission('create-category')" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Item Class</span>
                         </AddButton>
-                        <TrashedButton @click="fetchTrashedCategories" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                        <TrashedButton v-if="hasAnyRole(['Developer']) || hasPermission('view-trashed-category')" @click="fetchTrashedCategories" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
                         </TrashedButton>
                     </li>
@@ -251,7 +253,7 @@
                                         <span class="font-medium">Status: </span> {{ category.status }}
                                     </p>
                                 </div>
-                                <div class="flex items-center">
+                                <div v-if="hasAnyRole(['Developer']) || hasPermission('edit-category') || hasPermission('delete-category')" class="flex items-center">
                                     <Dropdown>
                                         <template #trigger>
                                             <button class="flex items-center bg-gray-700 text-indigo-100 p-2 rounded-full hover:text-gray-900  hover:bg-indigo-50 transition">
@@ -262,10 +264,10 @@
                                             </button>
                                         </template>
                                         <template #content>
-                                            <button @click="openEditModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                            <button v-if="hasAnyRole(['Developer']) || hasPermission('edit-category')" @click="openEditModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
                                                 Edit 
                                             </button>
-                                            <button @click="openDropModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                            <button v-if="hasAnyRole(['Developer']) || hasPermission('delete-category')"  @click="openDropModal(category)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out">
                                                 Remove
                                             </button>
                                         </template>

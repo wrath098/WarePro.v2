@@ -10,7 +10,9 @@
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Print from '@/Components/Buttons/Print.vue';
     import Swal from 'sweetalert2';
-    
+    import useAuthPermission from '@/Composables/useAuthPermission';
+
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
 
@@ -177,7 +179,7 @@
                     </li>
                 </ol>
                 <ol v-if="props.ppmp.status == 'Draft'">
-                    <li class="flex flex-col lg:flex-row justify-center items-center">
+                    <li v-if="hasPermission('consolidate-office-ppmp') ||  hasAnyRole(['Developer'])" class="flex flex-col lg:flex-row justify-center items-center">
                         <button @click="showModal('copy')" class="flex items-center rounded-md text-white bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 hover:bg-gradient-to-br hover:text-gray-200 p-1 group">
                             <svg class="w-5 h-5 text-gray-100 group-hover:text-gray-200" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
@@ -206,11 +208,11 @@
                         }">
                             <template #action="props">
                                 <span v-if="ppmp.status == 'Draft'">
-                                    <ViewButton :href="route('conso.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
-                                    <RemoveButton @click="openDropPpmpModal(props.cellData)" tooltip="Trash"/>
+                                    <ViewButton v-if="hasPermission('view-app') ||  hasAnyRole(['Developer'])" :href="route('conso.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
+                                    <RemoveButton v-if="hasPermission('delete-app') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Trash"/>
                                 </span>
                                 <span v-if="ppmp.status == 'Approved'">
-                                    <Print :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: props.cellData.id})" tooltip="Print" />
+                                    <Print v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: props.cellData.id})" tooltip="Print" />
                                 </span>
                             </template>
                     </DataTable>

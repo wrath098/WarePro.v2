@@ -26,10 +26,18 @@ export default function useAuthPermission() {
         return userPermissions.value.includes(permission);
     };
 
+    const hasAnyPermission = (permissionsToCheck: string[]): boolean => {
+        if (!userPermissions.value) return false;
+        return permissionsToCheck.some(permission => 
+            userPermissions.value.includes(permission)
+        );
+    };
+
     return {
         userRoles,
         userPermissions,
         hasAnyRole,
-        hasPermission
+        hasPermission,
+        hasAnyPermission
     };
 }

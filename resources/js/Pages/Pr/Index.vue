@@ -5,9 +5,10 @@
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
     import { computed, onMounted } from 'vue';
-    
-    const page = usePage();
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
+    const page = usePage();
     const props = defineProps({
         toPr: Object,
         pendingPr: Object
@@ -131,8 +132,8 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <ViewButton :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
-                                <Print :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" />
+                                <ViewButton v-if="hasPermission('view-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
+                                <Print v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" />
                             </template>
                     </DataTable>
                 </div>
