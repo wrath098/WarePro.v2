@@ -100,6 +100,35 @@ reject-all-pr-particular
 #PURCHASE REQUEST
 view-purchase-order
 
+#IAR
+>RECEIVING
+view-iar-transaction-pending
+view-iar-transaction-all
+view-iar-transaction
+collect-iar-transactions
+
+>IAR PARTICULARS
+update-iar-particular
+accept-iar-particular
+reject-iar-particular
+accept-all-iar-particular
+reject-all-iar-particular
+
+#RIS
+create-ris-transaction
+view-ris-transactions
+
+#INVENTORY
+view-products-inventory
+
+#STOCK CARD
+view-product-stock-card
+
+#EXPIRED PRODUCTS
+monitor-expiring-products
+
+
+
 
 
 

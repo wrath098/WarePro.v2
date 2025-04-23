@@ -6,7 +6,9 @@
     import Refresh from '@/Components/Buttons/Refresh.vue';
     import Swal from 'sweetalert2';
     import axios from 'axios';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const props = defineProps({
         iar: Object,
@@ -150,7 +152,7 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <Refresh :href="route('iar.collect.transactions')">Get Transactions from AssetPRO </Refresh>
+                        <Refresh v-if="hasAnyRole(['Developer']) || hasPermission('collect-iar-transactions')" :href="route('iar.collect.transactions')">Get Transactions from AssetPRO </Refresh>
                     </li>
                 </ol>
             </nav>
@@ -168,7 +170,7 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <ViewButton :href="route('iar.particular', { iar: props.cellData.id})" tooltip="View"/>
+                                <ViewButton v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction')" :href="route('iar.particular', { iar: props.cellData.id})" tooltip="View"/>
                             </template>
                     </DataTable>
                 </div>

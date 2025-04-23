@@ -7,7 +7,9 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
     import Swal from 'sweetalert2';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
     const props = defineProps({
@@ -189,10 +191,10 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <button @click="openAcceptAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
+                        <button v-if="hasAnyRole(['Developer']) || hasPermission('accept-all-iar-particular')" @click="openAcceptAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
                             Accept All
                         </button>
-                        <button @click="openDenyAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
+                        <button v-if="hasAnyRole(['Developer']) || hasPermission('reject-all-iar-particular')" @click="openDenyAllModal(props.particulars)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-indigo-600 border-2 border-indigo-600 rounded hover:bg-indigo-600 hover:text-white active:bg-indigo-500 focus:outline-none focus:ring">
                             Reject All
                         </button>
                     </li>
@@ -210,7 +212,7 @@
                         <div class="flex flex-col gap-1">
                             <div class="flex text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
                                 Item No. {{ particular.itemNo }}
-                                <div class="flex items-center">
+                                <div v-if="hasAnyRole(['Developer']) || hasPermission('update-iar-particular')" class="flex items-center">
                                     <button @click="openEditModal(particular)" class="text-emerald-500 p-2 rounded-full hover:text-gray-50  hover:bg-indigo-500 transition">
                                         <svg class="w-4 h-4" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 1025 1023">
                                             <path fill="currentColor" d="M896.428 1023h-768q-53 0-90.5-37.5T.428 895V127q0-53 37.5-90t90.5-37h576l-128 127h-384q-27 0-45.5 19t-18.5 45v640q0 27 19 45.5t45 18.5h640q27 0 45.5-18.5t18.5-45.5V447l128-128v576q0 53-37.5 90.5t-90.5 37.5zm-576-464l144 144l-208 64zm208 96l-160-159l479-480q17-16 40.5-16t40.5 16l79 80q16 16 16.5 39.5t-16.5 40.5z"/>
@@ -242,13 +244,13 @@
                         </div>
                     </div>
                     <div class="flex md:flex-row justify-end mt-2">
-                        <button @click="openDenyModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-gray-600 rounded-lg hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300">
+                        <button v-if="hasAnyRole(['Developer']) || hasPermission('accept-iar-particular')" @click="openDenyModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-gray-600 rounded-lg hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300">
                             Denied
                             <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
                             </svg>
                         </button>
-                        <button @click="openAcceptModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-indigo-600 rounded-lg hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300">
+                        <button v-if="hasAnyRole(['Developer']) || hasPermission('reject-iar-particular')" @click="openAcceptModal(particular)" class="inline-flex items-center px-3 py-2 m-1 text-sm font-medium text-center text-white bg-indigo-600 rounded-lg hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300">
                             Receive
                             <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>

@@ -11,28 +11,38 @@ import useAuthPermission from '@/Composables/useAuthPermission';
 const { hasAnyRole, hasPermission , hasAnyPermission} = useAuthPermission();
 
 const componentPermissions = [
-  'view-office',
-  'view-proposed-budget',
-  'view-account-class',
-  'view-category',
-  'view-item-class'
+    'view-office',
+    'view-proposed-budget',
+    'view-account-class',
+    'view-category',
+    'view-item-class'
 ];
 
 const productPermissions = [
-  'view-product-list',
-  'view-price-list',
-  'view-product-exemption'
+    'view-product-list',
+    'view-price-list',
+    'view-product-exemption'
 ];
 
 const ppmpPermissions = [
-  'create-office-ppmp',
-  'view-office-ppmp-list',
-  'view-app-list'
+    'create-office-ppmp',
+    'view-office-ppmp-list',
+    'view-app-list'
 ];
 
 const procurementPermissions = [
-  'view-purchase-order',
-  'view-purchase-request-list',
+    'view-purchase-order',
+    'view-purchase-request-list',
+];
+
+const inventoryPermissions = [
+    'view-iar-transaction-pending',
+    'view-iar-transaction-all',
+    'view-ris-transactions',
+    'create-ris-transaction',
+    'view-products-inventory',
+    'monitor-expiring-products',
+    'view-product-stock-card',
 ];
 
 
@@ -40,7 +50,7 @@ const components = hasAnyPermission(componentPermissions) || hasAnyRole(['Develo
 const products = hasAnyPermission(productPermissions) || hasAnyRole(['Developer']);
 const ppmp = hasAnyPermission(ppmpPermissions) || hasAnyRole(['Developer']);
 const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Developer']);
-
+const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Developer']);
 </script>
 
 <template>
@@ -310,23 +320,25 @@ const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Dev
                             </SidebarLink>
                         </li>
                         <li>
-                            <div class="pt-2">
+                            <div v-if="inventory" class="pt-2">
                                 <div class="flex flex-row items-center">
                                     <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
                                 </div>
                             </div>
-                            <SidebarDropdown :active="$page.url.includes('/iar')" class="mb-1">
+                            <SidebarDropdown 
+                                v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-pending') || hasPermission('view-iar-transaction-all')"
+                                :active="$page.url.includes('/iar')" class="mb-1">
                                     <Inspect :class="{ 'text-white' : $page.url.includes('/iar')}"/>
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Inspection and Acceptance</span>
                                     <ArrowDown :class="{'text-white': $page.url.includes('/iar')}" />
                                 <template #dropdown-items>
-                                    <li>
+                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-pending')">
                                         <SubSidebarLink :href="route('iar')" :active="route().current('iar') || $page.url.includes('/iar/particulars')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('iar') || $page.url.includes('/iar/particulars')}"/>
                                             Receiving
                                         </SubSidebarLink>
                                     </li>
-                                    <li>
+                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-all')">
                                         <SubSidebarLink :href="route('show.iar.transactions')" :active="route().current('show.iar.transactions') || route().current('iar.particular.completed')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('iar.particular.completed')}"/>
                                             All Transactions
@@ -334,7 +346,9 @@ const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Dev
                                     </li>
                                 </template>
                             </SidebarDropdown>
-                            <SidebarDropdown :active="route().current('create.ris') || route().current('ris.display.logs')" class="mb-1">
+                            <SidebarDropdown
+                                v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction') || hasPermission('view-ris-transactions')"
+                                :active="route().current('create.ris') || route().current('ris.display.logs')" class="mb-1">
                                     <svg
                                         class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
                                         :class="{ 'text-white' : route().current('create.ris') || route().current('ris.display.logs')}"
@@ -348,13 +362,13 @@ const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Dev
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Requisition and Issuance</span>
                                     <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs')}" />
                                 <template #dropdown-items>
-                                    <li>
+                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction')">
                                         <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
                                             Releasing
                                         </SubSidebarLink>
                                     </li>
-                                    <li>
+                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('view-ris-transactions')">
                                         <SubSidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
                                             Issuances
@@ -362,11 +376,15 @@ const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Dev
                                     </li>
                                 </template>
                             </SidebarDropdown>
-                            <SidebarLink :href="route('inventory.index')" :active="route().current('inventory.index')">
+                            <SidebarLink   
+                                v-if="hasAnyRole(['Developer']) || hasPermission('view-products-inventory')"
+                                :href="route('inventory.index')" :active="route().current('inventory.index')">
                                 <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
                                 <span class="ml-3">Inventory</span>
                             </SidebarLink>
-                            <SidebarLink :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
+                            <SidebarLink 
+                                v-if="hasAnyRole(['Developer']) || hasPermission('view-product-stock-card')"
+                                :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
                                 <svg 
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
                                     :class="{ 'text-white' : route().current('show.stockCard')}"
@@ -379,7 +397,9 @@ const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Dev
                                 </svg>
                                 <span class="ml-3">Stock Card</span>
                             </SidebarLink>
-                            <SidebarLink :href="route('show.expiry.products')" :active="route().current('show.expiry.products')" class="my-1">
+                            <SidebarLink 
+                            v-if="hasAnyRole(['Developer']) || hasPermission('monitor-expiring-products')"
+                            :href="route('show.expiry.products')" :active="route().current('show.expiry.products')" class="my-1">
                                 <svg 
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
                                     :class="{ 'text-white' : route().current('show.expiry.products')}"

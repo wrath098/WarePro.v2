@@ -4,7 +4,9 @@
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
 
     const props = defineProps({
@@ -128,8 +130,10 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <ViewButton v-if="props.cellData.status === 'Pending'" :href="route('iar.particular', { iar: props.cellData.id})" tooltip="View"/>
-                                <ViewButton v-if="props.cellData.status === 'Completed'" :href="route('iar.particular.completed', { iar: props.cellData.id})" tooltip="View"/>
+                                <div v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction')">
+                                    <ViewButton v-if="props.cellData.status === 'Pending'" :href="route('iar.particular', { iar: props.cellData.id})" tooltip="View"/>
+                                    <ViewButton v-if="props.cellData.status === 'Completed'" :href="route('iar.particular.completed', { iar: props.cellData.id})" tooltip="View"/>
+                                </div>
                             </template>
                     </DataTable>
                 </div>
