@@ -57,7 +57,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
     <div class="lg:block">
         <aside class="fixed w-80 h-[calc(100vh-8rem)] z-50 overflow-y-auto select-none top-24 lg:left-8 transition-all rounded-lg p-2 bg-slate-50">
             <nav class="text-sm text-gray-700 mb-5">
-                <div class="overflow-y-auto py-3 px-3 h-full">
+                <div class="overflow-hidden py-3 px-3 h-full">
                     <ul class="space-y-2">
                         <li>
                             <div class="flex flex-row items-center">
@@ -443,7 +443,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     >
                                         <path fill="currentColor" fill-rule="evenodd" d="M17 10v1.1l1 .5l.8-.8l1.4 1.4l-.8.8l.5 1H21v2h-1.1l-.5 1l.8.8l-1.4 1.4l-.8-.8a4 4 0 0 1-1 .5V20h-2v-1.1a4 4 0 0 1-1-.5l-.8.8l-1.4-1.4l.8-.8a4 4 0 0 1-.5-1H11v-2h1.1l.5-1l-.8-.8l1.4-1.4l.8.8a4 4 0 0 1 1-.5V10zm.4 3.6c.4.4.6.8.6 1.4a2 2 0 0 1-3.4 1.4A2 2 0 0 1 16 13c.5 0 1 .2 1.4.6M5 8a4 4 0 1 1 8 .7a7 7 0 0 0-3.3 3.2A4 4 0 0 1 5 8m4.3 5H7a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h6.1a7 7 0 0 1-1.8-7" clip-rule="evenodd"/>
                                     </svg>
-                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Accounts Setting</span>
+                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Users Setting</span>
                                     <ArrowDown :class="{'text-white': route().current('user') || route().current('user.roles') || route().current('user.permissions')}" />
                                 <template #dropdown-items>
                                     <li v-if="hasAnyRole(['Developer'])">
@@ -467,7 +467,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </template>
                             </SidebarDropdown>
                         </li>
-                        <li>
+                        <!-- <li>
                             <SidebarLink :href="route('dashboard')" :active="false">
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
@@ -480,7 +480,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </svg>
                                 <span class="ml-3">FQA</span>
                             </SidebarLink>
-                        </li>
+                        </li> -->
                     </ul>
                 </div>
             </nav>

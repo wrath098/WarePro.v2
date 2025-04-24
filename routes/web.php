@@ -45,16 +45,19 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 
 Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
 
-Route::middleware(['auth', 'role_or_permission:Developer|System Administrator'])->prefix('users')->group(function () {
-    Route::get('/', [UserController::class, 'index'])->name('user');
-    Route::get('/user-information/{user}', [UserController::class, 'userInformation'])->name('user.information');
-    Route::post('/assign-role', [UserController::class, 'assignRole'])->name('user.assign.role');
-    Route::post('/assign-permission', [UserController::class, 'assignPermission'])->name('user.assign.permission');
-    Route::delete('/revoke-role', [UserController::class, 'revokeRole'])->name('user.revoke.role');
-    Route::put('/update-user-information', [UserController::class, 'updateUserInformation'])->name('update.user.information');
-    Route::put('/user-new-password', [UserController::class, 'userNewPassword'])->name('user.new.password');
-    Route::delete('/user-account/{user}', [UserController::class, 'destroy'])->name('user.account.destroy');
-    Route::delete('/revoke-permission', [UserController::class, 'revokePermission'])->name('user.revoke.permission');
+Route::middleware('auth')->prefix('users')->group(function () {
+
+    Route::middleware('userAccess')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('user');
+        Route::get('/user-information/{user}', [UserController::class, 'userInformation'])->name('user.information');
+        Route::post('/assign-role', [UserController::class, 'assignRole'])->name('user.assign.role');
+        Route::post('/assign-permission', [UserController::class, 'assignPermission'])->name('user.assign.permission');
+        Route::delete('/revoke-role', [UserController::class, 'revokeRole'])->name('user.revoke.role');
+        Route::put('/update-user-information', [UserController::class, 'updateUserInformation'])->name('update.user.information');
+        Route::put('/user-new-password', [UserController::class, 'userNewPassword'])->name('user.new.password');
+        Route::delete('/user-account/{user}', [UserController::class, 'destroy'])->name('user.account.destroy');
+        Route::delete('/revoke-permission', [UserController::class, 'revokePermission'])->name('user.revoke.permission');
+    });
 
     Route::middleware('developer')->group(function () {
         Route::get('/roles', [RoleController::class, 'index'])->name('user.roles');
@@ -74,7 +77,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->prefix('funds')->group(function () {
-    Route::get('/', [FundController::class, 'index'])->name('fund.display.all');
+    Route::middleware('componentAccess')->get('/', [FundController::class, 'index'])->name('fund.display.all');
     Route::post('/save', [FundController::class, 'store'])->name('fund.store');
     Route::post('/update', [FundController::class, 'update'])->name('fund.update');
     Route::put('/restore/{fundId}', [FundController::class, 'restore'])->name('fund.restore');
@@ -85,7 +88,7 @@ Route::middleware('auth')->prefix('funds')->group(function () {
 });
 
 Route::middleware('auth')->prefix('categories')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('category.display.active');
+    Route::middleware('componentAccess')->get('/', [CategoryController::class, 'index'])->name('category.display.active');
     Route::post('/save', [CategoryController::class, 'store'])->name('category.store');
     Route::post('/update', [CategoryController::class, 'update'])->name('category.update');
     Route::post('/restore/{catId}', [CategoryController::class, 'restore'])->name('category.restore');
@@ -96,7 +99,7 @@ Route::middleware('auth')->prefix('categories')->group(function () {
 });
 
 Route::middleware('auth')->prefix('items')->group(function () {
-    Route::get('/', [ItemClassController::class, 'index'])->name('item.display.active');
+    Route::middleware('componentAccess')->get('/', [ItemClassController::class, 'index'])->name('item.display.active');
     Route::post('/save', [ItemClassController::class, 'store'])->name('item.store');
     Route::post('/update', [ItemClassController::class, 'update'])->name('item.update');
     Route::post('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
@@ -107,14 +110,14 @@ Route::middleware('auth')->prefix('items')->group(function () {
 });
 
 Route::middleware('auth')->prefix('offices')->group(function () {
-    Route::get('/', [OfficeController::class, 'index'])->name('office.display.active');
+    Route::middleware('componentAccess')->get('/', [OfficeController::class, 'index'])->name('office.display.active');
     Route::post('/save', [OfficeController::class, 'store'])->name('office.store');
     Route::post('/update', [OfficeController::class, 'update'])->name('office.update');
     Route::post('/deactivate', [OfficeController::class, 'deactivate'])->name('office.deactivate');
 });
 
 Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
-    Route::get('/', [CapitalOutlayController::class, 'index'])->name('general.fund.display');
+    Route::middleware('componentAccess')->get('/', [CapitalOutlayController::class, 'index'])->name('general.fund.display');
     Route::post('/store-amount', [CapitalOutlayController::class, 'storeFund'])->name('general.fund.store.amount');
     Route::get('/edit-fund-allocations', [CapitalOutlayController::class, 'editFundAllocation'])->name('general.fund.editFundAllocation');
     Route::put('/update-fund-allocations', [CapitalOutlayController::class, 'updateFundAllocation'])->name('general.fund.updateFundAllocation');
@@ -124,15 +127,17 @@ Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
 });
 
 Route::middleware('auth')->prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
-    Route::get('/product-price-list', [ProductController::class, 'showPriceList'])->name('product.display.active.pricelist');
+    Route::middleware('productAccess')->group(function() {
+        Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
+        Route::get('/product-price-list', [ProductController::class, 'showPriceList'])->name('product.display.active.pricelist');
+        Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');
+    });
     Route::get('/autocomplete-product', [ProductController::class, 'showAutoComplete'])->name('product.show.autocomplete');
     Route::post('/save', [ProductController::class, 'store'])->name('product.store');
     Route::post('/update', [ProductController::class, 'update'])->name('product.update');
     Route::put('/restore', [ProductController::class, 'restore'])->name('product.restore');
     Route::any('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
     Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
-    Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');
     Route::post('/store-unmodified-product', [ProductPpmpExceptionController::class, 'store'])->name('store.unmodified.product');
     Route::post('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
 
@@ -141,13 +146,16 @@ Route::middleware('auth')->prefix('products')->group(function () {
 });
 
 Route::middleware('auth')->prefix('ppmp')->group(function () {
-    Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
+    Route::middleware('ppmpAccess')->group(function() {
+        Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
+        Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
+        Route::get('/consolidated-ppmp-list', [PpmpTransactionController::class, 'showConsolidatedPpmp_Type'])->name('conso.ppmp.type');
+    });
+    
     Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
     Route::get('/consolidated-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showConsolidatedPpmp'])->name('conso.ppmp.show');
     Route::post('/proceed-to-approved/{ppmpTransaction}', [PpmpTransactionController::class, 'storeAsFinal'])->name('proceed.to.final.ppmp');
     Route::post('/copy-ppmp', [PpmpTransactionController::class, 'storeCopy'])->name('make.copy.ppmp');
-    Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
-    Route::get('/consolidated-ppmp-list', [PpmpTransactionController::class, 'showConsolidatedPpmp_Type'])->name('conso.ppmp.type');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
     Route::any('/create-consolidated', [PpmpTransactionController::class, 'storeConsolidated'])->name('consolidated.ppmp.store');
     Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
@@ -163,11 +171,14 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
 });
 
 Route::middleware('auth')->prefix('pr')->group(function () {
-    Route::get('/create/step-1', [PrMultiStepFormController::class, 'stepOne'])->name('pr.form.step1');
+    Route::middleware('purchaseRequestAccess')->group(function() {
+        Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
+        Route::get('/procurement-basis', [PrTransactionController::class, 'showProcurementBasis'])->name('pr.display.procurementBasis');
+        Route::get('/create/step-1', [PrMultiStepFormController::class, 'stepOne'])->name('pr.form.step1');
+    });
+    
     Route::get('/create/step-2', [PrMultiStepFormController::class, 'stepTwo'])->name('pr.form.step2');
     Route::post('/create/submit', [PrMultiStepFormController::class, 'submit'])->name('pr.form.submit');       
-    Route::get('/', [PrTransactionController::class, 'index'])->name('pr.display.transactions');
-    Route::get('/procurement-basis', [PrTransactionController::class, 'showProcurementBasis'])->name('pr.display.procurementBasis');
     Route::get('/procurement-basis/available-list/{ppmpTransaction}', [PrTransactionController::class, 'showAvailableToPurchase'])->name('pr.display.availableToPurchase');
     Route::get('/show-pr-particular/{prTransaction}', [PrTransactionController::class, 'showParticulars'])->name('pr.show.particular');
     Route::put('/particular/update', [PrParticularController::class, 'update'])->name('pr.particular.update');
@@ -178,13 +189,13 @@ Route::middleware('auth')->prefix('pr')->group(function () {
     Route::put('/particular/approvedAll/{prTransaction}', [PrTransactionController::class, 'approvedAll'])->name('pr.particular.approvedAll');
 });
 
-Route::middleware('auth')->prefix('po')->group(function () {
+Route::middleware(['auth', 'role_or_permission:view-purchase-order|Developer'])->prefix('po')->group(function () {
     Route::get('/on-process', [PrTransactionController::class, 'showOnProgress'])->name('pr.show.onProcess');
 });
 
 Route::middleware('auth')->prefix('iar')->group(function () {
-    Route::get('/', [IarTransactionController::class, 'index'])->name('iar');
-    Route::get('/show-all-air-transaction', [IarTransactionController::class, 'showAllTransactions'])->name('show.iar.transactions');
+    Route::middleware(['auth', 'role_or_permission:view-iar-transaction-pending|Developer'])->get('/', [IarTransactionController::class, 'index'])->name('iar');
+    Route::middleware(['auth', 'role_or_permission:view-iar-transaction-all|Developer'])->get('/show-all-air-transaction', [IarTransactionController::class, 'showAllTransactions'])->name('show.iar.transactions');
     Route::get('/collect-transactions', [IarTransactionController::class, 'collectIarTransactions'])->name('iar.collect.transactions');
     Route::get('/particulars', [IarTransactionController::class, 'fetchIarParticular'])->name('iar.particular');
     Route::get('/completed-iar-transaction/particulars', [IarTransactionController::class, 'getCompletedIarTransactionParticulars'])->name('iar.particular.completed');
@@ -196,17 +207,17 @@ Route::middleware('auth')->prefix('iar')->group(function () {
 });
 
 Route::middleware('auth')->prefix('inventory')->group(function () {
-    Route::get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
+    Route::middleware(['auth', 'role_or_permission:view-products-inventory|Developer'])->get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
     Route::post('/edit-re-order-level', [ProductInventoryTransactionController::class, 'updateReOrderLevel'])->name('update.reorder.level');
-    Route::get('/stock-card', [ProductInventoryController::class, 'showStockCard'])->name('show.stockCard');
-    Route::get('/expiry-products', [ProductInventoryTransactionController::class, 'showProductsOnExpired'])->name('show.expiry.products');
+    Route::middleware(['auth', 'role_or_permission:view-products-inventory|Developer'])->get('/stock-card', [ProductInventoryController::class, 'showStockCard'])->name('show.stockCard');
+    Route::middleware(['auth', 'role_or_permission:monitor-expiring-products|Developer'])->get('/expiry-products', [ProductInventoryTransactionController::class, 'showProductsOnExpired'])->name('show.expiry.products');
 });
 
 Route::middleware('auth')->prefix('ris')->group(function () {
-    Route::get('/', [RisTransactionController::class, 'create'])->name('create.ris');
+    Route::middleware(['auth', 'role_or_permission:create-ris-transaction|Developer'])->get('/', [RisTransactionController::class, 'create'])->name('create.ris');
     Route::post('/store', [RisTransactionController::class, 'store'])->name('store.ris');
-    Route::get('/ris-logs', [RisTransactionController::class, 'risTransactions'])->name('ris.display.logs');
+    Route::middleware(['auth', 'role_or_permission:view-ris-transactions|Developer'])->get('/ris-logs', [RisTransactionController::class, 'risTransactions'])->name('ris.display.logs');
     Route::get('/{transactionId}/attachment', [RisTransactionController::class, 'showAttachment'])->name('ris.show.attachment');
 });
 

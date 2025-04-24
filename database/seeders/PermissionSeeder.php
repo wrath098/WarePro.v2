@@ -18,114 +18,143 @@ class PermissionSeeder extends Seeder
             'create-user',
             'edit-user',
             'delete-user',
+            
             #ROLES
             'create-role',
             'edit-role',
             'delete-role',
+
             #PERMISSION
             'create-permission',
             'edit-permission',
             'delete-permission',
-            #BUDGET ALLOCAtION
-            'view-budget',
-            'create-budget',
-            'edit-budget',
-            'update-budget',
+
+            #COMPONENTS
+            #PROPOSED BUDGET
+            'view-proposed-budget',
+            'create-new-budget',
+            'edit-proposed-budget',
+
             #ACCOUNT CLASSIFICATION
             'view-account-class',
+            'view-trashed-account-class',
             'create-account-class',
             'edit-account-class',
             'delete-account-class',
-            'view-trashed-account-class',
-            'restore-trashed-account-class',
-            #CATEGORY
+
+            #CATEGORIES
             'view-category',
+            'view-trashed-category',
             'create-category',
             'edit-category',
             'delete-category',
-            'view-trashed-category',
-            'restore-trashed-category',
+
             #ITEM CLASS
             'view-item-class',
+            'view-trashed-item-class',
             'create-item-class',
             'edit-item-class',
             'delete-item-class',
-            'view-trashed-item-class',
-            'restore-trashed-item-class',
+
             #OFFICE
             'view-office',
             'create-office',
             'edit-office',
             'delete-office',
+
             #PRODUCTS
-            'view-product',
-            'create-product',
-            'edit-product',
-            'modify-product',
-            'delete-product',
-            'print-product',
+            #ITEM LIST
+            'view-product-list',
+            'create-product-item',
+            'print-product-list',
+            'view-trashed-product-items',
+            'edit-product-item',
+            'modify-product-item',
+            'delete-product-item',
+
             #PRODUCT PRICE
-            'view-product-price',
-            'print-product-price',
-            #PRODUCT EXCEPTIONS FOR QUANTITY ADJUSTMENT
-            'view-product-exceptions',
-            'create-product-exceptions',
-            'delete-product-exceptions',
-            #PPMP
-            'view-ppmp',
+            'view-price-list',
+            'print-price-list',
+
+            #PRODUCT QUANTITY EXEMPTION
+            'view-product-exemption',
+            'create-product-exemption',
+            'delete-product-exemption',
+
+            #PROJECT PROCUREMENT MANAGEMENT PLAN
             #OFFICE PPMP
-            'view-create-ppmp',
             'create-office-ppmp',
             'view-office-ppmp',
+            'view-office-ppmp-list',
             'delete-office-ppmp',
             'print-office-ppmp',
-            'create-office-particular',
-            'edit-office-particular',
-            'delete-office-particular',
-            #OFFICE PPMP LIST
-            'view-office-ppmp-draft-list',
-            'view-office-ppmp-approved-list',
-            #APP
-            'view-office-app-draft-list',
-            'view-office-app-approved-list',
-            'create-app',
+
+            #OFFICE PPMP PARTICULARS
+            'create-office-ppmp-particular',
+            'edit-office-ppmp-particular',
+            'delete-office-ppmp-particular',
+
+            #ANNUAL PROCUREMENT PLAN
+            'consolidate-office-ppmp',
+            'view-app-list',
             'view-app',
             'delete-app',
-            'create-app-particular',
+            'print-app',
+            'print-app-summary-overview',
+
+            #ANNUAL PROCUREMENT PLAN PARTICULARS
+            'add-app-particular',
             'edit-app-particular',
             'delete-app-particular',
+            'confirm-app-finalization',
+
             #PURCHASE REQUEST
-            'view-purchase-request',
+            #PROCUREMENT BASIS
             'view-procurement-basis',
+            'view-purchase-request',
+
+            #CREATE PURCHASE REQUEST
             'create-purchase-request',
-            'view-pr-list',
-            'view-pr-transaction',
-            'print-pr-transaction',
+
+            #PENDING FOR APPROVAL OF PURCHASE REQUEST
+            'view-purchase-request-list',
+            'print-purchase-request',
+
             'edit-pr-particular',
-            'approved-pr-particular',
-            'delete-pr-particular',
-            'approved-pr-particular-all',
-            'reject-pr-particular-all',
+            'accept-pr-particular',
+            'reject-pr-particular',
+            'accept-all-pr-particular',
+            'reject-all-pr-particular',
+
+            #PURCHASE REQUEST
+            'view-purchase-order',
+
             #IAR
-            'view-iar',
-            'create-iar-transacation',
+            #RECEIVING
+            'view-iar-transaction-pending',
+            'view-iar-transaction-all',
             'view-iar-transaction',
-            'edit-iar-particular',
+            'collect-iar-transactions',
+
+            #IAR PARTICULARS
+            'update-iar-particular',
             'accept-iar-particular',
             'reject-iar-particular',
-            'accept-iar-particular-all',
-            'reject-iar-particular-all',
-            'view-all-transaction',
-            'view-all-completed-transaction',
+            'accept-all-iar-particular',
+            'reject-all-iar-particular',
+
             #RIS
-            'view-ris',
             'create-ris-transaction',
+            'view-ris-transactions',
+
             #INVENTORY
-            'view-inventory',
-            'edit-product-threshold',
-            'edit-product-inventory',
-            'view-stock-card',
-            'view-expired-products',
+            'view-products-inventory',
+
+            #STOCK CARD
+            'view-product-stock-card',
+
+            #EXPIRED PRODUCTS
+            'monitor-expiring-products',
          ];
  
          foreach ($permissions as $permission) {

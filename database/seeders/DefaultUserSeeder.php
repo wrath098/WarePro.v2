@@ -23,7 +23,7 @@ class DefaultUserSeeder extends Seeder
 
         $sysAdmin = User::create([
             'name' => 'System Admin', 
-            'email' => 'admin@gmail.com',
+            'email' => 'sysadmin@gmail.com',
             'password' => Hash::make('12345678')
         ]);
         $sysAdmin->assignRole('System Administrator');
@@ -32,7 +32,7 @@ class DefaultUserSeeder extends Seeder
         $custodian = User::create([
             'name' => 'Property Costudian', 
             'email' => 'custodian@gmail.com',
-            'password' => Hash::make('pc1234')
+            'password' => Hash::make('12345678')
         ]);
         $custodian->assignRole('Custodian');
     }

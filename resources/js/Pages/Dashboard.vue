@@ -1,10 +1,15 @@
 <script setup>
 import LineChart from '@/Components/LineChart.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { onMounted, ref, watchEffect } from 'vue';
+import { computed, onMounted, ref, watchEffect } from 'vue';
 import useAuthPermission from '@/Composables/useAuthPermission';
+import Swal from 'sweetalert2';
+
+const page = usePage();
+const message = computed(() => page.props.flash.message);
+const errMessage = computed(() => page.props.flash.error);
 
 const {hasAnyRole, hasPermission} = useAuthPermission();
 const props = defineProps({
@@ -164,6 +169,26 @@ const columns = [
         width: '10%'
     }
 ];
+
+onMounted(() => {
+    if (message.value) {
+        Swal.fire({
+            title: 'Success',
+            text: message.value,
+            icon: 'success',
+            confirmButtonText: 'OK',
+        });
+    }
+
+    if (errMessage.value) {
+        Swal.fire({
+            title: 'Failed',
+            text: errMessage.value,
+            icon: 'error',
+            confirmButtonText: 'OK',
+        });
+    }
+});
 </script>
 
 <template>

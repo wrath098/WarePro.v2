@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'developer' => \App\Http\Middleware\isDeveloper::class,
             'sysAdmin' => \App\Http\Middleware\IsSysAdmin::class,
+            'userAccess' => \App\Http\Middleware\UserAccess::class,
+            'componentAccess' => \App\Http\Middleware\ComponentAccess::class,
+            'productAccess' => \App\Http\Middleware\ProductAccess::class,
+            'ppmpAccess' => \App\Http\Middleware\ppmpAccess::class,
+            'purchaseRequestAccess' => \App\Http\Middleware\PurchaseRequestAccess::class,
         ]);
 
         $middleware->web(append: [
