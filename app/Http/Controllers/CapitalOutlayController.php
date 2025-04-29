@@ -75,7 +75,9 @@ class CapitalOutlayController extends Controller
             
             if($isFound) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Designated amount in selected Account Class already exist!']);
+                return back()->withInput()->withErrors([
+                        'fundId' => 'The Year and Account Class combination already exists!'
+                    ]);
             }
 
             CapitalOutlay::create([
@@ -88,16 +90,18 @@ class CapitalOutlayController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Designated amount in selected Account Class created successfully!']);
+            return redirect()->back()
+                ->with(['message' => 'Designated amount in selected Account Class created successfully!']);
 
         } catch(\Exception $e) {
             DB::rollBack();
             Log::error("Designating Account Fund Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData,
             ]);
-            return redirect()->back()->with(['error' => 'Designating Account Fund Failed. Please try again!']);
+
+            return back()->with('error', 'Designating Account Fund Failed. Please try again!')->withInput();
         }
     }
 

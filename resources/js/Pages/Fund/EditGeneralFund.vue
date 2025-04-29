@@ -1,6 +1,5 @@
 <script setup>
-import { Head, usePage } from '@inertiajs/vue3';
-import { Inertia } from '@inertiajs/inertia';
+import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { ref, reactive, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
@@ -28,13 +27,15 @@ const submitForm = () => {
 
 const confirmSubmit = () => {
     isLoading.value = true;
-    const data = { year: props.year, ...updateBudget};
-    Inertia.put('update-fund-allocations', data, {
+    const form = useForm({ year: props.year, ...updateBudget});
+
+
+    form.put(route('general.fund.updateFundAllocation')), {
         onSuccess: () => {
             closeModal();
             isLoading.value = false;
         },
-    });
+    };
 };
 
 const message = computed(() => page.props.flash.message);

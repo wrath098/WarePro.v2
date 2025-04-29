@@ -1,7 +1,6 @@
 <script setup>
-import { Head, usePage } from '@inertiajs/vue3';
-import { Inertia } from '@inertiajs/inertia';
-import { ref, reactive, computed, onMounted } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -9,11 +8,15 @@ import DangerButton from '@/Components/Buttons/DangerButton.vue';
 import AddButton from '@/Components/Buttons/AddButton.vue';
 import Swal from 'sweetalert2';
 import useAuthPermission from '@/Composables/useAuthPermission';
+import InputError from '@/Components/InputError.vue';
 
 const {hasAnyRole, hasPermission} = useAuthPermission();
 const page = usePage();
 const isLoading = ref(false);
 const activeYear = ref('');
+
+const message = computed(() => page.props.flash.message);
+const errMessage = computed(() => page.props.flash.error);
 
 const props = defineProps({
     generalFund: Object,
@@ -55,26 +58,41 @@ const showModal = (modalType) => { modalState.value = modalType; }
 const closeModal = () => { modalState.value = null; }
 const isAddModalOpen = computed(() => modalState.value === 'add');
 
-const storeFund = reactive({
+const storeFund = useForm({
     fundId: '',
     year: '',
     amount: '',
 });
 
-const submitForm = (url, data) => {
+const submit = () => {
     isLoading.value = true;
-    Inertia.post(url, data, {
+
+    storeFund.post(route('general.fund.store.amount'), {
+        onFinish: () => {
+            isLoading.value = false;
+        },
         onSuccess: () => {
-            closeModal();
+            if (errMessage.value) {
+                Swal.fire({
+                    title: 'Failed',
+                    text: errMessage.value,
+                    icon: 'error',
+                });
+            } else {
+                storeFund.reset();
+                Swal.fire({
+                    title: 'Success',
+                    text: message.value,
+                    icon: 'success',
+                }).then(() => closeModal());
+            }
+        },
+        onError: (errors) => {
             isLoading.value = false;
         },
     });
 };
 
-const submit = () => submitForm('general-servies-fund/store-amount', storeFund);
-
-const message = computed(() => page.props.flash.message);
-const errMessage = computed(() => page.props.flash.error);
 
 onMounted(() => {
     if (message.value) {
@@ -267,8 +285,9 @@ const formatDecimal = (value) => {
                                     <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                 </select>
                                 <label for="year" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
+                                <InputError class="mt-2" :message="storeFund.errors.year" />
                             </div>
-                            <div class="relative z-0 w-full group my2">
+                            <div class="relative z-0 w-full group my-2">
                                 <select v-model="storeFund.fundId" name="accountId" id="accountId" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                     <option value="" disabled selected>Please choose the Account Classification applicable</option>
                                     <option v-for="account in accountClassification" :key="account.id" :value="account.id">
@@ -276,10 +295,12 @@ const formatDecimal = (value) => {
                                     </option>
                                 </select>
                                 <label for="accountId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
+                                <InputError class="mt-2" :message="storeFund.errors.fundId" />
                             </div>
                             <div class="relative z-0 w-full group my-3">
                                 <input v-model="storeFund.amount" type="number" name="amount" id="amount" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                 <label for="amount" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Designated Amount</label>
+                                <InputError class="mt-2" :message="storeFund.errors.amount" />
                             </div>
                         </div>
                     </div>
