@@ -196,7 +196,7 @@ Route::middleware(['auth', 'role_or_permission:view-purchase-order|Developer'])-
 Route::middleware('auth')->prefix('iar')->group(function () {
     Route::middleware(['auth', 'role_or_permission:view-iar-transaction-pending|Developer'])->get('/', [IarTransactionController::class, 'index'])->name('iar');
     Route::middleware(['auth', 'role_or_permission:view-iar-transaction-all|Developer'])->get('/show-all-air-transaction', [IarTransactionController::class, 'showAllTransactions'])->name('show.iar.transactions');
-    Route::get('/collect-transactions', [IarTransactionController::class, 'collectIarTransactions'])->name('iar.collect.transactions');
+    Route::post('/collect-transactions', [IarTransactionController::class, 'collectIarTransactions'])->name('iar.collect.transactions');
     Route::get('/particulars', [IarTransactionController::class, 'fetchIarParticular'])->name('iar.particular');
     Route::get('/completed-iar-transaction/particulars', [IarTransactionController::class, 'getCompletedIarTransactionParticulars'])->name('iar.particular.completed');
     Route::post('/particulars/accept', [IarTransactionController::class, 'acceptIarParticular'])->name('iar.particular.accept');

@@ -28,20 +28,12 @@ class IarTransactionController extends Controller
 
     public function index()
     {
-        #THIS WILL BE USED FOR TESTING CONNECTION FROM OTHER DEVICE XAMPP SERVER
-        #DELETE AFTER THE TEST IS WORKING
-        // $results2 = DB::connection('pgso-pms')
-        // ->table('sdi_air')
-        // ->select('sdi_air.air_id', 'sdi_air.po_no', 'psu_suppliers.name', 'sdi_air.air_date', 'sdi_air.warehouse')
-        // ->join('psu_suppliers', 'sdi_air.supplier_id', '=', 'psu_suppliers.supplier_id')
-        // ->where('warehouse', 1)
-        // ->get();
-
-        // dd($results2);
-
         $lists = IarTransaction::where('status', 'pending')
             ->orderBy('sdi_iar_id', 'desc')
             ->get();
+
+        $wareproList = IarTransaction::latest('sdi_iar_id')->first();
+        $lastIarId = $wareproList ? $wareproList->sdi_iar_id : 0;
 
         $lists = $lists->map(fn($iar) => [
             'id' => $iar->id,
@@ -52,7 +44,7 @@ class IarTransactionController extends Controller
             'status' => ucfirst($iar->status),
         ]);
 
-        return Inertia::render('Iar/Pending', ['iar' => $lists]);
+        return Inertia::render('Iar/Pending', ['iar' => $lists, 'lastId' => $lastIarId]);
     }
 
     public function showAllTransactions()
@@ -73,23 +65,19 @@ class IarTransactionController extends Controller
         return Inertia::render('Iar/Transactions', ['transactions' => $transactionList]);
     }
 
-    public function collectIarTransactions()
+    public function collectIarTransactions(Request $request)
     {
         DB::beginTransaction();
         
         try {
-            $wareproList = IarTransaction::latest('sdi_iar_id')->first();
-            $lastIarId = $wareproList ? $wareproList->sdi_iar_id : 0;
-
-            $pgsoList = $this->fetchIarTransactionsFromAssetPro($lastIarId);
+            $pgsoList = $request->param;
 
             foreach ($pgsoList as $iar) {
-                if(!$this->verifyIarExistence($iar->air_id)) {
+                if(!$this->verifyIarExistence($iar['air_id'])) {
                     $createIar = $this->processCreationOfIarTransaction($iar);
-                    $particulars = $this->fetchIarParticularsFromAssetPro($iar->air_id);
     
-                    foreach ($particulars as $particular) {
-                        $this->processCreationOfIarParticulars($particular, $createIar->id);
+                    foreach ($iar['particulars'] as $particular) {
+                        $this->processCreationOfIarParticulars($particular, $createIar['id']);
                     }
                 }
             }
@@ -101,7 +89,6 @@ class IarTransactionController extends Controller
             Log::error("Collecting IAR Transaction from AssetPro failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
             return redirect()->back()->with(['error' => 'Unable to collect IAR Transactions. Please try again!']);
         }
@@ -527,45 +514,25 @@ class IarTransactionController extends Controller
         return ProductInventory::where('prod_id', $productId)->first();
     }
 
-    private function fetchIarTransactionsFromAssetPro(int $id)
-    {
-        return DB::connection('pgso-pms')
-            ->table('sdi_air')
-            ->select('sdi_air.air_id', 'sdi_air.po_no', 'psu_suppliers.name', 'sdi_air.air_date', 'sdi_air.warehouse')
-            ->join('psu_suppliers', 'sdi_air.supplier_id', '=', 'psu_suppliers.supplier_id')
-            ->where('sdi_air.air_id', '>' , $id)
-            ->where('warehouse', 1)
-            ->get();
-    }
-
-    private function fetchIarParticularsFromAssetPro(int $id)
-    {
-        return DB::connection('pgso-pms')
-            ->table('sdi_air_particulars')
-            ->select('*')
-            ->where('air_id', $id)
-            ->get();
-    }
-
-    private function processCreationOfIarTransaction(stdClass $iar): ?IarTransaction
+    private function processCreationOfIarTransaction(array $iar): ?IarTransaction
     {
         return IarTransaction::create([
-            'sdi_iar_id' => $iar->air_id,
-            'po_no' => $iar->po_no,
-            'supplier' => $iar->name,
-            'date' => $iar->air_date,
+            'sdi_iar_id' => $iar['air_id'],
+            'po_no' => $iar['po_no'],
+            'supplier' => $iar['name'],
+            'date' => $iar['air_date'],
         ]);
     }
 
-    private function processCreationOfIarParticulars(stdClass $particular, int $IarId): ?IarParticular
+    private function processCreationOfIarParticulars(array $particular, int $IarId): ?IarParticular
     {
         return IarParticular::create([
-            'item_no' => $particular->item_no,
-            'stock_no' => $particular->stock_no,
-            'unit' => $particular->unit,
-            'description' => $particular->description,
-            'qty' => $particular->quantity,
-            'price' => $particular->unit_cost,
+            'item_no' => $particular['item_no'] ? str_replace('`', '', $particular['item_no']) : 0,
+            'stock_no' => $particular['stock_no'],
+            'unit' => $particular['unit'],
+            'description' => $particular['description'],
+            'qty' => $particular['quantity'],
+            'price' => (float)$particular['unit_cost'],
             'air_id' => $IarId,
         ]);
     }

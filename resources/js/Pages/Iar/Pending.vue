@@ -12,21 +12,18 @@
     const page = usePage();
     const props = defineProps({
         iar: Object,
+        lastId: Number,
     });
 
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
 
 
-    const API_BASE_URL = 'http://192.168.2.20/api';
-    const tdrpData = ref([]);
-    const fetchArchives = async () => {
+    const API_BASE_URL = 'http://192.168.2.16/pgso-pms/api/fetch-iar';
+    const newTransactionsList = ref([]);
+    const fetchArchives = async (id) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/archives`, {
-                params: {
-                    search_tdrp: '95-007-00544',
-                    municipality: null
-                },
+            const response = await axios.get(`${API_BASE_URL}/ ${id}`, {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
@@ -38,12 +35,38 @@
                 throw new Error('No data received from server');
             }
 
-            tdrpData.value = response.data;
-            return response.data;
+            newTransactionsList.value = response.data;
+
+            const saveResponse = await axios.post('iar/collect-transactions', {
+                param: newTransactionsList.value
+            }, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (newTransactionsList.value) {
+                Swal.fire({
+                    title: 'Success',
+                    text: newTransactionsList.value.length + ' new transaction',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
+            }
+
+            return saveResponse;
         } catch (error) {
             const errorMessage = error.response?.data?.message || 
                             error.message || 
-                            'Failed to fetch archives';
+                            'Failed to fetch IAR Transactions';
+
+            Swal.fire({
+                title: 'Error',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
             
             console.error('Error:', {
                 message: errorMessage,
@@ -52,7 +75,7 @@
             });
 
             throw {
-                userMessage: 'Failed to load TDRP data. Please try again later.',
+                userMessage: 'Failed to load IAR Transactions data. Please try again later.',
                 technicalMessage: errorMessage,
                 code: error.response?.status || 'NETWORK_ERROR'
             };
@@ -103,7 +126,6 @@
     ];
 
     onMounted(() => {
-        fetchArchives();
         if (message.value) {
             Swal.fire({
                 title: 'Success',
@@ -152,7 +174,15 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <Refresh v-if="hasAnyRole(['Developer']) || hasPermission('collect-iar-transactions')" :href="route('iar.collect.transactions')">Get Transactions from AssetPRO </Refresh>
+                        <button v-if="hasAnyRole(['Developer']) || hasPermission('collect-iar-transactions')" @click="fetchArchives(props.lastId)"
+                            class="flex items-center justify-center text-white bg-gradient-to-r from-indigo-400 via-indigo-600 to-indigo-800 hover:bg-gradient-to-br font-medium rounded-lg text-sm text-center px-4 py-1">
+                            <svg class="w-6 h-6 mr-2" fill="none" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 32 32">
+                                <path fill="currentColor" d="M16 7L6 17l1.41 1.41L15 10.83V28H2v2h13a2 2 0 0 0 2-2V10.83l7.59 7.58L26 17Z"/>
+                                <path fill="currentColor" d="M6 8V4h20v4h2V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v4Z"/>
+                            </svg>
+                            <span>Get Transactions from AssetPRO</span>
+                        </button>
+                        <!-- <Refresh v-if="hasAnyRole(['Developer']) || hasPermission('collect-iar-transactions')" :href="route('iar.collect.transactions')">Get Transactions from AssetPRO </Refresh> -->
                     </li>
                 </ol>
             </nav>
