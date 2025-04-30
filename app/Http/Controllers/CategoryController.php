@@ -55,27 +55,32 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
-        $fundId = $request->input('fundId');
-        $catName = $request->input('catName');
-        $createdBy = $request->input('createdBy');
+        $validatedData = $request->validate([
+            'fundId' => 'required|integer',
+            'catName' => 'required|string',
+            'createdBy' => 'required|integer',
+        ]);        
         
+        DB::beginTransaction();
+
         try {
             $lastCode = Category::selectRaw('cat_code')->orderBy('cat_code', 'desc')->first();
             $newCode = (int) $lastCode->cat_code + 1;
 
-            $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catName);
-
+            $existingCategory  = $this->productService->validateCategoryExistence($validatedData['fundId'], $validatedData['catName']);
+            
             if($existingCategory) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Category Name is already exist.']);
+                return back()->withInput()->withErrors([
+                    'catName' => 'Category Name under the selected account class is already exist!'
+                ]);
             }
 
             Category::create([
-                'fund_id' => $fundId,
-                'cat_name' => $catName,
+                'fund_id' => $validatedData['fundId'],
+                'cat_name' => $validatedData['catName'],
                 'cat_code' => $newCode,
-                'created_by' => $createdBy,
+                'created_by' => $validatedData['createdBy'],
             ]);
 
             Db::commit();
@@ -85,16 +90,17 @@ class CategoryController extends Controller
             Log::error("Creating Category Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData,
             ]);
-            return redirect()->back()->with(['error' => 'Creating New Category Failed. Please try again!']);
+
+            return back()->with('error', 'Creating New Category Failed. Please try again!')->withInput();
         }
     }
 
     public function update(Request $request)
     {   
         $validated = $request->validate([
-            'catId' => 'required|exists:categories,id',
+            'catId' => 'required',
             'fundId' => 'required|integer',
             'catCode' => 'required|integer',
             'catName' => 'required|string|max:255',
@@ -108,13 +114,14 @@ class CategoryController extends Controller
         $updater = $validated['updater'];
 
         try {
-            DB::transaction(function () use ($catId, $fundId, $catCode, $catName, $updater, $request) {
+            DB::transaction(function () use ($catId, $fundId, $catName, $updater) {
                 $category = Category::findOrFail($catId);
                 $existingCategory  = $this->productService->validateCategoryExistence($fundId, $catName);
 
-                if($existingCategory) {
-                    return redirect()->back()
-                    ->with(['error' => 'Category Name already exist.']);
+                if($existingCategory && $category->id !== $existingCategory->id) {
+                    return back()->withInput()->withErrors([
+                        'catName' => 'Category Name under the selected account class is already exist!'
+                    ]);
                 }
 ;
                 $category->update(['cat_name' => $catName, 'updated_by' => $updater]);
@@ -125,9 +132,8 @@ class CategoryController extends Controller
             Log::error("Updating Category Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()->with(['error' => 'Updating Category Information Failed. Please try again!']);
+            return back()->with('error', 'Updating Category Information Failed. Please try again!')->withInput();
         }
     }
 
@@ -151,7 +157,7 @@ class CategoryController extends Controller
             if($catId->funder->fund_status != 'active') {
                 DB::rollBack();
                 return redirect()->back()
-                ->with(['error' => 'Unable to restore the category, main account classification is inactive!']);
+                ->with('error', 'Unable to restore the category, main account classification is inactive!');
             }
 
             foreach ($catId->items as $item) {
@@ -165,7 +171,7 @@ class CategoryController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Category was activated.']);
+            return redirect()->back()->with('message', 'Category was activated.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -174,7 +180,7 @@ class CategoryController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()->with(['error' => 'Restoring Category Failed. Please try again!']);
+            return back()->with('error','Restoring Category Failed. Please try again!');
         }       
     }
 
@@ -235,9 +241,8 @@ class CategoryController extends Controller
             Log::error("Deletion of Category Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()->with(['error' => 'Deletion of a Category Failed. Please try again!']);
+            return back()->with('error', 'Deletion of a Category Failed. Please try again!');
         }
     }
 

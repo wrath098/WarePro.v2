@@ -26,6 +26,7 @@ class FundController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
+
         $validation = $request->validate([
             'fundName' => 'required|string|max:255',
             'fundDesc' => 'nullable|string|max:255',
@@ -39,7 +40,9 @@ class FundController extends Controller
                 
             if ($existingFund) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Account Classification Name is already exist.']);
+                return back()->withInput()->withErrors([
+                    'fundName' => 'Account Classification Name is already exist!'
+                ]);
             }
 
             Fund::create([
@@ -50,11 +53,15 @@ class FundController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Account Classification created successfully']);
+            return redirect()->back()->with('message', 'Account Classification created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Creation of Account Classification error: ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to create Account Classification']);
+            Log::error("Creation of Account Classification error: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to create Account Classification. Please try again!');
         }
     }
 

@@ -174,7 +174,6 @@ class CapitalOutlayController extends Controller
             Log::error("Updating Account Fund Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
             return redirect()->back()->with(['error' => 'Updating Proposed Budget Failed. Please try again!']);
         }

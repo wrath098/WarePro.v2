@@ -1,5 +1,5 @@
 <script setup>
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 import { ref, reactive, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -11,6 +11,7 @@ import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
 import Swal from 'sweetalert2';
 import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
 import useAuthPermission from '@/Composables/useAuthPermission';
+import InputError from '@/Components/InputError.vue';
 
 const {hasAnyRole, hasPermission} = useAuthPermission();
 const modalState = ref(null);
@@ -50,7 +51,7 @@ const fetchTrashedFund = async () => {
     }
 };
 
-const form = reactive({
+const form = useForm({
     fundName: '',
     fundDesc: '',
     createdBy: props.authUserId || '',
@@ -73,15 +74,38 @@ const confirmForm = reactive({
     updatedBy: props.authUserId || '',
 });
 
-const submit = () => {
+const submitForm = (url, formData) => {
     isLoading.value = true;
-    Inertia.post('funds/save', form, {
+
+    formData.post(url, {
+        preserveScroll: true,
+        onFinish: () => {
+            isLoading.value = false;
+        },
         onSuccess: () => {
-            closeModal();
-            isLoading.value = true;
-        }
+            if (errMessage.value) {
+                Swal.fire({
+                    title: 'Failed',
+                    text: errMessage.value,
+                    icon: 'error',
+                });
+            } else {
+                formData.reset();
+                Swal.fire({
+                    title: 'Success',
+                    text: message.value,
+                    icon: 'success',
+                }).then(() => closeModal());
+            }
+        },
+        onError: (errors) => {
+            isLoading.value = false;
+            console.log('Error: ' + errors);
+        },
     });
 };
+
+const submit = () => submitForm(route('fund.store'), form);
 
 const editFormSubmit = () => {
     isLoading.value = true;
@@ -340,10 +364,12 @@ const columns = [
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.fundName" type="text" name="fundName" id="fundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
                                     <label for="fundName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
+                                    <InputError class="mt-2" :message="form.errors.fundName" />
                                 </div>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.fundDesc" type="text" name="fundDesc" id="fundDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                                     <label for="fundDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Description (<i>Opptional</i>)</label>
+                                    <InputError class="mt-2" :message="form.errors.fundDesc" />
                                 </div>
                             </div>
                         </div>

@@ -1,7 +1,6 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { Inertia } from '@inertiajs/inertia';
-    import { ref, reactive, computed, onMounted } from 'vue';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Dropdown from '@/Components/Dropdown.vue';
     import Modal from '@/Components/Modal.vue';
@@ -12,6 +11,7 @@
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const modalState = ref(null);
@@ -22,6 +22,8 @@
     const isEditModalOpen = computed(() => modalState.value === 'edit');
     const isDropModalOpen = computed(() => modalState.value === 'deactivate');
     const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const showModal = (modalType) => {
         modalState.value = modalType;
@@ -52,14 +54,14 @@
         }
     };
 
-    const form = reactive({
+    const form = useForm({
         catName: '',
         catCode: '',
         fundId: '',
         createdBy: props.authUserId || '',
     });
 
-    const editForm = reactive({
+    const editForm = useForm({
         catId: '',
         catName: '',
         catCode: '',
@@ -67,12 +69,12 @@
         updater: props.authUserId || '',
     });
 
-    const dropForm = reactive({
+    const dropForm = useForm({
         catId: '',
         updater: props.authUserId || '',
     });
 
-    const confirmForm = reactive({
+    const confirmForm = useForm({
         catId: '',
         updater: props.authUserId || '',
     });
@@ -95,43 +97,52 @@
         modalState.value = 'confirm';
     };
 
-    const submitForm = (url, data) => {
+    const submitForm = (url, formData) => {
         isLoading.value = true;
-        Inertia.post(url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData.post(url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
-            }
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => closeModal());
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.log('Error: ' + errors);
+            },
         });
     };
 
-    const submit = () => submitForm('categories/save', form);
-    const submitEdit = () => submitForm('categories/update', editForm);
-    const submitDrop = () => submitForm('categories/deactivate', dropForm);
-    const confirmFormSubmit = () => submitForm(`categories/restore/${confirmForm.catId}`, null);
+    const submit = () => submitForm(route('category.store'), form);
+    const submitEdit = () => submitForm(route('category.update'), editForm);
+    const submitDrop = () => submitForm(route('category.deactivate'), dropForm);
 
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
+    const confirmFormSubmit = () => {
+        if (confirmForm.catId) {
+            submitForm(route('category.restore', { id: confirmForm.catId }), confirmForm);
+        } else {
             Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
+                title: 'Error',
+                text: 'Category ID is missing',
                 icon: 'error',
-                confirmButtonText: 'OK',
             });
         }
-    });
+    };
 
     const columns = [
         {
@@ -318,10 +329,12 @@
                                         </option>
                                     </select>
                                     <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
+                                    <InputError class="mt-2" :message="form.errors.fundId" />
                                 </div>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.catName" type="text" name="category" id="category" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
                                     <label for="category" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
+                                    <InputError class="mt-2" :message="form.errors.catName" />
                                 </div>
                                 <!-- <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.catCode" type="number" name="categoryCode" id="categoryCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
@@ -366,10 +379,12 @@
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="editForm.catName" type="text" name="editCatName" id="editCatName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
                                     <label for="editCatName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
+                                    <InputError class="mt-2" :message="editForm.errors.catName" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="editForm.catCode" type="text" name="editCatCode" id="editCatCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" disabled/>
                                     <label for="editCatCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Code</label>
+                                    <InputError class="mt-2" :message="editForm.errors.catCode" />
                                 </div>
                                 <div class="relative z-0 w-full group my2">
                                     <select v-model="editForm.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required disabled>
@@ -379,6 +394,7 @@
                                         </option>
                                     </select>
                                     <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
+                                    <InputError class="mt-2" :message="editForm.errors.fundId" />
                                 </div>
                             </div>
                         </div>
