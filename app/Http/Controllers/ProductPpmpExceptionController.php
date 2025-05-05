@@ -21,7 +21,7 @@ class ProductPpmpExceptionController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(Request $request)
+    public function index()
     {
         $list = Product::where('prod_status', 'active')
                 ->get()
@@ -66,31 +66,47 @@ class ProductPpmpExceptionController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $item = Product::findOrFail($request->prod['id']);
+        $validateData = $request->validate([
+            'param' => 'required|array',
+            'param.prod' => 'required|array',
+            'param.ppmpYear' => 'required|string',
+        ]);
 
-            $validateList = ProductPpmpException::where('prod_id', $item->id)
-                ->where('year', $request['ppmpYear'])
-                ->first();
+        $prodId = $request->param ? $request->param['prod']['id'] : null ;
+        $year = $request->param ? $request->param['ppmpYear'] : null ;
+
+        DB::beginTransaction();
+        try {
+            $item = Product::findOrFail($prodId);
+
+            $validateList = ProductPpmpException::where('prod_id', $item->id)->first();
             
             if($validateList) {
                 $validateList->update(['status'=> 'active']);
-                return redirect()->back()
-                    ->with(['error' => 'Product Code is already exist on list!']);
+
+                DB::commit();
+                return redirect()->route('product.unmodified.list')
+                    ->with('message', 'Product Code is active!');
             }
 
             ProductPpmpException::create([
-                'year' => $request['ppmpYear'],
+                'year' => $year,
                 'prod_id' => $item->id,
             ]);
 
-            return redirect()->back()
-            ->with(['message' => 'Product has been added successfully!']);
+            DB::commit();
+            return redirect()->route('product.unmodified.list')
+                ->with('message', 'Product has been added successfully!');
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'Product Code does not exist.']);
+            DB::rollBack();
+            Log::error("Creating Product Quantity Exemption Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $validateData
+            ]);
+            return back()
+                ->with('error', 'Creating Product Quantity Exemption failed. Please try again!');
         }
     }
 
@@ -101,12 +117,12 @@ class ProductPpmpExceptionController extends Controller
 
             $productExempt->update(['status' => 'deactivate']);
 
-            return redirect()->back()
-                ->with(['message' => 'Product has been moved to trash successfully!']);
+            return redirect()->route('product.unmodified.list')
+                ->with('message', 'Product has been moved to trash successfully!');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return redirect()->back()
-                ->with(['error' => 'An unexpected error occurred.']);
+            return back()
+                ->with('error', 'An unexpected error occurred.');
         }
     }
 }

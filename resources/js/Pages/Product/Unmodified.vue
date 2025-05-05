@@ -1,7 +1,6 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { ref, reactive, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+    import { ref, computed, onMounted, reactive } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import Modal from '@/Components/Modal.vue';
@@ -14,6 +13,8 @@
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         products: Object,
@@ -28,6 +29,7 @@
 
     const stockNo = ref('');
     const stockData = ref(null);
+    const createForm = useForm({});
 
     const fetchData = () => {
         if (stockNo.value.length > 0) {
@@ -49,7 +51,7 @@
         ppmpYear: '',
     });
 
-    const edit = reactive({
+    const edit = useForm({
         prodId: '',
     });
 
@@ -66,49 +68,69 @@
     const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
 
-    const submitForm = (url, data) => {
-        isLoading.value = true;
-        Inertia.post(url, data, {
-            onSuccess: () => { 
-                closeModal();
+    const submitAddUnmodified = async () => {
+        createForm.post(route('store.unmodified.product', { param: create }), {
+            preserveScroll: false,
+            onFinish: () => {
                 isLoading.value = false;
             },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    createForm.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        router.visit(route('product.unmodified.list'), {
+                            preserveScroll: true,
+                            preserveState: false,
+                        });
+                    });
+                }
+            },
             onError: (errors) => {
-                console.error(`Form submission failed for ${url}`, errors);
                 isLoading.value = false;
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submitAddUnmodified = () => submitForm('store-unmodified-product', create);
-    const submitDropUnmodify = () => submitForm('deactivate-unmodified-product', edit);
+    const submitDropUnmodify = async () => {
+        edit.put(route('deactivate.unmodified.product'), {
+            preserveScroll: false,
+            onSuccess: () => {
+                Swal.fire({
+                    title: 'Success',
+                    text: message.value,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    closeModal();
+
+                    router.visit(route('product.unmodified.list'), {
+                        preserveScroll: true,
+                        preserveState: false,
+                    });
+                });
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+            }
+        });
+    };
 
     function generateYears() {
         const currentYear = new Date().getFullYear() + 2;
         return Array.from({ length: 3 }, (_, i) => currentYear - i);
     }
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
 
     const columns = [
         {

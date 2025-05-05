@@ -53,8 +53,9 @@ class OfficeController extends Controller
 
             if($existingCode) {
                 DB::rollback();
-                return redirect()->back()
-                    ->with(['error' => 'Office code already exist.']);
+                return back()->withInput()->withErrors([
+                    'offCode' => 'Office code already exis!'
+                ]);
             }
 
             Office::create([
@@ -67,17 +68,17 @@ class OfficeController extends Controller
 
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'New office has been successfully added.']);
+                ->with('message', 'New office has been successfully added.');
         }catch (\Exception $e) {
 
             DB::rollBack();
             Log::error("Creation of New Office Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData
             ]);
 
-            return redirect()->back()->with(['error' => 'Creation of New Office failed. Please try again!']);
+            return back()->with('error', 'Creation of New Office failed. Please try again!');
         }
     }
 
@@ -104,8 +105,9 @@ class OfficeController extends Controller
 
             if($existingCode->isNotEmpty()) {
                 DB::rollback();
-                return redirect()->back()
-                    ->with(['error' => 'Office code already exist.']);
+                return back()->withInput()->withErrors([
+                    'offCode' => 'Office code already exis!'
+                ]);
             }
 
             $office->fill([
@@ -118,17 +120,17 @@ class OfficeController extends Controller
 
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Office has been successfully updated.']);
+                ->with('message', 'Office has been successfully updated.');
         } catch (\Exception $e) {
 
             DB::rollBack();
             Log::error("Updating Office Information  Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData
             ]);
 
-            return redirect()->back()->with(['error' => 'Updating Office Information failed. Please try again!']);
+            return back()->with('error', 'Updating Office Information failed. Please try again!');
         }
     }
 
@@ -149,7 +151,7 @@ class OfficeController extends Controller
                 $office->forceDelete();
                 DB::commit();
                 return redirect()->back()
-                    ->with(['message' => 'Office has been successfully removed.']);
+                    ->with('message', 'Office has been successfully removed.');
             }
 
             // $office->fill([
@@ -159,16 +161,16 @@ class OfficeController extends Controller
 
             DB::commit();
             return redirect()->back()
-                ->with(['error' => 'Unable to removed the Office due to dependencies. ']);
+                ->with('error', 'Unable to removed the Office due to dependencies.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Deletion of Office Information Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData
             ]);
 
-            return redirect()->back()->with(['error' => 'Deletion Office Information failed. Please try again!']);
+            return back()->with('error', 'Deletion Office Information failed. Please try again!');
         }
     }
 }

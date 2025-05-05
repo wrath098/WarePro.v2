@@ -55,7 +55,9 @@ class ItemClassController extends Controller
 
             if ($itemNameExist) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Item Name under the selected category is already exist.']);
+                return back()->withInput()->withErrors([
+                    'itemName' => 'Item Name under the selected category is already exist!'
+                ]);
             }
 
             $latestCode = ItemClass::withTrashed()
@@ -75,16 +77,16 @@ class ItemClassController extends Controller
 
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'New Item Class has been successfully added']);
+                ->with('message', 'New Item Class has been successfully added');
             
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Creating New Item Class Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validated
             ]);
-            return redirect()->back()->with(['error' => 'Creation of New Item Class Failed. Please try again!']);
+            return back()->with('error', 'Creation of New Item Class Failed. Please try again!');
         }
     }
 
@@ -101,9 +103,11 @@ class ItemClassController extends Controller
             $itemClass = ItemClass::findOrFail($validatedData['itemId']);
             $itemNameExist = ItemClass::withTrashed()->whereRaw('LOWER(item_name) = ?', [strtolower($validatedData['editName'])])->first();
 
-            if ($itemNameExist) {
+            if ($itemNameExist && $itemClass->id !== $itemNameExist->id) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Item Name under the selected category is already exist.']);
+                return back()->withInput()->withErrors([
+                    'itemName' => 'Item Name under the selected category is already exist!'
+                ]);
             }
 
             $itemClass->fill([
@@ -113,15 +117,15 @@ class ItemClassController extends Controller
             
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Item Class name was updated successfully.']);
+                ->with('message', 'Item Class name was updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Updating Item Class Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData
             ]);
-            return redirect()->back()->with(['error' => 'Updating Item Class Failed. Please try again!']);
+            return back()->with('error', 'Updating Item Class Failed. Please try again!');
         }
     }
 
@@ -143,7 +147,7 @@ class ItemClassController extends Controller
 
             if($itemClassDetails->category->cat_status != 'active'){
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Unable to restore the item class, main category is inactive!']);
+                return back()->with('error', 'Unable to restore the item class, main category is inactive!');
             }
 
             foreach ($itemClassDetails->products as $product) {
@@ -155,16 +159,16 @@ class ItemClassController extends Controller
             
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Item Class has been restored!.']);
+                ->with('message', 'Item Class has been restored!.');
         } catch(\Exception $e) {
 
             DB::rollBack();
             Log::error("Restoring Item Class Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $itemClass
             ]);
-            return redirect()->back()->with(['error' => 'Restoring Item Class Failed. Please try again!']);
+            return back()->with('error', 'Restoring Item Class Failed. Please try again!');
         }
     }
 
@@ -193,7 +197,7 @@ class ItemClassController extends Controller
 
                 DB::commit();
                 return redirect()->back()
-                    ->with(['message' => 'Item Class Name was removed successfully']);
+                    ->with('message', 'Item Class Name was removed successfully');
             }
 
             foreach ($itemClass->products as $product) {  
@@ -213,7 +217,7 @@ class ItemClassController extends Controller
             
             DB::commit();
             return redirect()->back()
-                ->with(['message' => 'Item Class has been move to trash!.']);
+                ->with('message', 'Item Class has been move to trash!.');
 
         } catch (\Exception $e) {
 
@@ -221,9 +225,9 @@ class ItemClassController extends Controller
             Log::error("Deletion of Item Class Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $itemClass
             ]);
-            return redirect()->back()->with(['error' => 'Deleting Item Class Failed. Please try again!']);
+            return back()->with('error', 'Deleting Item Class Failed. Please try again!');
         }
     }
 

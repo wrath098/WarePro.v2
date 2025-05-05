@@ -1,7 +1,6 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { ref, reactive, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
@@ -11,17 +10,20 @@
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         offices: Object,
         authUserId: Number,
     });
 
-    const create = reactive({
+    const create = useForm({
         offCode: '',
         offName: '',
         offHead: '',
@@ -29,7 +31,7 @@
         createdBy: props.authUserId || '',
     });
 
-    const edit = reactive({
+    const edit = useForm({
         offId: '',
         offCode: '',
         offName: '',
@@ -66,42 +68,40 @@
         modalState.value = 'deactivate';
     };
 
-    const submitForm = (url, data) => {
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia.post(url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData[method](url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => closeModal());
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submit = () => submitForm('offices/save', create);
-    const submitEdit = () => submitForm('offices/update', edit);
-    const submitDeactivate = () => submitForm('offices/deactivate', edit);
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const submit = () => submitForm('post', route('office.store'), create);
+    const submitEdit = () => submitForm('put', route('office.update'), edit);
+    const submitDeactivate = () => submitForm('put', route('office.deactivate'), edit);
 
     const columns = [
         {
@@ -213,18 +213,22 @@
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="create.offCode" type="text" name="officeCode" id="officeCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="officeCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Code/Abbreviation</label>
+                                    <InputError class="mt-2" :message="create.errors.offCode" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="create.offName" type="text" name="officeName" id="officeName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="officeName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Name</label>
+                                    <InputError class="mt-2" :message="create.errors.offName" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="create.offHead" type="text" name="officeHead" id="officeHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="officeHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Head of Office</label>
+                                    <InputError class="mt-2" :message="create.errors.offHead" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="create.posHead" type="text" name="positionHead" id="positionHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="positionHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Position of the Head of Office</label>
+                                    <InputError class="mt-2" :message="create.errors.posHead" />
                                 </div>
                                 <input type="hidden" v-model="create.createdBy">
                             </div>
@@ -266,18 +270,22 @@
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="edit.offCode" type="text" name="editOfficeCode" id="editOfficeCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editOfficeCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Code/Abbreviation</label>
+                                    <InputError class="mt-2" :message="edit.errors.offCode" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="edit.offName" type="text" name="editOfficeName" id="editOfficeName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editOfficeName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office Name</label>
+                                    <InputError class="mt-2" :message="edit.errors.offName" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="edit.offHead" type="text" name="editOfficeHead" id="editOfficeHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editOfficeHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Head of Office</label>
+                                    <InputError class="mt-2" :message="edit.errors.offHead" />
                                 </div>
                                 <div class="relative z-0 w-full group my-3">
                                     <input v-model="edit.posHead" type="text" name="editPositionHead" id="editPositionHead" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editPositionHead" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Position of the Head of Office</label>
+                                    <InputError class="mt-2" :message="edit.errors.posHead" />
                                 </div>
                             </div>
                         </div>

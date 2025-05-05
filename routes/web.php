@@ -79,9 +79,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->prefix('funds')->group(function () {
     Route::middleware('componentAccess')->get('/', [FundController::class, 'index'])->name('fund.display.all');
     Route::post('/save', [FundController::class, 'store'])->name('fund.store');
-    Route::post('/update', [FundController::class, 'update'])->name('fund.update');
+    Route::put('/update', [FundController::class, 'update'])->name('fund.update');
     Route::put('/restore/{fundId}', [FundController::class, 'restore'])->name('fund.restore');
-    Route::post('/deactivate', [FundController::class, 'deactivate'])->name('fund.deactivate');
+    Route::put('/deactivate', [FundController::class, 'deactivate'])->name('fund.deactivate');
 
     #AJAX
     Route::get('/trashed-funds', [FundController::class, 'showTrashedFunds'])->name('show.trash.funds');
@@ -101,9 +101,9 @@ Route::middleware('auth')->prefix('categories')->group(function () {
 Route::middleware('auth')->prefix('items')->group(function () {
     Route::middleware('componentAccess')->get('/', [ItemClassController::class, 'index'])->name('item.display.active');
     Route::post('/save', [ItemClassController::class, 'store'])->name('item.store');
-    Route::post('/update', [ItemClassController::class, 'update'])->name('item.update');
-    Route::post('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
-    Route::post('/restore/{itemClass}', [ItemClassController::class, 'restore'])->name('item.restore');
+    Route::put('/update', [ItemClassController::class, 'update'])->name('item.update');
+    Route::put('/deactivate', [ItemClassController::class, 'deactivate'])->name('item.deactivate');
+    Route::put('/restore/{itemClass}', [ItemClassController::class, 'restore'])->name('item.restore');
 
     #AJAX
     Route::get('/trashed-itemclass', [ItemClassController::class, 'showTrashedItemClass'])->name('item.show.trashed');
@@ -112,8 +112,8 @@ Route::middleware('auth')->prefix('items')->group(function () {
 Route::middleware('auth')->prefix('offices')->group(function () {
     Route::middleware('componentAccess')->get('/', [OfficeController::class, 'index'])->name('office.display.active');
     Route::post('/save', [OfficeController::class, 'store'])->name('office.store');
-    Route::post('/update', [OfficeController::class, 'update'])->name('office.update');
-    Route::post('/deactivate', [OfficeController::class, 'deactivate'])->name('office.deactivate');
+    Route::put('/update', [OfficeController::class, 'update'])->name('office.update');
+    Route::put('/deactivate', [OfficeController::class, 'deactivate'])->name('office.deactivate');
 });
 
 Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
@@ -134,12 +134,12 @@ Route::middleware('auth')->prefix('products')->group(function () {
     });
     Route::get('/autocomplete-product', [ProductController::class, 'showAutoComplete'])->name('product.show.autocomplete');
     Route::post('/save', [ProductController::class, 'store'])->name('product.store');
-    Route::post('/update', [ProductController::class, 'update'])->name('product.update');
+    Route::put('/update', [ProductController::class, 'update'])->name('product.update');
     Route::put('/restore', [ProductController::class, 'restore'])->name('product.restore');
     Route::any('/move-and-modify', [ProductController::class, 'moveAndModify'])->name('product.move.modify');
-    Route::post('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
+    Route::put('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
     Route::post('/store-unmodified-product', [ProductPpmpExceptionController::class, 'store'])->name('store.unmodified.product');
-    Route::post('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
+    Route::put('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
 
     #AJAX
     Route::get('/trashed-items', [ProductController::class, 'getTrashedItems'])->name('trashed.product.items');

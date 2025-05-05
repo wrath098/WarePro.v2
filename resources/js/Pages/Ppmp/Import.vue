@@ -1,5 +1,5 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
     import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -41,11 +41,12 @@
         modalState.value = 'drop';
     };
 
-    const create = reactive({
+    const create = useForm({
         ppmpType: '',
         ppmpYear: '',
         ppmpSem: '',
         office: '',
+        file: null,
         createdBy: props.user,
     });
 
@@ -88,18 +89,19 @@
             return;
         }
 
-        const formData = new FormData();
-            formData.append('ppmpType', create.ppmpType);
-            formData.append('ppmpYear', create.ppmpYear);
-            formData.append('ppmpSem', create.ppmpSem);
-            formData.append('office', create.office);
-            formData.append('user', create.createdBy);
-            formData.append('file', file.value);
-
-        Inertia.post('ppmp/create', formData, {
+        create.setData('file', file.value);
+        
+        create.post(route('create.ppmp.store'), {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
+            forceFormData: true,
+            onError: (errors) => {
+                console.error('Form submission errors:', errors);
+            },
+            onSuccess: () => {
+                console.log('Form submitted successfully');
+            }
         })
     };
 

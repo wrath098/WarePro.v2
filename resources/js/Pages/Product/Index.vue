@@ -1,5 +1,5 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
     import { ref, reactive, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -16,10 +16,16 @@
     import axios from 'axios';
     import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+    const warningMessage = computed(() => page.props.flash.warning);
+
     const props = defineProps({
         products: Object,
         categories: Object,
@@ -41,7 +47,7 @@
         }
     };
 
-    const create = reactive({
+    const create = useForm({
         selectedCategory: '',
         itemId: '',
         prodDesc: '',
@@ -53,7 +59,7 @@
         createdBy: props.authUserId || '',
     });
 
-    const edit = reactive({
+    const edit = useForm({
         prodId: '',
         selectedCategory: '',
         itemId: '',
@@ -66,7 +72,7 @@
         updatedBy: props.authUserId || '',
     });
 
-    const restore = reactive({
+    const restore = useForm({
         prodId: '',
     });
 
@@ -131,74 +137,50 @@
         return Array.from({ length: 5 }, (_, i) => currentYear - i);
     }
 
-    const submitForm = (action, url, data) => {
-        let method;
-
-        switch (action) {
-            case 'post':
-                method = 'post';
-                break;
-            case 'put':
-                method = 'put';
-                break;
-            case 'delete':
-                method = 'delete';
-                break;
-            default:
-                throw new Error('Invalid action specified');
-        }
-
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia[method](url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData[method](url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                }else if (warningMessage.value) {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: warningMessage.value,
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                    }).then(() => closeModal());
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => closeModal());
+                }
             },
             onError: (errors) => {
                 isLoading.value = false;
-                console.error(`Form submission failed for ${url}`, errors);
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submit = () => submitForm('post', 'products/save', create);
-    const submitEdit = () => submitForm('post', 'products/update', edit);
-    const submitModify = () => submitForm('post', 'products/move-and-modify', edit);
-    const submitDeactivate = () => submitForm('post', 'products/deactivate', edit);
-    const submitRestore = () => submitForm('put', 'products/restore', restore);
-    
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    const warningMessage = computed(() => page.props.flash.warning);
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (warningMessage.value) {
-            Swal.fire({
-                title: 'Warning!',
-                text: warningMessage.value,
-                icon: 'warning',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const submit = () => submitForm('post', route('product.store'), create);
+    const submitEdit = () => submitForm('put', route('product.update'), edit);
+    const submitModify = () => submitForm('put', route('product.move.modify'), edit);
+    const submitDeactivate = () => submitForm('put', route('product.deactivate'), edit);
+    const submitRestore = () => submitForm('put', route('product.restore'), restore);
 
     const activeColumns = [
         {
@@ -404,6 +386,7 @@
                                             </option>
                                         </select>
                                         <label for="category" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category</label>
+                                        <InputError class="mt-2" :message="create.errors.selectedCategory" />
                                     </div>
                                     <div class="relative z-0 w-full my-3 group" v-if="filteredItems.length">
                                         <select v-model="create.itemId" name="item" id="item" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
@@ -413,6 +396,7 @@
                                             </option>
                                         </select>
                                         <label for="item" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Class</label>
+                                        <InputError class="mt-2" :message="create.errors.itemId" />
                                     </div>
                                 </div>
                                 <div class="mt-5">
@@ -420,11 +404,13 @@
                                     <div class="relative z-0 w-full group my-1">
                                         <textarea v-model="create.prodDesc" type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required> </textarea>
                                         <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                        <InputError class="mt-2" :message="create.errors.prodDesc" />
                                     </div>
                                     <div class="grid lg:grid-cols-2 lg:gap-6 mt-3">
                                         <div class="relative z-0 w-full group">
                                             <input v-model="create.prodPrice" type="number" name="prodPrice" id="prodPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                                             <label for="prodPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
+                                            <InputError class="mt-2" :message="create.errors.prodPrice" />
                                         </div>
                                         <div class="relative z-0 w-full group">
                                             <select v-model="create.prodUnit" name="prodUnit" id="prodUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
@@ -451,6 +437,7 @@
                                                 <option value="Yard">Yard</option>
                                             </select>
                                             <label for="prodUnit" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                            <InputError class="mt-2" :message="create.errors.prodUnit" />
                                         </div>
                                     </div>
                                     <div class="relative z-0 w-full my-3 group">
@@ -459,10 +446,12 @@
                                             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                         </select>
                                         <label for="prodRemarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
+                                        <InputError class="mt-2" :message="create.errors.prodRemarks" />
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
                                         <input v-model="create.prodOldCode" type="text" name="prodOldCode" id="prodOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                                         <label for="prodOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
+                                        <InputError class="mt-2" :message="create.errors.prodOldCode" />
                                     </div>
                                     <input type="hidden" v-model="create.createdBy">
                                 </div>
@@ -475,6 +464,7 @@
                                             <option :value="0">No</option>
                                         </select>
                                         <label for="hasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
+                                        <InputError class="mt-2" :message="create.errors.hasExpiry" />
                                     </div>
                                 </div>
                             </div>
@@ -517,14 +507,17 @@
                                     <div class="relative z-0 w-full mb-5 group">
                                         <input v-model="edit.prodOldCode" type="text" name="editprodOldCode" id="editprodOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" />
                                         <label for="editprodOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock No</label>
+                                        <InputError class="mt-2" :message="edit.errors.prodOldCode" />
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
                                         <textarea v-model="edit.prodDesc" type="text" name="editProdDesc" id="editProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required></textarea>
                                         <label for="editProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                        <InputError class="mt-2" :message="edit.errors.prodDesc" />
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
                                         <input v-model="edit.prodPrice" type="number" name="editProdPrice" id="editProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                         <label for="editProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
+                                        <InputError class="mt-2" :message="edit.errors.prodPrice" />
                                     </div>
                                     <input type="hidden" v-model="edit.updatedBy">
                                 </div>
@@ -537,6 +530,7 @@
                                             <option :value="0">No</option>
                                         </select>
                                         <label for="editHasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
+                                        <InputError class="mt-2" :message="edit.errors.hasExpiry" />
                                     </div>
                                 </div>
                             </div>
@@ -583,6 +577,7 @@
                                             </option>
                                         </select>
                                         <label for="modifyCategory" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category</label>
+                                        <InputError class="mt-2" :message="edit.errors.selectedCategory" />
                                     </div>
                                     <div class="relative z-0 w-full my-3 group" v-if="filteredItems.length">
                                         <select v-model="edit.itemId" name="modifyItem" id="modifyItem" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
@@ -592,6 +587,7 @@
                                             </option>
                                         </select>
                                         <label for="modifyItem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Class</label>
+                                        <InputError class="mt-2" :message="edit.errors.itemId" />
                                     </div>
                                 </div>
                                 <div class="mt-5">
@@ -599,11 +595,13 @@
                                     <div class="relative z-0 w-full group my-1">
                                         <textarea v-model="edit.prodDesc" type="text" name="modifyProdDesc" id="modifyProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required readonly> </textarea>
                                         <label for="modifyProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                        <InputError class="mt-2" :message="edit.errors.prodDesc" />
                                     </div>
                                     <div class="grid lg:grid-cols-2 lg:gap-6 mt-3">
                                         <div class="relative z-0 w-full group">
                                             <input v-model="edit.prodPrice" type="text" name="modifyProdPrice" id="modifyProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required readonly />
                                             <label for="modifyProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
+                                            <InputError class="mt-2" :message="edit.errors.prodPrice" />
                                         </div>
                                         <div class="relative z-0 w-full group">
                                             <select v-model="edit.prodUnit" name="modifyProdUnit" id="modifyProdUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required disabled>
@@ -630,6 +628,7 @@
                                                 <option value="Yard">Yard</option>
                                             </select>
                                             <label for="modifyProdUnit" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                            <InputError class="mt-2" :message="edit.errors.prodUnit" />
                                         </div>
                                     </div>
                                     <div class="relative z-0 w-full my-3 group">
@@ -638,10 +637,12 @@
                                             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                         </select>
                                         <label for="modifyProdRemarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
+                                        <InputError class="mt-2" :message="edit.errors.prodRemarks" />
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
                                         <input v-model="edit.prodOldCode" type="number" name="modifyProdOldCode" id="modifyProdOldCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" readonly/>
                                         <label for="modifyProdOldCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Old Stock Number</label>
+                                        <InputError class="mt-2" :message="edit.errors.prodOldCode" />
                                     </div>
                                     <div class="mt-5">
                                     <p class="text-sm text-[#86591e]">Product Expiration <span class="text-xs text-[#3b3b3b]">(Optional)</span></p>
@@ -652,6 +653,7 @@
                                                 <option :value="0">No</option>
                                             </select>
                                             <label for="editHasExpiry" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Has Expiry?</label>
+                                            <InputError class="mt-2" :message="edit.errors.hasExpiry" />
                                         </div>
                                     </div>
                                     <input type="hidden" v-model="edit.updatedBy">

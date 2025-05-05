@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -80,6 +79,17 @@ class FundController extends Controller
             $fund = Fund::findOrFail($validation['fundId']);
             $fund->lockForUpdate();
 
+            $existingFund = Fund::withTrashed()
+                ->whereRaw('LOWER(fund_name) = ?', [strtolower($validation['fundName'])])
+                ->first();
+
+            if ($existingFund && $fund->id !== $existingFund->id) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'fundName' => 'Account Classification Name is already exist!'
+                ]);
+            }
+
             $fund->fill([
                 'fund_name' => $validation['fundName'],
                 'description' => $validation['fundDesc'],
@@ -87,11 +97,15 @@ class FundController extends Controller
             ])->save();
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Account Classification updated successfully.']);
+            return redirect()->back()->with('message', 'Account Classification updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Updating of Account Classification error: ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Updating failed! Account Classification Name is already exist.']);
+            Log::error("Updating of Account Classification error:: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to update Account Classification. Please try again!');
         }
     }
     
@@ -128,12 +142,15 @@ class FundController extends Controller
             $fundId->update(['fund_status' => 'active', 'updated_by' => $user]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'An account classification activated.']);
+            return redirect()->back()->with('message', 'An account classification activated.');
         } catch (\Exception $e) {
-            
             DB::rollBack();
-            Log::error('Restoration of Fund Cluster error for fundId ' . $fundId->fund_name . ': ' . $e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            Log::error("Restoration of Account Classification error:: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to restore Account Classification. Please try again!');
         }        
     }
 
@@ -153,7 +170,7 @@ class FundController extends Controller
             if($fund->categories->isEmpty()) {
                 $fund->forceDelete();
                 DB::commit();
-                return redirect()->back()->with(['message' => 'Account Classification deleted successfully.']);
+                return redirect()->back()->with('message', 'Account Classification deleted successfully.');
             }
 
             foreach ($fund->categories as $category) {
@@ -170,11 +187,15 @@ class FundController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->back()->with(['message' => 'Account Classification move to trashed.']);
+            return redirect()->back()->with('message', 'Account Classification move to trashed.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Deletion of Fund Cluster error for fundId ' . $validation['fundId'] . ': ' . $e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to move the fund cluster to trash.']);
+            Log::error("Deleting of Account Classification error:: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Failed to remove Account Classification. Please try again!');
         }
     }
 

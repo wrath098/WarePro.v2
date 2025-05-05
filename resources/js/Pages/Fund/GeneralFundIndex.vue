@@ -42,7 +42,7 @@ const fetchNewBudgetInfo = async (year) => {
         } catch (error) {
             isFetchClick.value = false;
             isLoading.value = false;
-            console.error('Error fetching product data:', error);
+            console.error('Error fetching product data:', JSON.stringify(error));
         }
     }
 };

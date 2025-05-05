@@ -123,7 +123,7 @@
             },
             onError: (errors) => {
                 isLoading.value = false;
-                console.log('Error: ' + errors);
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };

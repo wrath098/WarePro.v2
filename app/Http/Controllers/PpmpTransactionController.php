@@ -82,6 +82,7 @@ class PpmpTransactionController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->toArray());
         DB::beginTransaction();
 
         $validatedData = $request->validate([

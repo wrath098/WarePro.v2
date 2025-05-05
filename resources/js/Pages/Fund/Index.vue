@@ -57,27 +57,27 @@ const form = useForm({
     createdBy: props.authUserId || '',
 });
 
-const editForm = reactive({
+const editForm = useForm({
     fundId: '',
     updatedBy: props.authUserId || '',
     fundName: '',
     fundDesc: ''
 });
 
-const dropForm = reactive({
+const dropForm = useForm({
     fundId: '',
     updatedBy: props.authUserId || '',
 });
 
-const confirmForm = reactive({
+const confirmForm = useForm({
     fundId: '',
     updatedBy: props.authUserId || '',
 });
 
-const submitForm = (url, formData) => {
+const submitForm = (method, url, formData) => {
     isLoading.value = true;
 
-    formData.post(url, {
+    formData[method](url, {
         preserveScroll: true,
         onFinish: () => {
             isLoading.value = false;
@@ -100,42 +100,25 @@ const submitForm = (url, formData) => {
         },
         onError: (errors) => {
             isLoading.value = false;
-            console.log('Error: ' + errors);
+            console.log('Error: ' + JSON.stringify(errors));
         },
     });
 };
 
-const submit = () => submitForm(route('fund.store'), form);
-
-const editFormSubmit = () => {
-    isLoading.value = true;
-    Inertia.post('funds/update', editForm, {
-        onSuccess: () => {
-            closeModal();
-            isLoading.value = true;
-        },
-    });
-}
-
-const dropFormSubmit = () => {
-    isLoading.value = true;
-    Inertia.post('funds/deactivate', dropForm, {
-        onSuccess: () => {
-            closeModal();
-            isLoading.value = true;
-        },
-    });
-}
-
+const submit = () => submitForm('post', route('fund.store'), form);
+const editFormSubmit = () => submitForm('put', route('fund.update'), editForm);
+const dropFormSubmit = () => submitForm('put', route('fund.deactivate'), dropForm);
 const confirmFormSubmit = () => {
-    isLoading.value = true;
-    Inertia.put(`funds/restore/${confirmForm.fundId}`, null, {
-        onSuccess: () => {
-            closeModal();
-            isLoading.value = true;
-        },
-    });
-}
+    if (confirmForm.fundId) {
+        submitForm('put', route('fund.restore', { id: confirmForm.fundId }), confirmForm);
+    } else {
+        Swal.fire({
+            title: 'Error',
+            text: 'Fund ID is missing',
+            icon: 'error',
+        });
+    }
+};
 
 const openEditModal = (fund) => {
     editForm.fundId = fund.id;
@@ -412,6 +395,7 @@ const columns = [
                             <div class="relative z-0 w-full group my-2">
                                 <input v-model="editForm.fundName" type="text" name="editFundName" id="editFundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
                                 <label for="editFundName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
+                                <InputError class="mt-2" :message="editForm.errors.fundName" />
                             </div>
                             <div class="relative z-0 w-full group my-3">
                                 <input v-model="editForm.fundDesc" type="text" name="editFundDesc" id="editFundDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" />

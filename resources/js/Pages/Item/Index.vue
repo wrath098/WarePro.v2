@@ -1,7 +1,6 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { ref, reactive, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
@@ -14,10 +13,13 @@
     import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
     import axios from 'axios';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         activeItemClass: Object,
@@ -40,13 +42,13 @@
         }
     };
 
-    const form = reactive({
+    const form = useForm({
         catId: '',
         itemName: '',
         createdBy: props.authUserId || '',
     });
 
-    const editForm = reactive({
+    const editForm = useForm({
         itemId: '',
         editName: '',
         updatedBy: props.authUserId || '',
@@ -82,43 +84,52 @@
         modalState.value = null;
     }
 
-    const submitForm = (url, data) => {
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia.post(url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData[method](url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => closeModal());
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submit = () => submitForm('items/save', form);
-    const submitEdit = () => submitForm('items/update', editForm);
-    const submitDeactivate = () => submitForm('items/deactivate', editForm);
-    const confirmFormSubmit = () => submitForm(`items/restore/${editForm.itemId}`, null);
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
+    const submit = () => submitForm('post', route('item.store'), form);
+    const submitEdit = () => submitForm('put', route('item.update'), editForm);
+    const submitDeactivate = () => submitForm('put', route('item.deactivate'), editForm);
+    const confirmFormSubmit = () => {
+        if (editForm.itemId) {
+            submitForm('put', route('item.restore', { id: editForm.itemId }), editForm);
+        } else {
             Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
+                title: 'Error',
+                text: 'Item Class ID is missing',
                 icon: 'error',
-                confirmButtonText: 'OK',
             });
         }
-    });
+    };
+
     const activeColumns = [
         {
             data: 'code',
@@ -128,7 +139,7 @@
         {
             data: 'name',
             title: 'Class Name',
-            width: '15%'
+            width: '15%',
         },
         {
             data: 'category',
@@ -323,6 +334,7 @@
                                 <div class="relative z-0 w-full group my-1">
                                     <input v-model="form.itemName" type="text" name="itemName" id="itemName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="itemName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Name</label>
+                                    <InputError class="mt-2" :message="form.errors.itemName" />
                                 </div>
                                 <input type="hidden" v-model="form.createdBy">
                             </div>
@@ -364,6 +376,7 @@
                                 <div class="relative z-0 w-full group my-1">
                                     <input v-model="editForm.editName" type="text" name="editItemName" id="editItemName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editItemName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Name</label>
+                                    <InputError class="mt-2" :message="editForm.errors.itemName" />
                                 </div>
                             </div>
                         </div>
