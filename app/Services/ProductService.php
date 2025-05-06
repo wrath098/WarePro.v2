@@ -211,10 +211,11 @@ class ProductService
 
     public function getCapitalOutlay($year, $fundId)
     {
-        $capital = CapitalOutlay::where('year', $year)
-            ->where('fund_id', $fundId)
-            ->first();
-        return optional($capital)->amount;
+        return CapitalOutlay::where([
+            'year' => $year,
+            'fund_id' => $fundId
+        ])
+        ->value('amount');
     }
 
     public function getCapitalOutlayContingency($year, $fundId, $sem)
@@ -226,8 +227,7 @@ class ProductService
             ->where('fund_id', $fundId)
             ->first();
 
-        $amount = $capital ? $capital->allocations->first()->amount : null;
-        return $amount;
+        return $capital?->allocations->first()?->amount;
     }
 
     public function getProductReorderPoint(int $id)

@@ -1,11 +1,13 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
     import { ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';   
     import Swal from 'sweetalert2';
     
     const page = usePage();
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         toPr: {
@@ -101,35 +103,41 @@
         }).format(value);
     };
 
+    const createForm = useForm({});
     const nextStep = () => {
         const requestData = {
-            selectedItems: selectedItems.value,
+            selectedItems: JSON.stringify(selectedItems.value),
             prTransactionInfo: props.prInfo,
         };
-        Inertia.post('submit', requestData);
+        createForm.post(route('pr.form.submit', { requestData }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    }).then(() => {
+                        isLoading.value = false;
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                    });
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.error('Error: ' + JSON.stringify(errors));
+            },
+        });
     };
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
 </script>
 
 <template>

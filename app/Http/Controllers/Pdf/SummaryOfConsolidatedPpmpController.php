@@ -139,7 +139,6 @@ class SummaryOfConsolidatedPpmpController extends Controller
         return PpmpTransaction::with('particulars', 'requestee')
             ->where('ppmp_year', $year)
             ->where('ppmp_type', 'individual')
-            ->where('ppmp_status', 'draft')
             ->get();
     }
 

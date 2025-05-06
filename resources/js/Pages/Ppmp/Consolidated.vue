@@ -1,7 +1,6 @@
 <script setup>
-    import { Head, usePage} from '@inertiajs/vue3';
-    import { reactive, ref, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { Head, useForm, usePage} from '@inertiajs/vue3';
+    import { reactive, ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -11,10 +10,13 @@
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         ppmp: Object,
@@ -22,12 +24,12 @@
         user: Number,
     });
 
-    const form = reactive({
+    const form = useForm({
         conId: props.ppmp.id,
         user: props.user,
     });
     
-    const addParticular  = reactive({
+    const addParticular  = useForm({
         transId: props.ppmp.id,
         prodCode: '',
         firstQty: '',
@@ -35,7 +37,7 @@
         user: props.user,
     });
 
-    const editParticular = reactive({
+    const editParticular = useForm({
         partId: '',
         prodCode: '',
         prodDesc: '',
@@ -44,7 +46,7 @@
         user: props.user,
     });
 
-    const dropParticular = reactive({
+    const dropParticular = useForm({
         pId: '',
         user: props.user,
     });
@@ -75,42 +77,43 @@
         return qty.replace(/,/g, '');
     };
 
-    const submitRequest = (method, url, data) => {
+    const submitRequest = (method, url, formData) => {
         isLoading.value = true;
-        Inertia[method](url, data, {
+
+        formData[method](url, {
+            preserveScroll: true,
             onSuccess: () => {
-                closeModal();
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    }).then(() => {
+                        isLoading.value = false;
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                    });
+                }
+            },
+            onError: (errors) => {
                 isLoading.value = false;
+                console.info('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submit = () => submitRequest('post', `../proceed-to-approved/${form.conId}`, form);
-    const submitEdit = () => submitRequest('put', `../consolidated-particular/update/${editParticular.partId}`, editParticular);
-    const submitDrop = () => submitRequest('delete', `../consolidated-particular/destroy/${dropParticular.pId}`, dropParticular);
-    const submitAdd = () => submitRequest('post', `../consolidated-particular/add`, addParticular);
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const submit = () => submitRequest('post', route('proceed.to.final.ppmp', { ppmpTransaction: form.conId}), form);
+    const submitEdit = () => submitRequest('put', route('conso-particular-update', { ppmpConsolidated: editParticular.partId }), editParticular);
+    const submitDrop = () => submitRequest('delete', route('conso-particular-destroy', { ppmpConsolidated: dropParticular.pId }), dropParticular);
+    const submitAdd = () => submitRequest('post', route('conso-particular-store'), addParticular);
 
     const columns = [
         {
@@ -352,6 +355,7 @@
                             <div class="relative z-0 w-full group my-2">
                                 <input v-model="addParticular.prodCode" type="text" name="prodCode" id="prodCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                 <label for="prodCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock No.</label>
+                                <InputError class="mt-2" :message="addParticular.errors.prodCode" />
                             </div>
                         </div>
                         <div class="mt-5">

@@ -1,5 +1,5 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, router, useForm, usePage } from '@inertiajs/vue3';
     import { reactive, ref, computed, onMounted } from 'vue';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -10,10 +10,13 @@
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         ppmp: Object,
@@ -26,6 +29,7 @@
 
     const stockNo = ref('');
     const stockData = ref(null);
+    const createForm = useForm({});
 
     const fetchData = () => {
         if (stockNo.value.length > 0) {
@@ -57,7 +61,7 @@
         user: props.user,
     });
 
-    const editParticular = reactive({
+    const editParticular = useForm({
         partId: '',
         prodCode: '',
         prodDesc: '',
@@ -66,7 +70,7 @@
         user: props.user,
     });
 
-    const dropParticular = reactive({
+    const dropParticular = useForm({
         pId: '',
         user: props.user,
     });
@@ -85,60 +89,50 @@
         modalState.value = 'drop';
     }
 
-    const submitForm = (action, url, data) => {
-        let method;
-
-        switch (action) {
-            case 'post':
-                method = 'post';
-                break;
-            case 'put':
-                method = 'put';
-                break;
-            case 'delete':
-                method = 'delete';
-                break;
-            default:
-                throw new Error('Invalid action specified');
-        }
-
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia[method](url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData[method](url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        router.visit(route('indiv.ppmp.show', { ppmpTransaction: props.ppmp.id}), {
+                            preserveScroll: true,
+                            preserveState: false,
+                        });
+                    });
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.error('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submitAdd = () => submitForm('post', 'create', addParticular);
-    const submitEdit = () => submitForm('put', 'edit', editParticular);
+
+    const submitAdd = () => submitForm('post', route('indiv.particular.store', { param : addParticular }), createForm);
+    const submitEdit = () => submitForm('put', route('indiv.particular.update'), editParticular);
     const submitDrop = () => {
         const ppmpParticular = dropParticular.pId;
-        submitForm('delete', `delete/${ppmpParticular}`, null)
+        submitForm('delete', route('indiv.particular.delete', { ppmpParticular }), dropParticular)
     };
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
 
     const columns = [
         {
@@ -390,10 +384,12 @@
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="editParticular.prodCode" type="text" name="editStockNo" id="editStockNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required readonly/>
                                     <label for="editStockNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock No</label>
+                                    <InputError class="mt-2" :message="editParticular.errors.partId" />
                                 </div>
                                 <div class="relative z-0 w-full group my-2">
                                     <textarea v-model="editParticular.prodDesc" type="text" name="editProdDesc" id="editProdDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" readonly></textarea>
                                     <label for="editProdDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                    <InputError class="mt-2" :message="editParticular.errors.prodDesc" />
                                 </div>
                             </div>
                             <div class="mt-5">
@@ -401,10 +397,12 @@
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="editParticular.firstQty" type="number" name="editFirstQty" id="editFirstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editFirstQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">1st Semester (Qty)</label>
+                                    <InputError class="mt-2" :message="editParticular.errors.firstQty" />
                                 </div>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="editParticular.secondQty" type="number" name="editSecondQty" id="editSecondQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editSecondQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">2nd Semester (Qty)</label>
+                                    <InputError class="mt-2" :message="editParticular.errors.secondQty" />
                                 </div>
                             </div>
                         </div>

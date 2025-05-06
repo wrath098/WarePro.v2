@@ -1,7 +1,6 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { Inertia } from '@inertiajs/inertia';
-    import { reactive, ref, computed, onMounted } from 'vue';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -15,6 +14,8 @@
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         ppmp: Object,
@@ -22,7 +23,7 @@
         individualList: Object,
     });
 
-    const edit = reactive({
+    const edit = useForm({
         ppmpId: '',
         user: props.user,
     });
@@ -35,7 +36,7 @@
 
     const filteredYears = ref([]);
     const filteredVersion = ref([]);
-    const generateConsolidated = reactive({
+    const generateConsolidated = useForm({
         selectedType: '',
         selectedYear: '',
         selectedVersion: '',
@@ -62,43 +63,41 @@
         generateConsolidated.selectedVersion = '';
     };
 
-    const submitForm = (url, data) => {
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia.post(url, data, {
+
+        formData[method](url, {
+            preserveScroll: true,
             onSuccess: () => {
-                closeModal();
-                isLoading.value = false;
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    }).then(() => {
+                        isLoading.value = false;
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                    });
+                }
             },
             onError: (errors) => {
-                console.error(`Form submission failed for ${url}`, errors);
                 isLoading.value = false;
+                console.error('Error: ' + JSON.stringify(errors));
             },
         });
     };
-    const submitConsolidated = () => submitForm('create-consolidated', generateConsolidated);
-    const submitDropPpmp = () => submitForm('drop', edit);
 
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const submitConsolidated = () => submitForm('post', route('consolidated.ppmp.store'), generateConsolidated);
+    const submitDropPpmp = () => submitForm('delete', route('indiv.ppmp.destroy'), edit);
 
     const columns = [
         {

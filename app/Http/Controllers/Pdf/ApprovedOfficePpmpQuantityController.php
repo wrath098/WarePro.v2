@@ -106,6 +106,9 @@ class ApprovedOfficePpmpQuantityController extends Controller
                     $fundTotal = 0;
     
                     foreach ($fund->categories as $category) {
+                        $catFirstTotal = 0; 
+                        $catSecondTotal = 0;
+                        $catTotal = 0;
 
                         $matchedCount = $productsOnCategory->get($category->cat_code, 0);
                         
@@ -114,10 +117,6 @@ class ApprovedOfficePpmpQuantityController extends Controller
                                 $text .= $this->generateCategoryHeader($category);
                             }
 
-                            $catFirstTotal = 0; 
-                            $catSecondTotal = 0;
-                            $catTotal = 0;
-            
                             foreach ($category->items as $item) {
                                 if ($item->products->isNotEmpty()) {  
                                     foreach ($item->products as $product) {
@@ -141,8 +140,9 @@ class ApprovedOfficePpmpQuantityController extends Controller
                             $text .= $this->generateCategoryFooterForBothSemesters($category, $catTotal, $catFirstTotal, $catSecondTotal);
                         }
                     }
+
+                    $text .= $this->generateFundFooterForBothSemesters($fund, $fundTotal, $fundFirstTotal, $fundSecondTotal);
                 }
-                $text .= $this->generateFundFooterForBothSemesters($fund, $fundTotal, $fundFirstTotal, $fundSecondTotal);
             }
             return $text;
         }
@@ -157,16 +157,15 @@ class ApprovedOfficePpmpQuantityController extends Controller
 
                 foreach ($fund->categories as $category) {
                     if ($category->items->isNotEmpty()) {
-
+                        
+                        $catFirstTotal = 0; 
+                        $catSecondTotal = 0;
+                        $catTotal = 0;
                         $matchedCount = $productsOnCategory->get($category->cat_code, 0);
 
                         if($matchedCount  > 0 ) {
                             $text .= $this->generateCategoryHeader($category);
                         }
-
-                        $catFirstTotal = 0; 
-                        $catSecondTotal = 0;
-                        $catTotal = 0;
                         
                         foreach ($category->items as $item) {
 
@@ -182,14 +181,16 @@ class ApprovedOfficePpmpQuantityController extends Controller
                                 }  
                             }         
                         }
-                    }
-                    if ($catTotal > 0) {
-                        $text .= $this->generateCategoryFooterForFirstSemester($category, $catTotal, $catFirstTotal);
-                    }
 
-                    $fundFirstTotal += $catFirstTotal; 
-                    $fundTotal += $catTotal;
+                        if ($matchedCount  > 0 ) {
+                            $text .= $this->generateCategoryFooterForFirstSemester($category, $catTotal, $catFirstTotal);
+                        }
+
+                        $fundFirstTotal += $catFirstTotal; 
+                        $fundTotal += $catTotal;
+                    }
                 }
+
                 $text .= $this->generateFundFooterForFirstSemester($fund, $fundTotal, $fundFirstTotal);
             }
         }

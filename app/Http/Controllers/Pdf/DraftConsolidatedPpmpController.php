@@ -142,12 +142,14 @@ class DraftConsolidatedPpmpController extends Controller
         $funds = $this->productService->getAllProduct_FundModel();
 
         foreach ($funds as $fund) {
-            if ($fund->categories->isNotEmpty()) {
-                $text .= $this->generateFundHeader($fund);
 
             $fundFirstTotal = 0; 
             $fundSecondTotal = 0;
             $fundTotal = 0;
+
+            if ($fund->categories->isNotEmpty()) {
+                $text .= $this->generateFundHeader($fund);
+
                 foreach ($fund->categories as $category) {
                     if ($category->items->isNotEmpty()) {
                         $text .= $this->generateCategoryHeader($category);

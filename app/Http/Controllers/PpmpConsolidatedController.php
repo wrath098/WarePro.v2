@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PpmpConsolidatedController extends Controller
 {
@@ -18,28 +19,36 @@ class PpmpConsolidatedController extends Controller
         $this->productService = $productService;
     }
 
-    public function store(Request $request) {
+    public function store(Request $request) 
+    {
+        $validatedData = $request->validate([
+            'transId' => 'required|integer',
+            'prodCode' => 'required|string|max:20',
+            'firstQty' => 'required|integer',
+            'secondQty' => 'nullable|integer',
+            'user' => 'nullable|integer',
+        ], [
+            'transId.required' => 'Please provide a transaction ID.',
+        ]);
+
         try {
-            $validatedData = $request->validate([
-                'transId' => 'required|integer',
-                'prodCode' => 'required|string|max:20',
-                'firstQty' => 'required|integer',
-                'secondQty' => 'nullable|integer',
-                'user' => 'nullable|integer',
-            ], [
-                'transId.required' => 'Please provide a transaction ID.',
-            ]);
 
             $productExist = Product::where('prod_newNo', $validatedData['prodCode'])
                 ->where('prod_status', 'active')->first();
+
             if (!$productExist) {
-                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list.']);
+                return back()->withInput()->withErrors([
+                    'prodCode' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on product list!'
+                ]);
             }
 
             $particularExist = PpmpConsolidated::where('trans_id', $validatedData['transId'])
                 ->where('prod_id', $productExist->id)->first();
+
             if ($particularExist) {
-                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list.']);
+                return back()->withInput()->withErrors([
+                    'prodCode' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list!'
+                ]);
             } else {
                 PpmpConsolidated::create([
                     'qty_first' => $validatedData['firstQty'],
@@ -57,7 +66,13 @@ class PpmpConsolidatedController extends Controller
                 return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully added!']);
             }
         } catch(\Exception $e) {
-            return redirect()->back()->with(['error' => 'Product No. '. $request->prodCode . ' updating failed!']);
+            Log::error("Adding new product failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $validatedData
+            ]);
+
+            return redirect()->back()->with(['error' => 'Adding new product failed. Please try again!']);
         }
     }
 
@@ -71,7 +86,13 @@ class PpmpConsolidatedController extends Controller
             ]);
             return redirect()->back()->with(['message' => 'Product No. '. $request->prodCode . ' updated successfully!']);
         } catch(\Exception $e) {
-            return redirect()->back()->with(['error' => 'Product No. '. $request->prodCode . ' updating failed!']);
+            Log::error("Adding new product failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $request->toArray()
+            ]);
+
+            return back()->with(['error' => 'Product No. '. $request->prodCode . ' updating failed!']);
         }
     }
 

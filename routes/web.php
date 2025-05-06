@@ -158,12 +158,12 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::post('/copy-ppmp', [PpmpTransactionController::class, 'storeCopy'])->name('make.copy.ppmp');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
     Route::any('/create-consolidated', [PpmpTransactionController::class, 'storeConsolidated'])->name('consolidated.ppmp.store');
-    Route::post('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
+    Route::delete('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
     Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
     Route::put('/individual-ppmp/edit', [PpmpParticularController::class, 'update'])->name('indiv.particular.update');
     Route::post('/consolidated-particular/add', [PpmpConsolidatedController::class, 'store'])->name('conso-particular-store');
     Route::put('/consolidated-particular/update/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'update'])->name('conso-particular-update');
-    Route::delete('/consolidated-particular/destroy/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'destroy'])->name('conso-particular-update');
+    Route::delete('/consolidated-particular/destroy/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'destroy'])->name('conso-particular-destroy');
     Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 
     #AJAX

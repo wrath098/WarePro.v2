@@ -104,6 +104,9 @@ class DraftOfficePpmpController extends Controller
                     $fundTotal = 0;
     
                     foreach ($fund->categories as $category) {
+                        $catFirstTotal = 0; 
+                        $catSecondTotal = 0;
+                        $catTotal = 0;
 
                         $matchedCount = $productsOnCategory->get($category->cat_code, 0);
                         
@@ -111,10 +114,6 @@ class DraftOfficePpmpController extends Controller
                             if($matchedCount  > 0 ) {
                                 $text .= $this->generateCategoryHeader($category);
                             }
-
-                            $catFirstTotal = 0; 
-                            $catSecondTotal = 0;
-                            $catTotal = 0;
             
                             foreach ($category->items as $item) {
                                 if ($item->products->isNotEmpty()) {  
@@ -139,14 +138,17 @@ class DraftOfficePpmpController extends Controller
                             $text .= $this->generateCategoryFooterForBothSemesters($category, $catTotal, $catFirstTotal, $catSecondTotal);
                         }
                     }
+
+                    $text .= $this->generateFundFooterForBothSemesters($fund, $fundTotal, $fundFirstTotal, $fundSecondTotal);
                 }
-                $text .= $this->generateFundFooterForBothSemesters($fund, $fundTotal, $fundFirstTotal, $fundSecondTotal);
             }
+
             return $text;
         }
 
         foreach ($funds as $fund) {
             if ($fund->categories->isNotEmpty()) {
+    
                 $text .= $this->generateFundHeader($fund);
 
                 $fundFirstTotal = 0; 
@@ -154,6 +156,10 @@ class DraftOfficePpmpController extends Controller
                 $fundTotal = 0;
 
                 foreach ($fund->categories as $category) {
+                    $catFirstTotal = 0; 
+                    $catSecondTotal = 0;
+                    $catTotal = 0;
+
                     if ($category->items->isNotEmpty()) {
 
                         $matchedCount = $productsOnCategory->get($category->cat_code, 0);
@@ -162,10 +168,6 @@ class DraftOfficePpmpController extends Controller
                             $text .= $this->generateCategoryHeader($category);
                         }
 
-                        $catFirstTotal = 0; 
-                        $catSecondTotal = 0;
-                        $catTotal = 0;
-                        
                         foreach ($category->items as $item) {
 
                             if ($item->products->isNotEmpty()) {  
@@ -181,6 +183,7 @@ class DraftOfficePpmpController extends Controller
                             }         
                         }
                     }
+
                     if ($catTotal > 0) {
                         $text .= $this->generateCategoryFooterForFirstSemester($category, $catTotal, $catFirstTotal);
                     }
@@ -188,9 +191,12 @@ class DraftOfficePpmpController extends Controller
                     $fundFirstTotal += $catFirstTotal; 
                     $fundTotal += $catTotal;
                 }
+
                 $text .= $this->generateFundFooterForFirstSemester($fund, $fundTotal, $fundFirstTotal);
+
             }
         }
+
         return $text;
     }
 

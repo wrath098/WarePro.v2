@@ -24,62 +24,67 @@ class PpmpParticularController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $validatedData = $request->validate([
-                'transId' => 'required|integer',
-                'prodCode' => 'required|string|max:20',
-                'firstQty' => 'required|integer',
-                'secondQty' => 'nullable|integer',
-                'user' => 'nullable|integer',
-            ], [
-                'transId.required' => 'Please provide a transaction ID.',
-            ]);  
+        $validatedData = $request->validate([
+            'param.transId' => 'required|integer',
+            'param.prodCode' => 'required|string|max:20',
+            'param.firstQty' => 'required|integer',
+            'param.secondQty' => 'nullable|integer',
+            'param.user' => 'nullable|integer',
+        ], [
+            'param.transId.required' => 'Please provide a transaction ID.',
+        ]); 
 
-            $productExist = Product::where('prod_newNo', $validatedData['prodCode'])
+        try {
+            $productExist = Product::where('prod_newNo', $validatedData['param']['prodCode'])
                 ->where('prod_status', 'active')->first();
             if (!$productExist) {
-                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' does not exist or has been inactive on current product list.']);
+                return back()->with(['error' => 'The Product No. '. $validatedData['param']['prodCode'] . ' does not exist or has been inactive on current product list.']);
             }
 
-            $particularExist = PpmpParticular::where('trans_id', $validatedData['transId'])
+            $particularExist = PpmpParticular::where('trans_id', $validatedData['param']['transId'])
                 ->where('prod_id', $productExist->id)->first();
             if ($particularExist) {
-                return redirect()->back()->with(['error' => 'The Product No. '. $validatedData['prodCode'] . ' already exist on the list.']);
+                return back()->with(['error' => 'The Product No. '. $validatedData['param']['prodCode'] . ' already exist on the list.']);
             } else {
                 PpmpParticular::create([
-                    'qty_first' => $validatedData['firstQty'],
-                    'qty_second' => $validatedData['secondQty'] ? $validatedData['secondQty'] : 0,
+                    'qty_first' => $validatedData['param']['firstQty'],
+                    'qty_second' => $validatedData['param']['secondQty'] ? $validatedData['param']['secondQty'] : 0,
                     'prod_id' => $productExist->id,
                     'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
-                    'trans_id' => $validatedData['transId'],
+                    'trans_id' => $validatedData['param']['transId'],
                 ]);
 
-                $transId = PpmpTransaction::findOrFail($validatedData['transId']);
-                $transId->update(['updated_by' => $validatedData['user']]);
+                $transId = PpmpTransaction::findOrFail($validatedData['param']['transId']);
+                $transId->update(['updated_by' => $validatedData['param']['user']]);
 
-                return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully added!']);
+                return redirect()->back()->with('message', 'Product No. '. $validatedData['param']['prodCode'] . ' has been successfully added!');
             }
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with(['error' => 'Adding Product Item failed!']);
+            Log::error("Adding new PPMP particular failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $validatedData
+            ]);
+
+            return back()->with(['error' => 'Adding Product Item failed!']);
         }
     }
 
     public function update(Request $request)
     {
-        try {
-            $validatedData = $request->validate([
-                'partId' => 'required|integer',
-                'prodCode' => 'required|string|max:20',
-                'prodDesc' => 'nullable|string',
-                'firstQty' => 'required|integer|min:1',
-                'secondQty' => 'nullable|integer|min:0',
-                'user' => 'nullable|integer',
-            ], [
-                'partId.required' => 'Please provide a Particular ID.',
-                'firstQty.min' => 'First quantity must be at least 1.',
-            ]);
+        $validatedData = $request->validate([
+            'partId' => 'required|integer',
+            'prodCode' => 'required|string|max:20',
+            'prodDesc' => 'nullable|string',
+            'firstQty' => 'required|integer|min:1',
+            'secondQty' => 'nullable|integer|min:0',
+            'user' => 'nullable|integer',
+        ], [
+            'partId.required' => 'Please provide a Particular ID.',
+            'firstQty.min' => 'First quantity must be at least 1.',
+        ]);
 
+        try {
             $particularExist = PpmpParticular::findOrFail($validatedData['partId']);
             $particularExist->update([
                 'qty_first' => $validatedData['firstQty'],
@@ -92,8 +97,13 @@ class PpmpParticularController extends Controller
             return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully updated!']);
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+            Log::error("Updating PPMP particular failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $validatedData
+            ]);
+
+            return redirect()->back()->with(['error' => 'Updating Product No.'. $validatedData['prodCode'] . ' failed. Please try again!']);
         }
     }
 
@@ -108,8 +118,13 @@ class PpmpParticularController extends Controller
 
             return redirect()->back()->with(['message' => 'Product has been moved to trashed succecfully!']);
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return redirect()->back()->with(['error' => 'Failed to delete the particular.']);
+            Log::error("Removing PPMP particular failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $ppmpParticular
+            ]);
+
+            return back()->with(['error' => 'Failed to delete the particular. Please try again!']);
         }
     }
 

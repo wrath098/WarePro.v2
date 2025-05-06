@@ -160,14 +160,15 @@ class ApprovedConsolidatedPpmpController extends Controller
         $funds = $this->productService->getAllProduct_FundModel();
 
         foreach ($funds as $fund) {
+            $fundFirstTotal = 0; 
+            $fundSecondTotal = 0;
+            $fundTotal = 0;
+
             if ($fund->categories->isNotEmpty()) {
                 $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
                             <td width="100%">' . strtoupper($fund->fund_name) . '</td>
                             </tr>';
 
-            $fundFirstTotal = 0; 
-            $fundSecondTotal = 0;
-            $fundTotal = 0;
                 foreach ($fund->categories as $category) {
                     if ($category->items->isNotEmpty()) {
                         $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
@@ -320,6 +321,7 @@ class ApprovedConsolidatedPpmpController extends Controller
                 'secondSem' => $contingencySecond,
             ];
         }
+        
         $text .= '<tr>
                     <td style="border:1px solid #fff;" width="100%">
                         <p style="font-size: 10px; line-height: 0.4;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>

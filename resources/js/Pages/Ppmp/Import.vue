@@ -1,7 +1,6 @@
 <script setup>
     import { Head, useForm, usePage } from '@inertiajs/vue3';
-    import { reactive, ref, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
@@ -10,10 +9,13 @@
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         officePpmps: Object,
@@ -21,7 +23,7 @@
         user: Number,
     });
 
-    const edit = reactive({
+    const edit = useForm({
         ppmpId: '',
         user: props.user,
     });
@@ -47,7 +49,7 @@
         ppmpSem: '',
         office: '',
         file: null,
-        createdBy: props.user,
+        user: props.user,
     });
 
     const onFileChange = (event) => {
@@ -88,60 +90,67 @@
             alert('Please select a file first!');
             return;
         }
-
-        create.setData('file', file.value);
-        
+        isLoading.value = true;
+        create.file = file.value;
         create.post(route('create.ppmp.store'), {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
             forceFormData: true,
             onError: (errors) => {
-                console.error('Form submission errors:', errors);
+                isLoading.value = false;
+                console.error('Error: ' + JSON.stringify(errors));
             },
             onSuccess: () => {
-                console.log('Form submitted successfully');
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    create.reset();
+                    isLoading.value = false;
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    });
+                }
             }
         })
     };
 
-    const submitForm = (url, data) => {
-        isLoading.value = true;
-        Inertia.post(url, data, {
+    const submitDropPpmp = async () => {
+        edit.delete(route('indiv.ppmp.destroy'), {
+            preserveScroll: true,
             onSuccess: () => {
-                closeModal();
-                isLoading.value = false;
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    create.reset();
+                    isLoading.value = false;
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                    });
+                }
             },
             onError: (errors) => {
-                console.error(`Form submission failed for ${url}`, errors);
                 isLoading.value = false;
-            },
+                console.error('Error: ' + JSON.stringify(errors));
+            }
         });
     };
-
-    const submitDropPpmp = () => submitForm('ppmp/drop', edit);
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success!',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed!',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
 
     const columns = [
         {
@@ -242,6 +251,7 @@
                                         <option v-for="office in officeList.data" :key="office.id" :value="office.id">{{ office.name }}</option>
                                     </select>
                                     <label for="office" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>
+                                    <InputError class="mt-2" :message="create.errors.office" />
                                 </div>
                                 <div class="pt-4">
                                     <p class="mb-5 block text-base font-medium text-[#86591e]">Upload File</p>

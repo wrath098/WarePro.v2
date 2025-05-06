@@ -216,25 +216,25 @@ class DraftAdjustedOfficePpmpController extends Controller
     private function generateOriginalQuantityBothSem($funds, &$text, $productsOnCategory, $sortedParticulars, $request)
     {
         foreach ($funds as $fund) {
+            $fundFirstTotal = 0; 
+            $fundSecondTotal = 0; 
+            $fundTotal = 0;
+
             if ($fund->categories->isNotEmpty()) {
                 $text .= $this->generateFundHeader($fund);
 
-                $fundFirstTotal = 0; 
-                $fundSecondTotal = 0; 
-                $fundTotal = 0;
-
                 foreach ($fund->categories as $category) {
                     $matchedCount = $productsOnCategory->get($category->cat_code, 0);
+
+                    $catFirstTotal = 0; 
+                    $catSecondTotal = 0; 
+                    $catTotal = 0;
 
                     if ($category->items->isNotEmpty()) {
                         if($matchedCount  > 0 ) {
                             $text .= $this->generateCategoryHeader($category);
                         }
 
-                        $catFirstTotal = 0; 
-                        $catSecondTotal = 0; 
-                        $catTotal = 0;
-        
                         foreach ($category->items as $item) {
 
                             if ($item->products->isNotEmpty()) {  

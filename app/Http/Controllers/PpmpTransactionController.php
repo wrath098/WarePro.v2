@@ -82,13 +82,13 @@ class PpmpTransactionController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->toArray());
         DB::beginTransaction();
 
         $validatedData = $request->validate([
             'ppmpType' => 'required|string',
             'ppmpYear' => 'required|integer',
             'office' => 'required|integer',
+            'ppmpSem' => 'nullable|string',
             'user' => 'required|integer',
             'file' => 'nullable|file|mimes:xls,xlsx',
         ]);
@@ -97,7 +97,9 @@ class PpmpTransactionController extends Controller
             if($validatedData['ppmpType'] == 'individual') {
                 if ($this->validateIndivPpmp($validatedData)) {
                     DB::rollBack();
-                    return redirect()->back()->with(['error' => 'Office PPMP already exists!']);
+                    return back()->withInput()->withErrors([
+                        'office' => 'Office PPMP already exists!'
+                    ]);
                 }
 
                 $createPpmp = $this->createPpmpTransaction($validatedData);
@@ -122,17 +124,17 @@ class PpmpTransactionController extends Controller
 
                 DB::commit();
                 return redirect()->route('import.ppmp.index')
-                    ->with(['message' => 'Successfully create PPMP! You can now check the list to add products.']);
+                    ->with('message', 'Successfully create PPMP! You can now check the list to add products.');
             } elseif ($validatedData['ppmpType'] == 'contingency') {
 
                 DB::rollback();
-                return redirect()->back()
-                ->with(['error' => 'Contingency creation is not yet available. Please refer to your system administrator for this action.']);
+                return back()->with(
+                    'error', 'Contingency creation is not yet available. Please refer to your system administrator for this action.'
+                );
             } else {
 
                 DB::rollback();
-                return redirect()->back()
-                ->with(['error' => '404 - Not Found!']);
+                return back()->with('error', '404 - Not Found!');
             }
         } catch (\Exception $e) {
 
@@ -140,9 +142,9 @@ class PpmpTransactionController extends Controller
             Log::error("Creation of PPMP Transaction Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $validatedData
             ]);
-            return redirect()->back()->with(['error' => 'Creation of PPMP Transaction. Please try again!']);
+            return back()->with('error', 'Creation of PPMP Transaction. Please try again!');
         }
     }
 
@@ -207,13 +209,14 @@ class PpmpTransactionController extends Controller
     public function storeConsolidated(Request $request)
     {
         DB::beginTransaction();
+
         try {
             $countUnavailableProduct = 0;
 
             $queryTransaction = $this->getQueryTransaction($request);
             if (!$queryTransaction) {
                 DB::rollBack();
-                return redirect()->back()->with(['error' => 'Request is incomplete. Please try again.']);
+                return back()->with(['error' => 'Request is incomplete. Please try again.']);
             }
 
             $data = $this->prepareConsolidationData($request, $queryTransaction);
@@ -240,16 +243,17 @@ class PpmpTransactionController extends Controller
             Log::error("Consolidating PPMP Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request
             ]);
-            return redirect()->back()->with(['error' => 'Consolidating PPMP Failed. Please try again!']);
+
+            return back()->with(['error' => 'Consolidating PPMP Failed. Please try again!']);
         }
     }
 
     public function storeAsFinal(Request $request, PpmpTransaction $ppmpTransaction)
     {
         DB::beginTransaction();
-
+        
         $officePpmpStatus = 'individual';
         $year = $ppmpTransaction->ppmp_year;
         $type = $ppmpTransaction->ppmp_type;
@@ -289,7 +293,7 @@ class PpmpTransactionController extends Controller
             Log::error("Finalization of APP/ Consolidated PPMP Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $ppmpTransaction->toArray()
             ]);
             return redirect()->back()->with(['error' => 'Finalization of Consolidated PPMP Failed. Please try again!']);
         }
@@ -325,7 +329,8 @@ class PpmpTransactionController extends Controller
         return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars, 'products' => $list, 'user' => Auth::id(),]);
     }
 
-    public function showConsolidatedPpmp(PpmpTransaction $ppmpTransaction) {
+    public function showConsolidatedPpmp(PpmpTransaction $ppmpTransaction)
+    {
         $totalAmount = 0;
         $ppmpTransaction->load('updater', 'consolidated');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
@@ -467,6 +472,7 @@ class PpmpTransactionController extends Controller
     public function destroy(Request $request)
     {
         DB::beginTransaction();
+
         try {
             $ppmpTransaction = PpmpTransaction::with('particulars')
                 ->where('id', $request->input('ppmpId'))
@@ -484,12 +490,12 @@ class PpmpTransactionController extends Controller
 
                     DB::commit();
                     return redirect()->back()
-                        ->with(['message' => 'PPMP deletion was successful.']);
+                        ->with('message', 'PPMP deletion was successful.');
                 } else {
 
                     DB::rollback();
                     return redirect()->back()
-                        ->with(['error' => 'Unable to delete the PPMP. Contact your system administrator with this matter!']);
+                        ->with('error', 'Unable to delete the PPMP. Contact your system administrator with this matter!');
                 }
             } elseif ($ppmpTransaction->ppmp_type == 'consolidated') {
                 $ppmpTransaction = PpmpTransaction::with('consolidated', 'purchaseRequests')
@@ -499,7 +505,7 @@ class PpmpTransactionController extends Controller
                 if($ppmpTransaction->purchaseRequests->isNotEmpty()) {
                     DB::rollback();
                     return redirect()->back()
-                        ->with(['error' => 'Unable to delete the PPMP. Purchase Request/s was already been created on this transaction!']);
+                        ->with('error', 'Unable to delete the PPMP. Purchase Request/s was already been created on this transaction!');
                 }
                 
                 if ($ppmpTransaction->consolidated instanceof Collection) {
@@ -514,12 +520,12 @@ class PpmpTransactionController extends Controller
 
                 DB::commit();
                 return redirect()->route('conso.ppmp.type', ['type' => 'consolidated' , 'status' => 'draft'])
-                    ->with(['message' => 'PPMP deletion was successful.']);
+                    ->with('message', 'PPMP deletion was successful.');
             } else {
 
                 DB::rollback();
                     return redirect()->back()
-                        ->with(['error' => 'This action is under construction!']);
+                        ->with('error', 'This action is under construction!');
             }
             
         } catch (\Exception $e) {
@@ -528,9 +534,9 @@ class PpmpTransactionController extends Controller
             Log::error("Deletion of PPMP Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request
             ]);
-            return redirect()->back()->with(['error' => 'PPMP deletion failed. Please try again!']);
+            return back()->with('error', 'PPMP deletion failed. Please try again!');
         }
     }
 
