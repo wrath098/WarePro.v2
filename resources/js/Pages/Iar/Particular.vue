@@ -1,5 +1,5 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
     import { Inertia } from '@inertiajs/inertia';
     import { computed, onMounted, reactive, ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -12,6 +12,9 @@
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
     const props = defineProps({
         iar: Object,
         particulars: Object,
@@ -35,17 +38,17 @@
         }
     };
 
-    const acceptParticular = reactive({
+    const acceptParticular = useForm({
         pid: '',
         dateReceive: ''
     });
-    const acceptAllParticular = reactive({
+    const acceptAllParticular = useForm({
         particulars: '',
         dateReceive: ''
     });
-    const denyParticular = reactive({pid: ''});
-    const denyAllParticular = reactive({particulars: ''});
-    const editParticular = reactive({
+    const denyParticular = useForm({pid: ''});
+    const denyAllParticular = useForm({particulars: ''});
+    const editParticular = useForm({
         pid: '',
         stockNo: '',
         expiry: '',
@@ -101,59 +104,44 @@
     const isDenyModalOpen = computed(() => modalState.value === 'deny');
     const isDenyAllModalOpen = computed(() => modalState.value === 'denyAll');
 
-    const submitForm = (action, url, data) => {
-        let method;
-
-        switch (action) {
-            case 'post':
-                method = 'post';
-                break;
-            case 'put':
-                method = 'put';
-                break;
-            case 'delete':
-                method = 'delete';
-                break;
-            default:
-                throw new Error('Invalid action specified');
-        }
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia[method](url, data, {
+
+        formData[method](url, {
+            preserveScroll: true,
             onSuccess: () => {
-                closeModal();
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    }).then(() => {
+                        isLoading.value = false;
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                    });
+                }
+            },
+            onError: (errors) => {
                 isLoading.value = false;
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submitAcceptance = () => submitForm('post', 'particulars/accept', acceptParticular);
-    const submitAcceptanceAll = () => submitForm('post', 'particulars/acceptAll', acceptAllParticular);
-    const submitEdit = () => submitForm('put', 'particulars/update', editParticular);
-    const submitDeny = () => submitForm('put', 'particulars/reject', denyParticular);
-    const submitDenyAll = () => submitForm('post', 'particulars/rejectAll', denyAllParticular);
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const submitAcceptance = () => submitForm('post', route('iar.particular.accept'), acceptParticular);
+    const submitAcceptanceAll = () => submitForm('post', route('iar.particular.accept.all'), acceptAllParticular);
+    const submitEdit = () => submitForm('put', route('iar.particular.update'), editParticular);
+    const submitDeny = () => submitForm('put', route('iar.particular.reject'), denyParticular);
+    const submitDenyAll = () => submitForm('post', route('iar.particular.reject.all'), denyAllParticular);
 </script>
 
 <template>

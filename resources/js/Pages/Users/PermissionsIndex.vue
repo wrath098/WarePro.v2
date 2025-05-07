@@ -5,10 +5,11 @@
     import Modal from '@/Components/Modal.vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import { Inertia } from '@inertiajs/inertia';
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
     import { computed, onMounted, reactive, ref } from 'vue';
     import Swal from 'sweetalert2';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+    import InputError from '@/Components/InputError.vue';
 
     const page = usePage();
     const message = computed(() => page.props.flash.message);
@@ -25,11 +26,11 @@
     const showModal = (modalType) => { modalState.value = modalType;}
     const closeModal = () => {modalState.value = null;}
 
-    const create = reactive({
+    const create = useForm({
         permissionName: '',
     });
 
-    const drop = reactive({
+    const drop = useForm({
         id: '',
     });
 
@@ -38,38 +39,42 @@
         modalState.value = 'drop';
     };
 
-    const submitForm = (action, url, data) => {
-        let method;
-
-        switch (action) {
-            case 'post':
-                method = 'post';
-                break;
-            case 'put':
-                method = 'put';
-                break;
-            case 'delete':
-                method = 'delete';
-                break;
-            default:
-                throw new Error('Invalid action specified');
-        }
-
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia[method](url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData[method](url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                    });
+                }
             },
             onError: (errors) => {
                 isLoading.value = false;
-                console.error(`Form submission failed for ${url}`, errors);
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
 
-    const submit = () => submitForm('post', 'permissions/store', create);
-    const submitDrop = () => submitForm('delete', `permissions/delete/${drop.id}`);
+    const submit = () => submitForm('post', route('user.permissions.store'), create);
+    const submitDrop = () => submitForm('delete', route('user.permissions.destroy', { permission: drop.id}), drop);
     
     const columns = [
         {
@@ -185,6 +190,7 @@
                                 <div class="relative z-0 w-full group my-1">
                                     <input v-model="create.permissionName" type="text" name="roleName" id="roleName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
                                     <label for="roleName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Permission Name</label>
+                                    <InputError class="mt-2" :message="create.errors.permissionName" />
                                 </div>
                             </div>
                         </div>

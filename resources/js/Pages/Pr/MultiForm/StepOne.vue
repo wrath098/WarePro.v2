@@ -1,7 +1,6 @@
 <script setup>
-    import { reactive, ref, computed, onMounted } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
     import { Head, useForm, usePage } from '@inertiajs/vue3';
-    import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';   
     import Swal from 'sweetalert2';
     

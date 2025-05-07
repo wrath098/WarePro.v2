@@ -43,12 +43,12 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'roleName' => 'required|string|unique:roles,name',
+        ]);
+
         DB::beginTransaction();
         try {
-            $request->validate([
-                'roleName' => 'required|string|unique:roles,name',
-            ]);
-
             $formatted = Str::of($request->roleName)->lower()->title();
     
             Role::create(['name' => $formatted]);
@@ -60,6 +60,7 @@ class RoleController extends Controller
             Log::error("Creating a Role Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
+                'data' => $request->toArray()
             ]);
 
             return redirect()->back()->with('error', 'Failed to create Role. Please try again.');
@@ -106,7 +107,7 @@ class RoleController extends Controller
             Log::error("Deletion of Role Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $role->toArray()
             ]);
 
             return redirect()->back()->with('error', 'Deletion of role failed. Please try again!');

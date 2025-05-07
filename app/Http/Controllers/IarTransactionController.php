@@ -165,21 +165,25 @@ class IarTransactionController extends Controller
             $formattedDate = $this->productService->defaultDateFormat($request->dateReceive);
 
             if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
-                throw new \Exception('Invalid Date. Please try again!');
+                DB::rollBack();
+                return back()->with('error', 'Invalid Date. Please try again!');
             }
 
             if(!$productDetails) {
-                throw new \Exception('Product Item/Stock No. not found. Please update the product code and try again!');
+                DB::rollBack();
+                return back()->with('error', 'Product Item/Stock No. not found. Please update the product code and try again!');
             }
 
             $userId = Auth::id();
 
             if($productDetails->has_expiry && !$particular->date_expiry) {
-                throw new \Exception('Product Item is Time-limited. Please enter the expiry date to proceed!');
+                DB::rollBack();
+                return back()->with('error', 'Product Item is Time-limited. Please enter the expiry date to proceed!');
             }
 
             if(strtolower($productDetails->prod_unit) !== strtolower($particular->unit)) {
-                throw new \Exception('The unit of measurement of the particular differs from the one in the product record: ' . $productDetails->prod_unit);
+                DB::rollBack();
+                return back()->with('error', 'The unit of measurement of the particular differs from the one in the product record: ' . $productDetails->prod_unit);
             }
 
             $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($productDetails->id, $formattedDate);
@@ -223,9 +227,9 @@ class IarTransactionController extends Controller
             Log::error("Accepting IAR Particular Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray(),
             ]);
-            return redirect()->back()->with(['error' => 'Proccessing IAR Particular Failed. Please try again!']);
+            return back()->with(['error' => 'Proccessing IAR Particular Failed. Please try again!']);
         }
     }
 
@@ -236,6 +240,11 @@ class IarTransactionController extends Controller
         $formattedDate = $this->productService->defaultDateFormat($request->dateReceive);
         $countParticularsToUpdated = 0;
         $userId = Auth::id();
+
+        if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
+            DB::rollBack();
+            return back()->with('error', 'Invalid Date. Please try again!');
+        }
 
         try {
             foreach ($request->particulars as $particular) {
@@ -283,7 +292,7 @@ class IarTransactionController extends Controller
 
             if($countParticularsToUpdated) {
                 DB::commit();
-                return redirect()->back()->with(['error' => $countParticularsToUpdated .' item/s were not processed due to the required criteria not meet: [Stock No# | Unit of Measure | Product Expiry]']);
+                return redirect()->back()->with(['error' => $countParticularsToUpdated .' item/s were not processed due to the required criteria not meet: [Stock No# | Unit of Measure | Product Expiry]. Please update the product information and try again!']);
             }
 
             $iarTransaction = $this->getIarTransaction($particularDetails->air_id);
@@ -295,9 +304,9 @@ class IarTransactionController extends Controller
             Log::error("Accepting All IAR Particular Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray()
             ]);
-            return redirect()->back()->with(['error' => 'Proccessing All IAR Particular Failed. Please try again!']);
+            return back()->with(['error' => 'Proccessing All IAR Particular Failed. Please try again!']);
         }
     }
 
@@ -312,11 +321,13 @@ class IarTransactionController extends Controller
             $productDetails = $this->validateProduct($request->stockNo);
 
             if(!$productDetails) {
-                throw new \Exception('Product Item not found!');
+                DB::rollBack();
+                return back()->with('error', 'Product Item not found!');
             }
 
             if(strtolower($request->parUnit) != strtolower($productDetails->prod_unit)){
-                throw new \Exception('Product and IAR particular units of measurement do not match!');
+                DB::rollBack();
+                return back()->with('error', 'Product and IAR particular units of measurement do not match!');
             }
 
             $particularInfo->update([
@@ -334,9 +345,9 @@ class IarTransactionController extends Controller
             Log::error("Updating IAR Particular Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray()
             ]);
-            return redirect()->back()->with(['error' => 'Updating IAR Particular Failed. Please try again!']);
+            return back()->with(['error' => 'Updating IAR Particular Failed. Please try again!']);
         }
     }
 
@@ -367,9 +378,9 @@ class IarTransactionController extends Controller
             Log::error("Reject IAR Particular Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray()
             ]);
-            return redirect()->back()->with(['error' => 'Rejecting IAR Particular Failed. Please try again!']);
+            return back()->with(['error' => 'Rejecting IAR Particular Failed. Please try again!']);
         }
     }
 
@@ -397,9 +408,9 @@ class IarTransactionController extends Controller
             Log::error("Reject IAR Particular Failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray()
             ]);
-            return redirect()->back()->with(['error' => 'Rejecting IAR Particular Failed. Please try again!']);
+            return back()->with(['error' => 'Rejecting IAR Particular Failed. Please try again!']);
         }
     }
 

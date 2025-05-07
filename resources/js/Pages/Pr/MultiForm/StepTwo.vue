@@ -8,6 +8,7 @@
     const page = usePage();
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
+    const isLoading = ref(false);
 
     const props = defineProps({
         toPr: {
@@ -103,13 +104,15 @@
         }).format(value);
     };
 
-    const createForm = useForm({});
+    const createForm = useForm({
+        selectedItems: [],
+        prTransactionInfo: {},
+    });
     const nextStep = () => {
-        const requestData = {
-            selectedItems: JSON.stringify(selectedItems.value),
-            prTransactionInfo: props.prInfo,
-        };
-        createForm.post(route('pr.form.submit', { requestData }), {
+        createForm.selectedItems = selectedItems.value;
+        createForm.prTransactionInfo = props.prInfo;
+
+        createForm.post(route('pr.form.submit'), {
             preserveScroll: true,
             onSuccess: () => {
                 if (errMessage.value) {
@@ -121,13 +124,12 @@
                         isLoading.value = false;
                     });
                 } else {
-                    formData.reset();
+                    createForm.reset();
                     Swal.fire({
                         title: 'Success',
                         text: message.value,
                         icon: 'success',
                     }).then(() => {
-                        closeModal();
                         isLoading.value = false;
                     });
                 }

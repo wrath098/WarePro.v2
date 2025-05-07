@@ -53,7 +53,7 @@ class ProductInventoryTransactionController extends Controller
 
             if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
                 DB::rollBack();
-                return redirect()->back()->with('error', 'Please verify the entered date and try again!');
+                return back()->with('error', 'Please verify the entered date and try again!');
             }
 
             $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
@@ -94,9 +94,9 @@ class ProductInventoryTransactionController extends Controller
             Log::error("Product Inventory adjustment failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray()
             ]);
-            return redirect()->back()->with('error', 'Failed to update inventory. Please try again.');
+            return back()->with('error', 'Failed to update inventory. Please try again.');
         }
     }
     
@@ -125,9 +125,9 @@ class ProductInventoryTransactionController extends Controller
             Log::error("Product Inventory Threshold failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'data' => $request->toArray()
             ]);
-            return redirect()->back()->with(['error' => 'Failed to update product inventory reorder level. Please try again!']);
+            return back()->with(['error' => 'Failed to update product inventory reorder level. Please try again!']);
         }
     }
 

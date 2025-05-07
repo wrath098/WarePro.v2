@@ -29,12 +29,12 @@ class PermissionController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'permissionName' => 'required|string|unique:permissions,name',
+        ]);
+
         DB::beginTransaction();
         try {
-            $request->validate([
-                'permissionName' => 'required|string|unique:permissions,name',
-            ]);
-
             $formatted = Str::slug($request->permissionName);
     
             Permission::create(['name' => $formatted]);

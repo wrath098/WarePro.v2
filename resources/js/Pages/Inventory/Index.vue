@@ -1,7 +1,6 @@
 <script setup>
-    import { computed, onMounted, reactive, ref } from 'vue';
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { Inertia } from '@inertiajs/inertia';
+    import { computed, ref } from 'vue';
+    import { Head, router, useForm, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import { DataTable } from 'datatables.net-vue3';
     import Modal from '@/Components/Modal.vue';
@@ -10,7 +9,10 @@
     import Swal from 'sweetalert2';
 
     const page = usePage();
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
     const isLoading = ref(false);
+
     const props = defineProps({
         inventory: Object,
         countOutOfStock: Number,
@@ -20,7 +22,7 @@
 
     const reformatInventory = Object.values(props.inventory);
 
-    const addParticular = reactive({
+    const addParticular = useForm({
         pid: '',
         stockNo: '',
         desc: '',
@@ -31,11 +33,12 @@
         dateOfAdjustment: '',
     });
 
-    const editParticular = reactive({
+    const editParticular = useForm({
         pid: '',
         stockNo: '',
         desc: '',
         reorder: '',
+        prodId: ''
     });
 
     const modalState = ref(null);
@@ -60,41 +63,45 @@
         modalState.value = 'edit';
     }
 
-    const submitForm = (action, url, data) => {
+    const submitForm = (method, url, formData) => {
         isLoading.value = true;
-        Inertia[action](url, data, {
-            onSuccess: () => {
-                closeModal();
+
+        formData[method](url, {
+            preserveScroll: true,
+            onFinish: () => {
                 isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        isLoading.value = false;
+                        router.visit(route('inventory.index'), {
+                            preserveScroll: true,
+                            preserveState: false,
+                        });
+                    });
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.log('Error: ' + JSON.stringify(errors));
             },
         });
     };
-
-    const submitAdd = () => submitForm('post', 'inventory/store', addParticular);
-    const submitEdit = () => submitForm('post', 'inventory/edit-re-order-level', editParticular);
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const submitAdd = () => submitForm('post', route('store.product.quantity'), addParticular);
+    const submitEdit = () => submitForm('post', route('update.reorder.level'), editParticular);
 
     const columns = [
         {

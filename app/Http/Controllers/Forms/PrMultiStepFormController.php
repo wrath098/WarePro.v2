@@ -244,8 +244,7 @@ class PrMultiStepFormController extends Controller
     public function submit(Request $request)
     {
         DB::beginTransaction();
-
-        dd($request->toArray());
+        
         try {
             $selectedItems = $request->input('selectedItems');
             $prTransactionInfo = $request->input('prTransactionInfo');

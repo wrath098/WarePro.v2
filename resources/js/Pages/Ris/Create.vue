@@ -1,6 +1,6 @@
 <script setup>
     import { reactive, ref, watch, onMounted, computed } from 'vue';
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { Head, router, useForm, usePage } from '@inertiajs/vue3';
     import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
@@ -12,26 +12,7 @@
     const page = usePage();
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const isLoading = ref(false);
 
     const props = defineProps({
         office: Object
@@ -121,34 +102,61 @@
         }
     };
 
-    const create = reactive({
-        risNo: '',
-        receivedBy: '',
-        risDate: '',
-        remarks: '',
-    });
-
     const submit = () => {
         showModal();
     };
 
+    const create = useForm({
+        risNo: '',
+        receivedBy: '',
+        risDate: '',
+        remarks: '',
+        officeId: null,
+        ppmpYear: null,
+        requestProducts: null,
+        file: null,
+    });
+    
     const confirmSubmit = () => {
-        const formData = new FormData();
-            formData.append('risNo', create.risNo);
-            formData.append('officeId', searchOfficePpmp.officeId);
-            formData.append('ppmpYear', searchOfficePpmp.year);
-            formData.append('receivedBy', create.receivedBy);
-            formData.append('risDate', create.risDate);
-            formData.append('remarks', create.remarks);
-            formData.append('requestProducts', JSON.stringify(requestData.value));
-            formData.append('file', file.value);
+        isLoading.value = true;
+        create.officeId = searchOfficePpmp.officeId;
+        create.ppmpYear = searchOfficePpmp.year;
+        create.file = file.value;
+        create.requestProducts = JSON.stringify(requestData.value);
 
-        Inertia.post('ris/store', formData, {
+        create.post(route('store.ris'), {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
-        });
-        closeModal();
+            forceFormData: true,
+            onError: (errors) => {
+                isLoading.value = false;
+                console.error('Error: ' + JSON.stringify(errors));
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    create.reset();
+                    isLoading.value = false;
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => {
+                        closeModal();
+                        router.visit(route('create.ris'), {
+                            preserveScroll: true,
+                            preserveState: false,
+                        });
+                    });
+                }
+            }
+        })
     };
 </script>
 
