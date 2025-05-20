@@ -18,4 +18,25 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        outDir: 'public/build',
+        emptyOutDir: true,
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js',
+            }
+        },
+        cssCodeSplit: true,
+        minify: 'esbuild',
+        sourcemap: process.env.NODE_ENV !== 'production',
+    },
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+            '~': '/resources',
+        },
+    },
 });

@@ -1,6 +1,6 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { computed, onMounted, ref } from 'vue';
+    import { Head, router } from '@inertiajs/vue3';
+    import { ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
@@ -8,19 +8,18 @@
     import useAuthPermission from '@/Composables/useAuthPermission';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
-    const page = usePage();
+    const isLoading = ref(false);
+
     const props = defineProps({
         iar: Object,
         lastId: Number,
     });
 
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-
     const API_BASE_URL = 'http://192.168.2.16/pgso-pms/api/fetch-iar';
     const newTransactionsList = ref([]);
     const fetchArchives = async (id) => {
+        isLoading.value = true;
+
         try {
             const response = await axios.get(`${API_BASE_URL}/ ${id}`, {
                 headers: {
@@ -31,6 +30,7 @@
             });
 
             if (!response.data) {
+                isLoading.value = false;
                 throw new Error('No data received from server');
             }
 
@@ -51,9 +51,14 @@
                     text: newTransactionsList.value.length + ' new transaction',
                     icon: 'success',
                     confirmButtonText: 'OK',
+                }).then(() => {
+                    isLoading.value = false;
+                    router.visit(route('iar'), {
+                        preserveScroll: true,
+                        preserveState: false,
+                    });
                 });
             }
-
             return saveResponse;
         } catch (error) {
             const errorMessage = error.response?.data?.message || 
@@ -72,6 +77,8 @@
                 status: error.response?.status,
                 url: error.config?.url
             });
+
+            isLoading.value = false;
 
             throw {
                 userMessage: 'Failed to load IAR Transactions data. Please try again later.',
@@ -123,27 +130,6 @@
             render: '#action',
         },
     ];
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
-
 </script>
 
 <template>
@@ -174,6 +160,7 @@
                 <ol>
                     <li class="flex flex-col lg:flex-row">
                         <button v-if="hasAnyRole(['Developer']) || hasPermission('collect-iar-transactions')" @click="fetchArchives(props.lastId)"
+                            :class="{ 'opacity-25': isLoading }" :disabled="isLoading"
                             class="flex items-center justify-center text-white bg-gradient-to-r from-indigo-400 via-indigo-600 to-indigo-800 hover:bg-gradient-to-br font-medium rounded-lg text-sm text-center px-4 py-1">
                             <svg class="w-6 h-6 mr-2" fill="none" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 32 32">
                                 <path fill="currentColor" d="M16 7L6 17l1.41 1.41L15 10.83V28H2v2h13a2 2 0 0 0 2-2V10.83l7.59 7.58L26 17Z"/>
@@ -181,7 +168,6 @@
                             </svg>
                             <span>Get Transactions from AssetPRO</span>
                         </button>
-                        <!-- <Refresh v-if="hasAnyRole(['Developer']) || hasPermission('collect-iar-transactions')" :href="route('iar.collect.transactions')">Get Transactions from AssetPRO </Refresh> -->
                     </li>
                 </ol>
             </nav>
@@ -189,6 +175,19 @@
         <div class="my-4 w-full bg-white shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
+                    <div v-if="isLoading" class="absolute bg-white bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
+                        <div class="flex items-center">
+                        <span class="text-3xl mr-4">Loading</span>
+                        <svg class="animate-spin h-8 w-8 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        </div>
+                    </div>
+
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
