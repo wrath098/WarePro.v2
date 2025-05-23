@@ -325,7 +325,7 @@ class ProductService
         $now = Carbon::now();
 
         return $parsedDate->between(
-            $now->copy()->subDays(120),
+            $now->copy()->subDays(210),
             $now
         );
     }
