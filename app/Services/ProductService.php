@@ -109,7 +109,7 @@ class ProductService
                 $query->withTrashed()->select('id', 'cat_id', 'item_code', 'item_name');
             },
             'items.products' => function ($query) {
-                $query->withTrashed()->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+                $query->withTrashed()->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo', 'prod_status');
             }
         ])
         ->get(['id', 'cat_code', 'cat_name']);

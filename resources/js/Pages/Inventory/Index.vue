@@ -7,6 +7,7 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
     import Swal from 'sweetalert2';
+import PrintButton from '@/Components/Buttons/PrintButton.vue';
 
     const page = usePage();
     const message = computed(() => page.props.flash.message);
@@ -189,6 +190,13 @@
                                 Warehouse Stock
                             </a>
                         </div>
+                    </li>
+                </ol>
+                <ol>
+                    <li class="flex flex-col lg:flex-row">
+                        <PrintButton :href="route('generatePdf.productInventoryList')" target="_blank" class="mx-1 my-1 lg:my-0">
+                            <span class="mr-2">Print</span>
+                        </PrintButton>
                     </li>
                 </ol>
             </nav>

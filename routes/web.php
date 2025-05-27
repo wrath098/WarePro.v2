@@ -22,8 +22,10 @@ use App\Http\Controllers\Pdf\AsOfStockCardController;
 use App\Http\Controllers\Pdf\DraftConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\DraftOfficePpmpController;
+use App\Http\Controllers\Pdf\InventoryController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
+use App\Http\Controllers\Pdf\PsDbmController;
 use App\Http\Controllers\Pdf\PurchaseRequestController;
 use App\Http\Controllers\Pdf\SsmiController;
 use App\Http\Controllers\Pdf\SummaryOfConsolidatedPpmpController;
@@ -235,6 +237,8 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
     Route::get('/stock-card-as-of', [AsOfStockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard.AsOf');
     Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
+    Route::get('/beginning-balance', [InventoryController::class, 'generatePdf_productInventoryList'])->name('generatePdf.productInventoryList');
+    Route::get('/ps-dbm', [PsDbmController::class, 'generate_psDbm'])->name('generatePdf.psDbm');
 });
 
 #AJAX
