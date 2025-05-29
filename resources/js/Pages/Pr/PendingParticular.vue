@@ -252,10 +252,15 @@
                                 <div class="font-bold text-lg">Purchase Request Information</div>
 
                                 <div class="flex items-center">
-                                    <div class="rounded-full p-1 hover:bg-white transition-colors duration-500">
-                                        <a v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id})" target="_blank" class="flex items-center rounded-full transition">
+                                    <div v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])" class="rounded-full p-1 hover:bg-white transition-colors duration-500">
+                                        <a v-if="pr.pr_desc != 'PS-DBM'" :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id })" target="_blank" class="flex items-center rounded-full transition">
                                             <svg class="w-7 h-7 text-indigo-100 hover:text-indigo-600 transition duration-75" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                 <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                                            </svg>
+                                        </a>
+                                        <a v-else :href="route('generatePdf.pr.psDbm', { pr: pr.id })" target="_blank" class="flex items-center rounded-full transition">
+                                            <svg class="w-7 h-7 text-indigo-100 hover:text-indigo-600 transition duration-75" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                <path fill="currentColor" d="M13 13.15V10q0-.425-.288-.712T12 9t-.712.288T11 10v3.15l-.9-.875Q9.825 12 9.413 12t-.713.3q-.275.275-.275.7t.275.7l2.6 2.6q.3.3.7.3t.7-.3l2.6-2.6q.275-.275.287-.687T15.3 12.3q-.275-.275-.687-.288t-.713.263zM6 22q-.825 0-1.412-.587T4 20V8.825q0-.4.15-.762t.425-.638l4.85-4.85q.275-.275.638-.425t.762-.15H18q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22z"/>
                                             </svg>
                                         </a>
                                     </div>

@@ -233,7 +233,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/drafted-office-ppmp-list/{ppmp}', [DraftOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
     Route::get('/approved-office-ppmp-list/{ppmp}', [ApprovedOfficePpmpQuantityController::class, 'generatePdf_Ppmp'])->name('generatePdf.ApprovedOfficePpmp');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
-    Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
+    Route::get('/purchase-request-ps-dbm/{pr}', [PurchaseRequestController::class, 'generate_psDbm'])->name('generatePdf.pr.psDbm');
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
     Route::get('/stock-card-as-of', [AsOfStockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard.AsOf');
     Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');

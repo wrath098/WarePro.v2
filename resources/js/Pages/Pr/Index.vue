@@ -6,6 +6,7 @@
     import Swal from 'sweetalert2';
     import { computed, onMounted } from 'vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
+import Download from '@/Components/Buttons/Download.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -133,7 +134,10 @@
                         }">
                             <template #action="props">
                                 <ViewButton v-if="hasPermission('view-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
-                                <Print v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" />
+                                <span v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])">
+                                    <Print v-if="props.cellData.pr_desc != 'PS-DBM'" :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" />
+                                    <Download v-else :href="route('generatePdf.pr.psDbm', { pr: props.cellData.id})" tooltip="Download"/>
+                                </span>
                             </template>
                     </DataTable>
                 </div>
