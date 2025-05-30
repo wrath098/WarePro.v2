@@ -159,27 +159,30 @@ class StockCardController extends Controller
         $firstTransaction = $inventoryTransactions->first();
         $lastTransaction  = $inventoryTransactions->last();
         $beginningBalance = 0;
+        $currentStock = 0;
 
         if ($firstTransaction) {
             if ($firstTransaction['type'] == 'purchase' || $firstTransaction['type'] == 'adjustment') {
                 $beginningBalance = $firstTransaction['currentStock'] - $firstTransaction['qty'];
+                $currentStock += $beginningBalance;
             } elseif ($firstTransaction['type'] == 'issuance') {
                 $beginningBalance = $firstTransaction['currentStock'] + $firstTransaction['qty'];
+                $currentStock += $beginningBalance;
             }
         }
 
         $text .= '
-                    <tr style="font-size: 9px; font-weight:bold;">
-                        <td width="60px"></td>
-                        <td width="150px" style="text-align:center;">**** Beginning Balance ****</td>
-                        <td width="35px" style="text-align:center;">'. number_format($beginningBalance, 0, '.', ',') .'</td>
-                        <td width="52px"></td>
-                        <td width="35px"></td>
-                        <td width="52px"></td>
-                        <td width="87px" style="text-align:center;">'. number_format($beginningBalance, 0, '.', ',') .'</td>
-                        <td width="48px"></td>
-                    </tr>
-                ';
+                <tr style="font-size: 9px; font-weight:bold;">
+                    <td width="60px"></td>
+                    <td width="150px" style="text-align:center;">**** Beginning Balance ****</td>
+                    <td width="35px" style="text-align:center;">'. number_format($beginningBalance, 0, '.', ',') .'</td>
+                    <td width="52px"></td>
+                    <td width="35px"></td>
+                    <td width="52px"></td>
+                    <td width="87px" style="text-align:center;">'. number_format($beginningBalance, 0, '.', ',') .'</td>
+                    <td width="48px"></td>
+                </tr>
+            ';
 
         foreach($inventoryTransactions as $transaction) {
             $text .= '
@@ -189,10 +192,13 @@ class StockCardController extends Controller
 
                     if ($transaction['type'] == 'issuance') {
                         $text .= 'RIS #' . $transaction['risDetails']['risNo'];
+                        $currentStock -= (int) $transaction['qty'];
                     } elseif ($transaction['type'] == 'purchase') {
                         $text .= 'IAR #' . $transaction['iarDetails']['iarNo'] . '<br>PO #' . $transaction['iarDetails']['poNo'];
+                        $currentStock += (int) $transaction['qty'];
                     } elseif ($transaction['type'] == 'adjustment') {
                         $text .= '';
+                        $currentStock += (int) $transaction['qty'];
                     }
 
             $text .= '</td>
@@ -200,7 +206,7 @@ class StockCardController extends Controller
                     <td width="52px"style="text-align:right;">' . ($transaction['type'] == 'purchase' ? $transaction['iarDetails']['price'] : '') . '</td>
                     <td width="35px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? number_format($transaction['qty'], 0, '.', ',') : '') . '</td>
                     <td width="52px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? $transaction['risDetails']['officeCode'] : '') . '</td>
-                    <td width="87px" style="text-align:center;">' . number_format($transaction['currentStock'], 0, '.', ',') . '</td>
+                    <td width="87px" style="text-align:center;">' . number_format($currentStock, 0, '.', ',') . '</td>
                     <td width="48px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? $transaction['risDetails']['remarks'] : '') . '</td>
                 </tr>
             ';
