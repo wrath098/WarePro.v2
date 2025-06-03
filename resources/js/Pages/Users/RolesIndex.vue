@@ -9,6 +9,7 @@
     import Swal from 'sweetalert2';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import InputError from '@/Components/InputError.vue';
+    import ViewButton from '@/Components/Buttons/ViewButton.vue';
 
     const page = usePage();
     const message = computed(() => page.props.flash.message);
@@ -168,6 +169,7 @@
                             ordering: true
                         }">
                         <template #action="props">
+                            <ViewButton v-if="!['Developer', 'System Administrator'].includes(props.cellData?.name)" :href="route('user.role.permissions', { role : props.cellData.id })" tooltip="View" />
                             <RemoveButton v-if="!['Developer', 'System Administrator'].includes(props.cellData?.name)" @click="openDropModal(props.cellData.id)" tooltip="Remove"/>
                         </template>
                     </DataTable>

@@ -221,12 +221,15 @@
                                                     </button>
                                                 </template>
                                                 <template #content>
-                                                    <button v-if="hasPermission('add-app-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
+
+                                                    <!-- ADD A PARTICULAR FOR CONSOLIDATED -->
+                                                    <!-- <button v-if="hasPermission('add-app-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
                                                         </svg>
                                                         <span class="ml-2">Add Particular</span>   
-                                                    </button>
+                                                    </button> -->
+
                                                     <div v-if="hasPermission('print-app-summary-overview') ||  hasAnyRole(['Developer'])">
                                                         <a v-if="ppmp.ppmp_type == 'Consolidated'" :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                                             <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -262,6 +265,11 @@
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Transaction No.</dt>
                                             <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_code }}</dd>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Type</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.description }}</dd>
                                         </div>
 
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">

@@ -175,10 +175,10 @@
         <div class="my-4 w-full bg-white shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
-                    <div v-if="isLoading" class="absolute bg-white bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
+                    <div v-if="isLoading" class="absolute bg-white text-indigo-800 bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
                         <div class="flex items-center">
                         <span class="text-3xl mr-4">Loading</span>
-                        <svg class="animate-spin h-8 w-8 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        <svg class="animate-spin h-8 w-8 text-indigo-800" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor"

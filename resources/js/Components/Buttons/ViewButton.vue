@@ -48,7 +48,7 @@
 <style scoped>
     .tooltip {
         bottom: 70%;
-        left: 50%;
+        left: 60%;
         transform: translateX(-50%);
         margin-bottom: 0.5rem;
         opacity: 0;

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->softDeletes();
+        Schema::table('ppmp_transactions', function (Blueprint $table) {
+            $table->string('description')->nullable()->after('ppmp_type');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('deleted_at');
+        Schema::table('ppmp_transactions', function (Blueprint $table) {
+            $table->dropColumn('description');
         });
     }
 };

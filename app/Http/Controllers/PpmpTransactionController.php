@@ -55,7 +55,7 @@ class PpmpTransactionController extends Controller
                 return [
                     'id' => $ppmp->id,
                     'ppmpCode' => $ppmp->ppmp_code,
-                    'ppmpType' => ucfirst($ppmp->ppmp_type),
+                    'ppmpType' => $ppmp->ppmp_type == 'individual' ? 'Office' : ucfirst($ppmp->ppmp_type),
                     'basedPrice' => ((float) $ppmp->price_adjustment * 100) . '%',
                     'officeId' => $ppmp->office_id,
                     'officeCode' => $ppmp->requestee->office_name ?? '',
@@ -109,6 +109,7 @@ class PpmpTransactionController extends Controller
                     
                     $startRow = 0;
                     $currentRow = 0;
+
                     (new FastExcel)->import($fullPath, function ($line) use ($createPpmp, &$currentRow, $startRow) {
                         $currentRow++;
 
@@ -440,13 +441,17 @@ class PpmpTransactionController extends Controller
             ->get();
 
         $transactions = $transactions->map(function ($transaction) {
+            $priceAdjustment = $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0;
+            $qtyAdjust = $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0;
+            $threshold = $transaction->tresh_adjustment ? ((float)$transaction->tresh_adjustment * 100) : 0;
+            $details = 'Price Adjustment: ' . $priceAdjustment . '% <br>' . 'Quantity Adjustment. : ' . $qtyAdjust . '% <br>' . 'Maximum Adjustment: ' . $threshold . '%';
+
             return [
                 'id' => $transaction->id,
                 'code' => $transaction->ppmp_code,
                 'ppmpYear' => $transaction->ppmp_year,
-                'priceAdjust' => $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0,
-                'qtyAdjust' => $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0,
-                'threshold' => $transaction->tresh_adjustment ? ((float)$transaction->tresh_adjustment * 100) : 0,
+                'description' => $transaction->description,
+                'details' => $details,
                 'createdAt' => $transaction->created_at->format('F d, Y'),
                 'updatedBy' => optional($transaction->updater)->name ?? 'Unknown',
             ];
@@ -467,6 +472,37 @@ class PpmpTransactionController extends Controller
             $result = [];
         }
         return response()->json(['data' => $result]);
+    }
+
+    public function updateConsolidatedDescription(Request $request)
+    {
+        DB::beginTransaction();
+        
+        $request->validate([
+            'ppmpId' => 'required|integer|exists:ppmp_transactions,id',
+            'ppmpDesc' => 'required|string|max:255',
+        ]);
+
+        try {
+            $ppmpTransaction = PpmpTransaction::findOrFail($request->ppmpId);
+
+            $ppmpTransaction->description = $request->ppmpDesc;
+            $ppmpTransaction->updated_by = Auth::id();
+            $ppmpTransaction->save();
+
+            DB::commit();
+            return redirect()->back()
+                        ->with('success', 'Successfully updated the PPMP.');
+        } catch(\Exception $e) {
+
+            DB::rollBack();
+            Log::error("Creation of New Product Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $request->toArray()
+            ]);
+            return back()->with('error', 'Updating of PPMP Failed. Please try again!');
+        }
     }
 
     public function destroy(Request $request)
@@ -545,6 +581,7 @@ class PpmpTransactionController extends Controller
         return PpmpTransaction::create([
             'ppmp_code' => now()->format('YmdHis'),
             'ppmp_type' => $validatedData['ppmpType'],
+            'description' => 'Raw File',
             'ppmp_year' => $validatedData['ppmpYear'],
             'office_id' => $validatedData['office'],
             'created_by' => $validatedData['user'],
@@ -571,13 +608,13 @@ class PpmpTransactionController extends Controller
     {
         $newStock = $line['New_Stock_No'] ?? null;
         $code = $line['Old_Sotck_No'] ?? null;
-        $janQty = is_numeric($line['Jan']) ? $line['Jan'] : 0;
-        $mayQty = is_numeric($line['May']) ? $line['May'] : 0;
+        $janQty = is_numeric($line['Mar']) ? $line['Mar'] : 0;
+        $mayQty = is_numeric($line['Aug']) ? $line['Aug'] : 0;
         $totalQuantity = intval($janQty) + intval($mayQty);
 
-         # New Stock Pattern Comparison
+        # New Stock Pattern Comparison
         # !preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock) 
-        if (!preg_match("/^\d{4}$/", $code) || $totalQuantity === 0) {
+        if (!preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock) || $totalQuantity === 0) {
             return null;
         }
         

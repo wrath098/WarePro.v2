@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
@@ -27,6 +28,27 @@ class RoleController extends Controller
         ]);
         return Inertia::render('Users/RolesIndex', [
             'roles' => $roles
+        ]);
+    }
+
+    public function showRolePermissions(Role $role)
+    {
+        $role->load('permissions');
+
+        $role->permissions = $role->permissions->map(function ($permission) {
+            return [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                'guardName' => $permission->guard_name,
+                'createdAt' => Carbon::parse($permission->created_at)->format('m-d-Y'),
+            ];
+        });
+
+        //dd($role->permissions);
+
+        return Inertia::render('Users/PermissionsInRoles', [
+            'role' => $role,
+            'permissions' => $role->permissions,
         ]);
     }
 
@@ -112,5 +134,20 @@ class RoleController extends Controller
 
             return redirect()->back()->with('error', 'Deletion of role failed. Please try again!');
         }
+    }
+
+    public function destroyRolePermission(Request $request)
+    {
+        $request->validate([
+            'role_id' => 'required|integer|exists:roles,id',
+            'permission_id' => 'required|integer|exists:permissions,id',
+        ]);
+
+        $role = Role::findOrFail($request->role_id);
+        $permission = Permission::findOrFail($request->permission_id);
+
+        $role->revokePermissionTo($permission);
+
+        return back()->with('message', 'Permission removed from role successfully.');
     }
 }

@@ -11,6 +11,8 @@
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
     import InputError from '@/Components/InputError.vue';
+import AddButton from '@/Components/Buttons/AddButton.vue';
+import PrintButton from '@/Components/Buttons/PrintButton.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -207,6 +209,16 @@
                         </div>
                     </li>
                 </ol>
+                <ol>
+                    <li class="flex flex-col lg:flex-row">
+                        <AddButton v-if="hasPermission('create-office-ppmp-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                            <span class="mr-2">Add New Particular</span>
+                        </AddButton>
+                        <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id})" target="_blank" class="mx-1 my-1 lg:my-0">
+                            <span class="mr-2">Print List</span>
+                        </PrintButton>
+                    </li>
+                </ol>
             </nav>
         </template>
 
@@ -217,26 +229,6 @@
                         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
                             <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
                                 <div class="font-bold text-lg">PPMP Information</div>
-                                <div class="flex items-center">
-                                    <div v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" class="rounded-full mx-1">
-                                        <a :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id})" target="_blank" title="Print">
-                                            <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 384">
-                                                <path fill="currentColor" d="M363 107q26 0 45 18.5t19 45.5v128h-86v85H85v-85H0V171q0-27 18.5-45.5T64 107h299zm-64 234V235H128v106h171zm63.5-149q8.5 0 15-6.5t6.5-15t-6.5-15t-15-6.5t-15 6.5t-6.5 15t6.5 15t15 6.5zM341 0v85H85V0h256z"/>
-                                            </svg>
-                                        </a>
-                                    </div>
-                                    <div v-if="hasPermission('create-office-ppmp-particular') ||  hasAnyRole(['Developer'])" class="rounded-full mx-1">
-                                        <button @click="showModal('add')" title="Add New Item">
-                                            <svg class="w-6 h-6 text-gray-50 transition duration-75 hover:text-emerald-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                                                <g id="galaAdd0" fill="none" stroke="currentColor" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="16">
-                                                    <circle id="galaAdd1" cx="128" cy="128" r="112"/>
-                                                    <path id="galaAdd2" d="M 79.999992,128 H 176.0001"/>
-                                                    <path id="galaAdd3" d="m 128.00004,79.99995 v 96.0001"/>
-                                                </g>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
 
                             <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
@@ -253,7 +245,7 @@
 
                                     <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                         <dt class="font-medium text-gray-900">Type</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.ppmp_type }}</dd>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.ppmp_type == 'individual' ? 'Office' : ppmp.ppmp_type }}</dd>
                                     </div>
 
                                     <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
