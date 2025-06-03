@@ -16,6 +16,10 @@
         permissions: Object,
     });
 
+    const page = usePage();
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
+
     const isLoading = ref(false);
     const modalState = ref(null);
     const isAddModalOpen = computed(() => modalState.value === 'add');
@@ -24,7 +28,8 @@
     const closeModal = () => {modalState.value = null;}
 
     const create = useForm({
-        roleName: '',
+        permission: '',
+        role: ''
     });
 
     const drop = useForm({
@@ -72,8 +77,27 @@
         });
     };
 
-    const submit = () => submitForm('post', route('user.roles.store'), create);
+    const submit = () => submitForm('post', route('role.permission.store'), create);
     const submitDrop = () => submitForm('delete', route('role.permission.destroy'), drop);
+
+    const availablePermissions = ref([]);
+    const fetchAvailablePermissions = async () => {
+        if (props.role) {
+            try {
+                const url = route('available.role.permissions'); 
+                const response = await axios.get(url, { params: { id: props.role.id } });
+                availablePermissions.value = response.data;
+            } catch (error) {
+                console.error('Error fetching office data:', error);
+            }
+        }
+    };
+
+    const handleAddClick = async () => {
+        await fetchAvailablePermissions();
+        create.role = props.role.id;
+        showModal('add');
+    };
 
     const columns = [
         {
@@ -135,7 +159,7 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <AddButton @click="showModal('add')" class="mx-1 my-1 lg:my-0">
+                        <AddButton @click="handleAddClick('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Add New Permission</span>
                         </AddButton>
                     </li>
@@ -145,7 +169,6 @@
         <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
-
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
@@ -191,6 +214,50 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </form>
+    </Modal>
+    <Modal :show="isAddModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submit">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m-2.5-8.5q1.45 0 2.475-1.025T13 10t-1.025-2.475T9.5 6.5T7.025 7.525T6 10t1.025 2.475T9.5 13.5m7 1q1.05 0 1.775-.725T19 12t-.725-1.775T16.5 9.5t-1.775.725T14 12t.725 1.775t1.775.725M12 20q2.125 0 3.875-1t2.825-2.65q-.525-.15-1.075-.25T16.5 16q-1.325 0-3.2.775t-3 3.05q.425.1.85.138T12 20m-3.175-.65q.875-1.8 1.988-2.675T12.5 15.5q-.725-.225-1.463-.362T9.5 15q-1.125 0-2.225.275t-2.125.775q.65 1.075 1.588 1.938t2.087 1.362"/>
+                        </svg>
+                    </div>
+                    <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Create New User Permission</h3>
+                        <p class="text-sm text-gray-500"> Enter the details for the new User Permission you wish to add.</p>
+                        <div class="mt-10">
+                            <p class="text-sm text-[#86591e] mb-2">User Permission</p>
+                            <div class="relative z-0 w-full group mb-5 lg:mb-0">
+                                <select v-model="create.permission" name="permission" id="permission" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <option value="" disabled selected class="pl-5">Select Available Permissions</option>
+                                    <option v-for="permit in availablePermissions" :key="permit.id" :value="permit.id" class="ml-5">{{ permit.name }}</option>
+                                </select>
+                                <label for="permission" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Permissions</label>
+                            </div>
+                            <InputError class="mt-2" :message="create.errors.role" />
+                            <InputError class="mt-2" :message="create.errors.permission" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Confirm 
+                </SuccessButton>
+
+                <DangerButton @click="closeModal"> 
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Cancel
+                </DangerButton>
             </div>
         </form>
     </Modal>

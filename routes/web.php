@@ -67,11 +67,15 @@ Route::middleware('auth')->prefix('users')->group(function () {
         Route::delete('/roles/delete/{role}', [RoleController::class, 'destroy'])->name('user.roles.destroy');
 
         Route::get('/roles/{role}', [RoleController::class, 'showRolePermissions'])->name('user.role.permissions');
+        Route::post('/permission-in-role/create', [RoleController::class, 'storeRolePermission'])->name('role.permission.store');
         Route::delete('/permission-in-role/delete', [RoleController::class, 'destroyRolePermission'])->name('role.permission.destroy');
 
         Route::get('/permissions', [PermissionController::class, 'index'])->name('user.permissions');
         Route::post('/permissions/store', [PermissionController::class, 'store'])->name('user.permissions.store');
         Route::delete('/permissions/delete/{permission}', [PermissionController::class, 'destroy'])->name('user.permissions.destroy');
+
+        #AJAX
+        Route::get('/available-permissions-for-role', [RoleController::class, 'showAvailablePermissionsForRole'])->name('available.role.permissions');
     });
 });
 

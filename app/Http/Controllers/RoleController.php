@@ -44,25 +44,12 @@ class RoleController extends Controller
             ];
         });
 
-        //dd($role->permissions);
-
         return Inertia::render('Users/PermissionsInRoles', [
             'role' => $role,
             'permissions' => $role->permissions,
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -89,33 +76,45 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Role $role)
+    public function storeRolePermission(Request $request)
     {
-        //
+        $request->validate([
+            'role' => 'required|exists:roles,id',
+            'permission' => 'required|integer',
+            'permission.*' => 'exists:permissions,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try
+        {
+            $role = Role::findOrFail($request->input('role'));
+        
+            $role->givePermissionTo($request->input('permission'));
+
+            DB::commit();
+            return redirect()->back()->with('message', 'A permission was assigned to the role successfully!');
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("Assigning Permission to a Role Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $request->toArray()
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to assign permission to a Role. Please try again.');
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Role $role)
+    public function showAvailablePermissionsForRole(Request $request)
     {
-        //
+        $roleId = $request->input('id');
+        $assignedPermissionIds = Role::findOrFail($roleId)->permissions->pluck('id');
+        $availablePermissions = Permission::whereNotIn('id', $assignedPermissionIds)->get();
+
+        return response()->json($availablePermissions);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Role $role)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Role $role)
     {
         DB::beginTransaction();
