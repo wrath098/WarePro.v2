@@ -212,27 +212,30 @@
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Print Project Procurement Management Plan</h3>
-                        <p class="text-sm text-gray-500"> Please select the version of the ppmp.</p>
+                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Print Office Project Procurement Management Plan</h3>
+                        <p class="text-sm text-gray-500">
+                            Default setting is 'Original Office PPMP' type with '100' Office Maximum Allowed Quantity.
+                        </p>
                         <div class="mt-5">
+                            <p class="text-sm text-[#86591e]">PPMP Version Type: <span class="text-sm text-gray-500">Select a version type to determine how the adjustments will be applied.</span></p>
                             <div class="relative z-0 w-full my-3 group">
                                 <select v-model="printPpmp.printType" name="selectedVersion" id="selectedVersion" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                    <option value="" disabled selected>Select Version</option>
-                                    <option value="original">Original Quantity</option>
-                                    <option value="adjustment">Adjust Quantity</option>
+                                    <option value="" disabled selected>Select the version type</option>
+                                    <option value="original">Original Office PPMP</option>
+                                    <option value="adjustment">Adjusted Office PPMP</option>
                                 </select>
-                                <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Version</label>
+                                <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select Version Type</label>
                             </div>
                             <div v-if="printPpmp.printType" >
                                 <div v-if="printPpmp.printType == 'adjustment'" class="mt-5">
-                                    <p class="text-sm text-[#86591e]"> Adjustment: <span class="text-sm text-[#8f9091]">This will adjust the quantity of each item requested by the various offices.</span></p>
+                                    <p class="text-sm text-[#86591e]">Adjustment to the Original Office PPMP: <span class="text-sm text-gray-500">This will adjust the quantity of each item requested by the various offices.</span></p>
                                     <div class="relative z-0 w-full group my-2">
                                         <input v-model="printPpmp.qtyAdjust" type="number" min="50" max="99" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                         <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
                                     </div>
                                 </div>
                                 <div class="mt-5">
-                                    <p class="text-sm text-[#86591e]"> Set Maximum Allowed Quantity: <span class="text-sm text-[#8f9091]">This will set the quantity limit for each item requested by the various offices.</span></p>
+                                    <p class="text-sm text-[#86591e]">Office Maximum Allowed Quantity: <span class="text-sm text-[#666666]">(Use this setting to define quantity limits, in percentage terms, for each item requested across offices.)</span></p>
                                     <div class="relative z-0 w-full group my-2">
                                         <input v-model="printPpmp.threshold" type="number" min="50" max="100" name="threshold" id="threshold" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                         <label for="threshold" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>
