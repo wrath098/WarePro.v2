@@ -17,6 +17,7 @@ class PpmpTransaction extends Model
     protected $fillable = [
         'ppmp_code',
         'ppmp_type',
+        'description',
         'price_adjustment',
         'qty_adjustment',
         'tresh_adjustment',
@@ -24,6 +25,7 @@ class PpmpTransaction extends Model
         'ppmp_version',
         'ppmp_year',
         'office_id',
+        'remarks',
         'created_by',
         'updated_by',
     ];

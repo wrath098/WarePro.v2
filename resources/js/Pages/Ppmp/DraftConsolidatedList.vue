@@ -11,6 +11,7 @@
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
     import InputError from '@/Components/InputError.vue';
+    import IconButton from '@/Components/Buttons/IconButton.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -105,7 +106,7 @@
     };
 
     const submitConsolidated = () => submitForm('post', route('consolidated.ppmp.store'), generateConsolidated);
-    const submitEditPpmp = () => submitForm('patch', route('indiv.ppmp.update'), edit);
+    const submitEditPpmp = () => submitForm('post', route('make.copy.ppmp'), edit);
     const submitDropPpmp = () => submitForm('delete', route('indiv.ppmp.destroy'), edit);
 
     const columns = [
@@ -126,7 +127,7 @@
         },
         {
             data: 'details',
-            title: 'Remarks',
+            title: 'Other Details',
             width: '20%'
         },
         {
@@ -212,12 +213,11 @@
                             <template #action="props">
                                 <span v-if="ppmp.status == 'Draft'">
                                     <ViewButton v-if="hasPermission('view-app') ||  hasAnyRole(['Developer'])" :href="route('conso.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
-                                    <button v-if="hasPermission('edit-consolidation') ||  hasAnyRole(['Developer'])" @click="openEditModal(props.cellData)" class="w-full inline-flex justify-center text-base sm:ml-3 sm:w-auto sm:text-sm" title="Edit">
-                                        <svg class="w-7 h-7 text-indigo-800 hover:text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                            <path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/>
-                                            <path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/>
+                                    <IconButton v-if="hasPermission('edit-consolidation') ||  hasAnyRole(['Developer'])" @click="openEditModal(props.cellData)" class="w-full inline-flex justify-center text-base sm:ml-3 sm:w-auto sm:text-sm" tooltip="Create a Copy">
+                                        <svg class="w-7 h-7 text-indigo-800 hover:text-indigo-600" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M6.569 2.25h6.362c.604 0 1.102 0 1.508.033c.421.035.809.109 1.173.294a3 3 0 0 1 1.311 1.311c.186.364.26.752.294 1.173c.033.406.033.904.033 1.508v.181h.4c.503 0 .918 0 1.257.023c.352.024.678.076.991.205a3 3 0 0 1 1.624 1.624c.13.313.18.639.205.99c.023.34.023.755.023 1.257v.052c0 .502 0 .917-.023 1.256a3.2 3.2 0 0 1-.189.95a12.43 12.43 0 0 1-8.236 8.37l-.189.059a3.1 3.1 0 0 1-.956.19c-.34.024-.754.024-1.256.024h-.052c-.502 0-.917 0-1.256-.023c-.352-.024-.678-.076-.991-.205a3 3 0 0 1-1.624-1.624c-.13-.313-.18-.639-.205-.99c-.023-.34-.023-.755-.023-1.257v-.401h-.18c-.604 0-1.103 0-1.509-.033c-.421-.035-.809-.108-1.173-.294a3 3 0 0 1-1.311-1.311c-.185-.364-.26-.752-.294-1.173c-.033-.406-.033-.904-.033-1.508V6.569c0-.604 0-1.102.033-1.508c.035-.421.109-.809.294-1.173a3 3 0 0 1 1.311-1.311c.364-.185.752-.26 1.173-.294c.406-.033.904-.033 1.508-.033M8.25 17.625c0 .534 0 .898.02 1.18c.018.276.053.419.094.519a1.5 1.5 0 0 0 .812.812c.1.041.243.076.519.094c.282.02.646.02 1.18.02s.898 0 1.18-.02c.276-.018.419-.053.519-.094a1.5 1.5 0 0 0 .812-.812c.041-.1.075-.243.094-.519c.02-.282.02-.646.02-1.18v-.026c0-.502 0-.917.023-1.256c.024-.352.076-.678.205-.991a3 3 0 0 1 1.624-1.624c.313-.13.639-.18.99-.205c.34-.023.755-.023 1.257-.023h.026c.534 0 .898 0 1.18-.02c.276-.019.419-.053.519-.094a1.5 1.5 0 0 0 .812-.812c.041-.1.076-.243.094-.519c.02-.282.02-.646.02-1.18s0-.898-.02-1.18c-.018-.276-.053-.419-.094-.519a1.5 1.5 0 0 0-.812-.812c-.1-.041-.243-.076-.519-.094c-.282-.02-.646-.02-1.18-.02H11.1c-.642 0-1.08 0-1.417.028c-.329.027-.497.076-.614.135a1.5 1.5 0 0 0-.656.656c-.06.117-.108.285-.135.614c-.027.338-.028.775-.028 1.417z"/>
                                         </svg>
-                                    </button>
+                                    </IconButton>
                                     <RemoveButton v-if="hasPermission('delete-app') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Trash"/>
                                 </span>
                                 <span v-if="ppmp.status == 'Approved'">
@@ -319,8 +319,8 @@
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Update Consolidate PPMP</h3>
-                        <p class="text-sm text-gray-500"> Enter the description of the consolidated PPMP you wish to update.</p>
+                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Create Duplicate of Consolidated PPMP</h3>
+                        <p class="text-sm text-gray-500">Provide a description for the copied consolidated PPMP.</p>
                         
                         <div class="mt-5">
                             <p class="text-sm text-[#86591e]">PPMP Description</p>

@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ppmp_transactions', function (Blueprint $table) {
-            $table->string('description')->nullable()->after('ppmp_type');
+            $table->string('description')->default('Raw File')->after('ppmp_type');
+            $table->string('remarks')->nullable()->after('updated_by');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('ppmp_transactions', function (Blueprint $table) {
             $table->dropColumn('description');
+            $table->dropColumn('remarks');
         });
     }
 };

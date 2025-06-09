@@ -152,58 +152,53 @@ class PpmpTransactionController extends Controller
     public function storeCopy(Request $request)
     { 
         DB::beginTransaction();
+        
         try {
-            $percentage = (float)$request->input('qtyAdjust') / 100;
-            $transactions = PpmpTransaction::with('particulars')
-                ->where('ppmp_year', $request->input('selectedYear'))
-                ->where('ppmp_type', $request->input('selectedType'))
-                ->where('ppmp_status', 'draft')
-                ->where('ppmp_version', 1)
-                ->get();
+            $userId = Auth::id();
+            $transaction = PpmpTransaction::with('consolidated')->findOrFail($request->ppmpId);
 
-            if(!$transactions) {
-                DB::rollBack();
-                return redirect()->back()->with([
-                    'error' => 'No drafted PPMP Found!'  
-                ]);
-            }
+            $transactionDetails = [
+                'ppmpType' => $transaction->ppmp_type,
+                'ppmpYear' => $transaction->ppmp_year,
+                'office' => null,
+                'user' => $userId,
+            ];
 
-            $ppmpExist = PpmpTransaction::where('ppmp_year', $request->input('selectedYear'))
-                ->where('ppmp_type', $request->input('selectedType'))
-                ->where('ppmp_status', 'approved')
-                ->whereNotNull('tresh_adjustment')
-                ->exists();
+            $newTransaction = $this->createPpmpTransaction($transactionDetails);
 
-            if($ppmpExist) {
-                DB::rollBack();
-                return redirect()->back()->with([
-                    'error' => 'Quantity Adjustment for the Individual PPMP has already been set!'
-                ]);
-            }
+            $consolidatedData = $transaction->consolidated->map(function ($particular) use ($newTransaction, $userId) {
+                return [
+                    'qty_first'   => $particular->qty_first,
+                    'qty_second'  => $particular->qty_second,
+                    'prod_id'    => $particular->prod_id,
+                    'price_id'    => $particular->price_id,
+                    'trans_id'    => $newTransaction->id,
+                    'created_by'  => $userId,
+                    'updated_by'  => $userId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            })->toArray();
 
-            foreach ($transactions as $transaction) {
-                foreach ($transaction->particulars as $particular) {
-                    $isExempted = $this->productService->validateProductExcemption($particular->prod_id, $transaction->ppmp_year);
-                    $modifiedQtyFirst = !$isExempted && $particular->qty_first > 1 ? floor((int)$particular->qty_first * $percentage) : $particular->qty_first;
-                    $modifiedQtySecond = !$isExempted && $particular->qty_second > 1 ? floor((int)$particular->qty_second * $percentage) : $particular->qty_second;
-
-                    $particular->update(['tresh_first_qty' => $modifiedQtyFirst, 'tresh_second_qty' => $modifiedQtySecond]);
-                    $transaction->update(['tresh_adjustment' => $percentage, 'updated_by' => Auth::id()]);
-                }
-            }
+            PpmpConsolidated::insert($consolidatedData);
+            
+            $newTransaction->update([
+                'description' => $request->ppmpDesc,
+                'remarks' => 'Duplicate copy of Transaction No. ' . $transaction->ppmp_code,
+            ]);
 
             DB::commit();
-            return redirect()->route('indiv.ppmp.type', ['type' => 'individual' , 'status' => 'draft'])
-                ->with(['message' => 'A copy of PPMP was successful created! You may reload the browser to see the created copy of the PPMP.']);
+            return redirect()->route('conso.ppmp.type', ['type' => 'consolidated' , 'status' => 'draft'])
+                ->with(['message' => 'A copy of Consolidated PPMP was successful created!']);
         } catch (\Exception $e) {
 
             DB::rollBack();
-            Log::error("Making a copy of PPMP Failed: ", [
-                'user' => Auth::user()->name,
+            Log::error("PPMP copy failed - User: " . Auth::user()->name, [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()->with(['error' => 'Making a copy of PPMP Failed. Please try again!']);
+
+            return redirect()->back()->with('error', 'Failed to copy PPMP. Please try again.');
         }
     }
 
@@ -444,7 +439,10 @@ class PpmpTransactionController extends Controller
             $priceAdjustment = $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0;
             $qtyAdjust = $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0;
             $threshold = $transaction->tresh_adjustment ? ((float)$transaction->tresh_adjustment * 100) : 0;
-            $details = 'Price Adjustment: ' . $priceAdjustment . '% <br>' . 'Quantity Adjustment. : ' . $qtyAdjust . '% <br>' . 'Maximum Adjustment: ' . $threshold . '%';
+            $details = '<i><b>@</b>'. $priceAdjustment . '% ' . 'Price Adjustment' . '<br>'
+                    .'<b>@</b>'. $qtyAdjust . '% ' . 'Quantity Adjustment' .  '<br>' 
+                    .'<b>@</b>' . $threshold . '% ' . 'Maximum Adjustment' . '<br>'
+                    . ($transaction->remarks ? '<b>@</b>'. $transaction->remarks . '</i>': '</i>');
 
             return [
                 'id' => $transaction->id,
@@ -581,7 +579,6 @@ class PpmpTransactionController extends Controller
         return PpmpTransaction::create([
             'ppmp_code' => now()->format('YmdHis'),
             'ppmp_type' => $validatedData['ppmpType'],
-            'description' => 'Raw File',
             'ppmp_year' => $validatedData['ppmpYear'],
             'office_id' => $validatedData['office'],
             'created_by' => $validatedData['user'],

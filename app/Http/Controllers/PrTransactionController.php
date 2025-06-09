@@ -56,18 +56,26 @@ class PrTransactionController extends Controller
             return $ppmp->purchaseRequests->isNotEmpty();
         });
 
-        $formattedList = $ppmpListWithRequests->map(function ($transaction) {
+        $ppmpPrNos = $ppmpListWithRequests->mapWithKeys(function ($ppmp) {
+            return [$ppmp->id => $ppmp->purchaseRequests->pluck('pr_no')];
+        });
+
+        $prNumbersString = $ppmpPrNos->flatten()->implode(', ');
+
+        $formattedList = $ppmpListWithRequests->map(function ($transaction) use ($ppmpPrNos, $prNumbersString) {
             $qtyAdjustment = (int) ((float) $transaction->qty_adjustment * 100);
             $treshAdjustment = (int) ((float) $transaction->tresh_adjustment * 100);
+            $details = '<i><b>@</b>'. $qtyAdjustment . '% ' . 'Quantity Adjustment' .  '<br>' 
+                    .'<b>@</b>' . $treshAdjustment . '% ' . 'Maximum Adjustment' . '<br>'
+                    . ($transaction->remarks ? '<b>@</b>'. $transaction->remarks . '</i>': '</i>');
 
             return [
                 'id' => $transaction->id,
                 'code' => $transaction->ppmp_code,
                 'type' => ucfirst($transaction->ppmp_type),
                 'ppmpYear' => $transaction->ppmp_year,
-                'ppmpStatus' => ucfirst($transaction->ppmp_status),
-                'qtyAdjust' => $qtyAdjustment,
-                'threshold' => $treshAdjustment,
+                'prList' => $prNumbersString,
+                'details' => $details,
                 'pr' => $transaction->purchaseRequests->count(),
                 'createdAt' => $transaction->updated_at->format('F d, Y'),
                 'updatedBy' => optional($transaction->updater)->name ?? null,

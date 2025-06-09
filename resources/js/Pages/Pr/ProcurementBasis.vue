@@ -39,12 +39,12 @@
     const columns = [
         {
             data: 'code',
-            title: 'Transaction No#',
+            title: 'PPMP No#',
             width: '10%'
         },
         {
             data: 'type',
-            title: 'Type',
+            title: 'PPMP Type',
             width: '10%'
         },
         {
@@ -53,42 +53,23 @@
             width: '10%'
         },
         {
-            data: 'ppmpStatus',
-            title: 'PPMP Status',
-            width: '10%',
-            render: (data, type, row) => {
-                return `
-                <span class="${data === 'Draft' 
-                    ? 'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-red-300' 
-                    : 'bg-emerald-100 text-emerald-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-emerald-300'}">
-                    ${data}
-                </span>
-                `;
-            },
-        },
-        {
-            data: 'qtyAdjust',
-            title: 'Quantity Adjustment <br><span class="text-xs">(Percentage)</span>',
-            width: '10%'
-        },
-        {
-            data: 'threshold',
-            title: 'Maximum Allowed Quantity <br><span class="text-xs">(Percentage)</span>',
-            width: '10%'
+            data: 'details',
+            title: 'Other Details',
+            width: '20%'
         },
         {
             data: 'pr',
-            title: 'No# of Purchase Request',
+            title: 'No# of PR/s',
             width: '10%'
         },
         {
-            data: 'updatedBy',
-            title: 'Updated By',
-            width: '10%'
+            data: 'prList',
+            title: 'PR List',
+            width: '20%',
         },
         {
             data: 'createdAt',
-            title: 'Updated At',
+            title: 'Created At',
             width: '10%'
         },
         {
@@ -200,5 +181,13 @@
 
     :deep(div.dt-length > label) {
         display: none;
+    }
+
+    :deep([data-v-baaaa2f6] table.dataTable tbody > tr > td:nth-child(4)) {
+        text-align: left !important;
+    }
+
+    :deep([data-v-baaaa2f6] table.dataTable tbody > tr > td:nth-child(6)) {
+        text-align: left !important;
     }
 </style>

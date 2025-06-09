@@ -193,7 +193,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     <path fill="currentColor" d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z"/>
                                     <path fill="currentColor" d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z"/>
                                 </svg>
-                                <span class="ml-3">Create</span>
+                                <span class="ml-3">Create Office PPMP</span>
                             </SidebarLink>
                         </li>
                         <li v-if="hasPermission('view-office-ppmp-list') ||  hasAnyRole(['Developer'])">
@@ -208,7 +208,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M2.9 1L5 3.1l-.8.7L3 2.6V7H2V2.5L.8 3.8l-.7-.7L2.2 1h.7zM3 13.4V9H2v4.4L.8 12.2l-.7.7L2.2 15h.7L5 12.9l-.7-.7L3 13.4zM8.5 7h-2L6 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM7 6h1V5H7v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM12 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM7 11h1v-1H7v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM12 12h2v-2h-2v2zm-1-2H9v1h2v-1zm0-5H9v1h2V5z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Office's PPMP List</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Office PPMPs</span>
                                 <ArrowDown :class="{'text-white': route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}" />
                                 
                                 <template #dropdown-items>
@@ -239,7 +239,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M1.5 1h2v1H2v12h1.5v1h-2l-.5-.5v-13l.5-.5zm6 6h-2L5 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 6h1V5H6v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 11h1v-1H6v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 12h2v-2h-2v2zm-1-2H8v1h2v-1zm0-5H8v1h2V5z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated PPMP List</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated PPMPs</span>
                                 <ArrowDown :class="{'text-white': route().current('conso.ppmp.type') || route().current('conso.ppmp.show')}" />
 
                                 <template #dropdown-items>

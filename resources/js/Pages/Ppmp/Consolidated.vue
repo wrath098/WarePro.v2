@@ -268,7 +268,7 @@
                                         </div>
 
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Type</dt>
+                                            <dt class="font-medium text-gray-900">Description</dt>
                                             <dd class="text-gray-700 sm:col-span-2">{{ ppmp.description }}</dd>
                                         </div>
 
@@ -310,6 +310,11 @@
                                         <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                             <dt class="font-medium text-gray-900">Updated By</dt>
                                             <dd class="text-gray-700 sm:col-span-2">{{ ppmp.updater.name }}</dd>
+                                        </div>
+                                        
+                                        <div v-if="ppmp && ppmp.remarks != null" class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
+                                            <dt class="font-medium text-gray-900">Remarks</dt>
+                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.remarks }}</dd>
                                         </div>
                                     </dl>
                                 </div>
