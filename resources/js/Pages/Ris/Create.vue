@@ -1,7 +1,6 @@
 <script setup>
-    import { reactive, ref, watch, onMounted, computed } from 'vue';
+    import { reactive, ref, watch, computed } from 'vue';
     import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-    import { Inertia } from '@inertiajs/inertia';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -47,23 +46,32 @@
 
     const risNo = ref('');
     const stockData = ref(null);
-    watch(risNo, (newRisNo) => {
-        fetchData(newRisNo);
+    const showSuggestions = ref(false);
+
+    const filteredSuggestions = computed(() => {
+        const query = risNo.value.toLowerCase();
+        if (!query) return [];
+        return officePpmpParticulars.value.data.filter(item => {
+            const stockNo = item.prodStockNo ?? '';
+            const itemName = item.prodDesc ?? '';
+            return (stockNo.toLowerCase().includes(query) || itemName.toLowerCase().includes(query));
+        });
     });
-    const fetchData = (newRisNo) => {
-        if (newRisNo > 0 ) {
-            const foundStock = officePpmpParticulars.value.data.find(item => item.id === newRisNo);
-            if (foundStock) {
-            stockData.value = {
-                ...foundStock,
-                qty: foundStock.quantity || 0
-            };
-            } else {
-            stockData.value = null;
-            }
-        } else {
-            stockData.value = null;
-        }
+
+    function selectSuggestion(item) {
+        risNo.value = item.prodStockNo;
+        stockData.value = { ...item, qty: item.quantity || 0 };
+        showSuggestions.value = false;
+    }
+
+    function onInput() {
+        showSuggestions.value = true;
+    }
+
+    function hideSuggestions() {
+        setTimeout(() => {
+            showSuggestions.value = false;
+        }, 200);
     }
 
     watch(() => stockData.value?.qty, (newQty) => {});
@@ -214,12 +222,15 @@
                             <label for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
                         </div>
                     </div>
-                    <div v-if="officePpmpParticulars.data" class="relative z-0 w-full group ">
-                        <select v-model="risNo" name="requestedItem" id="requestedItem"  class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                            <option value="" disabled selected>Available Requested Items</option>
-                            <option v-for="particular in officePpmpParticulars.data" :key="particular.id" :value="particular.id">{{ particular.prodDesc }}</option>
-                        </select>
-                        <label for="requestedItem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select Product Item</label>
+
+                    <div v-if="officePpmpParticulars.data" class="relative z-0 w-full group">
+                        <input v-model="risNo" @input="onInput"  @focus="showSuggestions = true" @blur="hideSuggestions" type="text" name="requestedItem" id="requestedItem" autocomplete="off" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
+                        <label for="requestedItem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product Code/Name</label>
+                        <ul v-if="showSuggestions && filteredSuggestions.length" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 max-h-52 overflow-y-auto rounded shadow">
+                            <li v-for="(item, index) in filteredSuggestions" :key="index" @mousedown.prevent="selectSuggestion(item)" class="px-4 py-2 cursor-pointer hover:bg-blue-100">
+                                {{ item.prodStockNo }} - {{ item.prodDesc }}
+                            </li>
+                        </ul>
                     </div>
                     
                     <div v-if="stockData && stockData.availableStock > 0" class="mt-5">

@@ -64,7 +64,7 @@
         },
         {
             data: 'prList',
-            title: 'PR List',
+            title: 'Purchase Request/s',
             width: '20%',
         },
         {

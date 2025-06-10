@@ -6,7 +6,7 @@
     import Swal from 'sweetalert2';
     import { computed, onMounted } from 'vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
-import Download from '@/Components/Buttons/Download.vue';
+    import Download from '@/Components/Buttons/Download.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -50,12 +50,12 @@ import Download from '@/Components/Buttons/Download.vue';
         },
         {
             data: 'pr_desc',
-            title: 'Type of Procurement',
+            title: 'Mode of Procurement',
             width: '15%'
         },
         {
             data: function(row) {
-                return `${row.qty_adjustment}% of ${row.semester}`;
+                return row.semester ? `${row.qty_adjustment}% of ${row.semester}` : `${row.qty_adjustment}%`;
             },
             title: 'Procured Items',
             width: '15%'

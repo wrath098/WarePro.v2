@@ -43,6 +43,11 @@ class ProductInventoryTransactionController extends Controller
         ]);
     }
 
+    public function inventoryReport(Request $request)
+    {
+        return Inertia::render('Inventory/MonthlyInventory');
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();        

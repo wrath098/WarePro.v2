@@ -175,7 +175,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                         <li>
                             <div v-if="ppmp" class="pt-2">
                                 <div class="flex flex-row items-center">
-                                    <div class="text-sm font-light tracking-wide text-gray-500">Project Procurement Management Plan</div>
+                                    <div class="text-sm font-light tracking-wide text-gray-500">Annual Procurement Plan (APP)</div>
                                 </div>
                             </div>
                             <SidebarLink 
@@ -277,26 +277,26 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M10 2.25a1.75 1.75 0 0 0-1.582 1c-.684.006-1.216.037-1.692.223A3.25 3.25 0 0 0 5.3 4.563c-.367.493-.54 1.127-.776 1.998l-.047.17l-.513 2.964c-.185.128-.346.28-.486.459c-.901 1.153-.472 2.87.386 6.301c.545 2.183.818 3.274 1.632 3.91C6.31 21 7.435 21 9.685 21h4.63c2.25 0 3.375 0 4.189-.635c.814-.636 1.086-1.727 1.632-3.91c.858-3.432 1.287-5.147.386-6.301a2.186 2.186 0 0 0-.487-.46l-.513-2.962l-.046-.17c-.237-.872-.41-1.506-.776-2a3.25 3.25 0 0 0-1.426-1.089c-.476-.186-1.009-.217-1.692-.222A1.75 1.75 0 0 0 14 2.25h-4Zm8.418 6.896l-.362-2.088c-.283-1.04-.386-1.367-.56-1.601a1.75 1.75 0 0 0-.768-.587c-.22-.086-.486-.111-1.148-.118A1.75 1.75 0 0 1 14 5.75h-4a1.75 1.75 0 0 1-1.58-.998c-.663.007-.928.032-1.148.118a1.75 1.75 0 0 0-.768.587c-.174.234-.277.56-.56 1.6l-.362 2.089C6.58 9 7.91 9 9.685 9h4.63c1.775 0 3.105 0 4.103.146ZM8 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Zm8.75.75a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4ZM12 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request (PR)</span>
                                 <ArrowDown :class="{'text-white': route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase') || route().current('pr.form.step1') || route().current('pr.form.step2') || route().current('pr.display.transactions') || route().current('pr.show.particular')}" />
                                 <template #dropdown-items>
-                                    <ul>
-                                        <li v-if="hasPermission('view-procurement-basis') ||  hasAnyRole(['Developer'])">
-                                            <SubSidebarLink :href="route('pr.display.procurementBasis')" :active="route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase')">
-                                                <ArrowHeadRight :class="{ 'text-white' : route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase')}"/>
-                                                Procurement Basis
-                                            </SubSidebarLink>
-                                        </li>
+                                    <ul class="bg-gray-200 rounded-md">
                                         <li v-if="hasPermission('create-purchase-request') ||  hasAnyRole(['Developer'])">
                                             <SubSidebarLink :href="route('pr.form.step1')" :active="route().current('pr.form.step1') || route().current('pr.form.step2')">
                                                 <ArrowHeadRight :class="{ 'text-white' : route().current('pr.form.step1') || route().current('pr.form.step2')}"/>
-                                                Create
+                                                Create PR
                                             </SubSidebarLink>
                                         </li>
                                         <li>
                                             <SubSidebarLink :href="route('pr.display.transactions')" :active="route().current('pr.display.transactions') || route().current('pr.show.particular')">
                                                 <ArrowHeadRight :class="{ 'text-white' : route().current('/pr.display.transactions') || route().current('pr.show.particular')}"/>
-                                                Pending Approval
+                                                PR Pending
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li v-if="hasPermission('view-procurement-basis') ||  hasAnyRole(['Developer'])">
+                                            <SubSidebarLink :href="route('pr.display.procurementBasis')" :active="route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase')}"/>
+                                                PRs in APP
                                             </SubSidebarLink>
                                         </li>
                                     </ul>
@@ -332,18 +332,20 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Inspection and Acceptance</span>
                                     <ArrowDown :class="{'text-white': $page.url.includes('/iar')}" />
                                 <template #dropdown-items>
-                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-pending')">
-                                        <SubSidebarLink :href="route('iar')" :active="route().current('iar') || $page.url.includes('/iar/particulars')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('iar') || $page.url.includes('/iar/particulars')}"/>
-                                            Receiving
-                                        </SubSidebarLink>
-                                    </li>
-                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-all')">
-                                        <SubSidebarLink :href="route('show.iar.transactions')" :active="route().current('show.iar.transactions') || route().current('iar.particular.completed')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('iar.particular.completed')}"/>
-                                            All Transactions
-                                        </SubSidebarLink>
-                                    </li>
+                                    <ul class="bg-gray-200 rounded-md">
+                                        <li v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-pending')">
+                                            <SubSidebarLink :href="route('iar')" :active="route().current('iar') || $page.url.includes('/iar/particulars')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('iar') || $page.url.includes('/iar/particulars')}"/>
+                                                Receiving
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-all')">
+                                            <SubSidebarLink :href="route('show.iar.transactions')" :active="route().current('show.iar.transactions') || route().current('iar.particular.completed')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('iar.particular.completed')}"/>
+                                                All Transactions
+                                            </SubSidebarLink>
+                                        </li>
+                                    </ul>
                                 </template>
                             </SidebarDropdown>
                             <SidebarDropdown
@@ -362,18 +364,20 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Requisition and Issuance</span>
                                     <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs')}" />
                                 <template #dropdown-items>
-                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction')">
-                                        <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
-                                            Releasing
-                                        </SubSidebarLink>
-                                    </li>
-                                    <li v-if="hasAnyRole(['Developer']) || hasPermission('view-ris-transactions')">
-                                        <SubSidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
-                                            Issuances
-                                        </SubSidebarLink>
-                                    </li>
+                                    <ul class="bg-gray-200 rounded-md">
+                                        <li v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction')">
+                                            <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
+                                                Releasing
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li v-if="hasAnyRole(['Developer']) || hasPermission('view-ris-transactions')">
+                                            <SubSidebarLink :href="route('ris.display.logs')" :active="route().current('ris.display.logs')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
+                                                Issuances
+                                            </SubSidebarLink>
+                                        </li>
+                                    </ul>
                                 </template>
                             </SidebarDropdown>
                             <SidebarLink   
@@ -412,6 +416,20 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </svg>
                                 <span class="ml-3">Expired Inventory</span>
                             </SidebarLink>
+                            <SidebarLink :href="route('inventory.report')" :active="route().current('inventory.report')">
+                                <svg class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+                                    <defs>
+                                        <mask id="ipSSalesReport0">
+                                            <g fill="none" stroke-linejoin="round" stroke-width="4">
+                                                <path fill="#fff" stroke="#fff" d="M41 14L24 4L7 14v20l17 10l17-10z"/>
+                                                <path stroke="#000" stroke-linecap="round" d="M24 22v8m8-12v12m-16-4v4"/>
+                                            </g>
+                                        </mask>
+                                    </defs>
+                                    <path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ipSSalesReport0)"/>
+                                </svg>
+                                <span class="ml-3">Monthly Inventory Report</span>
+                            </SidebarLink>
                         </li>
                     </ul>
                     <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
@@ -446,24 +464,26 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Users Setting</span>
                                     <ArrowDown :class="{'text-white': route().current('user') || route().current('user.roles') || route().current('user.permissions')}" />
                                 <template #dropdown-items>
-                                    <li v-if="hasAnyRole(['Developer'])">
-                                        <SubSidebarLink :href="route('user.roles')" :active="route().current('user.roles')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user.roles')}"/>
-                                            Roles
-                                        </SubSidebarLink>
-                                    </li>
-                                    <li v-if="hasAnyRole(['Developer'])">
-                                        <SubSidebarLink :href="route('user.permissions')" :active="route().current('user.permissions')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user.permissions')}"/>
-                                            Permissions
-                                        </SubSidebarLink>
-                                    </li>
-                                    <li>
-                                        <SubSidebarLink :href="route('user')" :active="route().current('user')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('user')}"/>
-                                            Users
-                                        </SubSidebarLink>
-                                    </li>
+                                    <ul class="bg-gray-200 rounded-md">
+                                        <li v-if="hasAnyRole(['Developer'])">
+                                            <SubSidebarLink :href="route('user.roles')" :active="route().current('user.roles')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('user.roles')}"/>
+                                                Roles
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li v-if="hasAnyRole(['Developer'])">
+                                            <SubSidebarLink :href="route('user.permissions')" :active="route().current('user.permissions')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('user.permissions')}"/>
+                                                Permissions
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li>
+                                            <SubSidebarLink :href="route('user')" :active="route().current('user')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('user')}"/>
+                                                Users
+                                            </SubSidebarLink>
+                                        </li>
+                                    </ul> 
                                 </template>
                             </SidebarDropdown>
                         </li>

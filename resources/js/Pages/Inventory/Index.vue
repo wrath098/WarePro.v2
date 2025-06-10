@@ -195,7 +195,7 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
                 <ol>
                     <li class="flex flex-col lg:flex-row">
                         <PrintButton :href="route('generatePdf.productInventoryList')" target="_blank" class="mx-1 my-1 lg:my-0">
-                            <span class="mr-2">Print</span>
+                            <span class="mr-2">Beginning Balance</span>
                         </PrintButton>
                     </li>
                 </ol>

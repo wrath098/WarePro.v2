@@ -26,37 +26,35 @@ class PrMultiStepFormController extends Controller
 
     public function stepOne(): Response
     {
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code')
-        ->where(function($query) {
-            $query->where('ppmp_type', 'consolidated');
-            })
-            ->orWhere(function($query) {
-                    $query->where('ppmp_type', 'emergency');
-                })
+        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description')
+            ->whereIn('ppmp_type', ['consolidated', 'emergency'])
             ->get();
 
-        $resulToPr = $transactions->groupBy('ppmp_type')->map(function ($group) {
-            $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
-                return [
-                    'ppmp_year' => $yearGroup->first()->ppmp_year,
-                    'ppmpNo' => $yearGroup->pluck('ppmp_code')->all(),
-                ];
-            })->values()->all();
-            
+        $resultToPr = $transactions->groupBy('ppmp_type')->map(function ($typeGroup) {
             return [
-                'ppmp_type' => $group->first()->ppmp_type,
-                'years' => $years
+                'ppmp_type' => ucfirst($typeGroup->first()->ppmp_type),
+                'years' => $typeGroup->groupBy('ppmp_year')->map(function ($yearGroup) {
+                    return [
+                        'ppmp_year' => $yearGroup->first()->ppmp_year,
+                        'ppmpNo' => $yearGroup->map(function ($item) {
+                            return $item->ppmp_code . ' - ' . $item->description;
+                        })->all()
+                    ];
+                })->values()->all()
             ];
         })->values()->all();
 
         return Inertia::render('Pr/MultiForm/StepOne', [
-            'toPr' => $resulToPr,
+            'toPr' => $resultToPr,
         ]);
     }
 
     public function stepTwo(Request $request)
     {
-        $transaction = $this->getConsolidatedTransactionWithParticulars($request->selectedppmpCode);
+        $queryCOde = explode(' - ', $request->selectedppmpCode);
+        $selectedppmpCode = (int) $queryCOde[0];
+    
+        $transaction = $this->getConsolidatedTransactionWithParticulars($selectedppmpCode);
         $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
 
         $priceAdjustment = (int)$transaction->price_adjustment;

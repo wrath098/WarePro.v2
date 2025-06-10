@@ -99,15 +99,15 @@
             <div class="mx-auto w-full max-w-[550px] bg-white rounded-md border-2 border-indigo-900 shadow-lg my-4">
                 <form @submit.prevent="nextStep">
                     <div class="px-6 py-4 bg-indigo-900 text-white rounded-t">
-                        <h1 class="text-lg font-bold">Step 1: Project Procurement Management Plan Information</h1>
+                        <h1 class="text-lg font-bold">Step 1: Procurement Requests Information</h1>
                     </div>
                     <div class="p-4 rounded-md">
                         <div class="mb-5">
                             <label for="ppmpType" class="mb-3 block text-base font-medium text-[#07074D]">
-                                PPMP Type
+                                Items for Procurement
                             </label>
                             <select v-model="generatePr.selectedType" @change="onTypeChange(generatePr)" id="ppmpType" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
-                                <option value="" selected disabled>Select PPMP Type</option>
+                                <option value="" selected disabled>Select Type</option>
                                 <option v-for="type in props.toPr" :key="type.ppmp_type" :value="type.ppmp_type">
                                     {{ type.ppmp_type }}
                                 </option>
@@ -115,10 +115,10 @@
                         </div>
                         <div v-if="filteredYear.length" class="mb-5">
                             <label for="ppmpYear" class="mb-3 block text-base font-medium text-[#07074D]">
-                                PPMP Year
+                                Year of the Selected Type
                             </label>
                             <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" id="ppmpYear" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
-                                <option value="" disabled>Select PPMP Year</option>
+                                <option value="" disabled>Select Year</option>
                                 <option v-for="year in filteredYear" :key="year.ppmp_year" :value="year.ppmp_year">
                                     {{ year.ppmp_year }}
                                 </option>
@@ -126,20 +126,20 @@
                         </div>
                         <div v-if="filteredPpmpList.length" class="mb-5">
                             <label for="ppmpCode" class="mb-3 block text-base font-medium text-[#07074D]">
-                                PPMP Transaction No#
+                                Transaction No#
                             </label>
                             <select v-model="generatePr.selectedppmpCode"  id="ppmpCode" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
-                                <option value="" disabled>Select Consolidated PPMP</option>
+                                <option value="" disabled>Select Transaction</option>
                                 <option v-for="code in filteredPpmpList" :key="code" :value="code">
                                     {{ code }}
                                 </option>
                             </select>
                         </div>
-                        <div v-if="generatePr.selectedType == 'consolidated'" class="-mx-3 flex flex-wrap">
+                        <div v-if="generatePr.selectedType == 'Consolidated'" class="-mx-3 flex flex-wrap">
                             <div class="w-full px-3 sm:w-1/2">
                                 <div class="mb-5">
                                     <label for="semester" class="mb-3 block text-base font-medium text-[#07074D]">
-                                        Procurement
+                                        Semester-Based Procurement
                                     </label>
                                     <select v-model="generatePr.semester" id="semester" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                         <option value="" disabled>Select to Procure</option>
@@ -151,7 +151,7 @@
                             <div class="w-full px-3 sm:w-1/2">
                                 <div class="mb-5">
                                     <label for="prDescription" class="mb-3 block text-base font-medium text-[#07074D]">
-                                        PR Description
+                                        Mode of Procurement
                                     </label>
                                     <select v-model="generatePr.prDesc" id="prDescription" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                         <option value="" disabled>Select Description</option>
@@ -164,7 +164,7 @@
                             <div class="w-full px-3">
                                 <div class="mb-5">
                                     <label for="qtyAdjust" class="mb-3 block text-base font-medium text-[#07074D]">
-                                        Quantity Adjustment:
+                                        Quantity to Procure:
                                         <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span>
                                     </label>
                                     <input 
