@@ -417,7 +417,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 <span class="ml-3">Expired Inventory</span>
                             </SidebarLink>
                             <SidebarLink :href="route('inventory.report')" :active="route().current('inventory.report')">
-                                <svg class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+                                <svg class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" :class="{ 'text-white' : route().current('inventory.report')}">
                                     <defs>
                                         <mask id="ipSSalesReport0">
                                             <g fill="none" stroke-linejoin="round" stroke-width="4">

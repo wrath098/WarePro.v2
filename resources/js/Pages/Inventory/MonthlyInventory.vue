@@ -31,46 +31,18 @@
         }
     });
 
-    const searchProductInfo = reactive({
-        prodId: '',
-        product: '',
-        startDate: '',
-        endDate: '',
+    const searchDate = reactive({
+        asOfDate: '',
     });
 
-    const productList = ref([]);
     const productTransactions = ref([]);
 
-    const fetchProduct = async () => {
-        if (searchProductInfo.product) {
-            try {
-                const response = await axios.get('../api/search-product-item', {
-                    params: { query: searchProductInfo.product },
-                });
-                productList.value = response.data;
-                return productList;
-            } catch (error) {
-                console.error('Error fetching product data:', error);
-            }
-        } else {
-            productList.value = [];
-            return productList;
-        }
-    };
-
-    const debouncedFetchProduct = debounce(fetchProduct, 300);
-
-    const selectProduct = (product) => {
-        searchProductInfo.prodId = product.prodId;
-        searchProductInfo.product = product.prodDesc;
-        productList.value = [];
-    };
-
     const fetchproductTransactions = async () => {
-        if (searchProductInfo.product && searchProductInfo.startDate && searchProductInfo.endDate) {
+    console.log(searchDate.asOfDate);
+        if (searchDate.asOfDate) {
             try {
-                const response = await axios.get('../api/product-inventory-log', { 
-                    params: { query: searchProductInfo},
+                const response = await axios.get('../api/monthly-product-inventory', { 
+                    params: { query: searchDate.asOfDate},
                 });
                 productTransactions.value = response.data;
                 if (productTransactions.value.data.length == 0) {
@@ -161,7 +133,7 @@
                 <form @submit.prevent="fetchproductTransactions">
                     <div class="grid gap-2 grid-cols-1 lg:grid-cols-4 lg:gap-6 my-5 mx-3">
                         <div class="relative z-0 my-5 group">
-                            <input type="month" name="date" id="date" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                            <input v-model="searchDate.asOfDate" type="month" name="date" id="date" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                             <label for="date" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Date</label>
                         </div>
 

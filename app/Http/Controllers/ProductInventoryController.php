@@ -66,6 +66,32 @@ class ProductInventoryController extends Controller
        return response()->json(['data' => $inventoryTransactions], 200);
     }
 
+    public function getMonthlyInventory(Request $request)
+    {   
+        $date = Carbon::createFromFormat('Y-m', $request->input('query'));
+        $query_year = $date->year;
+        $query_month= $date->month;
+
+        $start_date = Carbon::createFromDate($query_year, 1, 1)->startOfDay();
+        $limit_date = Carbon::createFromDate($query_year, $query_month, 1)->endOfMonth()->endOfDay();
+
+        $products = Product::with(['inventoryTransactions' => function ($query) use ($start_date, $limit_date) {
+            $query->whereBetween('created_at', [$start_date, $limit_date])
+                ->orderBy('created_at', 'asc');
+        }])->get();
+
+        foreach ($products as $product) {
+            foreach ($product->inventoryTransactions as $transaction){
+                Log::info([$transaction->toArray()]);
+            }
+        }
+
+        //$inventoryLogs = ProductInventoryTransaction::withTrashed()->whereBetween('created_at', [$start_date, $limit_date])->get();
+
+        Log::info([$products]);
+        //return response()->json($inventoryLogs);
+    }
+
     public function productListInventory()
     {
         $productList = [];

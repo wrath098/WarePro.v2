@@ -57,4 +57,9 @@ class Product extends Model
     {
         return $this->hasOne(ProductInventory::class, 'prod_id');
     }
+
+    public function inventoryTransactions(): HasMany
+    {
+        return $this->hasMany(ProductInventoryTransaction::class, 'prod_id');
+    }
 }
