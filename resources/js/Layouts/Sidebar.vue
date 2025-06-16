@@ -387,21 +387,6 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 <span class="ml-3">Inventory</span>
                             </SidebarLink>
                             <SidebarLink 
-                                v-if="hasAnyRole(['Developer']) || hasPermission('view-product-stock-card')"
-                                :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
-                                <svg 
-                                    class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{ 'text-white' : route().current('show.stockCard')}"
-                                    fill="currentColor" 
-                                    aria-hidden="true" 
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 16 16"
-                                >
-                                    <path fill="currentColor" d="M12 6V0H4v6H0v7h16V6h-4zm-5 6H1V7h2v1h2V7h2v5zM5 6V1h2v1h2V1h2v5H5zm10 6H9V7h2v1h2V7h2v5zM0 16h3v-1h10v1h3v-2H0v2z"/>
-                                </svg>
-                                <span class="ml-3">Stock Card</span>
-                            </SidebarLink>
-                            <SidebarLink 
                             v-if="hasAnyRole(['Developer']) || hasPermission('monitor-expiring-products')"
                             :href="route('show.expiry.products')" :active="route().current('show.expiry.products')" class="my-1">
                                 <svg 
@@ -416,27 +401,14 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </svg>
                                 <span class="ml-3">Expired Inventory</span>
                             </SidebarLink>
-                            <SidebarLink :href="route('inventory.report')" :active="route().current('inventory.report')">
-                                <svg class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" :class="{ 'text-white' : route().current('inventory.report')}">
-                                    <defs>
-                                        <mask id="ipSSalesReport0">
-                                            <g fill="none" stroke-linejoin="round" stroke-width="4">
-                                                <path fill="#fff" stroke="#fff" d="M41 14L24 4L7 14v20l17 10l17-10z"/>
-                                                <path stroke="#000" stroke-linecap="round" d="M24 22v8m8-12v12m-16-4v4"/>
-                                            </g>
-                                        </mask>
-                                    </defs>
-                                    <path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ipSSalesReport0)"/>
-                                </svg>
-                                <span class="ml-3">Monthly Inventory Report</span>
-                            </SidebarLink>
                         </li>
                     </ul>
                     <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
-                        <!-- <li> 
-                            <SidebarLink :href="''" :active="false">
+                        <li> 
+                            <SidebarDropdown :active="route().current('show.stockCard') || route().current('inventory.report')">
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                    :class="{ 'text-white' : route().current('show.stockCard') || route().current('inventory.report') }"
                                     fill="currentColor" 
                                     aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -444,9 +416,26 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 >
                                     <path fill="currentColor" d="M832.27 1024h-768q-26 0-45-18.5T.27 960V65q0-27 19-45.5t45-18.5h448v352q0 13 9.5 22.5t22.5 9.5h352v575q0 27-18.5 45.5t-45.5 18.5zm-96-192h-32V608q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v224h-64V480q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v352h-64V672q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v160h-32q-13 0-22.5 9.5t-9.5 22.5t9.5 22.5t22.5 9.5h576q14 0 23-9.5t9-22.5t-9.5-22.5t-22.5-9.5zm-160-832q26 0 44 18l257 257q19 19 19 46h-320V0z"/>
                                 </svg>
-                                <span class="ml-3">Reports</span>
-                            </SidebarLink>
-                        </li> -->
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Reports</span>
+                                <ArrowDown :class="{'text-white': route().current('show.stockCard') || route().current('inventory.report')}" />
+                                <template #dropdown-items>
+                                    <ul class="bg-gray-200 rounded-md">
+                                        <li>
+                                            <SubSidebarLink v-if="hasAnyRole(['Developer']) || hasPermission('view-product-stock-card')" :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>
+                                                <span class="ml-3">Stock Card</span>
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li>
+                                            <SubSidebarLink :href="route('inventory.report')" :active="route().current('inventory.report')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('inventory.report')}"/>
+                                                <span class="ml-3">Monthly Inventory Report</span>
+                                            </SubSidebarLink>
+                                        </li>
+                                    </ul>
+                                </template>
+                            </SidebarDropdown>
+                        </li>
                         <li  v-if="hasAnyRole(['Developer', 'System Administrator'])">
                             <SidebarDropdown :active="route().current('user') || route().current('user.roles') || route().current('user.permissions')" class="mb-1">
                                     <svg 

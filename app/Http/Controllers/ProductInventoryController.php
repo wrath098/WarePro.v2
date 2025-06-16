@@ -75,21 +75,45 @@ class ProductInventoryController extends Controller
         $start_date = Carbon::createFromDate($query_year, 1, 1)->startOfDay();
         $limit_date = Carbon::createFromDate($query_year, $query_month, 1)->endOfMonth()->endOfDay();
 
-        $products = Product::with(['inventoryTransactions' => function ($query) use ($start_date, $limit_date) {
-            $query->whereBetween('created_at', [$start_date, $limit_date])
-                ->orderBy('created_at', 'asc');
-        }])->get();
+        $products = Product::with([
+            'inventory' => function ($query) {
+                $query->select('id', 'prod_id', 'qty_physical_count');
+            }, 
+            'inventoryTransactions' => function ($query) use ($start_date, $limit_date) {
+                $query->withTrashed()
+                    ->select('id', 'type', 'qty', 'prod_id', 'created_at')
+                    ->whereBetween('created_at', [$start_date, $limit_date])
+                    ->orderBy('created_at', 'asc');
+            }])
+            ->where('prod_status', 'active')
+            ->get();
+
+        $newProductArray = [];
 
         foreach ($products as $product) {
+            $currentStock = $product->inventory ? $product->inventory->qty_physical_count : 0;
+
             foreach ($product->inventoryTransactions as $transaction){
-                Log::info([$transaction->toArray()]);
+                if ($transaction->type == 'issuance') {
+                    $currentStock -= $transaction->qty;
+                } elseif ($transaction->type == 'purchase') {
+                    $currentStock += $transaction->qty;
+                } else {
+                    continue;
+                }
             }
+
+            $newProductArray[] = [
+                'id' => $product->id,
+                'newStockNo' => $product->prod_newNo,
+                'description' => $product->prod_desc,
+                'unit' => $product->prod_unit,
+                'oldStockNo' => $product->prod_oldNo,
+                'currentInventory' => number_format($currentStock, 0, '.', ','),
+            ];
         }
 
-        //$inventoryLogs = ProductInventoryTransaction::withTrashed()->whereBetween('created_at', [$start_date, $limit_date])->get();
-
-        Log::info([$products]);
-        //return response()->json($inventoryLogs);
+        return response()->json(['data' => $newProductArray], 200);
     }
 
     public function productListInventory()

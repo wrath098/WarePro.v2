@@ -1,35 +1,12 @@
 <script setup>
-    import { computed, onMounted, reactive, ref, watch } from 'vue';
-    import { Head, usePage } from '@inertiajs/vue3';
+    import {reactive, ref } from 'vue';
+    import { Head } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import { DataTable } from 'datatables.net-vue3';
     import axios from 'axios';
-    import { debounce } from 'lodash';
     import Swal from 'sweetalert2';
 
-    const page = usePage();
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-
-    onMounted(() => {
-        if (message.value) {
-            Swal.fire({
-                title: 'Success',
-                text: message.value,
-                icon: 'success',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        if (errMessage.value) {
-            Swal.fire({
-                title: 'Failed',
-                text: errMessage.value,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    });
+    const isLoading = ref(false);
 
     const searchDate = reactive({
         asOfDate: '',
@@ -38,14 +15,18 @@
     const productTransactions = ref([]);
 
     const fetchproductTransactions = async () => {
-    console.log(searchDate.asOfDate);
+        isLoading.value = true;
         if (searchDate.asOfDate) {
             try {
                 const response = await axios.get('../api/monthly-product-inventory', { 
                     params: { query: searchDate.asOfDate},
                 });
+
                 productTransactions.value = response.data;
+                isLoading.value = false;
+
                 if (productTransactions.value.data.length == 0) {
+                    isLoading.value = false;
                     Swal.fire({
                         title: 'Warning',
                         text: 'No products found.',
@@ -55,6 +36,7 @@
                     });
                 }
             } catch (error) {
+                isLoading.value = false;
                 console.error('Error fetching product data:', error);
             }
         }
@@ -62,34 +44,28 @@
 
     const columns = [
         {
-            data: 'created',
-            title: 'Date of Issuance/Acceptance',
+            data: 'newStockNo',
+            title: 'New Stock No#',
             width: '10%',
         },
         {
-            data: 'type',
-            title: 'Kind',
-            width: '20%',
+            data: 'oldStockNo',
+            title: 'Old Code',
+            width: '10%',
         },
         {
-            data: 'risNo',
-            title: 'Transaction No#',
-        },
-        {
-            data: 'requestee',
-            title: 'Office (Requestee)',
+            data: 'description',
+            title: 'Description',
         },
         {
             data: 'unit',
-            title: 'Unit of Measure',
+            title: 'Unit of Measurement',
+            width: '10%',
         },
         {
-            data: 'qty',
+            data: 'currentInventory',
             title: 'Quantity',
-        },
-        {
-            data: 'adjustedTotalStock',
-            title: 'Current Stock',
+            width: '10%',
         },
     ];
 </script>
@@ -145,7 +121,7 @@
                                 Filter
                             </button>
                             <a 
-                                :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.StockCard', { productDetails: searchProductInfo }) : '#'" 
+                                :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.MonthlyInventoryReport', { searchDate: searchDate.asOfDate }) : '#'" 
                                 target="_blank"
                                 class="flex w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
                                 :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"
@@ -163,8 +139,20 @@
                     </div>
                 </form>
             </div>
-            <!-- <div class="bg-white shadow-md sm:rounded-lg p-4">
+            <div class="bg-white shadow-md sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto md:overflow-hidden">
+                    <div v-if="isLoading" class="absolute bg-white text-indigo-800 bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
+                        <div class="flex items-center">
+                        <span class="text-3xl mr-4">Loading</span>
+                        <svg class="animate-spin h-8 w-8 text-indigo-800" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        </div>
+                    </div>
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
@@ -176,7 +164,7 @@
                         }"
                     />
                 </div>
-            </div> -->
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>
@@ -211,5 +199,13 @@
 
     :deep(div.dt-length > label) {
         display: none;
+    }
+
+    :deep([data-v-0a3bf863] table.dataTable tbody > tr > td:nth-child(3)) {
+            text-align: left !important;
+    }
+
+    :deep([data-v-0a3bf863] table.dataTable tbody > tr > td:nth-child(5)) {
+            text-align: right !important;
     }
 </style>
