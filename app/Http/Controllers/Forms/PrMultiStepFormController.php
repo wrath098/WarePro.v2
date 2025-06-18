@@ -26,8 +26,9 @@ class PrMultiStepFormController extends Controller
 
     public function stepOne(): Response
     {
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description')
+        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description', 'ppmp_status')
             ->whereIn('ppmp_type', ['consolidated', 'emergency'])
+            ->whereNull('remarks')
             ->get();
 
         $resultToPr = $transactions->groupBy('ppmp_type')->map(function ($typeGroup) {
@@ -53,12 +54,11 @@ class PrMultiStepFormController extends Controller
     {
         $queryCOde = explode(' - ', $request->selectedppmpCode);
         $selectedppmpCode = (int) $queryCOde[0];
-    
-        $transaction = $this->getConsolidatedTransactionWithParticulars($selectedppmpCode);
-        $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
+        $selectedType = $request->input(['selectedType']);
 
-        $priceAdjustment = (int)$transaction->price_adjustment;
-        $qtyAdjustment = (float)$request->qtyAdjust / 100;
+        $transaction = $selectedType != 'Emergency'
+            ? $this->getConsolidatedTransactionWithParticulars($selectedppmpCode)
+            : $this->getEmergencyParticulars($selectedppmpCode, $selectedType);
 
         $purchaseRequestInfo = [
             'semester' => $request->semester,
@@ -67,6 +67,23 @@ class PrMultiStepFormController extends Controller
             'transId' => $transaction->id,
             'user' => Auth::id(),
         ];
+
+        if($selectedType == 'Emergency') {
+            $particulars = $this->formatEmergencyParticulars($transaction);
+
+            $sortResult = $particulars->sortBy('prodCode');
+            
+            return Inertia::render('Pr/MultiForm/StepTwo', [
+                'toPr' => $sortResult,
+                'prInfo' => $purchaseRequestInfo,
+            ]);
+        }
+    
+        $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
+
+        $priceAdjustment = (int)$transaction->price_adjustment;
+        $qtyAdjustment = (float)$request->qtyAdjust / 100;
+
 
         if($request->semester == 'qty_first' && $prOnPpmp->isEmpty()){
             $result = $transaction->consolidated->map(function ($items) use ($transaction, $priceAdjustment, $qtyAdjustment) {
@@ -328,4 +345,35 @@ class PrMultiStepFormController extends Controller
 
         return $qtyOnPr ?? 0;
     }
+
+    private function getEmergencyParticulars($code, $type)
+    {
+        return PpmpTransaction::with('particulars')
+            ->where('ppmp_type', $type)
+            ->where('ppmp_code', $code)
+            ->first();
+    }
+
+    private function formatEmergencyParticulars($particulars) 
+    {
+        return $particulars->particulars->map(function ($items) {
+            $qty = 0;
+            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id);
+            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            
+            $firstAmount = $qty * $prodPrice;
+
+            return [
+                'pId' => $items->id, 
+                'prodId' => $items->prod_id,
+                'prodCode' => $this->productService->getProductCode($items->prod_id),
+                'prodName' => $this->productService->getProductName($items->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($items->prod_id),
+                'prodPrice' => $prodPrice,
+                'qty' => $items->qty_first,
+                'amount' => number_format($firstAmount, 2, '.', ','),
+            ];
+        });
+    }
+    
 }

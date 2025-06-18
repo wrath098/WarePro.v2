@@ -41,10 +41,8 @@ class PpmpTransactionController extends Controller
         
         $officePpmpExist = PpmpTransaction::where(function($query) use ($currentYear) {
                 $query->where(function($query) {
-                    $query->where('ppmp_type', 'individual')
-                        ->orWhere('ppmp_type', 'contingency');
+                    $query->whereIn('ppmp_type', ['individual', 'emergency']);
                 })
-                ->where('ppmp_status', 'draft')
                 ->where('ppmp_version', 1)
                 ->whereYear('created_at', $currentYear);
             })
@@ -127,11 +125,23 @@ class PpmpTransactionController extends Controller
                 return redirect()->route('import.ppmp.index')
                     ->with('message', 'Successfully create PPMP! You can now check the list to add products.');
             } elseif ($validatedData['ppmpType'] == 'contingency') {
+                
+                $is_AppExist = $this->fetchApprovedConsolidatedPpmp($validatedData['ppmpYear'], 'consolidated');
 
-                DB::rollback();
-                return back()->with(
-                    'error', 'Contingency creation is not yet available. Please refer to your system administrator for this action.'
-                );
+                if (!$is_AppExist) {
+                    DB::rollback();
+                    return back()->with('error', 'No consolidated PPMP is available. Please check the year entered and try again.');
+                }
+                
+                $ppmpData = array_merge($validatedData, ['ppmpType' => 'emergency']);
+                $ppmp = $this->createPpmpTransaction($ppmpData);
+                $ppmp->update(['ppmp_status' => 'approved']);
+
+                DB::commit();
+
+                return redirect()
+                    ->route('import.ppmp.index')
+                    ->with('message', 'Successfully created! You can now check the list to add products.');
             } else {
 
                 DB::rollback();
@@ -297,32 +307,32 @@ class PpmpTransactionController extends Controller
 
     public function showIndividualPpmp(PpmpTransaction $ppmpTransaction)
     {
-        $ppmpTransaction->load('particulars', 'requestee');
-        $list = Product::where('prod_status', 'active')
-                ->get()
-                ->map(fn($item) => [
-                    'id' => $item->id,
-                    'code' => $item->prod_newNo,
-                    'desc' => $item->prod_desc,
-                    'unit' => $item->prod_unit,
-                ]);
-        
-        $ppmpParticulars = $ppmpTransaction->particulars->map(fn($particular) => [
-            'id' => $particular->id,
-            'firstQty' => $particular->qty_first,
-            'secondQty' => $particular->qty_second,
-            'prodCode' => $this->productService->getProductCode($particular->prod_id),
-            'prodName' => $this->productService->getProductName($particular->prod_id),
-            'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
-        ])->sortBy('prodCode');
+        $ppmpTransaction->load('particulars', 'consolidated', 'requestee');
 
-        $ppmpTransaction['totalItems'] = $ppmpParticulars->count();
-        $grandTotal = $ppmpParticulars->sum(fn($particular) => (((int) $particular['firstQty'] + (int) $particular['secondQty']) * (float) $particular['prodPrice']));
+        $availableProducts = $ppmpTransaction->ppmp_type === 'individual'
+            ? $this->getActiveProductList()
+            : $this->getConsolidatedProductList($ppmpTransaction);
 
-        $ppmpTransaction['formattedOverallPrice'] = number_format($grandTotal, 2, '.', ',');
+        $ppmpParticulars = $ppmpTransaction->ppmp_type === 'individual'
+            ? $this->formatParticulars($ppmpTransaction)
+            : $this->formatConsolidated($ppmpTransaction);
 
-        return Inertia::render('Ppmp/Individual', ['ppmp' =>  $ppmpTransaction, 'ppmpParticulars' => $ppmpParticulars, 'products' => $list, 'user' => Auth::id(),]);
+        $totalItems = $ppmpParticulars->count();
+
+        $grandTotal = $ppmpParticulars->sum(function ($item) {
+            return ((int) $item['firstQty'] + (int) $item['secondQty']) * (float) $item['prodPrice'];
+        });
+
+        $formattedOverallPrice = number_format($grandTotal, 2, '.', ',');
+
+        return Inertia::render('Ppmp/Individual', [
+            'ppmp' =>  $ppmpTransaction,
+            'ppmpParticulars' => $ppmpParticulars,
+            'totalItems' => $totalItems,
+            'formattedOverallPrice' => $formattedOverallPrice,
+            'products' => $availableProducts,
+            'user' => Auth::id()
+        ]);
     }
 
     public function showConsolidatedPpmp(PpmpTransaction $ppmpTransaction)
@@ -460,16 +470,24 @@ class PpmpTransactionController extends Controller
         return Inertia::render('Ppmp/DraftConsolidatedList', ['ppmp' => $request, 'transactions' => $transactions, 'individualList' => $result]);
     }
 
-    public function showOfficeListWithNoPpmp(Request $request) {
-        $result = [];
-        if ($request->ppmpType == 'individual') {
-            $result = $this->getOfficesWithNoPpmp($request->ppmpType, $request->ppmpYear);
-        } elseif ($request->ppmpType == 'contingency') {
-            $result = $this->fetchOfficeList();
-        } else {
-            $result = [];
+    public function showOfficeListWithNoPpmp(Request $request)
+    {
+        $ppmpType = $request->ppmpType;
+        $ppmpYear = $request->ppmpYear;
+
+        if (!in_array($ppmpType, ['individual', 'contingency'])) {
+            return response()->json(['data' => []]);
         }
-        return response()->json(['data' => $result]);
+
+        $officeList = $ppmpType === 'individual' ? $this->getOfficesWithNoPpmp($ppmpType, $ppmpYear) : $this->fetchOfficeList();
+
+        $filterFn = $ppmpType === 'individual' 
+            ? fn($office) => !Str::contains(Str::lower($office['name']), 'secondary')
+            : fn($office) => Str::contains(Str::lower($office['name']), 'secondary');
+
+        $filteredOffices = $officeList->filter($filterFn)->values();
+
+        return response()->json(['data' => $filteredOffices]);
     }
 
     public function updateConsolidatedDescription(Request $request)
@@ -557,9 +575,11 @@ class PpmpTransactionController extends Controller
                     ->with('message', 'PPMP deletion was successful.');
             } else {
 
-                DB::rollback();
-                    return redirect()->back()
-                        ->with('error', 'This action is under construction!');
+                $ppmpTransaction->forceDelete();
+
+                DB::commit();
+                return redirect()->back()
+                        ->with('message', 'Emergency type has been deleted successful.');
             }
             
         } catch (\Exception $e) {
@@ -981,5 +1001,69 @@ class PpmpTransactionController extends Controller
                 'updated_by' => $userId , 
             ]);
         }
+    }
+
+    private function getActiveProductList()
+    {
+        return Product::where('prod_status', 'active')
+            ->get()
+            ->map(fn($item) => [
+                'id' => $item->id,
+                'code' => $item->prod_newNo,
+                'desc' => $item->prod_desc,
+                'unit' => $item->prod_unit,
+            ]);
+    }
+
+    private function getConsolidatedProductList(PpmpTransaction $ppmpTransaction)
+    {
+        $appParticulars = PpmpTransaction::where('ppmp_type', 'consolidated')
+            ->where('ppmp_year', $ppmpTransaction->ppmp_year)
+            ->where('ppmp_status', $ppmpTransaction->ppmp_status)
+            ->with('consolidated')
+            ->first();
+
+        if (!$appParticulars) {
+            return collect();
+        }
+
+        return $appParticulars->consolidated->map(function ($item) {
+            return [
+                'id' => $item->prod_id,
+                'code' => $this->productService->getProductCode($item->prod_id),
+                'desc' => $this->productService->getProductName($item->prod_id),
+                'unit' => $this->productService->getProductUnit($item->prod_id),
+            ];
+        });
+    }
+
+    private function formatParticulars(PpmpTransaction $ppmpTransaction)
+    {
+        return $ppmpTransaction->particulars->map(function ($particular) {
+            return [
+                'id' => $particular->id,
+                'firstQty' => $particular->qty_first,
+                'secondQty' => $particular->qty_second,
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+            ];
+        })->sortBy('prodCode')->values();
+    }
+
+    private function formatConsolidated(PpmpTransaction $ppmpTransaction)
+    {
+        return $ppmpTransaction->consolidated->map(function ($particular) {
+            return [
+                'id' => $particular->id,
+                'firstQty' => $particular->qty_first,
+                'secondQty' => $particular->qty_second,
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+            ];
+        })->sortBy('prodCode')->values();
     }
 }

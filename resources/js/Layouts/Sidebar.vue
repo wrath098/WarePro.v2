@@ -160,7 +160,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     <li v-if="hasPermission('view-price-list') ||  hasAnyRole(['Developer'])">
                                         <SubSidebarLink :href="route('product.display.active.pricelist')" :active="route().current('product.display.active.pricelist')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active.pricelist')}"/>
-                                            Price List
+                                            Price Timeline
                                         </SubSidebarLink>
                                     </li>
                                     <li v-if="hasPermission('view-product-exemption') ||  hasAnyRole(['Developer'])">
@@ -420,6 +420,14 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 <ArrowDown :class="{'text-white': route().current('show.stockCard') || route().current('inventory.report')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
+                                        <li>
+                                            <a :href="route('generatePdf.productInventoryList')" 
+                                                target="_blank" 
+                                                class="flex items-center p-2 mb-1 pl-5 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:text-gray-50 hover:bg-indigo-900">
+                                                <ArrowHeadRight />
+                                                <span class="ml-3">Beginning Balance</span>
+                                            </a>
+                                        </li>
                                         <li>
                                             <SubSidebarLink v-if="hasAnyRole(['Developer']) || hasPermission('view-product-stock-card')" :href="route('show.stockCard')" :active="route().current('show.stockCard')" class="my-1">
                                                 <ArrowHeadRight :class="{ 'text-white' : route().current('ris.display.logs')}"/>

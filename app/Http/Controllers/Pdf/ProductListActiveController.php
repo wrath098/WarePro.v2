@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MyPDF;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class ProductListActiveController extends Controller
 {
@@ -113,6 +114,89 @@ class ProductListActiveController extends Controller
         }
 
         return $text;
+    }
+
+    public function generate_productlist_word()
+    {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(360);
+
+        $templatePath = public_path('assets/word_temps/prodlist_template.docx');
+
+        if (!file_exists($templatePath)) {
+            abort(500, 'Template file not found at: ' . $templatePath);
+        }
+
+        $templateProcessor = new TemplateProcessor($templatePath);
+        $productList = $this->productService->getAllActiveProduct_Category();
+
+        $categoriesData = [];
+        $globalCount = 0;
+
+        foreach ($productList as $category) {
+            if ($category->items->isNotEmpty()) {
+                $productsData = [];
+                
+                foreach ($category->items as $item) {
+                    if ($item->products->isNotEmpty()) {
+                        foreach ($item->products as $product) {
+                            $globalCount++;
+                            $price = $this->productService->getLatestPrice($product->id) ?? 0;
+
+                            $productsData[] = [
+                                'count' => $globalCount,
+                                'oldCode' => $this->sanitizeForXml($product->prod_oldNo ?? ''),
+                                'newCode' => $this->sanitizeForXml($product->prod_newNo),
+                                'prodDesc' => $this->sanitizeForXml($product->prod_desc),
+                                'prodUnit' => $this->sanitizeForXml($product->prod_unit),
+                                'unitPrice' => number_format($price, 2, '.', ','),
+                            ];
+                        }
+                    }
+                }
+
+                if (!empty($productsData)) {
+                    $code_header = sprintf('%02d', (int)$category->cat_code) . ' - ' . $category->cat_name;
+                    $categoriesData[] = [
+                        'categoryCode' => $this->sanitizeForXml($code_header),
+                        'products' => $productsData,
+                    ];
+                }
+            }
+        }
+
+        if (empty($categoriesData)) {
+            abort(404, 'No product data available to generate report');
+        }
+
+        $templateProcessor->cloneBlock('categoryBlock', count($categoriesData), true, true);
+
+        foreach ($categoriesData as $index => $category) {
+            $blockNumber = $index + 1;
+            $templateProcessor->setValue("categoryCode#$blockNumber", $category['categoryCode']);
+
+            $templateProcessor->cloneRow("count#$blockNumber", count($category['products']));
+
+            foreach ($category['products'] as $prodIndex => $product) {
+                $rowNumber = $prodIndex + 1;
+                
+                foreach ($product as $key => $value) {
+                    $templateProcessor->setValue("$key#$blockNumber#$rowNumber", $value);
+                }
+            }
+        }
+
+        $filename = 'Product_List_' . now()->format('Ymd_His') . '.docx';
+        $savePath = storage_path('app/public/' . $filename);
+        $templateProcessor->saveAs($savePath);
+
+        return response()->download($savePath)->deleteFileAfterSend(true);
+    }
+
+    private function sanitizeForXml($value)
+    {
+        if (is_numeric($value)) return $value;
+        return htmlspecialchars($value ?? '', ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 
     #PRINT ALL PRODUCT BASE FROM THE ACCOUNT CLASSIFICATION

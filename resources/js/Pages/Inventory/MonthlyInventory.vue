@@ -8,6 +8,10 @@
 
     const isLoading = ref(false);
 
+    const currentYear = new Date().getFullYear()
+    const minMonth = `${currentYear}-01`
+    const maxMonth = `${currentYear}-12`
+
     const searchDate = reactive({
         asOfDate: '',
     });
@@ -90,7 +94,7 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="route('show.stockCard')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                Stock Card
+                                Monthly Inventory Report
                             </a>
                         </div>
                     </li>
@@ -102,14 +106,14 @@
                 <div class="bg-indigo-800 text-white p-4 flex justify-between rounded-t-md">
                     <div class="flex flex-wrap">
                         <p class="text-lg text-gray-100">
-                            <strong class="font-semibold">Product Information and Date of Duration</strong>
+                            <strong class="font-semibold">Product Inventory</strong>
                         </p>
                     </div>
                 </div>
                 <form @submit.prevent="fetchproductTransactions">
                     <div class="grid gap-2 grid-cols-1 lg:grid-cols-4 lg:gap-6 my-5 mx-3">
                         <div class="relative z-0 my-5 group">
-                            <input v-model="searchDate.asOfDate" type="month" name="date" id="date" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                            <input v-model="searchDate.asOfDate" type="month" :min="minMonth" :max="maxMonth" name="date" id="date" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                             <label for="date" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Date</label>
                         </div>
 

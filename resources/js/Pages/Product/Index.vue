@@ -316,8 +316,14 @@
                             <span class="mr-2">New Product Item</span>
                         </AddButton>
                         <PrintButton v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1 my-1 lg:my-0">
-                            <span class="mr-2">Print List</span>
+                            <span class="mr-2">Print </span>
                         </PrintButton>
+                        <a v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generate.product.active.list.word')" target="_blank" class="flex items-center justify-center text-white bg-blue-900 hover:bg-blue-500 font-medium rounded-lg text-sm  px-4 py-1 text-center me-2 transition duration-150 ease-in-out mx-1 my-1 lg:my-0">
+                            <span class="mr-2">Word</span>
+                            <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M17 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4zM2.859 2.877l12.57-1.795a.5.5 0 0 1 .571.494v20.848a.5.5 0 0 1-.57.494L2.858 21.123a1 1 0 0 1-.859-.99V3.867a1 1 0 0 1 .859-.99M11 8v4.989L9 11l-1.99 2L7 8H5v8h2l2-2l2 2h2V8z"/>
+                            </svg>
+                        </a>
                         <TrashedButton v-if="hasPermission('view-trashed-product-items') || hasAnyRole(['Developer'])" @click="fetchTrashedItems" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
                         </TrashedButton>

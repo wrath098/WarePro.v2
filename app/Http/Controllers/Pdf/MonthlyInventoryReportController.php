@@ -21,7 +21,7 @@ class MonthlyInventoryReportController extends Controller
 
     public function generatePdf_MonthlyInventoryReport(Request $request)
     {
-        $date = Carbon::createFromFormat('Y-m', $request->input('searchDate')['asOfDate']);
+        $date = Carbon::createFromFormat('Y-m', $request->input('searchDate'));
         $dateInWords = Carbon::parse($date)->format('F Y');
         $query_year = $date->year;
         $query_month= $date->month;
@@ -61,7 +61,7 @@ class MonthlyInventoryReportController extends Controller
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>MONTHLY INVENTORY REPORT</h4>
-                    <h5>'. $dateInWords .'</h5>
+                    <h5>As of '. $dateInWords .'</h5>
                 </div>
             </div>
             <br>
@@ -106,35 +106,11 @@ class MonthlyInventoryReportController extends Controller
                     ->whereBetween('created_at', [$start_date, $limit_date])
                     ->orderBy('created_at', 'asc');
             }])
-            ->where('prod_status', 'active')
             ->get();
 
-        $newProductArray = [];
+        $adjustedProducts = $this->reformatProductArray($products);
+
         $count = 0;
-
-        foreach ($products as $product) {
-            $currentStock = $product->inventory ? $product->inventory->qty_physical_count : 0;
-
-            foreach ($product->inventoryTransactions as $transaction){
-                if ($transaction->type == 'issuance') {
-                    $currentStock -= $transaction->qty;
-                } elseif ($transaction->type == 'purchase') {
-                    $currentStock += $transaction->qty;
-                } else {
-                    continue;
-                }
-            }
-
-            $newProductArray[] = [
-                'id' => $product->id,
-                'newStockNo' => $product->prod_newNo,
-                'description' => $product->prod_desc,
-                'unit' => $product->prod_unit,
-                'oldStockNo' => $product->prod_oldNo,
-                'currentInventory' => number_format($currentStock, 0, '.', ','),
-            ];
-        }
-
         foreach ($funds as $fund) {
 
             if ($fund->categories->isNotEmpty()) {
@@ -148,7 +124,7 @@ class MonthlyInventoryReportController extends Controller
                             if ($item->products->isNotEmpty()) {  
                                 foreach ($item->products as $product) {
 
-                                    $matchedParticulars = collect($newProductArray)->first(function ($item) use ($product) {
+                                    $matchedParticulars = collect($adjustedProducts)->first(function ($item) use ($product) {
                                         return $item['newStockNo'] == $product->prod_newNo;
                                     });
 
@@ -168,11 +144,8 @@ class MonthlyInventoryReportController extends Controller
                         }
                     }
                 }
-
             }
         }
-
-        Log::info(count($newProductArray));
 
         return $text;
     }
@@ -189,5 +162,37 @@ class MonthlyInventoryReportController extends Controller
         return '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
                     <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                 </tr>';
+    }
+
+    private function reformatProductArray($products)
+    {
+        $newProductArray = [];
+
+        foreach ($products as $product) {
+            $currentStock = $product->inventory ? $product->inventory->qty_physical_count : 0;
+
+            foreach ($product->inventoryTransactions as $transaction){
+                if ($transaction->type == 'issuance') {
+                    $currentStock -= $transaction->qty;
+                } elseif ($transaction->type == 'purchase') {
+                    $currentStock += $transaction->qty;
+                } else {
+                    continue;
+                }
+            }
+
+            if($product->prod_status == 'active' || ($product->prod_status == 'deactivated' && $currentStock > 0)) {
+                $newProductArray[] = [
+                    'id' => $product->id,
+                    'newStockNo' => $product->prod_newNo,
+                    'description' => $product->prod_desc,
+                    'unit' => $product->prod_unit,
+                    'oldStockNo' => $product->prod_oldNo,
+                    'currentInventory' => number_format($currentStock, 0, '.', ','),
+                ];
+            }
+        }
+
+        return $newProductArray;
     }
 }

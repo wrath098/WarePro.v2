@@ -26,6 +26,7 @@ class PpmpParticularController extends Controller
     {
         $validatedData = $request->validate([
             'param.transId' => 'required|integer',
+            'param.transType' => 'required|string',
             'param.prodCode' => 'required|string|max:20',
             'param.firstQty' => 'required|integer',
             'param.secondQty' => 'nullable|integer',
@@ -43,9 +44,11 @@ class PpmpParticularController extends Controller
 
             $particularExist = PpmpParticular::where('trans_id', $validatedData['param']['transId'])
                 ->where('prod_id', $productExist->id)->first();
+
             if ($particularExist) {
                 return back()->with(['error' => 'The Product No. '. $validatedData['param']['prodCode'] . ' already exist on the list.']);
             } else {
+                
                 PpmpParticular::create([
                     'qty_first' => $validatedData['param']['firstQty'],
                     'qty_second' => $validatedData['param']['secondQty'] ? $validatedData['param']['secondQty'] : 0,
@@ -216,5 +219,16 @@ class PpmpParticularController extends Controller
     {
         $productinventory = ProductInventory::where('prod_id', $productId)->first();
         return $productinventory->id ?? 0;
+    }
+
+    private function createParticular($validatedData)
+    {
+        return PpmpParticular::create([
+            'qty_first' => $validatedData['param']['firstQty'],
+            'qty_second' => $validatedData['param']['secondQty'] ? $validatedData['param']['secondQty'] : 0,
+            'prod_id' => $productExist->id,
+            'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
+            'trans_id' => $validatedData['param']['transId'],
+        ]);
     }
 }

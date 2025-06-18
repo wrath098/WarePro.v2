@@ -294,12 +294,10 @@ class PurchaseRequestController extends Controller
             }
         }
       
-        // Save to storage
         $filename = 'ARP_' . now()->format('Ymd_His') . '.docx';
         $savePath = storage_path('app/public/' . $filename);
         $templateProcessor->saveAs($savePath);
 
-        // Return as downloadable response
         return response()->download($savePath)->deleteFileAfterSend(true);
     }
 }

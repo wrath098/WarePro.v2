@@ -252,6 +252,10 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/ps-dbm', [PsDbmController::class, 'generate_psDbm'])->name('generatePdf.psDbm');
 });
 
+Route::middleware('auth')->prefix('word')->group(function () {
+    Route::get('/product-active-list', [ProductListActiveController::class, 'generate_productlist_word'])->name('generate.product.active.list.word');
+});
+
 #AJAX
 Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
@@ -261,6 +265,5 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/fast-moving-items', [DashboardController::class, 'getFastMovingItems'])->name('get.fast.moving.items');
     Route::get('/monthly-product-inventory', [ProductInventoryController::class, 'getMonthlyInventory'])->name('get.monthly.inventory');
 });
-
 
 require __DIR__.'/auth.php';

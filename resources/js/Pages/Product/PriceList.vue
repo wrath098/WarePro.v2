@@ -45,7 +45,7 @@
                 <ol>
                     <li class="flex flex-col lg:flex-row">
                         <PrintButton v-if="hasPermission('print-price-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.PriceActiveList')" class="mx-1 my-1 lg:my-0" target="_blank">
-                            <span class="mr-2">Print List</span>
+                            <span class="mr-2">Print</span>
                         </PrintButton>
                     </li>
                 </ol>

@@ -11,8 +11,8 @@
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
     import InputError from '@/Components/InputError.vue';
-import AddButton from '@/Components/Buttons/AddButton.vue';
-import PrintButton from '@/Components/Buttons/PrintButton.vue';
+    import AddButton from '@/Components/Buttons/AddButton.vue';
+    import PrintButton from '@/Components/Buttons/PrintButton.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -24,6 +24,8 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
         ppmp: Object,
         ppmpParticulars: Object,
         products: Object,
+        totalItems: String,
+        formattedOverallPrice: String,
         user: Number,
     });
 
@@ -57,6 +59,7 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
     
     const addParticular  = reactive({
         transId: props.ppmp.id,
+        transType: props.ppmp.ppmp_type,
         prodCode: stockNo,
         firstQty: '',
         secondQty: '',
@@ -215,7 +218,7 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
                             <span class="mr-2">Add New Particular</span>
                         </AddButton>
                         <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id})" target="_blank" class="mx-1 my-1 lg:my-0">
-                            <span class="mr-2">Print List</span>
+                            <span class="mr-2">Print</span>
                         </PrintButton>
                     </li>
                 </ol>
@@ -260,12 +263,12 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
 
                                     <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                         <dt class="font-medium text-gray-900">Total Items Listed</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.totalItems }}</dd>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ totalItems }}</dd>
                                     </div>
 
                                     <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                         <dt class="font-medium text-gray-900">Total Amount</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.formattedOverallPrice }}</dd>
+                                        <dd class="text-gray-700 sm:col-span-2">: {{ formattedOverallPrice }}</dd>
                                     </div>
                                 </dl>
                             </div>
@@ -328,7 +331,7 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
                                     <p class="text-red-500 text-xs italic mt-2">No product found!</p>
                                 </div>
                             </div>
-                            <div class="mt-5">
+                            <div v-if="ppmp.ppmp_type == 'individual'" class="mt-5">
                                 <p class="text-sm text-[#86591e]"> Product Quantity: </p>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="addParticular.firstQty" type="number" name="firstQty" id="firstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
@@ -337,6 +340,13 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="addParticular.secondQty" type="number" name="secondQty" id="secondQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                                     <label for="secondQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">2nd Semester(Qty)</label>
+                                </div>
+                            </div>
+                            <div v-else class="mt-5">
+                                <p class="text-sm text-[#86591e]"> Product Quantity: </p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="addParticular.firstQty" type="number" name="firstQty" id="firstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="firstQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Quantity</label>
                                 </div>
                             </div>
                         </div>
@@ -384,7 +394,7 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
                                     <InputError class="mt-2" :message="editParticular.errors.prodDesc" />
                                 </div>
                             </div>
-                            <div class="mt-5">
+                            <div v-if="ppmp.ppmp_type == 'individual'" class="mt-5">
                                 <p class="text-sm text-[#86591e]"> Product Quantity: </p>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="editParticular.firstQty" type="number" name="editFirstQty" id="editFirstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
@@ -395,6 +405,14 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
                                     <input v-model="editParticular.secondQty" type="number" name="editSecondQty" id="editSecondQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                     <label for="editSecondQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">2nd Semester (Qty)</label>
                                     <InputError class="mt-2" :message="editParticular.errors.secondQty" />
+                                </div>
+                            </div>
+                            <div v-else class="mt-5">
+                                <p class="text-sm text-[#86591e]"> Product Quantity: </p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="editParticular.firstQty" type="number" name="editFirstQty" id="editFirstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="editFirstQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Quantity</label>
+                                    <InputError class="mt-2" :message="editParticular.errors.firstQty" />
                                 </div>
                             </div>
                         </div>

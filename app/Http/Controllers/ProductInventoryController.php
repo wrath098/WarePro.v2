@@ -9,7 +9,6 @@ use App\Models\RisTransaction;
 use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,14 +102,16 @@ class ProductInventoryController extends Controller
                 }
             }
 
-            $newProductArray[] = [
-                'id' => $product->id,
-                'newStockNo' => $product->prod_newNo,
-                'description' => $product->prod_desc,
-                'unit' => $product->prod_unit,
-                'oldStockNo' => $product->prod_oldNo,
-                'currentInventory' => number_format($currentStock, 0, '.', ','),
-            ];
+            if($product->prod_status == 'active' || ($product->prod_status == 'deactivated' && $currentStock > 0)) {
+                $newProductArray[] = [
+                    'id' => $product->id,
+                    'newStockNo' => $product->prod_newNo,
+                    'description' => $product->prod_desc,
+                    'unit' => $product->prod_unit,
+                    'oldStockNo' => $product->prod_oldNo,
+                    'currentInventory' => number_format($currentStock, 0, '.', ','),
+                ];
+            }
         }
 
         return response()->json(['data' => $newProductArray], 200);
