@@ -174,7 +174,7 @@
         display: none;
     }
 
-    :deep([data-v-b08024b2] table.dataTable tbody > tr > td:nth-child(3)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(3)) {
         text-align: left !important;
     }
 </style>

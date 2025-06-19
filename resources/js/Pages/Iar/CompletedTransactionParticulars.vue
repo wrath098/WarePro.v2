@@ -246,15 +246,15 @@
         display: none;
     }
 
-    :deep([data-v-0ea0eb96] table.dataTable tbody > tr > td:nth-child(4)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(4)) {
         text-align: left !important;
     }
 
-    :deep([data-v-0ea0eb96] table.dataTable tbody > tr > td:nth-child(7)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(7)) {
         text-align: right !important;
     }
 
-    :deep([data-v-0ea0eb96] table.dataTable tbody > tr > td:nth-child(8)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(8)) {
         text-align: right !important;
     }
 </style>

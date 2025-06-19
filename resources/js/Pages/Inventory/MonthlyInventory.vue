@@ -205,11 +205,11 @@
         display: none;
     }
 
-    :deep([data-v-0a3bf863] table.dataTable tbody > tr > td:nth-child(3)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(3)) {
             text-align: left !important;
     }
 
-    :deep([data-v-0a3bf863] table.dataTable tbody > tr > td:nth-child(5)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(5)) {
             text-align: right !important;
     }
 </style>

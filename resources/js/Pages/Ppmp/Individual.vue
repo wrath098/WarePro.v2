@@ -500,7 +500,7 @@
         display: none;
     }
 
-    :deep([data-v-1a3dacf3] table.dataTable tbody > tr > td:nth-child(2)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(2)) {
         text-align: left !important;
     }
 </style>

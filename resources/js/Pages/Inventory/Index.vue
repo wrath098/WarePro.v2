@@ -427,7 +427,7 @@ import PrintButton from '@/Components/Buttons/PrintButton.vue';
         display: none;
     }
 
-    :deep([data-v-285881b3] table.dataTable tbody > tr > td:nth-child(3)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(3)) {
             text-align: left !important;
     }
 </style>

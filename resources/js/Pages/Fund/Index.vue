@@ -521,7 +521,7 @@ const columns = [
         display: none;
     }
 
-    :deep([data-v-6a28093d] table.dataTable tbody > tr > td:nth-child(2)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(2)) {
             text-align: left !important;
     }
 </style>

@@ -320,7 +320,7 @@ const columns = [
         display: none;
     }
 
-    :deep([data-v-554ff909] table.dataTable tbody > tr > td:nth-child(4)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(4)) {
         text-align: center !important;
     }
 </style>

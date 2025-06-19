@@ -516,11 +516,11 @@
         display: none;
     }
 
-    :deep([data-v-de7a9c2b] table.dataTable tbody > tr > td:nth-child(2)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(2)) {
             text-align: left !important;
     }
 
-    :deep([data-v-de7a9c2b] table.dataTable tbody > tr > td:nth-child(4)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(4)) {
             text-align: left !important;
     }
 </style>

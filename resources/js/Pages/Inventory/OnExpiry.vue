@@ -188,11 +188,11 @@
         display: none;
     }
 
-    :deep([data-v-410c3140] table.dataTable tbody > tr > td:nth-child(1)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(1)) {
             text-align: left !important;
     }
 
-    :deep([data-v-410c3140] table.dataTable tbody > tr > td:nth-child(3)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(3)) {
             text-align: left !important;
     }
 </style>
