@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Forms;
 
 use App\Http\Controllers\Controller;
+use App\Models\CapitalOutlay;
 use App\Models\PpmpConsolidated;
 use App\Models\PpmpTransaction;
 use App\Models\PrParticular;
@@ -264,6 +265,23 @@ class PrMultiStepFormController extends Controller
             $selectedItems = $request->input('selectedItems');
             $prTransactionInfo = $request->input('prTransactionInfo');
 
+            $ppmpTrans = PpmpTransaction::findOrFail($prTransactionInfo['transId']);
+
+            if($ppmpTrans->ppmp_type == 'emergency') {
+                $emergencyTransactions = $this->getAllTransaction($ppmpTrans->ppmp_year, $ppmpTrans->ppmp_type);
+                $calculatedData = $this->calculateTotalOfEmergencyPr($emergencyTransactions);
+
+                $grandTotal = $calculatedData->sum(function ($item) {
+                    return $item['transaction']['total_amount'];
+                });
+
+                $emergencyFund = $this->getTotalAmountOfEmergencyFund($ppmpTrans->ppmp_year);
+
+                dd($emergencyFund);
+
+                $create = $grandTotal;
+            }            
+
             $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
 
             foreach ($selectedItems as $item) {
@@ -296,6 +314,7 @@ class PrMultiStepFormController extends Controller
 
     private function createNewPurchaseRequest($request) {
         $request['qty_adjustment'] = (float)$request['qty_adjustment'] / 100;
+
         return PrTransaction::create([
             'pr_no' => now()->format('YmdHis'),
             'semester' => $request['semester'],
@@ -348,7 +367,7 @@ class PrMultiStepFormController extends Controller
 
     private function getEmergencyParticulars($code, $type)
     {
-        return PpmpTransaction::with('particulars')
+        return PpmpTransaction::with('consolidated')
             ->where('ppmp_type', $type)
             ->where('ppmp_code', $code)
             ->first();
@@ -356,12 +375,11 @@ class PrMultiStepFormController extends Controller
 
     private function formatEmergencyParticulars($particulars) 
     {
-        return $particulars->particulars->map(function ($items) {
-            $qty = 0;
+        return $particulars->consolidated->map(function ($items) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id);
             $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
             
-            $firstAmount = $qty * $prodPrice;
+            $firstAmount = $items->qty_first * $prodPrice;
 
             return [
                 'pId' => $items->id, 
@@ -375,5 +393,79 @@ class PrMultiStepFormController extends Controller
             ];
         });
     }
+
+    private function getAllTransaction($year, $type)
+    {
+        return PpmpTransaction::with([
+            'purchaseRequests' => function ($query) {
+                $query->select(['id', 'trans_id'])
+                    ->with(['prParticulars' => function ($query) {
+                        $query->select(['id', 'pr_id', 'prod_id', 'qty', 'unitPrice']);
+                    }]);
+            }
+        ])
+        ->where('ppmp_year', $year)
+        ->where('ppmp_type', $type)
+        ->get(['id', 'ppmp_year', 'ppmp_type', 'ppmp_code', 'office_id']);
+    }
+
+    private function calculateTotalOfEmergencyPr($transaction)
+    {
+        return $transaction->map(function ($transaction) {
+            $purchaseRequests = $transaction->purchaseRequests->map(function ($pr) {
+                $particulars = $pr->prParticulars->map(function ($particular) {
+                    $total = $particular->qty * $particular->unit_price;
+                    
+                    return [
+                        'product_id' => $particular->prod_id,
+                        'quantity' => $particular->qty,
+                        'price' => $particular->unit_price,
+                        'total' => $total,
+                        'formatted_total' => number_format($total, 2)
+                    ];
+                });
+                
+                $prTotal = $particulars->sum('total');
+                
+                return [
+                    'pr_id' => $pr->id,
+                    'status' => $pr->status,
+                    'particulars' => $particulars,
+                    'pr_total' => $prTotal,
+                    'formatted_pr_total' => number_format($prTotal, 2)
+                ];
+            });
+            
+            $transactionTotal = $purchaseRequests->sum('pr_total');
+            
+            return [
+                'transaction' => [
+                    'id' => $transaction->id,
+                    'ppmp_code' => $transaction->ppmp_code,
+                    'total_amount' => $transactionTotal,
+                    'formatted_total' => number_format($transactionTotal, 2)
+                ],
+                'purchase_requests' => $purchaseRequests
+            ];
+        });
+    }
     
+    private function getTotalAmountOfEmergencyFund($year)
+    {
+        return CapitalOutlay::with(['allocations' => function($query) {
+            $query->where('description', 'Contingency')
+                ->select(['id', 'cap_id', 'description', 'amount']);;
+        }])
+        ->select(['id', 'year', 'amount'])
+        ->where('year', $year)
+        ->get()
+        ->pipe(function($collection) {
+            return [
+                'grand_total' => $collection->sum('amount'),
+                'total_contingency' => $collection->sum(function($item) {
+                    return $item->allocations->sum('amount');
+                })
+            ];
+        });
+    }
 }
