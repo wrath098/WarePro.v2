@@ -10,6 +10,7 @@ use App\Models\PrParticular;
 use App\Models\PrTransaction;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -262,41 +263,46 @@ class PrMultiStepFormController extends Controller
         DB::beginTransaction();
         
         try {
+            $userId = Auth::id();
             $selectedItems = $request->input('selectedItems');
             $prTransactionInfo = $request->input('prTransactionInfo');
 
             $ppmpTrans = PpmpTransaction::findOrFail($prTransactionInfo['transId']);
 
             if($ppmpTrans->ppmp_type == 'emergency') {
+
                 $emergencyTransactions = $this->getAllTransaction($ppmpTrans->ppmp_year, $ppmpTrans->ppmp_type);
                 $calculatedData = $this->calculateTotalOfEmergencyPr($emergencyTransactions);
-
-                $grandTotal = $calculatedData->sum(function ($item) {
+                $grandTotalOfPurchases = $calculatedData->sum(function ($item) {
                     return $item['transaction']['total_amount'];
                 });
 
                 $emergencyFund = $this->getTotalAmountOfEmergencyFund($ppmpTrans->ppmp_year);
 
-                dd($emergencyFund);
+                $totalAmountToPurchase = collect($selectedItems)->reduce(function ($carry, $item) {
+                    return $carry + ((int) $item['qty'] * (float) $item['prodPrice']);
+                }, 0);
 
-                $create = $grandTotal;
+                $sumOfGrandTotalAndCurrent = $grandTotalOfPurchases + $totalAmountToPurchase;
+                
+                $percantage = round(($sumOfGrandTotalAndCurrent / $emergencyFund) * 100, 2);
+
+                if($percantage > 100) {
+                    DB::rollBack();
+                    return redirect()->back()->with(['error' => 'The Emergency Fund has reached its limit. Please adjust the quantity or remove some items, then try again.']);
+                }
+
+                $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
+                $createPrParticulars = $this->createNewPurchaseRequestParticulars($selectedItems, $createNewPurchaseRequest->id, $userId);
+                
+                $ppmpTrans->update(['remarks' => 'PR']);
+                
+                DB::commit();
+                return redirect()->route('pr.display.transactions')->with(['message' => 'Successfully executed the request. You accumulated ' . $percantage . '% of the total amount of the alloted contingency fund.']);
             }            
 
             $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
-
-            foreach ($selectedItems as $item) {
-                $particular = [
-                    "pId" => $item['pId'],
-                    "prodId" => $item['prodId'],
-                    "prodName" => $item['prodName'],
-                    "prodUnit" => $item['prodUnit'],
-                    "prodPrice" => (float) $item['prodPrice'],
-                    "qty" => (int)$item['qty'],
-                    "prId" => $createNewPurchaseRequest->id,
-                    "user" => $prTransactionInfo['user'],
-                ];
-                $this->createNewPurchaseRequestParticulars($particular);
-            }
+            $createPrParticulars = $this->createNewPurchaseRequestParticulars($selectedItems, $createNewPurchaseRequest->id, $userId);
 
             DB::commit();
             return redirect()->route('pr.display.transactions')->with(['message' => 'Successfully executed the request.']);
@@ -317,26 +323,32 @@ class PrMultiStepFormController extends Controller
 
         return PrTransaction::create([
             'pr_no' => now()->format('YmdHis'),
-            'semester' => $request['semester'],
-            'pr_desc' => $request['desc'],
-            'qty_adjustment' => $request['qty_adjustment'],
-            'trans_id' => $request['transId'],
-            'created_by' => $request['user'],
-            'updated_by' => $request['user'],
+            'semester' => $request['semester'] ?? null,
+            'pr_desc' => $request['desc'] ?? 'emergency',
+            'qty_adjustment' => $request['qty_adjustment'] ?? null,
+            'trans_id' => $request['transId'] ?? null,
+            'created_by' => $request['user'] ?? null,
+            'updated_by' => $request['user'] ?? null,
         ]);
     }
 
-    private function createNewPurchaseRequestParticulars($request) {
-        return PrParticular::create([
-            'prod_id' => $request['prodId'],
-            'unitPrice' => $request['prodPrice'],
-            'unitMeasure' => $request['prodUnit'],
-            'qty' => $request['qty'],
-            'revised_specs' => $request['prodName'],
-            'pr_id' => $request['prId'],
-            'conpar_id' => $request['pId'],
-            'updated_by' => $request['user'],
-        ]);
+    private function createNewPurchaseRequestParticulars($selectedItems, $prId, $userId) {
+        $particulars = [];
+
+        foreach ($selectedItems as $item) {
+            $particulars[] = [
+                "prod_id" => $item['prodId'],
+                "revised_specs" => $item['prodName'],
+                "unitMeasure" => $item['prodUnit'],
+                "unitPrice" => (float) $item['prodPrice'],
+                "qty" => (int)$item['qty'],
+                "pr_id" => $prId,
+                "conpar_id" => $item['pId'],
+                "updated_by" => $userId,
+            ];
+        }
+
+        PrParticular::insert($particulars);
     }
 
     private function getAllPrTransactionUnderPpmp($ppmp, $semester)
@@ -460,12 +472,9 @@ class PrMultiStepFormController extends Controller
         ->where('year', $year)
         ->get()
         ->pipe(function($collection) {
-            return [
-                'grand_total' => $collection->sum('amount'),
-                'total_contingency' => $collection->sum(function($item) {
-                    return $item->allocations->sum('amount');
-                })
-            ];
+            return $collection->sum(function($item) {
+                return $item->allocations->sum('amount');
+            });
         });
     }
 }

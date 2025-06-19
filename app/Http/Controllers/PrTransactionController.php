@@ -305,6 +305,7 @@ class PrTransactionController extends Controller
             'nc' => 'For Bidding',
             'dc' => 'Direct Contract',
             'psdbm' => 'PS-DBM',
+            'emergency' => 'Emergency',
         ];
     }
 }
