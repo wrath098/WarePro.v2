@@ -386,8 +386,7 @@ class PpmpTransactionController extends Controller
     {
         $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_version')
             ->where(function($query) {
-                $query->where('ppmp_type', 'emergency')
-                      ->orWhere('ppmp_type', 'individual');
+                $query->whereIn('ppmp_type', ['individual', 'emergency']);
             })
             ->where('ppmp_status', 'draft')
             ->get();
@@ -407,7 +406,7 @@ class PpmpTransactionController extends Controller
         })->values()->all();
         
         $ppmpTransactions = PpmpTransaction::with('requestee', 'updater')
-            ->where('ppmp_type', $request->type)
+            ->whereIn('ppmp_type', ['individual', 'emergency'])
             ->where('ppmp_status', $request->status)
             ->orderBy('ppmp_code', 'desc')
             ->get();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PpmpConsolidated;
 use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
@@ -35,32 +36,32 @@ class PpmpParticularController extends Controller
             'param.transId.required' => 'Please provide a transaction ID.',
         ]); 
 
+        $param = $validatedData['param'];
+
         try {
-            $productExist = Product::where('prod_newNo', $validatedData['param']['prodCode'])
+            $productExist = Product::where('prod_newNo', $param['prodCode'])
                 ->where('prod_status', 'active')->first();
+
             if (!$productExist) {
-                return back()->with(['error' => 'The Product No. '. $validatedData['param']['prodCode'] . ' does not exist or has been inactive on current product list.']);
+                return back()->with(['error' => 'The Product No. '. $param['prodCode'] . ' does not exist or has been inactive on current product list.']);
             }
 
-            $particularExist = PpmpParticular::where('trans_id', $validatedData['param']['transId'])
-                ->where('prod_id', $productExist->id)->first();
+            $particularExist = $param['transType'] == 'individual'
+                ? $this->validateProductOnParticular($param['transId'], $productExist->id)
+                : $this->validateProductOnConsolidated($param['transId'], $productExist->id);
 
             if ($particularExist) {
-                return back()->with(['error' => 'The Product No. '. $validatedData['param']['prodCode'] . ' already exist on the list.']);
+                return back()->with(['error' => 'The Product No. '. $param['prodCode'] . ' already exist on the list.']);
             } else {
-                
-                PpmpParticular::create([
-                    'qty_first' => $validatedData['param']['firstQty'],
-                    'qty_second' => $validatedData['param']['secondQty'] ? $validatedData['param']['secondQty'] : 0,
-                    'prod_id' => $productExist->id,
-                    'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
-                    'trans_id' => $validatedData['param']['transId'],
-                ]);
 
-                $transId = PpmpTransaction::findOrFail($validatedData['param']['transId']);
-                $transId->update(['updated_by' => $validatedData['param']['user']]);
+                $create = $param['transType'] == 'individual'
+                    ? $this->createProductOnParticular($validatedData, $productExist->id)
+                    : $this->createProductOnConsolidated($validatedData, $productExist->id);
 
-                return redirect()->back()->with('message', 'Product No. '. $validatedData['param']['prodCode'] . ' has been successfully added!');
+                $transId = PpmpTransaction::findOrFail($param['transId']);
+                $transId->update(['updated_by' => $param['user']]);
+
+                return redirect()->back()->with('message', 'Product No. '. $param['prodCode'] . ' has been successfully added!');
             }
         } catch (\Exception $e) {
             Log::error("Adding new PPMP particular failed: ", [
@@ -82,19 +83,24 @@ class PpmpParticularController extends Controller
             'firstQty' => 'required|integer|min:1',
             'secondQty' => 'nullable|integer|min:0',
             'user' => 'nullable|integer',
+            'transType' => 'required|string',
         ], [
             'partId.required' => 'Please provide a Particular ID.',
             'firstQty.min' => 'First quantity must be at least 1.',
         ]);
 
         try {
-            $particularExist = PpmpParticular::findOrFail($validatedData['partId']);
-            $particularExist->update([
+
+            $particular = $validatedData['transType'] == 'individual'
+                ? PpmpParticular::findOrFail($validatedData['partId'])
+                : PpmpConsolidated::findOrFail($validatedData['partId']);
+
+            $particular->update([
                 'qty_first' => $validatedData['firstQty'],
                 'qty_second' => $validatedData['secondQty']
             ]);
 
-            $transId = PpmpTransaction::findOrFail($particularExist['trans_id']);
+            $transId = PpmpTransaction::findOrFail($particular['trans_id']);
             $transId->update(['updated_by' => $validatedData['user']]);
 
             return redirect()->back()->with(['message' => 'Product No. '. $validatedData['prodCode'] . ' has been successfully updated!']);
@@ -110,21 +116,33 @@ class PpmpParticularController extends Controller
         }
     }
 
-    public function delete(Request $request, PpmpParticular $ppmpParticular)
+    public function delete(Request $request)
     {
-        try {
-            $user = Auth::id();
-            $transId = PpmpTransaction::findOrFail($ppmpParticular['trans_id']);
-            $transId->update(['updated_by' => $user]);
+        $validatedData = $request->validate([
+            'partId' => 'required|integer',
+            'user' => 'nullable|integer',
+            'transType' => 'required|string',
+        ], [
+            'pId.required' => 'Please provide a Particular ID.',
+        ]);
 
-            $ppmpParticular->delete();
+        try {
+
+            $particular = $validatedData['transType'] == 'individual'
+                ? PpmpParticular::findOrFail($validatedData['partId'])
+                : PpmpConsolidated::findOrFail($validatedData['partId']);
+
+            $transId = PpmpTransaction::findOrFail($particular->trans_id);
+            $transId->update(['updated_by' => $validatedData['user']]);
+
+            $particular->forceDelete();
 
             return redirect()->back()->with(['message' => 'Product has been moved to trashed succecfully!']);
         } catch (\Exception $e) {
             Log::error("Removing PPMP particular failed: ", [
                 'user' => Auth::user()->name,
                 'error' => $e->getMessage(),
-                'data' => $ppmpParticular
+                'data' => $validatedData
             ]);
 
             return back()->with(['error' => 'Failed to delete the particular. Please try again!']);
@@ -153,7 +171,6 @@ class PpmpParticularController extends Controller
             ->where('office_id', $officeId)
             ->where('ppmp_year', $year)
             ->get();
-    
 
         $availableItems = $officePpmp->flatMap(function ($transactions) {
             return $transactions->particulars->map(function ($particular) {
@@ -221,14 +238,42 @@ class PpmpParticularController extends Controller
         return $productinventory->id ?? 0;
     }
 
-    private function createParticular($validatedData)
+    private function validateProductOnParticular($transId, $prodId)
     {
-        return PpmpParticular::create([
-            'qty_first' => $validatedData['param']['firstQty'],
-            'qty_second' => $validatedData['param']['secondQty'] ? $validatedData['param']['secondQty'] : 0,
-            'prod_id' => $productExist->id,
-            'price_id' => $this->productService->getLatestPriceIdentification($productExist->id),
-            'trans_id' => $validatedData['param']['transId'],
+        return PpmpParticular::where('trans_id', $transId)->where('prod_id', $prodId)->first();
+    }
+
+    private function validateProductOnConsolidated($transId, $prodId)
+    {
+        return PpmpConsolidated::where('trans_id', $transId)->where('prod_id', $prodId)->first();
+    }
+
+    private function createProductOnParticular($validatedData, $prodId)
+    {
+        $param = $validatedData['param'];
+
+        PpmpParticular::create([
+            'qty_first' => $param['firstQty'],
+            'qty_second' => $param['secondQty'] ?? 0,
+            'prod_id' => $prodId,
+            'price_id' => $this->productService->getLatestPriceIdentification($prodId),
+            'trans_id' => $param['transId'],
         ]);
     }
+
+    private function createProductOnConsolidated($validatedData, $prodId)
+    {
+        $param = $validatedData['param'];
+
+        PpmpConsolidated::create([
+            'qty_first' => $param['firstQty'],
+            'qty_second' => $param['secondQty'] ?? 0,
+            'prod_id' => $prodId,
+            'price_id' => $this->productService->getLatestPriceIdentification($prodId),
+            'created_by' => $param['user'],
+            'updated_by' => $param['user'],
+            'trans_id' => $param['transId'],
+        ]);
+    }
+
 }

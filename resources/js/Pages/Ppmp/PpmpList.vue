@@ -7,6 +7,7 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import Print from '@/Components/Buttons/Print.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -68,7 +69,7 @@
         {
             data: 'ppmp_code',
             title: 'Transaction No#',
-            width: '15%'
+            width: '12%'
         },
         {
             data: 'requestee.office_code',
@@ -86,9 +87,16 @@
             width: '10%'
         },
         {
-            data: 'ppmp_version',
-            title: 'Version',
-            width: '5%'
+            data: 'ppmp_type',
+            title: 'Type',
+            width: '8%',
+            render: function(data) {
+                return data 
+                    ? data == 'individual' 
+                        ?'Office'
+                        : 'Emergency'
+                    : '';
+            }
         },
         {
             data: 'updater.name',
@@ -152,48 +160,54 @@
                             ordering: false
                         }"> 
                             <template #action="props">
-                                <div v-if="ppmp.status == 'Draft'">
-                                    <button v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" @click="openPrintModal(props.cellData.id)" title="Print">
-                                        <svg class="w-6 h-6 text-gray-800 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
-                                        </svg>
-                                    </button>
-                                </div>
+                                <ul v-if="ppmp.status == 'Draft'">
+                                    <li v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])">
+                                        <button v-if="props.cellData.ppmp_type == 'individual'"  @click="openPrintModal(props.cellData.id)" title="Print">
+                                            <svg class="w-6 h-6 text-gray-800 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                                            </svg>
+                                        </button>
+                                    </li>
+                                </ul>
 
                                 <ul v-if="ppmp.status == 'Approved'">
                                     <li v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])">
-                                        <details class="group">
-                                            <summary class="flex items-center justify-center gap-2 p-2 marker:content-none hover:cursor-pointer bg-gray-700 hover:bg-gray-900 rounded-md">
-                                                <span class="flex gap-2 text-sm text-gray-100">Print</span>
-                                                <svg class="w-3 h-3 text-gray-100 transition group-open:rotate-90" xmlns="http://www.w3.org/2000/svg"
-                                                    width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                                    <path fill-rule="evenodd"
-                                                        d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z">
-                                                    </path>
-                                                </svg>
-                                            </summary>
+                                        <div v-if="props.cellData.ppmp_type == 'individual'">
+                                            <details class="group">
+                                                <summary class="flex items-center justify-center gap-2 p-2 marker:content-none hover:cursor-pointer bg-gray-700 hover:bg-gray-900 rounded-md">
+                                                    <span class="flex gap-2 text-sm text-gray-100">Print</span>
+                                                    <svg class="w-3 h-3 text-gray-100 transition group-open:rotate-90" xmlns="http://www.w3.org/2000/svg"
+                                                        width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                        <path fill-rule="evenodd"
+                                                            d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z">
+                                                        </path>
+                                                    </svg>
+                                                </summary>
 
-                                            <article class="pb-2">
-                                                <ul class="flex flex-col">
-                                                    <li class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
-                                                        <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'original', ppmp: props.cellData.id})" target="_blank">
-                                                            Original Qty
-                                                        </a>
-                                                    </li>
-                                                    <li v-if="props.cellData.qty_adjustment < 1" class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
-                                                        <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'adjusted', ppmp: props.cellData.id})" target="_blank">
-                                                            Adjustment Qty
-                                                        </a>
-                                                    </li>
-                                                    <li v-if="props.cellData.tresh_adjustment < 1" class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
-                                                        <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'threshold', ppmp: props.cellData.id})" target="_blank">
-                                                            Maximum Allowed Qty
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </article>
-
-                                        </details>
+                                                <article class="pb-2">
+                                                    <ul class="flex flex-col">
+                                                        <li class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
+                                                            <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'original', ppmp: props.cellData.id})" target="_blank">
+                                                                Original Qty
+                                                            </a>
+                                                        </li>
+                                                        <li v-if="props.cellData.qty_adjustment < 1" class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
+                                                            <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'adjusted', ppmp: props.cellData.id})" target="_blank">
+                                                                Adjustment Qty
+                                                            </a>
+                                                        </li>
+                                                        <li v-if="props.cellData.tresh_adjustment < 1" class="my-1 rounded-md bg-gray-300 hover:bg-gray-600  hover:text-white">
+                                                            <a :href="route('generatePdf.ApprovedOfficePpmp', {type: 'threshold', ppmp: props.cellData.id})" target="_blank">
+                                                                Maximum Allowed Qty
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </article>
+                                            </details>
+                                        </div>
+                                        <div v-else>
+                                            <Print :href="route('generatePdf.emergencyPpmp', { ppmp: props.cellData.id})" tooltip="Print" />
+                                        </div>
                                     </li>
                                 </ul>
                             </template>

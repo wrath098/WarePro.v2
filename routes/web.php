@@ -22,6 +22,7 @@ use App\Http\Controllers\Pdf\AsOfStockCardController;
 use App\Http\Controllers\Pdf\DraftConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\DraftOfficePpmpController;
+use App\Http\Controllers\Pdf\EmergencyPpmpController;
 use App\Http\Controllers\Pdf\InventoryController;
 use App\Http\Controllers\Pdf\MonthlyInventoryReportController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
@@ -175,7 +176,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::post('/consolidated-particular/add', [PpmpConsolidatedController::class, 'store'])->name('conso-particular-store');
     Route::put('/consolidated-particular/update/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'update'])->name('conso-particular-update');
     Route::delete('/consolidated-particular/destroy/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'destroy'])->name('conso-particular-destroy');
-    Route::delete('/individual-ppmp/delete/{ppmpParticular}', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
+    Route::delete('/individual-ppmp/delete', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
 
     #AJAX
     Route::get('/offices-with-no-ppmp', [PpmpTransactionController::class, 'showOfficeListWithNoPpmp'])->name('show.ppmp.withNoPpmp');
@@ -234,22 +235,23 @@ Route::middleware('auth')->prefix('ris')->group(function () {
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {
-    Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
-    Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
-    Route::get('/consolidated-ppmp-list/{ppmp}', [DraftConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
-    Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
-    Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
-    Route::get('/draft-adjusted-ppmp-list', [DraftAdjustedOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftAdjustedPpmp');
-    Route::get('/drafted-office-ppmp-list/{ppmp}', [DraftOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
     Route::get('/approved-office-ppmp-list/{ppmp}', [ApprovedOfficePpmpQuantityController::class, 'generatePdf_Ppmp'])->name('generatePdf.ApprovedOfficePpmp');
+    Route::get('/beginning-balance', [InventoryController::class, 'generatePdf_productInventoryList'])->name('generatePdf.productInventoryList');
+    Route::get('/consolidated-ppmp-list/{ppmp}', [DraftConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
+    Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
+    Route::get('/drafted-office-ppmp-list/{ppmp}', [DraftOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
+    Route::get('/draft-adjusted-ppmp-list', [DraftAdjustedOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftAdjustedPpmp');
+    Route::get('/emergency-ppmp/{ppmp}', [EmergencyPpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.emergencyPpmp');
+    Route::get('/monthly-product-inventory', [MonthlyInventoryReportController::class, 'generatePdf_MonthlyInventoryReport'])->name('generatePdf.MonthlyInventoryReport');
+    Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');
+    Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
+    Route::get('/ps-dbm', [PsDbmController::class, 'generate_psDbm'])->name('generatePdf.psDbm');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
     Route::get('/purchase-request-ps-dbm/{pr}', [PurchaseRequestController::class, 'generate_psDbm'])->name('generatePdf.pr.psDbm');
+    Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
     Route::get('/stock-card-as-of', [AsOfStockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard.AsOf');
-    Route::get('/monthly-product-inventory', [MonthlyInventoryReportController::class, 'generatePdf_MonthlyInventoryReport'])->name('generatePdf.MonthlyInventoryReport');
-    Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
-    Route::get('/beginning-balance', [InventoryController::class, 'generatePdf_productInventoryList'])->name('generatePdf.productInventoryList');
-    Route::get('/ps-dbm', [PsDbmController::class, 'generate_psDbm'])->name('generatePdf.psDbm');
+    Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');    
 });
 
 Route::middleware('auth')->prefix('word')->group(function () {

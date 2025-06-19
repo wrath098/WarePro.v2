@@ -73,11 +73,13 @@
         firstQty: '',
         secondQty: '',
         user: props.user,
+        transType: props.ppmp.ppmp_type,
     });
 
     const dropParticular = useForm({
-        pId: '',
+        partId: '',
         user: props.user,
+        transType: props.ppmp.ppmp_type,
     });
 
     const openEditPpmpModal = (particular) => {
@@ -90,7 +92,7 @@
     }
 
     const openDropPpmpModal = (particular) => {
-        dropParticular.pId = particular.id;
+        dropParticular.partId = particular.id;
         modalState.value = 'drop';
     }
 
@@ -131,13 +133,9 @@
         });
     };
 
-
     const submitAdd = () => submitForm('post', route('indiv.particular.store', { param : addParticular }), createForm);
     const submitEdit = () => submitForm('put', route('indiv.particular.update'), editParticular);
-    const submitDrop = () => {
-        const ppmpParticular = dropParticular.pId;
-        submitForm('delete', route('indiv.particular.delete', { ppmpParticular }), dropParticular)
-    };
+    const submitDrop = () => submitForm('delete', route('indiv.particular.delete'), dropParticular);
 
     const columns = [
         {
@@ -217,7 +215,7 @@
                         <AddButton v-if="hasPermission('create-office-ppmp-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Add New Particular</span>
                         </AddButton>
-                        <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id})" target="_blank" class="mx-1 my-1 lg:my-0">
+                        <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.emergencyPpmp', { ppmp: ppmp.id})" target="_blank" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Print</span>
                         </PrintButton>
                     </li>
