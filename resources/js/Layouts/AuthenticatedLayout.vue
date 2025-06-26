@@ -145,7 +145,7 @@ const showingAppSideBar = ref(true);
                 </div>
             </header>
             <slot />
-            <footer class="mb-2 px-4 border-gray-500 z-10 flex lg:justify-end lg:items-end justify-center items-center">
+            <footer class="mb-2 px-4 border-gray-500 flex lg:justify-end lg:items-end justify-center items-center">
                 <div class="text-xs text-gray-400"> © 2025 PGSO Warehouse | Developed by C. & PGSO</div>
             </footer>
         </main>
