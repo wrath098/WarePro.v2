@@ -57,7 +57,6 @@ class RisTransactionController extends Controller
         DB::beginTransaction();
         $products = json_decode($request->requestProducts, true);
         $formattedDate = $this->productService->defaultDateFormat($request->risDate);
-
         if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
             DB::rollBack();
             return back()->with(['error' => 'Invalid date. Please try again!']);
