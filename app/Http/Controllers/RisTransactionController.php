@@ -89,30 +89,26 @@ class RisTransactionController extends Controller
         }
 
         try {
-            foreach ($products as $product) {
-                $risData['qty'] = $product['qty'];
-                $risData['unit'] = $product['prodUnit'];
-                $risData['prodId'] = $product['prodId'];
-                
-                $isProductAvailable = $this->validateAvailability($risData);
+            foreach ($products as $product) 
+            {
+                $isProductAvailable = $this->validateAvailability($product['prodId'], $product['requestedQty']);
                 if($isProductAvailable !== true) {
                     DB::rollback();
-                    return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
+                    return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['stockNo'] . ' is ' . $isProductAvailable . ' ' . $product['unit'] . '.']);
                 }
-
-                $totalTreshold = (int) $product['treshFirstQty'] + (int) $product['treshSecondQty'];
-                $totalReleased = (int) $product['releasedQty'] + (int) $product['qty'];
-
-                if($totalReleased > $totalTreshold) {
+                
+                $nextAvailQty = (int) $product['remainingQty'] - (int) $product['requestedQty'];
+                
+                if($nextAvailQty <= -1) {
                     DB::rollback();
                     throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
                 }
-
+                
                 $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
-                $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) + (int)$product['qty'];
-
+                $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) - (int)$product['requestedQty'];
+                
+                dd($nextAvailQty, $previousInventoryTransaction->toArray(), $currentStock);
                 $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
-
                 $createRisTransaction = $this->createRis($risData);
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
                 $this->updateQuantity($risData);
@@ -186,7 +182,7 @@ class RisTransactionController extends Controller
     {
         $query = ProductInventoryTransaction::create([
             'type' => 'issuance',
-            'qty' => $product['qty'],
+            'qty' => $risData['qty'],
             'current_stock' => $currentStock,
             'prodInv_id' => $product['prodInvId'],
             'ref_no' => $risId,
@@ -200,12 +196,12 @@ class RisTransactionController extends Controller
         return $query;
     }
 
-    public function validateAvailability($requestData)
+    public function validateAvailability(int $prodId, int $requestedQty)
     {
-        $productQuantity = ProductInventory::where('prod_id', $requestData['prodId'])->first();
+        $productQuantity = ProductInventory::where('prod_id', $prodId)->first();
         $quantity = $productQuantity ? $productQuantity->qty_on_stock : 0;
 
-        if ($quantity >= $requestData['qty']) {
+        if ($quantity >= $requestedQty) {
             return true;
         } else {
             return $quantity;

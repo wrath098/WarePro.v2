@@ -63,6 +63,11 @@ class ProductInventoryTransactionController extends Controller
 
             $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
             
+            if ($productInventory) {
+                DB::rollBack();
+                return redirect()->back()->with(['error' => 'Product Code #'. $request->stockNo. ' already has an existing inventory and cannot be updated. Please contact the system administrator if you need to modify the current stock']);
+            }
+            
             $previousTransaction = $this->productService->getPreviousProductInventoryTransaction($request->prodId, $formattedDate);
             $previousInventory = $previousTransaction->current_stock ?? 0;
 
@@ -191,7 +196,7 @@ class ProductInventoryTransactionController extends Controller
         return ProductInventoryTransaction::create([
             'type' => $request->type ?? 'adjustment',
             'qty' => $request->qty,
-            'stock_qty' => $request->qty,
+            'stock_qty' => 0,
             'notes' => $request->remarks,
             'prod_id' => $request->prodId,
             'current_stock' => $currentInventory,

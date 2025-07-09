@@ -50,11 +50,13 @@
     const rows = reactive([
         {
             id: '',
+            prodInvId: '',
+            prodId: '',
             stockNo: '',
             description: '',
             unit: '',
-            qty1: '',
-            qty2: '',
+            treshFirstQty: '',
+            treshSecondQty: '',
             stockAvailable: '',
             requestedQty: '',
             remainingQty:'',
@@ -66,11 +68,13 @@
     function addRow() {
         rows.push({
             id: '',
+            prodInvId: '',
+            prodId: '',
             stockNo: '',
             description: '',
             unit: '',
-            qty1: '',
-            qty2: '',
+            treshFirstQty: '',
+            treshSecondQty: '',
             stockAvailable: '',
             requestedQty: '',
             remainingQty:'',
@@ -126,12 +130,14 @@
 
     function selectSuggestion(row, item) {
         row.id = item.id;
+        row.prodInvId = item.prodInvId,
+        row.prodId = item.prodId,
         row.stockNo = item.prodStockNo;
         row.description = item.prodDesc;
         row.unit = item.prodUnit;
         row.suggestions = [];
-        row.qty1 = item.treshFirstQty,
-        row.qty2 = item.treshSecondQty,
+        row.treshFirstQty = item.treshFirstQty,
+        row.treshSecondQty = item.treshSecondQty,
         row.stockAvailable = item.availableStock,
         row.remainingQty = item.remainingQty,
         row.showStockSuggestions = false;
@@ -328,10 +334,10 @@
                                 <input v-model="row.unit" type="text" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.qty1" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.treshFirstQty" type="number" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.qty2" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.treshSecondQty" type="number" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
                                 <input v-model="row.stockAvailable" type="number" class="w-full text-center border-0" disabled/>

@@ -7,7 +7,6 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
     import Swal from 'sweetalert2';
-import PrintButton from '@/Components/Buttons/PrintButton.vue';
 
     const page = usePage();
     const message = computed(() => page.props.flash.message);
