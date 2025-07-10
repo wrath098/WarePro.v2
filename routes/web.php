@@ -232,6 +232,7 @@ Route::middleware('auth')->prefix('ris')->group(function () {
     Route::post('/store', [RisTransactionController::class, 'store'])->name('store.ris');
     Route::middleware(['auth', 'role_or_permission:view-ris-transactions|Developer'])->get('/ris-logs', [RisTransactionController::class, 'risTransactions'])->name('ris.display.logs');
     Route::get('/{transactionId}/attachment', [RisTransactionController::class, 'showAttachment'])->name('ris.show.attachment');
+    Route::get('/{transactionId}/{issuedTo}', [RisTransactionController::class, 'showRisItems'])->name('ris.show.items');
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {

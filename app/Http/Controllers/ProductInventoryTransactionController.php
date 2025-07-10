@@ -196,7 +196,7 @@ class ProductInventoryTransactionController extends Controller
         return ProductInventoryTransaction::create([
             'type' => $request->type ?? 'adjustment',
             'qty' => $request->qty,
-            'stock_qty' => 0,
+            'stock_qty' => $request->qty,
             'notes' => $request->remarks,
             'prod_id' => $request->prodId,
             'current_stock' => $currentInventory,

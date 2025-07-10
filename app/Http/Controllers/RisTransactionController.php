@@ -36,8 +36,11 @@ class RisTransactionController extends Controller
 
     public function risTransactions()
     {
-        $risTransaction = $this->getRisTransactions();
-        return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
+        $transaction = $this->getRis();
+        return Inertia::render('Ris/Transactions', ['transactions' => $transaction]);
+
+        // $risTransaction = $this->getRisTransactions();
+        // return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
     }
 
     public function showAttachment(Request $request)
@@ -50,6 +53,15 @@ class RisTransactionController extends Controller
         }
     
         return abort(404);
+    }
+
+    public function showRisItems(Request $request, $transactionId, $issuedTo)
+    {
+        $transaction = RisTransaction::where('ris_no', $transactionId)
+            ->where('issued_to', $issuedTo)
+            ->get();
+
+        return Inertia::render('Ris/TransactionItems', ['transactions' => $transaction]);
     }
 
     public function store(Request $request)
@@ -101,19 +113,18 @@ class RisTransactionController extends Controller
                 
                 if($nextAvailQty <= -1) {
                     DB::rollback();
-                    throw new \Exception('The inputted quantity of the product exceeds the requested quantity of the selected office.!');
+                    return redirect()->back()->with(['error' => 'The inputted quantity of the product exceeds the requested quantity of the selected office.!']);
                 }
-                
+
                 $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
                 $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) - (int)$product['requestedQty'];
-                
-                dd($nextAvailQty, $previousInventoryTransaction->toArray(), $currentStock);
                 $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
-                $createRisTransaction = $this->createRis($risData);
+
+                $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit']);
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
-                $this->updateQuantity($risData);
-                $this->updateInventoryTransaction($risData);
-                $this->updateReleasedItemQtyOnPpmp($product);
+                $this->updateQuantity($product['prodId'], $product['requestedQty']);
+                $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
+                $this->updateReleasedItemQtyOnPpmp($product['prodId'], $product['requestedQty']);
                 $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
             }   
 
@@ -132,25 +143,21 @@ class RisTransactionController extends Controller
     private function storeOtherOfficeRequest(iterable $risData, iterable $requestedProducts, string $formattedDate)
     {
         foreach ($requestedProducts as $product) {
-            $risData['qty'] = $product['qty'];
-            $risData['unit'] = $product['prodUnit'];
-            $risData['prodId'] = $product['prodId'];
             
-            $isProductAvailable = $this->validateAvailability($risData);
+            $isProductAvailable = $this->validateAvailability($product['prodId'], $product['requestedQty']);
             if($isProductAvailable !== true) {
                 DB::rollback();
-                return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['prodStockNo'] . ' is ' . $isProductAvailable . ' ' . $product['prodUnit'] . '.']);
+                return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['stockNo'] . ' is ' . $isProductAvailable . ' ' . $product['unit'] . '.']);
             }
 
             $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
-            $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) + (int)$product['qty'];
-
+            $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) - (int)$product['requestedQty'];
             $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
 
-            $createRisTransaction = $this->createRis($risData);
+            $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit']);
             $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock, $succeedingTransactions);
-            $this->updateQuantity($risData);
-            $this->updateInventoryTransaction($risData);
+            $this->updateQuantity($product['prodId'], $product['requestedQty']);
+            $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
             $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
         }
     }
@@ -161,30 +168,31 @@ class RisTransactionController extends Controller
         return Storage::url($path);
     }
 
-    private function createRis($requestData) {
+    private function createRis(iterable $requestData, int $requestedQty, int $prodId, string $prodUnit) {
         $officeId = $requestData['officeId'] == "others" ? null : $requestData['officeId'];
 
         return RisTransaction::create([
             'ris_no' => $requestData['risNo'],
-            'qty' => $requestData['qty'],
-            'unit' => $requestData['unit'],
+            'qty' => $requestedQty,
+            'unit' => $prodUnit,
             'issued_to' => $requestData['receivedBy'],
             'remarks' => $requestData['remarks'],
-            'prod_id' => $requestData['prodId'],
+            'prod_id' => $prodId,
             'office_id' => $officeId,
             'created_by' => $requestData['user'],
             'created_at' => $requestData['risDate'],
-            'attachment' => $requestData['path'] ?? null,
         ]);
     }
 
     private function createInventoryTransaction(iterable $product, iterable $risData, int $risId, int $currentStock, iterable $transactions)
     {
+        $prodInven_id = ProductInventory::where('prod_id', $product['prodId'])->value('id');
+
         $query = ProductInventoryTransaction::create([
             'type' => 'issuance',
-            'qty' => $risData['qty'],
+            'qty' => $product['requestedQty'],
             'current_stock' => $currentStock,
-            'prodInv_id' => $product['prodInvId'],
+            'prodInv_id' => $prodInven_id,
             'ref_no' => $risId,
             'prod_id' => $product['prodId'],
             'created_by' => $risData['user'] ?? null,
@@ -224,18 +232,18 @@ class RisTransactionController extends Controller
         return response()->json(['data' => $resultLogs]);
     }
 
-    private function updateQuantity($requestData)
+    private function updateQuantity($requestedProdId, $requestedQty)
     {
-        $productQuantity = ProductInventory::where('prod_id', $requestData['prodId'])->lockForUpdate()->first();
-        $productQuantity->qty_on_stock -= $requestData['qty'];
-        $productQuantity->qty_issued += $requestData['qty'];
+        $productQuantity = ProductInventory::where('prod_id', $requestedProdId)->lockForUpdate()->first();
+        $productQuantity->qty_on_stock -= $requestedQty;
+        $productQuantity->qty_issued += $requestedQty;
         return $productQuantity->save();
     }
 
-    private function updateReleasedItemQtyOnPpmp($requestData)
+    private function updateReleasedItemQtyOnPpmp(int $requestProdId, int $requestedQty)
     {
-        $itemOnPPmpInfo = PpmpParticular::findOrFail($requestData['id']);
-        return $itemOnPPmpInfo->update(['released_qty' => $itemOnPPmpInfo->released_qty += $requestData['qty']]);
+        $itemOnPPmpInfo = PpmpParticular::findOrFail($requestProdId);
+        return $itemOnPPmpInfo->update(['released_qty' => $itemOnPPmpInfo->released_qty += $requestedQty]);
     }
 
     private function getRisTransactions() {
@@ -270,10 +278,10 @@ class RisTransactionController extends Controller
         return $transactions;
     }
 
-    private function updateInventoryTransaction($requestData)
+    private function updateInventoryTransaction(int $requestedProdId, int $requestedQty)
     {
-        $currentQty = (int) $requestData['qty'];
-        $transactions = $this->getIncompleteInventoryTransactions($requestData['prodId']);
+        $currentQty = (int) $requestedQty;
+        $transactions = $this->getIncompleteInventoryTransactions($requestedProdId);
 
         foreach ($transactions as $transaction) {
             $stockQty = (int) $transaction->stock_qty;
@@ -347,5 +355,24 @@ class RisTransactionController extends Controller
             'releasedBy' => $transaction->creator->name,
             'attachment' => $transaction->attachment ?? null,
         ])->values();
+    }
+
+    private function getRis()
+    {
+        $transactions = RisTransaction::select('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', DB::raw('COUNT(id) as transaction_count'))
+             ->with(['creator', 'requestee'])
+            ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks')
+            ->orderBy('ris_no', 'desc')
+            ->limit(50)
+            ->get();
+
+        return $transactions->map(fn($transaction) => [
+            'risNo' => $transaction->ris_no,
+            'officeRequestee' => $transaction->requestee ? $transaction->requestee->office_code : 'Others',
+            'requesteeRemarks' => $transaction->remarks,
+            'issuedTo' => $transaction->issued_to,
+            'releasedBy' => $transaction->creator->name,
+            'noOfItems' => $transaction->transaction_count,
+        ]);
     }
 }
