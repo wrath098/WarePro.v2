@@ -58,8 +58,8 @@
             treshFirstQty: '',
             treshSecondQty: '',
             stockAvailable: '',
-            requestedQty: '',
             remainingQty:'',
+            requestedQty: '',
             showStockSuggestions: false,
             showDescSuggestions: false,
         }
@@ -76,8 +76,8 @@
             treshFirstQty: '',
             treshSecondQty: '',
             stockAvailable: '',
-            requestedQty: '',
             remainingQty:'',
+            requestedQty: '',
             showStockSuggestions: false,
             showDescSuggestions: false,
         })
@@ -346,7 +346,7 @@
                                 <input v-model="row.remainingQty" type="number" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.requestedQty" @input="requestedItemQtyDebounced(row)" type="number" class="w-full rounded-md input-red-when-disabled" :disabled="row.stockAvailable == 0 || row.remainingQty == 0"/>
+                                <input :min="0" :max="row.remainingQty" v-model="row.requestedQty" @input="requestedItemQtyDebounced(row)" type="number" class="w-full rounded-md input-red-when-disabled" :disabled="row.stockAvailable == 0 || row.remainingQty == 0"/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
                                 <button @click="deleteRow(index)" class="px-2 py-1 rounded">

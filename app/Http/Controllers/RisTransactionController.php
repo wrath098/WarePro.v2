@@ -57,23 +57,56 @@ class RisTransactionController extends Controller
 
     public function showRisItems(Request $request, $transactionId, $issuedTo)
     {
-        $transaction = RisTransaction::where('ris_no', $transactionId)
+        #TRANSACTIONS WITHIN RIS
+        $transaction = RisTransaction::with('productDetails')
+            ->where('ris_no', $transactionId)
             ->where('issued_to', $issuedTo)
             ->get();
 
-        return Inertia::render('Ris/TransactionItems', ['transactions' => $transaction]);
+        #RIS TRANSACTION INFO
+        $risInfo = RisTransaction::with(['creator', 'requestee'])
+            ->where('ris_no', $transactionId)
+            ->where('issued_to', $issuedTo)
+            ->first();
+
+        #TRANSFORM RISINFO COLLECTION TO ARRAY
+        $transformed = [
+            'risNo' => $risInfo->ris_no,
+            'officeRequestee' => $risInfo->requestee ? $risInfo->requestee->office_code : 'Others',
+            'remarks' => $risInfo->remarks,
+            'issuedTo' => $risInfo->issued_to,
+            'issuedBy' => $risInfo->creator ? $risInfo->creator->name : '',
+            'dateIssued' => $risInfo->created_at->format('F d, Y'),
+            'noOfItems' => $transaction->count(),
+        ];
+        
+        #RENDER TO PAGE
+        return Inertia::render('Ris/TransactionItems', [
+            'transactions' => $transaction,
+            'risInfo' => $transformed
+        ]);
     }
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
-        $products = json_decode($request->requestProducts, true);
-        $formattedDate = $this->productService->defaultDateFormat($request->risDate);
-        if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
-            DB::rollBack();
-            return back()->with(['error' => 'Invalid date. Please try again!']);
-        }
+        #VALIDATE REQUEST FORM INPUT
+        $request->validate([
+            'risNo' => 'required|string',
+            'receivedBy' => 'required|string',
+            'risDate' => 'required|string',
+            'remarks' => 'nullable|string',
+            'officeId' => 'nullable|string',
+            'ppmpYear' => 'required|string',
+            'requestProducts' => 'required|string',
+        ]);
 
+        #CONVERT REEQUEST PRODUCTS TO ARRAY
+        $products = json_decode($request->requestProducts, true);
+
+        #REFORMAT DATE WITH NOW() TIME
+        $formattedDate = $this->productService->defaultDateFormat($request->risDate);
+
+        #TRANSPOSED REQUEST FORM INPUT TO COSTUMIZE ARRAY
         $risData = [
             'risNo' => $request->risNo,
             'officeId' => $request->officeId,
@@ -83,21 +116,19 @@ class RisTransactionController extends Controller
             'user' => Auth::id(),
         ];
 
+        #CHECK FORMATTED DATE IF STILL VALID WITHIN THE GIVEN DATE DURATION
+        if (!$formattedDate || !$this->productService->isDateValid($formattedDate)) {
+            return back()->with(['error' => 'Invalid date. Please try again!']);
+        }
+
+        #STARTS DATABASE TRANSACTION
+        DB::beginTransaction();
+
+        #CHECK IF OFFICE VALUE IS "OTHERS"
         if ($risData['officeId'] == "others") {
             $this->storeOtherOfficeRequest($risData, $products, $formattedDate);
             DB::commit();
             return redirect()->back()->with(['message' => 'RIS created successfully!']);
-        }
-
-        if ($request->file) {
-            try {
-                $path = $this->handleFileUpload($request->file);
-                $risData['path'] = $path;
-            } catch (\Exception $e) {
-                DB::rollback();
-                Log::error("File upload failed: " . $e->getMessage());
-                return redirect()->back()->with(['error' => 'File upload failed']);
-            }
         }
 
         try {
@@ -124,7 +155,7 @@ class RisTransactionController extends Controller
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
                 $this->updateQuantity($product['prodId'], $product['requestedQty']);
                 $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
-                $this->updateReleasedItemQtyOnPpmp($product['prodId'], $product['requestedQty']);
+                $this->updateReleasedItemQtyOnPpmp($product['id'], $product['requestedQty']);
                 $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
             }   
 
@@ -133,11 +164,75 @@ class RisTransactionController extends Controller
         } catch (\Exception $e) {
             Log::error("Proccess RIS Failed: ", [
                 'user' => Auth::user()->name,
-                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             return redirect()->back()->with(['error' => 'Proccessing RIS Failed. Please try again!']);
         }
+    }
+
+    public function update(Request $request) 
+    {
+        #VALIDATE REQUEST FORM INPUT
+        $request->validate([
+            'risNo' => 'required|string',
+            'issuedTo' => 'required|string',
+            'oldData' => 'required|array',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            #TRANSACTIONS WITHIN RIS
+            $transactions = RisTransaction::where('ris_no', $request->oldData['risNo'])
+                ->where('issued_to', $request->oldData['issuedTo'])
+                ->get();
+
+            #UPDATE TRANSACTIONS
+            foreach($transactions as $transaction) {
+                $transaction->update([
+                    'ris_no' => $request->risNo,
+                    'issued_to' => $request->issuedTo
+                ]);
+            }
+            
+            #RENDER PAGE IF NO ERROR
+            DB::commit();
+            return redirect()->route('ris.display.logs')->with('message', 'Updated the RIS Information successfully!');
+        } catch (\Exception $e) {
+            
+            #RENDER PAGE IF THERE IS ERROR
+            DB::rollBack();
+            Log::error("Updating RIS Failed: ", [
+                'user' => Auth::user()->name,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with(['error' => 'Updating RIS Failed. Please try again!']);
+        
+        }
+    }
+
+    public function updateParticular(Request $request)
+    {
+        #VALIDATE FORM REQUEST INPUT
+        $request->validate([
+            'risParticularId' => 'required',
+            'stockNo' => 'nullable|string',
+            'proDesc' => 'nullable|string',
+            'requestedQty' => 'required',
+        ]);
+
+        dd($request->toArray());
+        #GET RIS PARTICULAR
+        $particular = RisTransaction::with('productDetails')->findOrFail($request->risParticularId);
+
+        #GET DIFFERENCE OF CURRENT QTY AND NEWLY REQUESTED QTY THEN UPDATE PRODUCT INVENTORY
+        $calculateDifference = $particular->qty - $request->requestedQty;
+
+        //$this->updateQuantity($particular->prod_id, $calculateDifference);
+
+        $this->updateInventoryTransactionParticular($particular->prod_id, $calculateDifference);
+        $this->updateReleasedItemQtyOnPpmp($particular->prod_id, $calculateDifference);
     }
 
     private function storeOtherOfficeRequest(iterable $risData, iterable $requestedProducts, string $formattedDate)
@@ -362,7 +457,7 @@ class RisTransactionController extends Controller
         $transactions = RisTransaction::select('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', DB::raw('COUNT(id) as transaction_count'))
              ->with(['creator', 'requestee'])
             ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks')
-            ->orderBy('ris_no', 'desc')
+            ->orderByDesc('ris_no')
             ->limit(50)
             ->get();
 
@@ -374,5 +469,17 @@ class RisTransactionController extends Controller
             'releasedBy' => $transaction->creator->name,
             'noOfItems' => $transaction->transaction_count,
         ]);
+    }
+
+    private function updateInventoryTransactionParticular(int $requestedProdId, $requestedQty)
+    {
+        $transactions = $this->getIncompleteInventoryTransactions($requestedProdId);
+
+        foreach ($transactions as $transaction) {
+            $stockQty = $requestedQty > 0 ? (int) $transaction->stock_qty + (int) $requestedQty : $transaction->stock_qty - (int) $requestedQty;
+            $transaction->update(['stock_qty' => $stockQty]);
+        }
+
+        return $transactions;
     }
 }

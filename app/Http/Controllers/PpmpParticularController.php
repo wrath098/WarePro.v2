@@ -175,7 +175,7 @@ class PpmpParticularController extends Controller
         $availableItems = $officePpmp->flatMap(function ($transactions) {
             return $transactions->particulars->map(function ($particular) {
                 $remainingQty = ($particular->tresh_first_qty + $particular->tresh_second_qty) - $particular->released_qty;
-
+ 
                 return [
                     'id' => $particular->id,
                     'treshFirstQty' => $particular->tresh_first_qty,

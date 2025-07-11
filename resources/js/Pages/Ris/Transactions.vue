@@ -72,6 +72,7 @@
             width: '11%',
             render: '#action',
         },
+        
     ];
 </script>
 
@@ -113,7 +114,8 @@
                         :options="{  
                             paging: true,
                             searching: true,
-                            ordering: true,
+                            ordering: false,
+                            order: [[0, 'desc']]
                         }"
                     >
                         <template #action="props">
