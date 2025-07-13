@@ -124,7 +124,7 @@ class RisTransactionController extends Controller
         #STARTS DATABASE TRANSACTION
         DB::beginTransaction();
 
-        #CHECK IF OFFICE VALUE IS "OTHERS"
+        #PROCEED IF VALUE IS NOT EQUAL "OTHERS"
         if ($risData['officeId'] == "others") {
             $this->storeOtherOfficeRequest($risData, $products, $formattedDate);
             DB::commit();
@@ -132,26 +132,35 @@ class RisTransactionController extends Controller
         }
 
         try {
-            foreach ($products as $product) 
-            {
+
+            #LOOP REQUESTED PRODUCTS
+            foreach ($products as $product) {
+
+                #CHECK QUANTITY VALIDITY
                 $isProductAvailable = $this->validateAvailability($product['prodId'], $product['requestedQty']);
                 if($isProductAvailable !== true) {
                     DB::rollback();
                     return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['stockNo'] . ' is ' . $isProductAvailable . ' ' . $product['unit'] . '.']);
                 }
                 
+                #CALCULATE REMAINING QANTITY
                 $nextAvailQty = (int) $product['remainingQty'] - (int) $product['requestedQty'];
-                
                 if($nextAvailQty <= -1) {
                     DB::rollback();
                     return redirect()->back()->with(['error' => 'The inputted quantity of the product exceeds the requested quantity of the selected office.!']);
                 }
 
+                #GET PRODUCT'S PREVIOUS INVENTORY TRANSACTION 
                 $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
                 $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) - (int)$product['requestedQty'];
+
+                #GET PRODUCT'S SUCCEEDING INVENTORY TRANSACTIONS
                 $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
 
-                $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit']);
+                #CREATE RIS TRANSACTION
+                $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit'], $product['id']);
+                
+                #CREATE INVENTORY TRANSACTION
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
                 $this->updateQuantity($product['prodId'], $product['requestedQty']);
                 $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
@@ -249,7 +258,7 @@ class RisTransactionController extends Controller
             $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) - (int)$product['requestedQty'];
             $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
 
-            $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit']);
+            $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit'], $product['id']);
             $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock, $succeedingTransactions);
             $this->updateQuantity($product['prodId'], $product['requestedQty']);
             $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
@@ -263,7 +272,7 @@ class RisTransactionController extends Controller
         return Storage::url($path);
     }
 
-    private function createRis(iterable $requestData, int $requestedQty, int $prodId, string $prodUnit) {
+    private function createRis(iterable $requestData, int $requestedQty, int $prodId, string $prodUnit, int $ppmpId) {
         $officeId = $requestData['officeId'] == "others" ? null : $requestData['officeId'];
 
         return RisTransaction::create([
@@ -274,6 +283,7 @@ class RisTransactionController extends Controller
             'remarks' => $requestData['remarks'],
             'prod_id' => $prodId,
             'office_id' => $officeId,
+            'ppmp_ref_no' => $ppmpId,
             'created_by' => $requestData['user'],
             'created_at' => $requestData['risDate'],
         ]);

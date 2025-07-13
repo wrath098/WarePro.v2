@@ -21,6 +21,7 @@ class RisTransaction extends Model
         'issued_to',
         'prod_id',
         'office_id',
+        'ppmp_ref_no',
         'created_by',
         'attachment',
         'created_at',
