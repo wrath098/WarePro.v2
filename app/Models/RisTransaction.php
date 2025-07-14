@@ -45,4 +45,9 @@ class RisTransaction extends Model
     {
         return $this->belongsTo(Office::class, 'office_id');
     }
+
+    public function releasedBasis(): BelongsTo
+    {
+        return $this->belongsTo(PpmpParticular::class, 'ppmp_ref_no');
+    }
 }

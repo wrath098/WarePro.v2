@@ -124,7 +124,7 @@ class RisTransactionController extends Controller
         #STARTS DATABASE TRANSACTION
         DB::beginTransaction();
 
-        #PROCEED IF VALUE IS NOT EQUAL "OTHERS"
+        #PROCEED IF VALUE IS NOT EQUAL TO "OTHERS"
         if ($risData['officeId'] == "others") {
             $this->storeOtherOfficeRequest($risData, $products, $formattedDate);
             DB::commit();
@@ -143,7 +143,7 @@ class RisTransactionController extends Controller
                     return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['stockNo'] . ' is ' . $isProductAvailable . ' ' . $product['unit'] . '.']);
                 }
                 
-                #CALCULATE REMAINING QANTITY
+                #CALCULATE REMAINING QUANTITY
                 $nextAvailQty = (int) $product['remainingQty'] - (int) $product['requestedQty'];
                 if($nextAvailQty <= -1) {
                     DB::rollback();
@@ -160,11 +160,19 @@ class RisTransactionController extends Controller
                 #CREATE RIS TRANSACTION
                 $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit'], $product['id']);
                 
-                #CREATE INVENTORY TRANSACTION
+                #CREATE PRODUCT INVENTORY TRANSACTION
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
+
+                #UPDATE PRODUCT INVENTORY QUANTITY STOCK
                 $this->updateQuantity($product['prodId'], $product['requestedQty']);
+
+                #UPDATE PRODUCT INVENTORY STOCK_QTY AND DISPATCH COLUMN
                 $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
+
+                #UPDATE QUANTITY RELEASED FROM THE PPMP OWNER
                 $this->updateReleasedItemQtyOnPpmp($product['id'], $product['requestedQty']);
+
+                #TEMPORARY DELETE THE TRANSACTION
                 $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
             }   
 
@@ -231,17 +239,66 @@ class RisTransactionController extends Controller
             'requestedQty' => 'required',
         ]);
 
-        dd($request->toArray());
-        #GET RIS PARTICULAR
-        $particular = RisTransaction::with('productDetails')->findOrFail($request->risParticularId);
+        DB::beginTransaction();
 
-        #GET DIFFERENCE OF CURRENT QTY AND NEWLY REQUESTED QTY THEN UPDATE PRODUCT INVENTORY
-        $calculateDifference = $particular->qty - $request->requestedQty;
+        try{
+            #GET RIS PARTICULAR
+            $particular = RisTransaction::with(['productDetails', 'releasedBasis'])->findOrFail($request->risParticularId);
 
-        //$this->updateQuantity($particular->prod_id, $calculateDifference);
+            #GET DIFFERENCE OF CURRENT QTY AND NEWLY REQUESTED QTY THEN UPDATE PRODUCT INVENTORY
+            $requestedQty = (int) $request['requestedQty'];
+            $originalQty = (int) $particular->qty;
+            $difference = $requestedQty - $originalQty;
 
-        $this->updateInventoryTransactionParticular($particular->prod_id, $calculateDifference);
-        $this->updateReleasedItemQtyOnPpmp($particular->prod_id, $calculateDifference);
+            #CALCULATE REMAINING QUANTITY
+            $releasedBasis = $particular->releasedBasis;
+            $nextAvailQty = 0;
+
+            if($releasedBasis) {
+                $grandTotalOfRequest = (int)$releasedBasis->tresh_first_qty + (int)$particular->tresh_second_qty;
+                $availableQuantityOnRequest = $grandTotalOfRequest - (int)$releasedBasis->released_qty;
+                $nextAvailQty = $availableQuantityOnRequest - $difference;
+            }
+            
+            if($nextAvailQty <= -1) {
+                DB::rollback();
+                return redirect()->back()->with(['error' => 'The inputted quantity of the product exceeds the requested quantity of the selected office. Available Quantity : ' . $availableQuantityOnRequest]);
+            }
+
+            #UPDATE PRODUCT INVENTORY QUANTITY STOCK
+            $this->updateQuantity($particular->prod_id, $difference);
+
+            #UPDATE PRODUCT INVENTORY TRANSACTION
+            $this->updateQuantityOnInvetoryTransaction($particular->id, $requestedQty, $difference);
+
+            #UPDATE RELEASED QUANTITY FROM THE PPMP OWNER
+            if($releasedBasis) {
+                $this->updateReleasedItemQtyOnPpmp($releasedBasis->id, $difference);
+            }
+
+            #UPDATE RELEASED STOCK_QTY IN PRODUCT INVENTORY TRANSACTION
+            $this->updateInventoryTransactionStockQty($particular->prod_id, $difference);
+
+            #UPDATE CURRENT QUANTITY IN PRODUCT INVENTORY TRANSACTIONS
+            $this->updateCurrentStock($particular->id, $particular->prod_id, $difference);
+            
+            #UPDATE RIS TRANSACTION
+            $particular->update(['qty' => $request->requestedQty]);
+
+            #RENDER PAGE IF NO ERROR
+            DB::commit();
+            return redirect()->back()->with('message', 'Updated the RIS Particular successfully!');
+        } catch(\Exception $e) {
+
+            #RENDER PAGE IF THERE IS ERROR
+            DB::rollBack();
+            Log::error("Updating RIS Particular Failed: ", [
+                'user' => Auth::user()->name,
+                'error_message' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with(['error' => 'Updating RIS Particular Failed. Please try again!']);
+        }
     }
 
     private function storeOtherOfficeRequest(iterable $risData, iterable $requestedProducts, string $formattedDate)
@@ -291,8 +348,10 @@ class RisTransactionController extends Controller
 
     private function createInventoryTransaction(iterable $product, iterable $risData, int $risId, int $currentStock, iterable $transactions)
     {
-        $prodInven_id = ProductInventory::where('prod_id', $product['prodId'])->value('id');
+        #RETURN PRODUCT INVENTORY ID
+        $prodInven_id = $product['prodInvId'] ? (int) $product['prodInvId'] : ProductInventory::where('prod_id', $product['prodId'])->value('id');
 
+        #CREATE PRODUCT INVENTORY TRANSACTION
         $query = ProductInventoryTransaction::create([
             'type' => 'issuance',
             'qty' => $product['requestedQty'],
@@ -304,6 +363,7 @@ class RisTransactionController extends Controller
             'created_at' => $risData['risDate'],
         ]);
 
+        #UPDATE PRODUCT INVENTORY TRANSACTION'S CURRENT_STOCK
         $this->productService->updateInventoryTransactionsCurrentStock($transactions, $currentStock);
 
         return $query;
@@ -348,7 +408,14 @@ class RisTransactionController extends Controller
     private function updateReleasedItemQtyOnPpmp(int $requestProdId, int $requestedQty)
     {
         $itemOnPPmpInfo = PpmpParticular::findOrFail($requestProdId);
-        return $itemOnPPmpInfo->update(['released_qty' => $itemOnPPmpInfo->released_qty += $requestedQty]);
+
+        $newReleasedQty = $itemOnPPmpInfo->released_qty + $requestedQty;
+
+        if($itemOnPPmpInfo->update(['released_qty' => $newReleasedQty])) {
+            return $itemOnPPmpInfo;
+        }
+
+        return false;
     }
 
     private function getRisTransactions() {
@@ -481,15 +548,64 @@ class RisTransactionController extends Controller
         ]);
     }
 
-    private function updateInventoryTransactionParticular(int $requestedProdId, $requestedQty)
+    private function updateInventoryTransactionStockQty(int $requestedProdId, int $requestedQty)
     {
-        $transactions = $this->getIncompleteInventoryTransactions($requestedProdId);
+        $transaction = ProductInventoryTransaction::where('prod_id', $requestedProdId)
+            ->where('dispatch', 'incomplete')
+            ->orderBy('created_at', 'asc')
+            ->first();
 
-        foreach ($transactions as $transaction) {
-            $stockQty = $requestedQty > 0 ? (int) $transaction->stock_qty + (int) $requestedQty : $transaction->stock_qty - (int) $requestedQty;
-            $transaction->update(['stock_qty' => $stockQty]);
+        $stockQty = (int) $transaction->stock_qty + $requestedQty;
+
+        if($transaction->update(['stock_qty' => $stockQty])) {
+            return $transaction;
         }
 
-        return $transactions;
+        return false;
+    }
+
+    private function updateQuantityOnInvetoryTransaction(int $refId, int $requestQty, int $difference)
+    {
+        $transaction = ProductInventoryTransaction::withTrashed()
+            ->where('ref_no', $refId)
+            ->where('type', 'issuance')
+            ->first();
+
+        $adjustedCurrentStock = $transaction->current_stock + $difference;
+
+        $updateData = [
+            'qty' => $requestQty,
+            'current_stock' => $adjustedCurrentStock
+        ];
+
+        if($transaction->update($updateData)) {
+            return $transaction;
+        }
+
+        return false;
+    }
+
+    public function updateCurrentStock(int $risId, int $prodId, int  $currentStock)
+    {
+        $transaction = ProductInventoryTransaction::withTrashed()
+            ->where('ref_no', $risId)
+            ->where('type', 'issuance')
+            ->first();
+
+        $date = $transaction ? $transaction->created_at : null;
+
+        $succeedingTransactions = ProductInventoryTransaction::withTrashed()
+            ->where('prod_id', $prodId)
+            ->where('created_at', '>' , $date)
+            ->get();
+
+        $updates = [];
+        
+        foreach ($succeedingTransactions as $transaction) {
+            $runningStock = (int)$transaction->current_stock + $currentStock;
+            $updates[] = ['id' => $transaction->id, 'current_stock' => $runningStock];
+        }
+
+        ProductInventoryTransaction::upsert($updates, ['id'], ['current_stock']);
     }
 }
