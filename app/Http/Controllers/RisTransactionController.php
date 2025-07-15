@@ -38,9 +38,12 @@ class RisTransactionController extends Controller
     {
         $transaction = $this->getRis();
         return Inertia::render('Ris/Transactions', ['transactions' => $transaction]);
+    }
 
-        // $risTransaction = $this->getRisTransactions();
-        // return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
+    public function ssmi()
+    {
+        $risTransaction = $this->getRisTransactions();
+        return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
     }
 
     public function showAttachment(Request $request)
@@ -159,10 +162,16 @@ class RisTransactionController extends Controller
 
                 #CREATE RIS TRANSACTION
                 $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit'], $product['id']);
-                
+                if (!$createRisTransaction) {
+                    return redirect()->back()->with(['error' => 'Failed to create RIS transaction for product ID ' . $product['prodId']]);
+                }
+
                 #CREATE PRODUCT INVENTORY TRANSACTION
                 $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock , $succeedingTransactions);
-
+                if (!$productInventoryTransaction) {
+                    return redirect()->back()->with(['error' => 'Failed to create inventory transaction for product ID ' . $product['prodId']]);
+                }
+                
                 #UPDATE PRODUCT INVENTORY QUANTITY STOCK
                 $this->updateQuantity($product['prodId'], $product['requestedQty']);
 
@@ -303,22 +312,42 @@ class RisTransactionController extends Controller
 
     private function storeOtherOfficeRequest(iterable $risData, iterable $requestedProducts, string $formattedDate)
     {
+        #LOOP REQUESTED PRODUCTS
         foreach ($requestedProducts as $product) {
-            
+
+            #CHECK QUANTITY VALIDITY
             $isProductAvailable = $this->validateAvailability($product['prodId'], $product['requestedQty']);
             if($isProductAvailable !== true) {
                 DB::rollback();
                 return redirect()->back()->with(['error' => 'The available quantity for product no. ' . $product['stockNo'] . ' is ' . $isProductAvailable . ' ' . $product['unit'] . '.']);
             }
 
+            #GET PRODUCT'S PREVIOUS INVENTORY TRANSACTION 
             $previousInventoryTransaction = $this->productService->getPreviousProductInventoryTransaction($product['prodId'], $formattedDate);
             $currentStock = (int)($previousInventoryTransaction->current_stock ?? 0) - (int)$product['requestedQty'];
+            
+            #GET PRODUCT'S SUCCEEDING INVENTORY TRANSACTIONS
             $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
 
+            #CREATE RIS TRANSACTION
             $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit'], $product['id']);
+            if (!$createRisTransaction) {
+                return redirect()->back()->with(['error' => 'Failed to create RIS transaction for product ID ' . $product['prodId']]);
+            }
+
+            #CREATE PRODUCT INVENTORY TRANSACTION
             $productInventoryTransaction = $this->createInventoryTransaction($product, $risData, $createRisTransaction->id, $currentStock, $succeedingTransactions);
+            if (!$productInventoryTransaction) {
+                return redirect()->back()->with(['error' => 'Failed to create inventory transaction for product ID ' . $product['prodId']]);
+            }
+
+            #UPDATE PRODUCT INVENTORY
             $this->updateQuantity($product['prodId'], $product['requestedQty']);
+
+            #UPDATED STOCK_QTY IN PRODUCT INVENTORY TRANSACTION
             $this->updateInventoryTransaction($product['prodId'], $product['requestedQty']);
+
+            #TEMPORARILY DELETE THE TRANSACTION
             $this->moveToTrashProductInventoryTransaction($productInventoryTransaction);
         }
     }

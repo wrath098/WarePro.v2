@@ -60,7 +60,7 @@ class MonthlyInventoryReportController extends Controller
                     <h5>PROVINCIAL GENERAL SERVICES OFFICE</h5>
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
-                    <h4>MONTHLY INVENTORY REPORT</h4>
+                    <h4>OFFICE AND JANITORIAL SUPPLIES INVENTORY REPORT</h4>
                     <h5>As of '. $dateInWords .'</h5>
                 </div>
             </div>

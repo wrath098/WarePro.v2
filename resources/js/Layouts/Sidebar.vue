@@ -405,10 +405,10 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                     </ul>
                     <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
                         <li> 
-                            <SidebarDropdown :active="route().current('show.stockCard') || route().current('inventory.report')">
+                            <SidebarDropdown :active="route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi')">
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                    :class="{ 'text-white' : route().current('show.stockCard') || route().current('inventory.report') }"
+                                    :class="{ 'text-white' : route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi') }"
                                     fill="currentColor" 
                                     aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -417,7 +417,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     <path fill="currentColor" d="M832.27 1024h-768q-26 0-45-18.5T.27 960V65q0-27 19-45.5t45-18.5h448v352q0 13 9.5 22.5t22.5 9.5h352v575q0 27-18.5 45.5t-45.5 18.5zm-96-192h-32V608q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v224h-64V480q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v352h-64V672q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v160h-32q-13 0-22.5 9.5t-9.5 22.5t9.5 22.5t22.5 9.5h576q14 0 23-9.5t9-22.5t-9.5-22.5t-22.5-9.5zm-160-832q26 0 44 18l257 257q19 19 19 46h-320V0z"/>
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Reports</span>
-                                <ArrowDown :class="{'text-white': route().current('show.stockCard') || route().current('inventory.report')}" />
+                                <ArrowDown :class="{'text-white': route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
                                         <li>
@@ -437,7 +437,13 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                         <li>
                                             <SubSidebarLink :href="route('inventory.report')" :active="route().current('inventory.report')">
                                                 <ArrowHeadRight :class="{ 'text-white' : route().current('inventory.report')}"/>
-                                                <span class="ml-3">Monthly Inventory Report</span>
+                                                <span class="ml-3">Office and Janitorial Supplies Inventory</span>
+                                            </SubSidebarLink>
+                                        </li>
+                                        <li>
+                                            <SubSidebarLink :href="route('view.ssmi')" :active="route().current('view.ssmi')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('view.ssmi')}"/>
+                                                <span class="ml-3">Summary of Supplies and Materials Issued</span>
                                             </SubSidebarLink>
                                         </li>
                                     </ul>
