@@ -278,7 +278,7 @@ class RisTransactionController extends Controller
             $this->updateQuantity($particular->prod_id, $difference);
 
             #UPDATE PRODUCT INVENTORY TRANSACTION
-            $this->updateQuantityOnInvetoryTransaction($particular->id, $requestedQty, $difference);
+            $this->updateQuantityOnInventoryTransaction($particular->id, $requestedQty, $difference);
 
             #UPDATE RELEASED QUANTITY FROM THE PPMP OWNER
             if($releasedBasis) {
@@ -593,7 +593,7 @@ class RisTransactionController extends Controller
         return false;
     }
 
-    private function updateQuantityOnInvetoryTransaction(int $refId, int $requestQty, int $difference)
+    private function updateQuantityOnInventoryTransaction(int $refId, int $requestQty, int $difference)
     {
         $transaction = ProductInventoryTransaction::withTrashed()
             ->where('ref_no', $refId)
@@ -601,6 +601,8 @@ class RisTransactionController extends Controller
             ->first();
 
         $adjustedCurrentStock = $transaction->current_stock + $difference;
+
+        dd($transaction->toArray(), $adjustedCurrentStock);
 
         $updateData = [
             'qty' => $requestQty,
@@ -616,12 +618,16 @@ class RisTransactionController extends Controller
 
     public function updateCurrentStock(int $risId, int $prodId, int  $currentStock)
     {
-        $transaction = ProductInventoryTransaction::withTrashed()
+        $risTransaction = ProductInventoryTransaction::withTrashed()
             ->where('ref_no', $risId)
             ->where('type', 'issuance')
             ->first();
 
-        $date = $transaction ? $transaction->created_at : null;
+        $current_stock = $risTransaction->current_stock + $currentStock;
+
+        dd($risTransaction->toArray(),$currentStock, $risId);
+
+        $date = $risTransaction ? $risTransaction->created_at : null;
 
         $succeedingTransactions = ProductInventoryTransaction::withTrashed()
             ->where('prod_id', $prodId)

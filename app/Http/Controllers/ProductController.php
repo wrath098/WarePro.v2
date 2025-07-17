@@ -359,63 +359,67 @@ class ProductController extends Controller
     }
 
     #FOR UPLOAD OF PRODUCTS FROM EXCEL FILE ONLY
-    // public function importProduct()
-    // {
-    //     $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';
-    //         $filename = 'Book13.xlsx';
-    //         $destinationPath = 'uploads/' . $filename;
+    public function importProduct()
+    {
+        $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';
+        $filename = 'Book13.xlsx';
+        $destinationPath = 'uploads/' . $filename;
 
-    //         Storage::disk('local')->put($destinationPath, File::get($sourcePath));
-    //         $fullPath = storage_path('app/' . $destinationPath);
+        Storage::disk('local')->put($destinationPath, File::get($sourcePath));
+        $fullPath = storage_path('app/' . $destinationPath);
 
-    //         $startRow = 0;
-    //         $currentRow = 0;
-    //         $products = [];
-    //         $duplicates = [];
+        $startRow = 0; // Assuming 1 to skip header row
+        $currentRow = 0;
+        $productsUpdated = 0;
+        $productsSkipped = 0;
 
-    //     try {
-            
-    //         (new FastExcel)->import($fullPath, function ($line) use ($startRow, &$currentRow, &$products, &$duplicates){
-    //             $currentRow++;
+        try {
+            (new FastExcel)->import($fullPath, function ($line) use ($startRow, &$currentRow, &$productsUpdated, &$productsSkipped) {
+                $currentRow++;
 
-    //             if ($currentRow < $startRow) {
-    //                 return null;
-    //             }
+                if ($currentRow < $startRow) {
+                    return null; // Skip rows before startRow
+                }
 
-    //             if(!preg_match("/^\d{4}$/", $line['Code'])) {
-    //                 return null;
-    //             }
+                $newStock = $line['New_Stock_No'] ?? null;
+                $price = $line['Price'] ?? null;
 
+                Log::info($newStock);
 
-    //             $itemId = $this->productService->getItemId((int)$line['Cat'], (int)$line['Item']);
-    //             $controlNo = $this->productService->generateStockNo($itemId);
+                // Validate stock number format
+                if (!preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock)) {
+                    $productsSkipped++;
+                    return null;
+                }
 
-    //             $product = Product::create([
-    //                 'prod_newNo' => $controlNo,
-    //                 'prod_desc' => $line['Desc'] ?? 'No Description',
-    //                 'prod_unit' => ucfirst($line['Unit']),
-    //                 'prod_remarks' => 2025,
-    //                 'prod_oldNo' => $line['Code'],
-    //                 'item_id' => $itemId,
-    //                 'created_by' => Auth::id()
-    //             ]);
+                $product = Product::where('prod_newNo', $newStock)->first();
+                if (!$product) {
+                    $productsSkipped++;
+                    return null; // No product found, skip
+                }
 
-    //             if($product)
-    //             {
-    //                 ProductPrice::create([
-    //                     'prod_price' => $line['Price'] ? (float)$line['Price'] : 0,
-    //                     'prod_id' => $product->id,
-    //                 ]);
-    //             } else {
-    //                 return response()->json(['error' => 'Uploading in error in line ' . $line['Code']]);
-    //             }
+                $latestPrice = (float) $this->productService->getLatestPrice($product->id);
+                $reformatPrice = (float) $price;
 
-    //         });
+                if ($latestPrice !== $reformatPrice) {
+                    ProductPrice::create([
+                        'prod_price' => $reformatPrice,
+                        'prod_id' => $product->id,
+                    ]);
+                    $productsUpdated++;
+                } else {
+                    $productsSkipped++;
+                }
+            });
 
-    //         return response()->json(['products' => $products, 'duplicates' => $duplicates, 'count' => $currentRow]);
-    //     } catch (\Exception $e) {
-    //         Log::error($e->getMessage());
-    //         return response()->json(['error', 'Error importing data: ' . $e->getMessage()]);
-    //     }
-    // }
+            return response()->json([
+                'rows_processed' => $currentRow,
+                'prices_updated' => $productsUpdated,
+                'rows_skipped' => $productsSkipped,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'Error importing data: ' . $e->getMessage()], 500);
+        }
+    }
 }

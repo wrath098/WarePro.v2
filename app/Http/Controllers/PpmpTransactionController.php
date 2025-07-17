@@ -344,7 +344,8 @@ class PpmpTransactionController extends Controller
 
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
-            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
+            //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
             
             $firstAmount = $items->qty_first * $prodPrice;
             $secondAmount = $items->qty_second * $prodPrice;
@@ -838,7 +839,8 @@ class PpmpTransactionController extends Controller
         $ppmpTransaction->load('consolidated');
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPrice($items->prod_id) * (float)$ppmpTransaction->price_adjustment;
-            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
+            //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
             $latestPriceId = $this->productService->getLatestPriceIdentification($items->prod_id);
 
             if ($items->price_id !== $latestPriceId) {

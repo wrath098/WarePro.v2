@@ -140,7 +140,8 @@ class ApprovedConsolidatedPpmpController extends Controller
 
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
-            $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
+            //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
 
             $qtyFirst = (int) $items->qty_first;
             $qtySecond = (int) $items->qty_second;
