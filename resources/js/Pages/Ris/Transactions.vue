@@ -5,6 +5,7 @@
     import { DataTable } from 'datatables.net-vue3';
     import Swal from 'sweetalert2';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
+    import Print from '@/Components/Buttons/Print.vue';
 
     const page = usePage();
 
@@ -120,6 +121,7 @@
                     >
                         <template #action="props">
                             <ViewButton :href="route('ris.show.items', { transactionId: props.cellData.risNo, issuedTo: props.cellData.issuedTo })" tooltip="View"/>
+                            <Print :href="route('generatePdf.issuance', { transactionId: props.cellData.risNo, issuedTo: props.cellData.issuedTo })" tooltip="Print"/>
                         </template>
                     </DataTable>
                 </div>

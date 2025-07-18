@@ -24,6 +24,7 @@ use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\DraftOfficePpmpController;
 use App\Http\Controllers\Pdf\EmergencyPpmpController;
 use App\Http\Controllers\Pdf\InventoryController;
+use App\Http\Controllers\Pdf\IssuanceController;
 use App\Http\Controllers\Pdf\MonthlyInventoryReportController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
@@ -233,6 +234,7 @@ Route::middleware('auth')->prefix('ris')->group(function () {
     Route::post('/store', [RisTransactionController::class, 'store'])->name('store.ris');
     Route::post('/update', [RisTransactionController::class, 'update'])->name('update.ris');
     Route::post('/particular/update', [RisTransactionController::class, 'updateParticular'])->name('update.ris.particular');
+    Route::post('/particular/delete', [RisTransactionController::class, 'removeParticular'])->name('remove.ris.particular');
     Route::middleware(['auth', 'role_or_permission:view-ris-transactions|Developer'])->get('/ris-logs', [RisTransactionController::class, 'risTransactions'])->name('ris.display.logs');
     Route::get('/{transactionId}/attachment', [RisTransactionController::class, 'showAttachment'])->name('ris.show.attachment');
     Route::get('/{transactionId}/{issuedTo}', [RisTransactionController::class, 'showRisItems'])->name('ris.show.items');
@@ -255,7 +257,8 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
     Route::get('/stock-card-as-of', [AsOfStockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard.AsOf');
-    Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');    
+    Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
+    Route::get('/issuance', [IssuanceController::class, 'generatePdf_Issuance'])->name('generatePdf.issuance');    
 });
 
 Route::middleware('auth')->prefix('word')->group(function () {

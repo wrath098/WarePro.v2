@@ -350,10 +350,10 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                             </SidebarDropdown>
                             <SidebarDropdown
                                 v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction') || hasPermission('view-ris-transactions')"
-                                :active="route().current('create.ris') || route().current('ris.display.logs')" class="mb-1">
+                                :active="route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')" class="mb-1">
                                     <svg
                                         class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                        :class="{ 'text-white' : route().current('create.ris') || route().current('ris.display.logs')}"
+                                        :class="{ 'text-white' : route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')}"
                                         fill="currentColor" 
                                         aria-hidden="true" 
                                         xmlns="http://www.w3.org/2000/svg"
@@ -362,12 +362,12 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                         <path fill="currentColor" d="M896 1537V936L256 616v880l544 273l-31 127l-641-320V472L960 57l832 415v270q-70 11-128 45V616l-640 320v473l-128 128zM754 302l584 334l247-124l-625-313l-206 103zm206 523l240-120l-584-334l-281 141l625 313zm888 71q42 0 78 15t64 41t42 63t16 79q0 39-15 76t-43 65l-717 717l-377 94l94-377l717-716q29-29 65-43t76-14zm51 249q21-21 21-51q0-31-20-50t-52-20q-14 0-27 4t-23 15l-692 692l-34 135l135-34l692-691z"/>
                                     </svg>
                                     <span class="flex-1 ml-3 text-left whitespace-nowrap">Requisition and Issuance</span>
-                                    <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs')}" />
+                                    <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
                                         <li v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction')">
-                                            <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris')">
-                                                <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris')}"/>
+                                            <SubSidebarLink :href="route('create.ris')" :active="route().current('create.ris') || route().current('ris.show.items')">
+                                                <ArrowHeadRight :class="{ 'text-white' : route().current('create.ris') || route().current('ris.show.items')}"/>
                                                 Releasing
                                             </SubSidebarLink>
                                         </li>

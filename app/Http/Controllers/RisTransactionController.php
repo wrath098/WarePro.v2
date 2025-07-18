@@ -310,6 +310,79 @@ class RisTransactionController extends Controller
         }
     }
 
+    public function removeParticular(Request $request)
+    {
+        #VALIDATE INPUT REQUEST FORM
+        $request->validate([
+            'risParticularId' => 'required|integer'
+        ]);
+
+        #FETCH REQUESTED RIS TRANSACTION
+        $risTransaction = RisTransaction::with(['productDetails', 'releasedBasis'])->findOrFail($request->risParticularId);
+        $releasedBasis = $risTransaction->releasedBasis;
+
+        $originalQty = - (int) $risTransaction->qty;
+
+        DB::beginTransaction();
+    
+
+        try {
+            #UPDATE PRODUCT INVENTORY QUANTITY STOCK
+            $this->updateQuantity($risTransaction->prod_id, $originalQty);
+
+            #UPDATE RELEASED QUANTITY FROM THE PPMP OWNER
+            if($releasedBasis) {
+                $this->updateReleasedItemQtyOnPpmp($releasedBasis->id, $originalQty);
+            }
+
+            #UPDATE RELEASED STOCK_QTY IN PRODUCT INVENTORY TRANSACTION
+            $this->updateInventoryTransactionStockQty($risTransaction->prod_id, $originalQty);
+
+            #UPDATE CURRENT QUANTITY IN PRODUCT INVENTORY TRANSACTIONS
+            $this->updateCurrentStock($risTransaction->id, $risTransaction->prod_id, $originalQty);
+
+            #GET PRODUCT INVENTORY TRANSACTION INFORMATION
+            $inventoryTransaction = ProductInventoryTransaction::withTrashed()
+                ->where('ref_no', $risTransaction->id)
+                ->where('type', 'issuance')
+                ->first();
+
+            $risNumber = $risTransaction->ris_no;
+            $risIssuedTo = $risTransaction->issued_to;
+
+            #REMOVE RIS TRANSACTION IN PRODUCT INVENTORY TRANSACTION 
+            $inventoryTransaction->forceDelete();
+            $risTransaction->forceDelete();
+            
+            #COUNT TRANSACTION WITHIN RIS
+            $noOfTransaction = RisTransaction::where('ris_no', $risNumber)
+                ->where('issued_to', $risIssuedTo)
+                ->count();
+
+            if($noOfTransaction == 0) {
+                #RENDER PAGE IF NO ERROR
+                DB::commit();
+                return redirect()->route('ris.display.logs')->with('message', 'Deleted the RIS Particular successfully!');
+            }
+
+            #RENDER PAGE IF NO ERROR
+            DB::commit();
+            return redirect()->back()->with('message', 'Deleted the RIS Particular successfully!');
+        } catch(\Exception $e) {
+
+            #RENDER PAGE IF THERE IS ERROR
+            DB::rollBack();
+            Log::error("Removing RIS Particular Failed: ", [
+                'user' => Auth::user()->name,
+                'error_message' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with(['error' => 'Removing RIS Particular Failed. Please try again!']);
+        }
+
+        
+    }
+
     private function storeOtherOfficeRequest(iterable $risData, iterable $requestedProducts, string $formattedDate)
     {
         #LOOP REQUESTED PRODUCTS
@@ -330,7 +403,7 @@ class RisTransactionController extends Controller
             $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($product['prodId'], $formattedDate);
 
             #CREATE RIS TRANSACTION
-            $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit'], $product['id']);
+            $createRisTransaction = $this->createRis($risData, $product['requestedQty'], $product['prodId'], $product['unit']);
             if (!$createRisTransaction) {
                 return redirect()->back()->with(['error' => 'Failed to create RIS transaction for product ID ' . $product['prodId']]);
             }
@@ -358,7 +431,7 @@ class RisTransactionController extends Controller
         return Storage::url($path);
     }
 
-    private function createRis(iterable $requestData, int $requestedQty, int $prodId, string $prodUnit, int $ppmpId) {
+    private function createRis(iterable $requestData, int $requestedQty, int $prodId, string $prodUnit, $ppmpId = null) {
         $officeId = $requestData['officeId'] == "others" ? null : $requestData['officeId'];
 
         return RisTransaction::create([
@@ -584,7 +657,7 @@ class RisTransactionController extends Controller
             ->orderBy('created_at', 'asc')
             ->first();
 
-        $stockQty = (int) $transaction->stock_qty + $requestedQty;
+        $stockQty = (int) $transaction->stock_qty - $requestedQty;
 
         if($transaction->update(['stock_qty' => $stockQty])) {
             return $transaction;
@@ -600,9 +673,7 @@ class RisTransactionController extends Controller
             ->where('type', 'issuance')
             ->first();
 
-        $adjustedCurrentStock = $transaction->current_stock + $difference;
-
-        dd($transaction->toArray(), $adjustedCurrentStock);
+        $adjustedCurrentStock = $transaction->current_stock - $difference;
 
         $updateData = [
             'qty' => $requestQty,
@@ -623,10 +694,6 @@ class RisTransactionController extends Controller
             ->where('type', 'issuance')
             ->first();
 
-        $current_stock = $risTransaction->current_stock + $currentStock;
-
-        dd($risTransaction->toArray(),$currentStock, $risId);
-
         $date = $risTransaction ? $risTransaction->created_at : null;
 
         $succeedingTransactions = ProductInventoryTransaction::withTrashed()
@@ -637,7 +704,7 @@ class RisTransactionController extends Controller
         $updates = [];
         
         foreach ($succeedingTransactions as $transaction) {
-            $runningStock = (int)$transaction->current_stock + $currentStock;
+            $runningStock = (int)$transaction->current_stock - $currentStock;
             $updates[] = ['id' => $transaction->id, 'current_stock' => $runningStock];
         }
 

@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
 
 const props = defineProps({
     transactions: Object,
@@ -23,6 +24,7 @@ const modalState = ref(false);
 const closeModal = () => { modalState.value = false; }
 const isEditModalOpen = computed(() => modalState.value === 'edit');
 const isParticularModalOpen = computed(() => modalState.value === 'particular');
+const isRemoveModalOpen = computed(() => modalState.value === 'delete');
 
 const editRis = useForm({
     risNo: '',
@@ -35,6 +37,10 @@ const editRisParticular = useForm({
     stockNo: '',
     proDesc: '',
     requestedQty: '',
+});
+
+const removeRisParticular = useForm({
+    risParticularId: '',
 });
 
 const openEditModal = (ris) => {
@@ -50,6 +56,11 @@ const openEditParticularModal = (particular) => {
     editRisParticular.proDesc = particular.product_details.prod_desc;
     editRisParticular.requestedQty = particular.qty;
     modalState.value = 'particular';
+}
+
+const openRemoveParticularModal = (particular) => {
+    removeRisParticular.risParticularId = particular.id;
+    modalState.value = 'delete';
 }
 
 const columns = [
@@ -114,7 +125,7 @@ const submitForm = (url, formData) => {
 
 const submit = () => submitForm(route('update.ris'), editRis);
 const submitParticular = () => submitForm(route('update.ris.particular'), editRisParticular);
-
+const submitDeletion = () => submitForm(route('remove.ris.particular'), removeRisParticular);
 </script>
 <template>
     <Head title="Purchase Request" />
@@ -228,6 +239,7 @@ const submitParticular = () => submitForm(route('update.ris.particular'), editRi
                                         }">
                                             <template #action="props">
                                                 <EditButton @click="openEditParticularModal(props.cellData)" tooltip="Edit" />
+                                                <RemoveButton @click="openRemoveParticularModal(props.cellData)" tooltip="Delete"/>
                                             </template>
                                     </DataTable>
                                 </div>
@@ -336,6 +348,38 @@ const submitParticular = () => submitForm(route('update.ris.particular'), editRi
                     </svg>
                     Cancel
                 </DangerButton>
+            </div>
+        </form>
+    </Modal>
+    <Modal :show="isRemoveModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitDeletion">
+            <div class="bg-gray-100 h-auto">
+                <div class="bg-white p-6  md:mx-auto">
+                    <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
+                    </svg>
+
+                    <div class="text-center">
+                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Move to Trash!</h3>
+                        <p class="text-gray-600 my-2">Confirming this action will remove the selected Particular into the list. This action can't be undone.</p>
+                        <p> Please confirm if you wish to proceed.</p>
+                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                            <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Confirm 
+                            </SuccessButton>
+
+                            <DangerButton @click="closeModal"> 
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Cancel
+                            </DangerButton>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </Modal>
