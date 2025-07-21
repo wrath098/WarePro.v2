@@ -238,11 +238,17 @@
                                                             <span class="ml-2">Summary Overview</span>
                                                         </a>
                                                     </div>
-                                                    <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                                    <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'initial'})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                                         <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                             <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
                                                         </svg>
-                                                        <span class="ml-2">Print List</span>
+                                                        <span class="ml-2">Print Consolidation - Initial</span>
+                                                    </a>
+                                                    <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'with_proposed_budget'})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                                        <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                                                        </svg>
+                                                        <span class="ml-2">Print Consolidation - With Budget Proposal</span>
                                                     </a>
                                                     <button v-if="hasPermission('confirm-app-finalization') ||  hasAnyRole(['Developer'])" @click="showModal('confirm')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
