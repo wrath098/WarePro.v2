@@ -222,7 +222,7 @@
                                                 </template>
                                                 <template #content>
 
-                                                    <!-- ADD A PARTICULAR FOR CONSOLIDATED -->
+                                                    <!-- UNCOMMENT IF YOU NEED TO ADD A PARTICULAR IN CONSOLIDATED PPMP-->
                                                     <!-- <button v-if="hasPermission('add-app-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
