@@ -44,7 +44,7 @@ const submit = () => {
             <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
             <div class="relative px-4 py-5 bg-gray-100 shadow-lg sm:rounded-3xl sm:p-16">
                 <div class="flex justify-center items-center mb-5">
-                    <img src="public/assets/images/Winvexis.png" alt="Winvexis">
+                    <img src="/WarePro.v2/assets/images/Winvexis.png" alt="Winvexis">
                 </div>
                 <form @submit.prevent="submit">
                     <div>

@@ -40,7 +40,9 @@ use App\Http\Controllers\RisTransactionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -273,6 +275,10 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/issuances-log', [RisTransactionController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
     Route::get('/fast-moving-items', [DashboardController::class, 'getFastMovingItems'])->name('get.fast.moving.items');
     Route::get('/monthly-product-inventory', [ProductInventoryController::class, 'getMonthlyInventory'])->name('get.monthly.inventory');
+});
+
+Route::fallback(function () {
+    return Inertia::render('Auth/NotFound', ['isAuth' => Auth::check()]);
 });
 
 require __DIR__.'/auth.php';
