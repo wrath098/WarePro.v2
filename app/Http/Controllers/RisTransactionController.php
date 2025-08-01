@@ -637,7 +637,7 @@ class RisTransactionController extends Controller
              ->with(['creator', 'requestee'])
             ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks')
             ->orderByDesc('ris_no')
-            ->limit(50)
+            //->limit(150)
             ->get();
 
         return $transactions->map(fn($transaction) => [
