@@ -311,7 +311,9 @@ class PpmpTransactionController extends Controller
 
         $availableProducts = $ppmpTransaction->ppmp_type === 'individual'
             ? $this->getActiveProductList()
-            : $this->getConsolidatedProductList($ppmpTransaction);
+            // UNCOMMENT IF EMERGENCY PRODUCT LIST IS WITHIN CONSOLIDATION ONLY
+            // : $this->getConsolidatedProductList($ppmpTransaction);
+            : $this->getActiveProductList();
 
         $ppmpParticulars = $ppmpTransaction->ppmp_type === 'individual'
             ? $this->formatParticulars($ppmpTransaction)
@@ -324,6 +326,7 @@ class PpmpTransactionController extends Controller
         });
 
         $formattedOverallPrice = number_format($grandTotal, 2, '.', ',');
+        $createdAt = $ppmpTransaction->created_at->format('F d, Y');
 
         return Inertia::render('Ppmp/Individual', [
             'ppmp' =>  $ppmpTransaction,
@@ -331,6 +334,7 @@ class PpmpTransactionController extends Controller
             'totalItems' => $totalItems,
             'formattedOverallPrice' => $formattedOverallPrice,
             'products' => $availableProducts,
+            'createdAt' => $createdAt,
             'user' => Auth::id()
         ]);
     }

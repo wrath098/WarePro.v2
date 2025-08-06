@@ -13,10 +13,12 @@ const message = computed(() => page.props.flash.message);
 
 const props = defineProps({
     user: Object,
+    office: String,
     roles: Array,
     direct_permissions: Array,
     roleList: Object,
     permissionList: Object,
+    offices: Object,
 });
 
 const isLoading = ref(false);
@@ -42,6 +44,7 @@ const updateUser = useForm({
     id: props.user.id,
     name: props.user.name,
     email: props.user.email,
+    officeId: props.office
 });
 
 const changePassword = useForm({
@@ -263,6 +266,12 @@ const submitRemovePermission = async () => {
                                     <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-light" placeholder="" :value="user?.created_at" disabled>
                                 </div>
                             </div>
+                            <div v-if="office">
+                                <label for="to" class="text-xs xs:text-sm font-medium text-gray-700 mb-1"><span class="font-light">Office Name</span></label>
+                                <div class="relative max-w-xs">
+                                    <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-light" placeholder="" :value="office" disabled>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label for="from" class="text-xs xs:text-sm font-medium text-gray-700 mb-1"><span class="font-light">Roles</span></label>
@@ -422,6 +431,17 @@ const submitRemovePermission = async () => {
                                     <label for="email" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Email Address</label>
                                     <InputError class="mt-2" :message="updateUser.errors.email" />
                                 </div>
+                            </div>
+                            <div class="mt-10">
+                                <p class="text-sm text-[#86591e] mb-2">Office</p>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="updateUser.officeId" name="officeId" id="officeId" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                        <option value="" disabled selected>Select Office</option>
+                                        <option v-for="off in offices" :key="off.id" :value="off.id">{{ off.name }}</option>
+                                    </select>
+                                    <label for="ppmpSem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>
+                                </div>
+                                <InputError class="mt-2" :message="updateUser.errors.officeId" />
                             </div>
                         </div>
                     </div>

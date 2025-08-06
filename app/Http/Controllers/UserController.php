@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Office;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,15 +18,19 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all()
+        $users = User::with('office')
+            ->get()
             ->map(fn($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'office' => $user->office ? $user->office->office_name : '',
                 'email' => $user->email,
                 'roles' => $user->getRoleNames(),
             ]);
 
-        return Inertia::render('Users/UserIndex', ['users' => $users]);
+        $offices = $this->getOffices();
+
+        return Inertia::render('Users/UserIndex', ['users' => $users, 'offices' => $offices]);
     }
 
     public function userInformation(User $user)
@@ -37,12 +42,14 @@ class UserController extends Controller
             return redirect()->route('user');
         }
 
-        $user->load(['roles.permissions', 'permissions']);
+        $user->load(['office', 'roles.permissions', 'permissions']);
         $roleList = Role::where('name', '!=', 'Developer')
                ->select('id', 'name')
                ->get();
         $permissionList = Permission::select('id', 'name')
             ->get();
+
+        $offices = $this->getOffices();
         
         return Inertia::render('Users/UserInformation', [
             'user' => $user->only([
@@ -52,6 +59,7 @@ class UserController extends Controller
                 'created_at',
                 'updated_at'
             ]),
+            'office' => $user->office ? $user->office->office_name : '',
             'roles' => $user->roles->map(function ($role) {
                 return [
                     'id' => $role->id,
@@ -62,6 +70,7 @@ class UserController extends Controller
             'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
             'roleList' => $roleList,
             'permissionList' => $permissionList,
+            'offices' => $offices,
         ]);
     }
 
@@ -151,10 +160,15 @@ class UserController extends Controller
             'id' => 'required|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|string|email|unique:users,email,' . $request['id'],
+            'officeId' => 'required'
         ]);
 
         $user = User::findOrFail($validated['id']);
-        $user->update(['name' => $validated['name'], 'email' => $validated['email']]);
+        $user->update([
+            'name' => $validated['name'], 
+            'email' => $validated['email'],
+            'office_id' => $validated['officeId                                                                                                          ']
+        ]);
 
         return redirect()->back()->with('message', "User has been successfully updated.");
     }
@@ -194,5 +208,16 @@ class UserController extends Controller
     protected function isDeveloper($userId)
     {
         return in_array('Developer', $this->getUserRoles($userId));
+    }
+
+    protected function getOffices()
+    {
+        return Office::where('office_status', 'active')
+        ->get()
+        ->map(fn($query) => [
+            'id' => $query->id,
+            'code' => $query->office_code,
+            'name' => $query->office_name
+        ]);
     }
 }

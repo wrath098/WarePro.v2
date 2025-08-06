@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\IarTransaction;
 use App\Models\ItemClass;
+use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
@@ -33,16 +34,19 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $products = Product::where('prod_status', 'active')->count();
+        $currentYear = Carbon::now()->addYear()->format('Y');
 
         $core = [
             'product' => $products,
-            'redorder' => $this->countReorderProductItem(),
+            'reOrder' => $this->countReorderProductItem(),
             'iarTransaction' => $this->countIarPendingTransactions(),
             'risTransaction' => $this->countRisTransactionThisDay(),
             'prTransaction'=> $this->countDraftedPurchaseRequest(),
             'availableProductItem' => $this->countAvailableProductItem(),
             'expiringProduct' => $this->countExpiringProductItem(),
             'outOfStockProducts' => $this->countOutOfStockProductItem(),
+            'ppmpTransactions' => $this->countPpmpUploaded($currentYear),
+            'consolidatedPpmp' => $this->checkApprovedApp($currentYear),
         ];
 
         $priceEvaluation = $this->monitorProductItemsPriceStatus() ?? collect();
@@ -217,5 +221,32 @@ class DashboardController extends Controller
         $latestPrice = $product->prices->first(); 
         
         return $latestPrice ? (float) $latestPrice->prod_price : 0;
+    }
+
+    private function countPpmpUploaded(string $year, string $type = 'individual')
+    {
+        $transactions =  PpmpTransaction::where('ppmp_year', $year)
+            ->where('ppmp_type', $type)
+            ->count();
+        
+        return [
+            'count' => $transactions,
+            'year' => $year
+        ];
+    }
+
+    private function checkApprovedApp(string $year, string $type = 'consolidated', string $status = 'approved')
+    {
+        $exists =  PpmpTransaction::where('ppmp_type', $type)
+            ->where('ppmp_year', $year)
+            ->where('ppmp_status', $status)
+            ->exists();
+        
+        $status = $exists ? 'Exists' : 'Empty';
+        
+        return [
+            'status' => $status ,
+            'year' => $year
+        ];
     }
 }

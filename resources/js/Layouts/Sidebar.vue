@@ -45,12 +45,12 @@ const inventoryPermissions = [
     'view-product-stock-card',
 ];
 
-
 const components = hasAnyPermission(componentPermissions) || hasAnyRole(['Developer']);
 const products = hasAnyPermission(productPermissions) || hasAnyRole(['Developer']);
 const ppmp = hasAnyPermission(ppmpPermissions) || hasAnyRole(['Developer']);
 const procurement = hasAnyPermission(procurementPermissions) || hasAnyRole(['Developer']);
 const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Developer']);
+const officeUser = hasAnyRole(['Office User']);
 </script>
 
 <template>
@@ -78,6 +78,12 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Dashboard</span>
                             </SidebarLink>
+                        </li>
+                        <li v-if="officeUser">
+                            <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
+                                <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active')}"/>
+                                Product List
+                            </SubSidebarLink>
                         </li>
                         <li v-if="components || products">
                             <div class="pt-2">
@@ -227,6 +233,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </template>
                             </SidebarDropdown>
                         </li>
+
                         <li v-if="hasPermission('view-app-list') ||  hasAnyRole(['Developer'])">
                             <SidebarDropdown :active="route().current('conso.ppmp.type') || route().current('conso.ppmp.show')">
                                 <svg 
@@ -257,6 +264,65 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                     </li>
                                 </template>
                             </SidebarDropdown>
+                        </li>
+                        <li v-if="officeUser">
+                            <div class="flex flex-row items-center pt-2">
+                                <div class="text-sm font-light tracking-wide text-gray-500">Project Procurement Management Plan (PPMP)</div>
+                            </div>
+                            <ol>
+                                <li>
+                                    <SidebarLink 
+                                        :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
+                                    >
+                                        <svg 
+                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                            :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                            fill="currentColor" 
+                                            aria-hidden="true" 
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path fill="currentColor" d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z"/>
+                                            <path fill="currentColor" d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z"/>
+                                        </svg>
+                                        <span class="ml-3">Create PPMP</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
+                                    <SidebarLink 
+                                        :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
+                                    >
+                                        <svg 
+                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                            :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                            fill="currentColor" 
+                                            aria-hidden="true" 
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path fill="currentColor" d="M20 2a1 1 0 0 1 1 1v3.757l-8.999 9l-.006 4.238l4.246.006L21 15.242V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1.778 6.808l1.414 1.414L15.414 18l-1.416-.002l.002-1.412zM12 12H7v2h5zm3-4H7v2h8z"/>
+                                        </svg>
+                                        <span class="ml-3">Drafted PPMP</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
+                                    <SidebarLink 
+                                        :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
+                                    >
+                                        <svg 
+                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                            :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                            fill="currentColor"
+                                            aria-hidden="true" 
+                                            xmlns="http://www.w3.org/2000/svg" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
+                                        </svg>
+                                        <span class="ml-3">Approved PPMP</span>
+                                    </SidebarLink>
+                                </li>
+                            </ol>                           
                         </li>
                         <li>
                             <div v-if="procurement" class="pt-2">
@@ -320,7 +386,7 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                             </SidebarLink>
                         </li>
                         <li>
-                            <div v-if="inventory" class="pt-2">
+                            <div v-if="inventory || officeUser" class="pt-2">
                                 <div class="flex flex-row items-center">
                                     <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
                                 </div>
@@ -401,6 +467,38 @@ const inventory = hasAnyPermission(inventoryPermissions) || hasAnyRole(['Develop
                                 </svg>
                                 <span class="ml-3">Expired Inventory</span>
                             </SidebarLink>
+                            <ol>
+                                <SidebarLink 
+                                    :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
+                                >
+                                    <svg 
+                                        class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                        :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                        fill="currentColor"
+                                        aria-hidden="true" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
+                                    </svg>
+                                    <span class="ml-3">Available Quantity</span>
+                                </SidebarLink>
+                                <SidebarLink 
+                                    :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
+                                >
+                                    <svg 
+                                        class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                        :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                        fill="currentColor"
+                                        aria-hidden="true" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
+                                    </svg>
+                                    <span class="ml-3">Product Requisition</span>
+                                </SidebarLink>
+                            </ol>
                         </li>
                     </ul>
                     <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">

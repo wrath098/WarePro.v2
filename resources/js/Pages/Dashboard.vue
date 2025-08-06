@@ -211,6 +211,52 @@ onMounted(() => {
             </nav>
         </template>
 
+        <div class="mt-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
+            <div class="overflow-hidden shadow-sm sm:rounded-lg">
+
+                <!-- APP -->
+                <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+                    <div class="flex items-center border bg-white rounded-sm overflow-hidden shadow">
+                        <div class="p-4">
+                            <svg class="h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="32" height="32" viewBox="0 0 48 48">
+                                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+                                    <path d="m34 10l8 8m0-8l-8 8m10 12l-7 8l-4-4"/>
+                                    <path fill="currentColor" d="M26 10H4v8h22zm0 20H4v8h22z"/>
+                                </g>
+                            </svg>
+                        </div>
+                        <div class="px-4 text-gray-700">
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="hasPermission('create-office-ppmp') || hasAnyRole(['Developer']) ? route('import.ppmp.index') : '#'">Office PPMP ({{ core.ppmpTransactions.year }})</a>
+                            </h3>
+                            <div class="flex justify-start items-center">
+                                <p class="text-3xl mr-2">{{ core.ppmpTransactions.count }}</p>
+                                <p class="text-sm text-gray-400">Offices</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center border bg-white rounded-sm overflow-hidden shadow">
+                        <div class="p-4">
+                            <svg class="h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="32" height="32" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
+                            </svg>
+                        </div>
+                        <div class="px-4 text-gray-700">
+                            <h3 class="text-sm tracking-wider">
+                                <a class="hover:underline" :href="hasPermission('view-app-list') || hasAnyRole(['Developer']) ? route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'}) : '#'">Consolidated PPMP ({{ core.consolidatedPpmp.year }})</a>
+                            </h3>
+                            <div class="flex justify-start items-center">
+                                <p class="text-3xl mr-2">{{ core.consolidatedPpmp.status }}</p>
+                                <p class="text-sm text-gray-400">Approved</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <div class="my-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
             <div class="overflow-hidden shadow-sm sm:rounded-lg">
 
@@ -337,7 +383,7 @@ onMounted(() => {
                             </h3>
                             <h3 class="text-sm tracking-wider"></h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.redorder }}</p>
+                                <p class="text-3xl mr-2">{{ core.reOrder }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
                             </div>
                         </div>
