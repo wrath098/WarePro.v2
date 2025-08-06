@@ -62,40 +62,35 @@ class ProductInventoryTransactionController extends Controller
             }
 
             $productInventory = ProductInventory::where('id', $request->pid)->lockForUpdate()->first();
-            
-            if ($productInventory) {
+
+            if ($productInventory && $productInventory->qty_physical_count > 0) {
                 DB::rollBack();
                 return redirect()->back()->with(['error' => 'Product Code #'. $request->stockNo. ' already has an existing inventory and cannot be updated. Please contact the system administrator if you need to modify the current stock']);
             }
             
-            $previousTransaction = $this->productService->getPreviousProductInventoryTransaction($request->prodId, $formattedDate);
-            $previousInventory = $previousTransaction->current_stock ?? 0;
-
-            $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($request->prodId, $formattedDate);
+            $succeedingTransactions = $this->succeedingTransaction($request->prodId);
 
             if($request->pid) {
-                $currentInventory = $previousInventory + $request->qty;
-                $productInventory->qty_on_stock += $request->qty;
-                
-                if ($productInventory->qty_physical_count > 0) {
-                    $productInventory->qty_purchase += $request->qty;
-                } else {
-                    $productInventory->qty_physical_count = $request->qty;
-                }
-
+                $productInventory->qty_on_stock = $currentInventory;
+                $productInventory->qty_physical_count = $currentInventory;
+                $productInventory->qty_purchase = 0;
+                $productInventory->qty_issued = 0;
                 $productInventory->updated_by = $userId;
                 $productInventory->save();
             } else {
-                ProductInventory::create([
+                $productInventory = ProductInventory::create([
                     'qty_on_stock' => $currentInventory,
                     'qty_physical_count' => $currentInventory,
                     'prod_id' => $request->prodId,
                     'updated_by' => $userId,
                 ]);
+
+                $this->createInventoryTransaction($request , $userId, $currentInventory, $formattedDate);
             }
 
-            $this->createInventoryTransaction($request , $userId, $currentInventory, $formattedDate);
-            $this->productService->updateInventoryTransactionsCurrentStock($succeedingTransactions, $currentInventory);
+            if($succeedingTransactions->isNotEmpty()) {
+                $this->updateInventoryTransaction($succeedingTransactions, $currentInventory, $productInventory);
+            }
             
             DB::commit();
             return redirect()->back()->with(['message' => 'Successfully added quantity to Product Code# ' . $request->stockNo]);
@@ -172,18 +167,18 @@ class ProductInventoryTransactionController extends Controller
 
     private function verifyExpiryDateStatus(string $date)
     {
-        $dateToCheck = Carbon::parse($date);
         $currentDate = Carbon::now();
-
+        $dateToCheck = Carbon::parse($date);
+        
         if ($dateToCheck->isPast()) {
             return 'Expired';
         }
 
-        if ($dateToCheck->diffInDays($currentDate) <= 90) {
+        if ($currentDate->diffInDays($dateToCheck) <= 90) {
             return 'Expiring';
         }
 
-        return true;
+        return null;
     }
 
     private function getPurchaseDetails(int $refNo): ?IarTransaction
@@ -203,5 +198,61 @@ class ProductInventoryTransactionController extends Controller
             'created_by' => $userId,
             'created_at' => $formattedDate,
         ]);
+    }
+
+    private function succeedingTransaction(int $prodId) {
+        return ProductInventoryTransaction::withTrashed()
+            ->where('prod_id', $prodId)
+            ->oldest('created_at')
+            ->get();
+    }
+
+    private function updateInventoryTransaction(iterable $transactions, int $qty = 0, iterable $inventoryTransaction): void
+    {
+        $requestQty = $qty;
+        $stockQty = $qty;
+        $currentStock = $qty;
+
+        $purchasesQty = 0;
+        $issuanceQty = 0;
+
+        $beginningBalanceTransaction = null;
+
+        foreach ($transactions as $transaction) {
+            switch ($transaction->type) {
+                case 'adjustment':
+                    $beginningBalanceTransaction = $transaction;
+                    $transaction->qty = $requestQty;
+                    $transaction->stock_qty = $stockQty;
+                    $transaction->current_stock = $currentStock;
+                    $transaction->save();
+                    break;
+
+                case 'issuance':
+                    $issuanceQty += $transaction->qty;
+                    $currentStock -= $transaction->qty;
+                    $stockQty -= $transaction->qty;
+                    $transaction->current_stock = $currentStock;
+                    $transaction->save();
+                    break;
+
+                default:
+                    $purchasesQty += $transaction->qty;
+                    $currentStock += $transaction->qty;
+                    $transaction->current_stock = $currentStock;
+                    $transaction->save();
+                    break;
+            }
+        }
+
+        if ($beginningBalanceTransaction) {
+            $beginningBalanceTransaction->stock_qty = $stockQty;
+            $beginningBalanceTransaction->save();
+        }
+
+        $inventoryTransaction->qty_physical_count = $purchasesQty;
+        $inventoryTransaction->qty_issued = $issuanceQty;
+        $inventoryTransaction->qty_on_stock = $currentStock;
+        $inventoryTransaction->save();
     }
 }
