@@ -225,6 +225,7 @@ Route::middleware('auth')->prefix('inventory')->group(function () {
     Route::middleware(['auth', 'role_or_permission:view-products-inventory|Developer'])->get('/', [ProductInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/store', [ProductInventoryTransactionController::class, 'store'])->name('store.product.quantity');
     Route::post('/edit-re-order-level', [ProductInventoryTransactionController::class, 'updateReOrderLevel'])->name('update.reorder.level');
+    Route::post('/iar-particular/remove', [ProductInventoryTransactionController::class, 'removeParticularTransaction'])->name('remove.air.inventory');
     Route::middleware(['auth', 'role_or_permission:view-products-inventory|Developer'])->get('/stock-card', [ProductInventoryController::class, 'showStockCard'])->name('show.stockCard');
     Route::middleware(['auth', 'role_or_permission:monitor-expiring-products|Developer'])->get('/expiry-products', [ProductInventoryTransactionController::class, 'showProductsOnExpired'])->name('show.expiry.products');
     Route::middleware(['auth', 'role_or_permission:monitor-expiring-products|Developer'])->get('/inventory-report', [ProductInventoryTransactionController::class, 'inventoryReport'])->name('inventory.report');

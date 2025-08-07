@@ -49,7 +49,11 @@ class IarTransactionController extends Controller
 
     public function showAllTransactions()
     {
-        $transactionList = IarTransaction::withTrashed()->with('updater')->orderby('id', 'desc')->take(1000)->get();
+        $transactionList = IarTransaction::withTrashed()
+            ->with('updater')
+            ->orderby('updated_at', 'desc')
+            ->take(1000)
+            ->get();
 
         $transactionList = $transactionList->map(fn($transaction) => [
             'id' => $transaction->id,

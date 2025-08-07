@@ -136,6 +136,56 @@ class ProductInventoryTransactionController extends Controller
         }
     }
 
+    public function removeParticularTransaction(Request $request)
+    {
+         $validated = $request->validate([
+            'transactionId' => 'required|exists:product_inventory_transactions,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $transaction = ProductInventoryTransaction::findOrFail($validated['transactionId']);
+            $productInventory = ProductInventory::firstWhere('prod_id', $transaction->prod_id);
+            
+            if (!$productInventory) {
+                throw new \Exception("Product inventory not found for product ID: {$transaction->prod_id}");
+            }
+
+            $currentQty = $transaction->type === 'issuance' 
+                ? $transaction->current_stock + $transaction->qty
+                : $transaction->current_stock - $transaction->qty;
+
+
+            $succeedingTransactions = ProductInventoryTransaction::withTrashed()
+                ->where('prod_id', $transaction->prod_id)
+                ->where('created_at', '>', $transaction->created_at)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $productInventory->qty_on_stock = $currentQty;
+            
+            if ($transaction->type === 'issuance') {
+                $productInventory->decrement('qty_issued', $transaction->qty);
+            } else {
+                $productInventory->decrement('qty_purchase', $transaction->qty);
+            }
+
+            $transaction->forceDelete();
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Successfully removed product inventory transaction.');
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("Update Product Inventory Transaction (Removing Transaction on StockCard) failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $request->toArray()
+            ]);
+            return back()->with(['error' => 'Failed to remove product inventory transaction. Please try again!']);
+        }
+    }
+
     private function getProductsWithExpiry()
     {   
         $query =  ProductInventoryTransaction::where('type', 'purchase')

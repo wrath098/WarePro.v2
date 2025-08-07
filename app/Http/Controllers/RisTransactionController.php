@@ -637,7 +637,7 @@ class RisTransactionController extends Controller
              ->with(['creator', 'requestee'])
             ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks')
             ->orderByDesc('ris_no')
-            //->limit(150)
+            ->limit(200)
             ->get();
 
         return $transactions->map(fn($transaction) => [
@@ -657,9 +657,17 @@ class RisTransactionController extends Controller
             ->orderBy('created_at', 'asc')
             ->first();
 
+        if(!$transaction) {
+            $transaction = ProductInventoryTransaction::withTrashed()
+                ->where('prod_id', $requestedProdId)
+                ->where('dispatch', 'complete')
+                ->orderBy('created_at', 'desc')
+                ->first();
+        }
+
         $stockQty = (int) $transaction->stock_qty - $requestedQty;
 
-        if($transaction->update(['stock_qty' => $stockQty])) {
+        if($transaction->update(['stock_qty' => $stockQty, 'deleted_at' => null])) {
             return $transaction;
         }
 
