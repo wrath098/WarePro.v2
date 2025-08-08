@@ -80,10 +80,19 @@ const officeUser = hasAnyRole(['Office User']);
                             </SidebarLink>
                         </li>
                         <li v-if="officeUser">
-                            <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
-                                <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active')}"/>
-                                Product List
-                            </SubSidebarLink>
+                            <SidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
+                                <svg
+                                    class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                    :class="{'text-white': route().current('product.display.active')}"
+                                    fill="currentColor" 
+                                    aria-hidden="true" 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path fill="currentColor" fill-rule="evenodd" d="M15 4H9v16h6zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3zM4 4h3v16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Product List</span>
+                            </SidebarLink>
                         </li>
                         <li v-if="components || products">
                             <div class="pt-2">
@@ -467,19 +476,19 @@ const officeUser = hasAnyRole(['Office User']);
                                 </svg>
                                 <span class="ml-3">Expired Inventory</span>
                             </SidebarLink>
-                            <ol>
+                            <ol v-if="officeUser">
                                 <SidebarLink 
                                     :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
                                 >
                                     <svg 
                                         class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                        :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
-                                        fill="currentColor"
+                                        :class="{'text-white': route().current('product.display.active')}"
+                                        fill="currentColor" 
                                         aria-hidden="true" 
                                         xmlns="http://www.w3.org/2000/svg" 
                                         viewBox="0 0 24 24"
                                     >
-                                        <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
+                                        <path fill="currentColor" d="M5 21L3 9h18l-2 12zm4-6h6v-2H9zM5 8V6h14v2zm2-3V3h10v2z"/>
                                     </svg>
                                     <span class="ml-3">Available Quantity</span>
                                 </SidebarLink>
@@ -491,17 +500,18 @@ const officeUser = hasAnyRole(['Office User']);
                                         :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
                                         fill="currentColor"
                                         aria-hidden="true" 
-                                        xmlns="http://www.w3.org/2000/svg" 
-                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 32 32"
                                     >
-                                        <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
+                                        <path fill="currentColor" d="M22 22v6H6V4h10V2H6a2 2 0 0 0-2 2v24a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6Z"/>
+                                        <path fill="currentColor" d="m29.54 5.76l-3.3-3.3a1.6 1.6 0 0 0-2.24 0l-14 14V22h5.53l14-14a1.6 1.6 0 0 0 0-2.24ZM14.7 20H12v-2.7l9.44-9.45l2.71 2.71ZM25.56 9.15l-2.71-2.71l2.27-2.27l2.71 2.71Z"/>
                                     </svg>
                                     <span class="ml-3">Product Requisition</span>
                                 </SidebarLink>
                             </ol>
                         </li>
                     </ul>
-                    <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                    <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700" v-if="!officeUser">
                         <li> 
                             <SidebarDropdown :active="route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi')">
                                 <svg

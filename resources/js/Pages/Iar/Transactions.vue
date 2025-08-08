@@ -77,7 +77,7 @@
             width: '10%'
         },
         {
-            data: 'date',
+            data: 'dateUpdated',
             title: 'Updated At',
             width: '10%'
         },

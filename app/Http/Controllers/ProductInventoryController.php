@@ -180,7 +180,7 @@ class ProductInventoryController extends Controller
                     }
                     return [
                         'id' => $transaction->id,
-                        'created' => $transaction->created_at->format('d-m-Y'),
+                        'created' => $transaction->created_at->format('m-d-Y'),
                         'unit' => $productUnit,
                         'type' => ucfirst($transaction->type),
                         'qty' => $transaction->qty,

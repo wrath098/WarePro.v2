@@ -167,7 +167,7 @@ class UserController extends Controller
         $user->update([
             'name' => $validated['name'], 
             'email' => $validated['email'],
-            'office_id' => $validated['officeId                                                                                                          ']
+            'office_id' => $validated['officeId']
         ]);
 
         return redirect()->back()->with('message', "User has been successfully updated.");

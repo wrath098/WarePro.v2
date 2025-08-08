@@ -152,16 +152,26 @@ class ProductInventoryTransactionController extends Controller
                 throw new \Exception("Product inventory not found for product ID: {$transaction->prod_id}");
             }
 
-            $currentQty = $transaction->type === 'issuance' 
-                ? $transaction->current_stock + $transaction->qty
-                : $transaction->current_stock - $transaction->qty;
-
+            $previousTransaction = ProductInventoryTransaction::withTrashed()
+                ->where('prod_id', $transaction->prod_id)
+                ->where('created_at', '<', $transaction->created_at)
+                ->orderBy('created_at', 'desc')
+                ->first();
 
             $succeedingTransactions = ProductInventoryTransaction::withTrashed()
                 ->where('prod_id', $transaction->prod_id)
                 ->where('created_at', '>', $transaction->created_at)
                 ->orderBy('created_at', 'asc')
                 ->get();
+            
+            $currentQty = $previousTransaction->current_stock;
+            foreach($succeedingTransactions as $trans) {
+                $currentQty = $trans->type === 'issuance' 
+                        ? $currentQty - $trans->qty 
+                        : $currentQty + $trans->qty;
+                $trans->current_stock = $currentQty;
+                $trans->save();
+            }
 
             $productInventory->qty_on_stock = $currentQty;
             
@@ -174,7 +184,7 @@ class ProductInventoryTransactionController extends Controller
             $transaction->forceDelete();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Successfully removed product inventory transaction.');
+            return redirect()->back()->with('message', 'Successfully removed product inventory transaction.');
         } catch(\Exception $e) {
             DB::rollBack();
             Log::error("Update Product Inventory Transaction (Removing Transaction on StockCard) failed: ", [

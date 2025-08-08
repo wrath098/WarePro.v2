@@ -91,7 +91,7 @@ const showingAppSideBar = ref(true);
                 </div>
             </div>
 
-            <div class="absolute bg-white translate-x-0 shadow-md rounded-md p-4 right-8 top-16 border-2" 
+            <div class="absolute bg-gray-100 translate-x-0 shadow-md rounded-md p-4 right-8 top-16 border-2" 
                 :class="{
                     hidden: !showingNavigationDropdown,
                     'inline-flex': showingNavigationDropdown,

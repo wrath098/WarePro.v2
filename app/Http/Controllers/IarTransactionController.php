@@ -9,6 +9,7 @@ use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\ProductPrice;
 use App\Services\ProductService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -60,10 +61,10 @@ class IarTransactionController extends Controller
             'airId' => $transaction->sdi_iar_id,
             'poId' => $transaction->po_no,
             'supplier' => $transaction->supplier,
-            'date' => $transaction->date,
+            'date' => Carbon::parse($transaction->date)->format('m-d-Y'),
             'status' => ucfirst($transaction->status),
             'updater' => $transaction->updater->name ?? '',
-            'dateUpdated' => $transaction->updated_at->format('Y-m-d'),
+            'dateUpdated' => $transaction->updated_at->format('m-d-Y'),
         ]);
 
         return Inertia::render('Iar/Transactions', ['transactions' => $transactionList]);
