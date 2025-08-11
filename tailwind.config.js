@@ -13,7 +13,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                oswald: ['Oswald', 'Figtree'],
+                oswald: ['Saira', 'Figtree'],
             },
         },
     },

@@ -211,12 +211,12 @@ onMounted(() => {
             </nav>
         </template>
 
-        <div class="mt-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
-            <div class="overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="mt-8 max-w-screen-2xl rounded-md">
+            <div class="overflow-hidden">
 
                 <!-- APP -->
-                <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
-                    <div class="flex items-center border bg-white rounded-sm overflow-hidden shadow">
+                <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg class="h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="32" height="32" viewBox="0 0 48 48">
                                 <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
@@ -236,7 +236,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="flex items-center border bg-white rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg class="h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="32" height="32" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
@@ -257,12 +257,12 @@ onMounted(() => {
             </div>
         </div>
 
-        <div class="my-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
-            <div class="overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="mt-8 max-w-screen-2xl">
+            <div class="overflow-hidden">
 
                 <!-- TRANSACTIONS -->
-                <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-4">
-                    <div class="flex items-center border bg-white rounded-sm overflow-hidden shadow">
+                <div class="grid grid-cols-1 gap-8 sm:grid-cols-4">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 16 16">
                                 <path fill="currentColor" d="M15.363 14.658a.5.5 0 1 1-.713.7l-2.97-3.023a.5.5 0 0 1 .001-.7A3.9 3.9 0 1 0 8.9 12.8a.5.5 0 1 1 0 .999a4.9 4.9 0 1 1 3.821-1.833zM3.094 13a.5.5 0 1 1 0 1H2.5A2.5 2.5 0 0 1 0 11.5v-9A2.5 2.5 0 0 1 2.5 0h9A2.5 2.5 0 0 1 14 2.5v.599a.5.5 0 1 1-1 0V2.5A1.5 1.5 0 0 0 11.5 1h-9A1.5 1.5 0 0 0 1 2.5v9A1.5 1.5 0 0 0 2.5 13zM2.5 3a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m-4 2a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m-2 1a.5.5 0 1 1 0 1a.5.5 0 0 1 0-1m0 3a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m6-6a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m-8 8a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1"/>
@@ -278,7 +278,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 2048 2048">
                                 <path fill="currentColor" d="M896 1537V936L256 616v880l544 273l-31 127l-641-320V472L960 57l832 415v270q-70 11-128 45V616l-640 320v473l-128 128zM754 302l584 334l247-124l-625-313l-206 103zm206 523l240-120l-584-334l-281 141l625 313zm888 71q42 0 78 15t64 41t42 63t16 79q0 39-15 76t-43 65l-717 717l-377 94l94-377l717-716q29-29 65-43t76-14zm51 249q21-21 21-51q0-31-20-50t-52-20q-14 0-27 4t-23 15l-692 692l-34 135l135-34l692-691z"/>
@@ -290,11 +290,11 @@ onMounted(() => {
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ core.risTransaction }}</p>
-                                <p class="text-sm text-gray-400">Issued Today</p>
+                                <p class="text-sm text-gray-400">Issued</p>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <g fill="currentColor">
@@ -313,7 +313,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8 8a2 2 0 0 0 2.828 0l7.172-7.172a2 2 0 0 0 0-2.828l-8-8zM7 9a2 2 0 1 1 .001-4.001A2 2 0 0 1 7 9z"/>
@@ -332,8 +332,8 @@ onMounted(() => {
                 </div>
 
                 <!-- PRODUCT -->
-                <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-4">
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                <div class="grid grid-cols-1 gap-8 sm:grid-cols-4 mt-8">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg class="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M7.24 2H5.34C3.15 2 2 3.15 2 5.33V7.23C2 9.41 3.15 10.56 5.33 10.56H7.23C9.41 10.56 10.56 9.41 10.56 7.23V5.33C10.57 3.15 9.42 2 7.24 2Z" fill="currentColor"/>
@@ -352,7 +352,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 256 256">
                                 <path fill="currentColor" d="M128 20a108 108 0 1 0 108 108A108.12 108.12 0 0 0 128 20Zm0 192a84 84 0 1 1 84-84a84.09 84.09 0 0 1-84 84Zm-12-80V80a12 12 0 0 1 24 0v52a12 12 0 0 1-24 0Zm28 40a16 16 0 1 1-16-16a16 16 0 0 1 16 16Z"/>
@@ -368,7 +368,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <g fill="currentColor">
@@ -388,7 +388,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                    <div class="flex items-center bg-slate-50 rounded-md overflow-hidden">
                         <div class="p-4">
                             <svg class="h-12 w-12 text-rose-600" fill="currentColor" stroke="currentColor" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 544.527 544.527" xml:space="preserve">
                                 <g>
@@ -426,13 +426,17 @@ onMounted(() => {
             </div>
         </div>
 
-        <div class="mb-4 max-w-screen-2xl bg-slate-50 shadow rounded-md">
+        <div class="mt-8 max-w-screen-2xl bg-slate-50 shadow rounded-md">
             <div class="p-2 overflow-hidden shadow-sm sm:rounded-lg">
                 <LineChart :data="chartData" :options="chartOptions" />
             </div>
         </div>
 
+<<<<<<< Updated upstream
         <div class="max-w-screen-2xl bg-gray-100 shadow rounded-md mb-4">
+=======
+        <div class="max-w-screen-2xl bg-white shadow rounded-md mt-8 mb-4">
+>>>>>>> Stashed changes
             <div class="flex justify-center my-4">
                 <h4 class="text-xl font-bold text-gray-500">Fast Moving Product Items</h4>
             </div>

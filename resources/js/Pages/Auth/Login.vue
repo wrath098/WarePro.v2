@@ -92,7 +92,7 @@ const submit = () => {
                 </form>
 
                 <div class="flex flex-col justify-center items-center bg-primary pt-10 text-sm">
-                    <p class="text-gray-500 font-bold">Copyright © Provincial General Services Office</p>
+                    <p class="text-gray-500 font-bold text-center">© Provincial General Services Office</p>
                     <p class="text-gray-300">Built by IT Dev Team, inspired by users.</p>
                 </div>
 

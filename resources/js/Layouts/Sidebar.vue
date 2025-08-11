@@ -61,7 +61,7 @@ const officeUser = hasAnyRole(['Office User']);
                     <ul class="space-y-2">
                         <li>
                             <div class="flex flex-row items-center">
-                                <div class="text-sm font-light tracking-wide text-gray-500">Navigation</div>
+                                <div class="text-sm font-bold tracking-wide text-gray-400">NAVIGATION</div>
                             </div>
                         </li>
                         <li>
@@ -76,10 +76,11 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" d="M15.21 2H8.75A6.76 6.76 0 0 0 2 8.75v6.5A6.76 6.76 0 0 0 8.75 22h6.5A6.76 6.76 0 0 0 22 15.25v-6.5A6.76 6.76 0 0 0 15.21 2M8.43 16.23a.8.8 0 1 1-1.6 0v-5.1a.8.8 0 0 1 1.6 0zm4.45 0a.8.8 0 1 1-1.6 0V7.78a.8.8 0 0 1 1.6 0zm4.21 0a.8.8 0 1 1-1.6 0V9.82a.8.8 0 0 1 1.6 0z"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Dashboard</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">DASHBOARD</span>
                             </SidebarLink>
                         </li>
                         <li v-if="officeUser">
+<<<<<<< Updated upstream
                             <SidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
                                 <svg
                                     class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
@@ -93,11 +94,17 @@ const officeUser = hasAnyRole(['Office User']);
                                 </svg>
                                 <span class="flex-1 ml-3 text-left whitespace-nowrap">Product List</span>
                             </SidebarLink>
+=======
+                            <SubSidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
+                                <ArrowHeadRight :class="{ 'text-white' : route().current('product.display.active')}"/>
+                                PRODUCT LIST
+                            </SubSidebarLink>
+>>>>>>> Stashed changes
                         </li>
                         <li v-if="components || products">
                             <div class="pt-2">
                                 <div class="flex flex-row items-center">
-                                    <div class="text-sm font-light tracking-wide text-gray-500">Core</div>
+                                    <div class="text-sm font-bold tracking-wide text-gray-400">CORE</div>
                                 </div>
                             </div>
                             <SidebarDropdown 
@@ -114,7 +121,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Components</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">COMPONENTS</span>
                                 <ArrowDown :class="{'text-white': route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display') || route().current('general.fund.editFundAllocation')}" />
                                 <template #dropdown-items>
                                     <li v-if="hasPermission('view-proposed-budget') || hasAnyRole(['Developer'])">
@@ -162,7 +169,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M15 4H9v16h6zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3zM4 4h3v16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Products</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">PRODUCTS</span>
                                 <ArrowDown :class="{'text-white': route().current('product.display.active') || route().current('product.display.active.pricelist') || route().current('product.unmodified.list')}" />
                                 
                                 <template #dropdown-items>
@@ -190,7 +197,7 @@ const officeUser = hasAnyRole(['Office User']);
                         <li>
                             <div v-if="ppmp" class="pt-2">
                                 <div class="flex flex-row items-center">
-                                    <div class="text-sm font-light tracking-wide text-gray-500">Annual Procurement Plan (APP)</div>
+                                    <div class="text-sm font-bold tracking-wide text-gray-400">ANNUAL PROCUREMENT PLAN (APP)</div>
                                 </div>
                             </div>
                             <SidebarLink 
@@ -208,7 +215,7 @@ const officeUser = hasAnyRole(['Office User']);
                                     <path fill="currentColor" d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z"/>
                                     <path fill="currentColor" d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z"/>
                                 </svg>
-                                <span class="ml-3">Create Office PPMP</span>
+                                <span class="ml-3">CREATE OFFICE PPMP</span>
                             </SidebarLink>
                         </li>
                         <li v-if="hasPermission('view-office-ppmp-list') ||  hasAnyRole(['Developer'])">
@@ -223,7 +230,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M2.9 1L5 3.1l-.8.7L3 2.6V7H2V2.5L.8 3.8l-.7-.7L2.2 1h.7zM3 13.4V9H2v4.4L.8 12.2l-.7.7L2.2 15h.7L5 12.9l-.7-.7L3 13.4zM8.5 7h-2L6 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM7 6h1V5H7v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM12 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM7 11h1v-1H7v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM12 12h2v-2h-2v2zm-1-2H9v1h2v-1zm0-5H9v1h2V5z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Office PPMPs</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">OFFICE PPMP</span>
                                 <ArrowDown :class="{'text-white': route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}" />
                                 
                                 <template #dropdown-items>
@@ -255,7 +262,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M1.5 1h2v1H2v12h1.5v1h-2l-.5-.5v-13l.5-.5zm6 6h-2L5 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 6h1V5H6v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 11h1v-1H6v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 12h2v-2h-2v2zm-1-2H8v1h2v-1zm0-5H8v1h2V5z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Consolidated PPMPs</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">CONSOLIDATED PPMP</span>
                                 <ArrowDown :class="{'text-white': route().current('conso.ppmp.type') || route().current('conso.ppmp.show')}" />
 
                                 <template #dropdown-items>
@@ -276,7 +283,7 @@ const officeUser = hasAnyRole(['Office User']);
                         </li>
                         <li v-if="officeUser">
                             <div class="flex flex-row items-center pt-2">
-                                <div class="text-sm font-light tracking-wide text-gray-500">Project Procurement Management Plan (PPMP)</div>
+                                <div class="text-sm font-bold tracking-wide text-gray-400">POJECT PROCUREMENT MANAGEMENT PLAN (PPMP)</div>
                             </div>
                             <ol>
                                 <li>
@@ -294,7 +301,7 @@ const officeUser = hasAnyRole(['Office User']);
                                             <path fill="currentColor" d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z"/>
                                             <path fill="currentColor" d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z"/>
                                         </svg>
-                                        <span class="ml-3">Create PPMP</span>
+                                        <span class="ml-3">CREATE PPMP</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
@@ -311,7 +318,7 @@ const officeUser = hasAnyRole(['Office User']);
                                         >
                                             <path fill="currentColor" d="M20 2a1 1 0 0 1 1 1v3.757l-8.999 9l-.006 4.238l4.246.006L21 15.242V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1.778 6.808l1.414 1.414L15.414 18l-1.416-.002l.002-1.412zM12 12H7v2h5zm3-4H7v2h8z"/>
                                         </svg>
-                                        <span class="ml-3">Drafted PPMP</span>
+                                        <span class="ml-3">DRAFTED PPMP</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
@@ -328,7 +335,7 @@ const officeUser = hasAnyRole(['Office User']);
                                         >
                                             <path fill="currentColor" d="m17.275 20.25l3.475-3.45l-1.05-1.05l-2.425 2.375l-.975-.975l-1.05 1.075zM6 9h12V7H6zm12 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 22V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v6.675q-.7-.35-1.463-.513T18 11H6v2h7.1q-.425.425-.787.925T11.675 15H6v2h5.075q-.05.25-.062.488T11 18q0 1.05.288 2.013t.862 1.837L12 22l-1.5-1.5L9 22l-1.5-1.5L6 22l-1.5-1.5z"/>
                                         </svg>
-                                        <span class="ml-3">Approved PPMP</span>
+                                        <span class="ml-3">APPROVED PPMP</span>
                                     </SidebarLink>
                                 </li>
                             </ol>                           
@@ -336,7 +343,7 @@ const officeUser = hasAnyRole(['Office User']);
                         <li>
                             <div v-if="procurement" class="pt-2">
                                 <div class="flex flex-row items-center">
-                                    <div class="text-sm font-light tracking-wide text-gray-500">Procurement</div>
+                                    <div class="text-sm font-bold tracking-wide text-gray-400">PROCUREMENT</div>
                                 </div>
                             </div>
                             <SidebarDropdown
@@ -352,7 +359,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M10 2.25a1.75 1.75 0 0 0-1.582 1c-.684.006-1.216.037-1.692.223A3.25 3.25 0 0 0 5.3 4.563c-.367.493-.54 1.127-.776 1.998l-.047.17l-.513 2.964c-.185.128-.346.28-.486.459c-.901 1.153-.472 2.87.386 6.301c.545 2.183.818 3.274 1.632 3.91C6.31 21 7.435 21 9.685 21h4.63c2.25 0 3.375 0 4.189-.635c.814-.636 1.086-1.727 1.632-3.91c.858-3.432 1.287-5.147.386-6.301a2.186 2.186 0 0 0-.487-.46l-.513-2.962l-.046-.17c-.237-.872-.41-1.506-.776-2a3.25 3.25 0 0 0-1.426-1.089c-.476-.186-1.009-.217-1.692-.222A1.75 1.75 0 0 0 14 2.25h-4Zm8.418 6.896l-.362-2.088c-.283-1.04-.386-1.367-.56-1.601a1.75 1.75 0 0 0-.768-.587c-.22-.086-.486-.111-1.148-.118A1.75 1.75 0 0 1 14 5.75h-4a1.75 1.75 0 0 1-1.58-.998c-.663.007-.928.032-1.148.118a1.75 1.75 0 0 0-.768.587c-.174.234-.277.56-.56 1.6l-.362 2.089C6.58 9 7.91 9 9.685 9h4.63c1.775 0 3.105 0 4.103.146ZM8 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Zm8.75.75a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4ZM12 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Purchase Request (PR)</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">PURCHASE REQUEST</span>
                                 <ArrowDown :class="{'text-white': route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase') || route().current('pr.form.step1') || route().current('pr.form.step2') || route().current('pr.display.transactions') || route().current('pr.show.particular')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
@@ -391,20 +398,20 @@ const officeUser = hasAnyRole(['Office User']);
                                     viewBox="0 0 24 24">
                                     <path fill="currentColor" d="M1 20v-2h5v-2H2v-2h4v-2H3.05v-2H6V7.05l-1.95-4.2L5.85 2L8.2 7h11.6l-1.95-4.15l1.8-.85L22 7v13zm11-7h4q.425 0 .713-.288T17 12t-.288-.712T16 11h-4q-.425 0-.712.288T11 12t.288.713T12 13"/>
                                 </svg>
-                                <span class="ml-3">Purchase Order</span>
+                                <span class="ml-3">PURCHASE ORDER</span>
                             </SidebarLink>
                         </li>
                         <li>
                             <div v-if="inventory || officeUser" class="pt-2">
                                 <div class="flex flex-row items-center">
-                                    <div class="text-sm font-light tracking-wide text-gray-500">Inventory</div>
+                                    <div class="text-sm font-bold tracking-wide text-gray-400">INVENTORY</div>
                                 </div>
                             </div>
                             <SidebarDropdown 
                                 v-if="hasAnyRole(['Developer']) || hasPermission('view-iar-transaction-pending') || hasPermission('view-iar-transaction-all')"
                                 :active="$page.url.includes('/iar')" class="mb-1">
                                     <Inspect :class="{ 'text-white' : $page.url.includes('/iar')}"/>
-                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Inspection and Acceptance</span>
+                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">ACCEPTANCE (IAR)</span>
                                     <ArrowDown :class="{'text-white': $page.url.includes('/iar')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
@@ -436,7 +443,7 @@ const officeUser = hasAnyRole(['Office User']);
                                     >
                                         <path fill="currentColor" d="M896 1537V936L256 616v880l544 273l-31 127l-641-320V472L960 57l832 415v270q-70 11-128 45V616l-640 320v473l-128 128zM754 302l584 334l247-124l-625-313l-206 103zm206 523l240-120l-584-334l-281 141l625 313zm888 71q42 0 78 15t64 41t42 63t16 79q0 39-15 76t-43 65l-717 717l-377 94l94-377l717-716q29-29 65-43t76-14zm51 249q21-21 21-51q0-31-20-50t-52-20q-14 0-27 4t-23 15l-692 692l-34 135l135-34l692-691z"/>
                                     </svg>
-                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Requisition and Issuance</span>
+                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">REQUISITION (RIS)</span>
                                     <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
@@ -459,7 +466,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 v-if="hasAnyRole(['Developer']) || hasPermission('view-products-inventory')"
                                 :href="route('inventory.index')" :active="route().current('inventory.index')">
                                 <Stock :class="{ 'text-white' : route().current('inventory.index')}"/>
-                                <span class="ml-3">Inventory</span>
+                                <span class="ml-3">STOCK AVAILABLE</span>
                             </SidebarLink>
                             <SidebarLink 
                             v-if="hasAnyRole(['Developer']) || hasPermission('monitor-expiring-products')"
@@ -474,7 +481,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" fill-rule="evenodd" d="M8.175.002a8 8 0 1 0 2.309 15.603a.75.75 0 0 0-.466-1.426a6.5 6.5 0 1 1 3.996-8.646a.75.75 0 0 0 1.388-.569A8 8 0 0 0 8.175.002ZM8.75 3.75a.75.75 0 0 0-1.5 0v3.94L5.216 9.723a.75.75 0 1 0 1.06 1.06L8.53 8.53l.22-.22V3.75ZM15 15a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm-.25-6.25a.75.75 0 0 0-1.5 0v3.5a.75.75 0 0 0 1.5 0v-3.5Z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="ml-3">Expired Inventory</span>
+                                <span class="ml-3">EXPIRING ITEMS</span>
                             </SidebarLink>
                             <ol v-if="officeUser">
                                 <SidebarLink 
@@ -490,7 +497,7 @@ const officeUser = hasAnyRole(['Office User']);
                                     >
                                         <path fill="currentColor" d="M5 21L3 9h18l-2 12zm4-6h6v-2H9zM5 8V6h14v2zm2-3V3h10v2z"/>
                                     </svg>
-                                    <span class="ml-3">Available Quantity</span>
+                                    <span class="ml-3">AVAILABLE QUANTITY</span>
                                 </SidebarLink>
                                 <SidebarLink 
                                     :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
@@ -506,12 +513,21 @@ const officeUser = hasAnyRole(['Office User']);
                                         <path fill="currentColor" d="M22 22v6H6V4h10V2H6a2 2 0 0 0-2 2v24a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6Z"/>
                                         <path fill="currentColor" d="m29.54 5.76l-3.3-3.3a1.6 1.6 0 0 0-2.24 0l-14 14V22h5.53l14-14a1.6 1.6 0 0 0 0-2.24ZM14.7 20H12v-2.7l9.44-9.45l2.71 2.71ZM25.56 9.15l-2.71-2.71l2.27-2.27l2.71 2.71Z"/>
                                     </svg>
-                                    <span class="ml-3">Product Requisition</span>
+                                    <span class="ml-3">PRODUCT REQUISTION</span>
                                 </SidebarLink>
                             </ol>
                         </li>
                     </ul>
+<<<<<<< Updated upstream
                     <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700" v-if="!officeUser">
+=======
+                    <ul class="pt-5 mt-5 space-y-2">
+                        <li>
+                            <div class="flex flex-row items-center">
+                                <div class="text-sm font-bold tracking-wide text-gray-400">OTHERS</div>
+                            </div>
+                        </li>
+>>>>>>> Stashed changes
                         <li> 
                             <SidebarDropdown :active="route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi')">
                                 <svg
@@ -524,7 +540,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 >
                                     <path fill="currentColor" d="M832.27 1024h-768q-26 0-45-18.5T.27 960V65q0-27 19-45.5t45-18.5h448v352q0 13 9.5 22.5t22.5 9.5h352v575q0 27-18.5 45.5t-45.5 18.5zm-96-192h-32V608q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v224h-64V480q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v352h-64V672q0-13-9.5-22.5t-22.5-9.5h-64q-13 0-22.5 9.5t-9.5 22.5v160h-32q-13 0-22.5 9.5t-9.5 22.5t9.5 22.5t22.5 9.5h576q14 0 23-9.5t9-22.5t-9.5-22.5t-22.5-9.5zm-160-832q26 0 44 18l257 257q19 19 19 46h-320V0z"/>
                                 </svg>
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Reports</span>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">GENERATE REPORT</span>
                                 <ArrowDown :class="{'text-white': route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">
@@ -572,7 +588,7 @@ const officeUser = hasAnyRole(['Office User']);
                                     >
                                         <path fill="currentColor" fill-rule="evenodd" d="M17 10v1.1l1 .5l.8-.8l1.4 1.4l-.8.8l.5 1H21v2h-1.1l-.5 1l.8.8l-1.4 1.4l-.8-.8a4 4 0 0 1-1 .5V20h-2v-1.1a4 4 0 0 1-1-.5l-.8.8l-1.4-1.4l.8-.8a4 4 0 0 1-.5-1H11v-2h1.1l.5-1l-.8-.8l1.4-1.4l.8.8a4 4 0 0 1 1-.5V10zm.4 3.6c.4.4.6.8.6 1.4a2 2 0 0 1-3.4 1.4A2 2 0 0 1 16 13c.5 0 1 .2 1.4.6M5 8a4 4 0 1 1 8 .7a7 7 0 0 0-3.3 3.2A4 4 0 0 1 5 8m4.3 5H7a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h6.1a7 7 0 0 1-1.8-7" clip-rule="evenodd"/>
                                     </svg>
-                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Users Setting</span>
+                                    <span class="flex-1 ml-3 text-left whitespace-nowrap">USERS SETTING</span>
                                     <ArrowDown :class="{'text-white': route().current('user') || route().current('user.roles') || route().current('user.permissions')}" />
                                 <template #dropdown-items>
                                     <ul class="bg-gray-200 rounded-md">

@@ -4,8 +4,8 @@
 @tailwind utilities;
 
 @font-face {
-    font-family: 'Oswald';
-    src: url('../../public/assets/font/Oswald-Regular.ttf') format('truetype');
+    font-family: 'Saira';
+    src: url('../../public/assets/font/Saira.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
