@@ -518,16 +518,7 @@ const officeUser = hasAnyRole(['Office User']);
                             </ol>
                         </li>
                     </ul>
-<<<<<<< Updated upstream
-                    <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700" v-if="!officeUser">
-=======
-                    <ul class="pt-5 mt-5 space-y-2">
-                        <li>
-                            <div class="flex flex-row items-center">
-                                <div class="text-sm font-bold tracking-wide text-gray-400">OTHERS</div>
-                            </div>
-                        </li>
->>>>>>> Stashed changes
+                    <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
                         <li> 
                             <SidebarDropdown :active="route().current('show.stockCard') || route().current('inventory.report') || route().current('view.ssmi')">
                                 <svg

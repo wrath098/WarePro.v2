@@ -432,11 +432,7 @@ onMounted(() => {
             </div>
         </div>
 
-<<<<<<< Updated upstream
-        <div class="max-w-screen-2xl bg-gray-100 shadow rounded-md mb-4">
-=======
-        <div class="max-w-screen-2xl bg-white shadow rounded-md mt-8 mb-4">
->>>>>>> Stashed changes
+        <div class="max-w-screen-2xl bg-white shadow rounded-md mb-4">
             <div class="flex justify-center my-4">
                 <h4 class="text-xl font-bold text-gray-500">Fast Moving Product Items</h4>
             </div>
