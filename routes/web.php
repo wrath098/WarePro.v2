@@ -276,6 +276,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/issuances-log', [RisTransactionController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
     Route::get('/fast-moving-items', [DashboardController::class, 'getFastMovingItems'])->name('get.fast.moving.items');
     Route::get('/monthly-product-inventory', [ProductInventoryController::class, 'getMonthlyInventory'])->name('get.monthly.inventory');
+    Route::get('/filter-dashboard', [DashboardController::class, 'filterByDate'])->name('filter.dashboard');
 });
 
 Route::fallback(function () {

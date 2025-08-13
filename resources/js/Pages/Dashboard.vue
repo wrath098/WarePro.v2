@@ -84,6 +84,21 @@ const chartOptions = ref({
     },
 });
 
+const selectedFilter = ref('day');
+const updatedCore = ref({ ...props.core });
+const filter = async (event) => {
+  selectedFilter.value = event.target.value;
+
+  // Make a request or filter data based on the selected filter
+  try {
+    const response = await axios.get(`https://api.example.com/filter?period=${selectedFilter.value}`);
+    console.log('Filtered Data:', response.data);
+    // Update your chart or data based on the response
+  } catch (error) {
+    console.error('Error fetching filtered data:', error);
+  }
+};
+
 watchEffect(() => {
     chartData.value = {
         labels: props.monthlyPriceEvaluation?.labels || [],
@@ -120,18 +135,11 @@ watchEffect(() => {
             },
         ]
     };
+
+    updatedCore.value = { ...props.core };
 });
 
 const fastMovingItems = ref([]);
-
-const fetchData = async () => {
-    try {
-        const response = await axios.get('api/fast-moving-items');
-        fastMovingItems.value = response.data;
-    } catch (error) {
-        console.log(error);
-    }
-}
 
 onMounted(() => {
     fetchData();
@@ -195,7 +203,7 @@ onMounted(() => {
     <Head title="Dashboard" />
     <AuthenticatedLayout>
         <template #header>
-            <nav class="flex" aria-label="Breadcrumb">
+            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
                     <li class="inline-flex items-center" aria-current="page">
                         <a :href="route('dashboard')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
@@ -206,6 +214,15 @@ onMounted(() => {
                             </svg>
                             Dashboard
                         </a>
+                    </li>
+                </ol>
+                <ol>
+                    <li class="flex flex-col lg:flex-row w-28">
+                        <select id="filter" name="filter" @change="filter" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1">
+                            <option selected value="day">Day</option>
+                            <option value="month">Month</option>
+                            <option value="year">Year</option>
+                        </select>
                     </li>
                 </ol>
             </nav>

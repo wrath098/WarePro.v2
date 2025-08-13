@@ -249,4 +249,23 @@ class DashboardController extends Controller
             'year' => $year
         ];
     }
+
+    public function filterByDate(Request $request)
+    {
+        $products = Product::where('prod_status', 'active')->count();
+        $currentYear = Carbon::now()->addYear()->format('Y');
+
+        $core = [
+            'product' => $products,
+            'reOrder' => $this->countReorderProductItem(),
+            'iarTransaction' => $this->countIarPendingTransactions(),
+            'risTransaction' => $this->countRisTransactionThisDay(),
+            'prTransaction'=> $this->countDraftedPurchaseRequest(),
+            'availableProductItem' => $this->countAvailableProductItem(),
+            'expiringProduct' => $this->countExpiringProductItem(),
+            'outOfStockProducts' => $this->countOutOfStockProductItem(),
+            'ppmpTransactions' => $this->countPpmpUploaded($currentYear),
+            'consolidatedPpmp' => $this->checkApprovedApp($currentYear),
+        ];
+    }
 }
