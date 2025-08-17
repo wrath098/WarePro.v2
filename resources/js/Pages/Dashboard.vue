@@ -15,8 +15,6 @@ const {hasAnyRole, hasPermission} = useAuthPermission();
 const props = defineProps({
     core: {
         type: Object,
-        required: true,
-        default: () => ({})
     },
     monthlyPriceEvaluation: {
         type: Object,
@@ -45,7 +43,7 @@ const chartOptions = ref({
                 display: true,
                 text: 'Months',
                 font: {
-                    family: 'Oswald',
+                    family: 'Saira',
                     size: 20,
                     lineHeight: 1.2,
                 },
@@ -58,7 +56,7 @@ const chartOptions = ref({
                 display: true,
                 text: 'No. of Product Items',
                 font: {
-                    family: 'Oswald',
+                    family: 'Saira',
                     size: 20,
                     style: 'normal',
                     lineHeight: 1.2
@@ -73,7 +71,7 @@ const chartOptions = ref({
             display: true,
             text: 'Price Adjustment Monitoring',
             font: {
-                family: 'Oswald',
+                family: 'Saira',
                 size: 20,
                 style: 'normal',
                 weight: 'bold',
@@ -84,19 +82,18 @@ const chartOptions = ref({
     },
 });
 
-const selectedFilter = ref('day');
+const selectedFilter = ref('year');
 const updatedCore = ref({ ...props.core });
-const filter = async (event) => {
-  selectedFilter.value = event.target.value;
 
-  // Make a request or filter data based on the selected filter
-  try {
-    const response = await axios.get(`https://api.example.com/filter?period=${selectedFilter.value}`);
-    console.log('Filtered Data:', response.data);
-    // Update your chart or data based on the response
-  } catch (error) {
-    console.error('Error fetching filtered data:', error);
-  }
+const filter = async (event) => {
+    selectedFilter.value = event.target.value;
+
+    try {
+        const response = await axios.get(route('filter.dashboard', { period: selectedFilter.value }));
+        updatedCore.value = response.data;
+    } catch (error) {
+        console.error('Error fetching filtered data:', error);
+    }
 };
 
 watchEffect(() => {
@@ -135,15 +132,9 @@ watchEffect(() => {
             },
         ]
     };
-
-    updatedCore.value = { ...props.core };
 });
 
 const fastMovingItems = ref([]);
-
-onMounted(() => {
-    fetchData();
-});
 
 const columns = [
     {
@@ -219,9 +210,9 @@ onMounted(() => {
                 <ol>
                     <li class="flex flex-col lg:flex-row w-28">
                         <select id="filter" name="filter" @change="filter" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1">
-                            <option selected value="day">Day</option>
+                            <option value="day">Day</option>
                             <option value="month">Month</option>
-                            <option value="year">Year</option>
+                            <option selected value="year">Year</option>
                         </select>
                     </li>
                 </ol>
@@ -247,7 +238,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('create-office-ppmp') || hasAnyRole(['Developer']) ? route('import.ppmp.index') : '#'">Office PPMP ({{ core.ppmpTransactions.year }})</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.ppmpTransactions.count }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.ppmpTransactions.count }}</p>
                                 <p class="text-sm text-gray-400">Offices</p>
                             </div>
                         </div>
@@ -264,7 +255,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-app-list') || hasAnyRole(['Developer']) ? route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'}) : '#'">Consolidated PPMP ({{ core.consolidatedPpmp.year }})</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.consolidatedPpmp.status }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.consolidatedPpmp.status }}</p>
                                 <p class="text-sm text-gray-400">Approved</p>
                             </div>
                         </div>
@@ -290,7 +281,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-iar') || hasAnyRole(['Developer']) ? route('iar') : '#'">IAR Transaction</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.iarTransaction }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.iarTransaction }}</p>
                                 <p class="text-sm text-gray-400">Pending</p>
                             </div>
                         </div>
@@ -306,7 +297,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-ris') || hasAnyRole(['Developer']) ? route('ris.display.logs') : '#'">RIS Transaction</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.risTransaction }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.risTransaction }}</p>
                                 <p class="text-sm text-gray-400">Issued</p>
                             </div>
                         </div>
@@ -325,7 +316,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-pr-transaction') || hasAnyRole(['Developer']) ? route('pr.display.transactions') : '#'">Purchase Request</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.prTransaction }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.prTransaction }}</p>
                                 <p class="text-sm text-gray-400">Pending</p>
                             </div>
                         </div>
@@ -364,7 +355,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-inventory') || hasAnyRole(['Developer']) ? route('inventory.index') : '#'">Available On Inventory</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.availableProductItem }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.availableProductItem }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
                             </div>
                         </div>
@@ -380,7 +371,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-expired-products') || hasAnyRole(['Developer']) ? route('show.expiry.products') : '#'">Expiring Product Items</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.expiringProduct }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.expiringProduct }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
                             </div>
                         </div>
@@ -400,7 +391,7 @@ onMounted(() => {
                             </h3>
                             <h3 class="text-sm tracking-wider"></h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.reOrder }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.reOrder }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
                             </div>
                         </div>
@@ -434,7 +425,7 @@ onMounted(() => {
                                 <a class="hover:underline" :href="hasPermission('view-inventory') || hasAnyRole(['Developer']) ? route('inventory.index') : '#'">Out Of Stock</a>
                             </h3>
                             <div class="flex justify-start items-center">
-                                <p class="text-3xl mr-2">{{ core.outOfStockProducts }}</p>
+                                <p class="text-3xl mr-2">{{ updatedCore.outOfStockProducts }}</p>
                                 <p class="text-sm text-gray-400">Items</p>
                             </div>
                         </div>

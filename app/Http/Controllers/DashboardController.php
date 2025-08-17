@@ -94,27 +94,73 @@ class DashboardController extends Controller
         return response()->json(['products' => $queryIssuances]);
     }
 
-    private function countIarPendingTransactions(): int
+    private function countIarPendingTransactions(string $periodType = 'year'): int
     {
-        return IarTransaction::selectRaw('COUNT(*) as count')
-            ->where('status', 'pending')
-            ->value('count') ?? 0;
+        $query = IarTransaction::where('status', 'pending');
+
+        switch ($periodType) {
+            case 'day':
+                $query->whereDate('created_at', Carbon::today());
+                break;
+
+            case 'month':
+                $now = Carbon::now();
+                $query->whereYear('created_at', $now->year)
+                    ->whereMonth('created_at', $now->month);
+                break;
+
+            default:
+                $query->whereYear('created_at', Carbon::now()->year);
+                break;
+        }
+        
+        return $query->count();
     }
 
-    private function countRisTransactionThisDay(): int
+    private function countRisTransactionThisDay(string $periodType = 'year'): int
     {
-        $today = Carbon::today('Asia/Manila');
-        return RisTransaction::whereBetween('created_at', [
-            $today->copy()->startOfDay(), 
-            $today->copy()->endOfDay()
-        ])->count();
+        $query = '';
+
+        switch ($periodType) {
+            case 'day':
+                $query = RisTransaction::whereDate('created_at', Carbon::today());
+                break;
+
+            case 'month':
+                $now = Carbon::now();
+                $query = RisTransaction::whereYear('created_at', $now->year)
+                    ->whereMonth('created_at', $now->month);
+                break;
+
+            default:
+                $query = RisTransaction::whereYear('created_at', Carbon::now()->year);
+                break;
+        }
+        
+        return $query->count();
     }
 
-    private function countDraftedPurchaseRequest(): int
+    private function countDraftedPurchaseRequest(string $periodType = 'year'): int
     {
-        return PrTransaction::selectRaw('COUNT(*) as count')
-            ->where('pr_status', 'draft')
-            ->value('count') ?? 0;;
+        $query = PrTransaction::where('pr_status', 'draft');
+
+        switch ($periodType) {
+            case 'day':
+                $query->whereDate('created_at', Carbon::today());
+                break;
+
+            case 'month':
+                $now = Carbon::now();
+                $query->whereYear('created_at', $now->year)
+                    ->whereMonth('created_at', $now->month);
+                break;
+
+            default:
+                $query->whereYear('created_at', Carbon::now()->year);
+                break;
+        }
+        
+        return $query->count();
     }
 
     private function countAvailableProductItem(): int
@@ -253,19 +299,20 @@ class DashboardController extends Controller
     public function filterByDate(Request $request)
     {
         $products = Product::where('prod_status', 'active')->count();
-        $currentYear = Carbon::now()->addYear()->format('Y');
+        $now = Carbon::now()->year;
 
         $core = [
             'product' => $products,
             'reOrder' => $this->countReorderProductItem(),
-            'iarTransaction' => $this->countIarPendingTransactions(),
-            'risTransaction' => $this->countRisTransactionThisDay(),
-            'prTransaction'=> $this->countDraftedPurchaseRequest(),
+            'iarTransaction' => $this->countIarPendingTransactions($request->period),
+            'risTransaction' => $this->countRisTransactionThisDay($request->period),
+            'prTransaction'=> $this->countDraftedPurchaseRequest($request->period),
             'availableProductItem' => $this->countAvailableProductItem(),
             'expiringProduct' => $this->countExpiringProductItem(),
             'outOfStockProducts' => $this->countOutOfStockProductItem(),
-            'ppmpTransactions' => $this->countPpmpUploaded($currentYear),
-            'consolidatedPpmp' => $this->checkApprovedApp($currentYear),
+            'ppmpTransactions' => $this->countPpmpUploaded($now),
+            'consolidatedPpmp' => $this->checkApprovedApp($now),
         ];
+        return response()->json($core);
     }
 }
