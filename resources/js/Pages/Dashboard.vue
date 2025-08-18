@@ -136,6 +136,19 @@ watchEffect(() => {
 
 const fastMovingItems = ref([]);
 
+const fetchData = async () => {
+    try {
+        const response = await axios.get('api/fast-moving-items');
+        fastMovingItems.value = response.data;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+onMounted(() => {
+    fetchData();
+});
+
 const columns = [
     {
         data: 'code',
