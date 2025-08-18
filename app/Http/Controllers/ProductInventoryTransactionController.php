@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IarParticular;
 use App\Models\IarTransaction;
 use App\Models\Product;
 use App\Models\ProductInventory;
@@ -241,9 +242,14 @@ class ProductInventoryTransactionController extends Controller
         return null;
     }
 
-    private function getPurchaseDetails(int $refNo): ?IarTransaction
+    private function getPurchaseDetails(int $refNo): ?array
     {
-        return IarTransaction::findOrFail($refNo)->select('sdi_iar_id', 'po_no')->first();
+        $particular = IarParticular::with('iarTransaction')->findOrFail($refNo);
+
+        return [
+            'sdi_iar_id' => $particular->iarTransaction->sdi_iar_id,
+            'po_no' => $particular->iarTransaction->po_no,
+        ];
     }
 
     private function createInventoryTransaction(object $request, int $userId, int $currentInventory, string $formattedDate): ?ProductInventoryTransaction
