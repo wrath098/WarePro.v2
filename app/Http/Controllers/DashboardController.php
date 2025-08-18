@@ -33,20 +33,25 @@ class DashboardController extends Controller
 
     public function index(): Response
     {
+        $period = [
+            'day' => null,
+            'month' => null,
+            'year' => Carbon::now()->addYear()->format('Y'),
+        ];
+
         $products = Product::where('prod_status', 'active')->count();
-        $currentYear = Carbon::now()->addYear()->format('Y');
 
         $core = [
-            'product' => $products,
-            'reOrder' => $this->countReorderProductItem(),
-            'iarTransaction' => $this->countIarPendingTransactions(),
-            'risTransaction' => $this->countRisTransactionThisDay(),
-            'prTransaction'=> $this->countDraftedPurchaseRequest(),
-            'availableProductItem' => $this->countAvailableProductItem(),
-            'expiringProduct' => $this->countExpiringProductItem(),
-            'outOfStockProducts' => $this->countOutOfStockProductItem(),
-            'ppmpTransactions' => $this->countPpmpUploaded($currentYear),
-            'consolidatedPpmp' => $this->checkApprovedApp($currentYear),
+            'product' => $products,#
+            'reOrder' => $this->countReorderProductItem(),#
+            'iarTransaction' => $this->countIarPendingTransactions($period),#year, month, day
+            'risTransaction' => $this->countRisTransactionThisDay($period),#year, month, day
+            'prTransaction'=> $this->countDraftedPurchaseRequest($period),#year, month, day
+            'availableProductItem' => $this->countAvailableProductItem(),#
+            'expiringProduct' => $this->countExpiringProductItem(),#
+            'outOfStockProducts' => $this->countOutOfStockProductItem(),#
+            'ppmpTransactions' => $this->countPpmpUploaded($period['year']),#year
+            'consolidatedPpmp' => $this->checkApprovedApp($period['year']),#year
         ];
 
         $priceEvaluation = $this->monitorProductItemsPriceStatus() ?? collect();
@@ -94,71 +99,49 @@ class DashboardController extends Controller
         return response()->json(['products' => $queryIssuances]);
     }
 
-    private function countIarPendingTransactions(string $periodType = 'year'): int
+    private function countIarPendingTransactions(array $period): int
     {
-        $query = IarTransaction::where('status', 'pending');
-
-        switch ($periodType) {
-            case 'day':
-                $query->whereDate('created_at', Carbon::today());
-                break;
-
-            case 'month':
-                $now = Carbon::now();
-                $query->whereYear('created_at', $now->year)
-                    ->whereMonth('created_at', $now->month);
-                break;
-
-            default:
-                $query->whereYear('created_at', Carbon::now()->year);
-                break;
-        }
+        $query = IarTransaction::where('status', 'pending')
+            ->when(isset($period['year']), function ($q) use ($period) {
+                $q->whereYear('created_at', $period['year']);
+            })
+            ->when(isset($period['month']), function ($q) use ($period) {
+                $q->whereMonth('created_at', $period['month']);
+            })
+            ->when(isset($period['day']), function ($q) use ($period) {
+                $q->whereDay('created_at', $period['day']);
+            });
         
         return $query->count();
     }
 
-    private function countRisTransactionThisDay(string $periodType = 'year'): int
+    private function countRisTransactionThisDay(array $period): int
     {
-        $query = '';
-
-        switch ($periodType) {
-            case 'day':
-                $query = RisTransaction::whereDate('created_at', Carbon::today());
-                break;
-
-            case 'month':
-                $now = Carbon::now();
-                $query = RisTransaction::whereYear('created_at', $now->year)
-                    ->whereMonth('created_at', $now->month);
-                break;
-
-            default:
-                $query = RisTransaction::whereYear('created_at', Carbon::now()->year);
-                break;
-        }
+        $query = RisTransaction::when(isset($period['year']), function ($q) use ($period) {
+                $q->whereYear('created_at', $period['year']);
+            })
+            ->when(isset($period['month']), function ($q) use ($period) {
+                $q->whereMonth('created_at', $period['month']);
+            })
+            ->when(isset($period['day']), function ($q) use ($period) {
+                $q->whereDay('created_at', $period['day']);
+            });
         
         return $query->count();
     }
 
-    private function countDraftedPurchaseRequest(string $periodType = 'year'): int
+    private function countDraftedPurchaseRequest(array $period): int
     {
-        $query = PrTransaction::where('pr_status', 'draft');
-
-        switch ($periodType) {
-            case 'day':
-                $query->whereDate('created_at', Carbon::today());
-                break;
-
-            case 'month':
-                $now = Carbon::now();
-                $query->whereYear('created_at', $now->year)
-                    ->whereMonth('created_at', $now->month);
-                break;
-
-            default:
-                $query->whereYear('created_at', Carbon::now()->year);
-                break;
-        }
+        $query = PrTransaction::where('pr_status', 'draft')
+            ->when(isset($period['year']), function ($q) use ($period) {
+                $q->whereYear('created_at', $period['year']);
+            })
+            ->when(isset($period['month']), function ($q) use ($period) {
+                $q->whereMonth('created_at', $period['month']);
+            })
+            ->when(isset($period['day']), function ($q) use ($period) {
+                $q->whereDay('created_at', $period['day']);
+            });
         
         return $query->count();
     }
@@ -288,18 +271,18 @@ class DashboardController extends Controller
             ->where('ppmp_status', $status)
             ->exists();
         
-        $status = $exists ? 'Exists' : 'Empty';
+        $remark = $exists ? 'Exists' : 'Empty';
         
         return [
-            'status' => $status ,
+            'status' => $remark ,
             'year' => $year
         ];
     }
 
     public function filterByDate(Request $request)
     {
+        $year = $request->period->year;
         $products = Product::where('prod_status', 'active')->count();
-        $now = Carbon::now()->year;
 
         $core = [
             'product' => $products,
@@ -310,9 +293,14 @@ class DashboardController extends Controller
             'availableProductItem' => $this->countAvailableProductItem(),
             'expiringProduct' => $this->countExpiringProductItem(),
             'outOfStockProducts' => $this->countOutOfStockProductItem(),
-            'ppmpTransactions' => $this->countPpmpUploaded($now),
-            'consolidatedPpmp' => $this->checkApprovedApp($now),
+            'ppmpTransactions' => $this->countPpmpUploaded($year),
+            'consolidatedPpmp' => $this->checkApprovedApp($year),
         ];
         return response()->json($core);
+    }
+
+    private function formatToInteger($number)
+    {
+        return number_format($number, 0, '.', ',');
     }
 }

@@ -42,11 +42,11 @@ const submit = () => {
 
         <div class="relative py-3 sm:max-w-xl sm:mx-auto">
             <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-            <div class="relative px-4 py-5 bg-gray-100 shadow-lg sm:rounded-3xl sm:p-16">
-                <div class="flex justify-center items-center mb-5">
+            <div class="relative py-5 bg-gray-100 shadow-lg sm:rounded-3xl ">
+                <div class="flex justify-center items-center py-5">
                     <img src="/WarePro.v2/assets/images/Winvexis.png" alt="Winvexis">
                 </div>
-                <form @submit.prevent="submit">
+                <form class="px-4 sm:px-16" @submit.prevent="submit">
                     <div>
                         <InputLabel for="email" value="Email" />
 

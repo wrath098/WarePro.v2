@@ -3,9 +3,10 @@ import LineChart from '@/Components/LineChart.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, onMounted, ref, watchEffect } from 'vue';
+import { computed, onMounted, reactive, ref, watchEffect } from 'vue';
 import useAuthPermission from '@/Composables/useAuthPermission';
 import Swal from 'sweetalert2';
+import { debounce } from 'lodash';
 
 const page = usePage();
 const message = computed(() => page.props.flash.message);
@@ -28,6 +29,53 @@ const props = defineProps({
         })
     }
 });
+
+const months = [
+    'January', 'February', 'March', 'April', 
+    'May', 'June', 'July', 'August',
+    'September', 'October', 'November', 'December'
+];
+
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 4 }, (_, i) => currentYear - 2 + i);
+
+const selectedDay = ref(null);
+const selectedMonth = ref(null);
+const selectedYear = ref(null);
+
+const daysInMonth = computed(() => {
+    if (!selectedMonth.value || !selectedYear.value) return 31;
+    
+    return new Date(selectedYear.value, selectedMonth.value, 0).getDate();
+});
+
+const updatedCore = ref({ ...props.core });
+
+const updateDaysInMonth = () => {
+    if (selectedDay.value && daysInMonth.value < selectedDay.value) {
+        selectedDay.value = null;
+    }
+    handleDateFilter();
+};
+
+
+const handleDateFilter = debounce(async () => {   
+    try {
+
+        const filtered = {
+            day: selectedDay.value,
+            month: selectedMonth.value,
+            year: selectedYear.value
+        };
+
+        const response = await axios.get(route('filter.dashboard', { period: filtered }));
+
+        console.log(filtered);
+        //updatedCore.value = response.data;
+    } catch (error) {
+        console.error('Error fetching filtered data:', error);
+    }
+}, 1500);
 
 const chartData = ref({
     labels: [],
@@ -81,20 +129,6 @@ const chartOptions = ref({
         },
     },
 });
-
-const selectedFilter = ref('year');
-const updatedCore = ref({ ...props.core });
-
-const filter = async (event) => {
-    selectedFilter.value = event.target.value;
-
-    try {
-        const response = await axios.get(route('filter.dashboard', { period: selectedFilter.value }));
-        updatedCore.value = response.data;
-    } catch (error) {
-        console.error('Error fetching filtered data:', error);
-    }
-};
 
 watchEffect(() => {
     chartData.value = {
@@ -207,7 +241,7 @@ onMounted(() => {
     <Head title="Dashboard" />
     <AuthenticatedLayout>
         <template #header>
-            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+            <nav class="flex justify-between flex-col sm:flex-row" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
                     <li class="inline-flex items-center" aria-current="page">
                         <a :href="route('dashboard')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
@@ -220,12 +254,23 @@ onMounted(() => {
                         </a>
                     </li>
                 </ol>
-                <ol>
-                    <li class="flex flex-col lg:flex-row w-28">
-                        <select id="filter" name="filter" @change="filter" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1">
-                            <option value="day">Day</option>
-                            <option value="month">Month</option>
-                            <option selected value="year">Year</option>
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="flex flex-col lg:flex-row w-20">
+                        <select v-model="selectedYear" id="filterYear" name="filterYear" @change="updateDaysInMonth" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1">
+                            <option disabled :value="null">Year</option>
+                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                        </select>
+                    </li>
+                    <li class="flex flex-col lg:flex-row w-32">
+                        <select v-model="selectedMonth" id="filterMonth" name="filterMonth" @change="updateDaysInMonth" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1">
+                            <option :value="null">Month</option>
+                            <option v-for="(month, index) in months" :key="index" :value="index + 1">{{ month }}</option>
+                        </select>
+                    </li>
+                    <li class="flex flex-col lg:flex-row w-20">
+                        <select v-model="selectedDay" id="filterDat" name="filterDay" @change="handleDateFilter" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1">
+                            <option :value="null">Day</option>
+                            <option v-for="day in daysInMonth" :value="day" :key="day">{{ day }}</option>
                         </select>
                     </li>
                 </ol>
