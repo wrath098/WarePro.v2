@@ -67,8 +67,10 @@ class CapitalOutlayController extends Controller
         $validatedData = $request->validate([
             'year' => 'required|integer',
             'fundId' => 'required|integer',
-            'amount' => 'required|integer',
+            'amount' => 'required',
         ]);
+
+        $filterAmount = preg_replace('/[^\d.]/', '', $validatedData['amount']);
         
         try {
             $isFound = $this->verifyAccountBudget($validatedData['fundId'], $validatedData['year']);
@@ -83,7 +85,7 @@ class CapitalOutlayController extends Controller
             CapitalOutlay::create([
                 'year' => $validatedData['year'],
                 'cluster' => 'Regular',
-                'amount' => $validatedData['amount'],
+                'amount' => $filterAmount,
                 'fund_id' => $validatedData['fundId'],
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),

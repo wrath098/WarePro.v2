@@ -58,7 +58,6 @@ const updateDaysInMonth = () => {
     handleDateFilter();
 };
 
-
 const handleDateFilter = debounce(async () => {   
     try {
 
@@ -69,9 +68,7 @@ const handleDateFilter = debounce(async () => {
         };
 
         const response = await axios.get(route('filter.dashboard', { period: filtered }));
-
-        console.log(filtered);
-        //updatedCore.value = response.data;
+        updatedCore.value = response.data;
     } catch (error) {
         console.error('Error fetching filtered data:', error);
     }
@@ -179,10 +176,6 @@ const fetchData = async () => {
     }
 }
 
-onMounted(() => {
-    fetchData();
-});
-
 const columns = [
     {
         data: 'code',
@@ -217,6 +210,8 @@ const columns = [
 ];
 
 onMounted(() => {
+    fetchData();
+    
     if (message.value) {
         Swal.fire({
             title: 'Success',
@@ -293,7 +288,7 @@ onMounted(() => {
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="hasPermission('create-office-ppmp') || hasAnyRole(['Developer']) ? route('import.ppmp.index') : '#'">Office PPMP ({{ core.ppmpTransactions.year }})</a>
+                                <a class="hover:underline" :href="hasPermission('create-office-ppmp') || hasAnyRole(['Developer']) ? route('import.ppmp.index') : '#'">Office PPMP ({{ updatedCore.ppmpTransactions.year }})</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ updatedCore.ppmpTransactions.count }}</p>
@@ -310,7 +305,7 @@ onMounted(() => {
                         </div>
                         <div class="px-4 text-gray-700">
                             <h3 class="text-sm tracking-wider">
-                                <a class="hover:underline" :href="hasPermission('view-app-list') || hasAnyRole(['Developer']) ? route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'}) : '#'">Consolidated PPMP ({{ core.consolidatedPpmp.year }})</a>
+                                <a class="hover:underline" :href="hasPermission('view-app-list') || hasAnyRole(['Developer']) ? route('conso.ppmp.type', { type: 'consolidated' , status: 'approved'}) : '#'">Consolidated PPMP ({{ updatedCore.consolidatedPpmp.year }})</a>
                             </h3>
                             <div class="flex justify-start items-center">
                                 <p class="text-3xl mr-2">{{ updatedCore.consolidatedPpmp.status }}</p>

@@ -243,11 +243,11 @@ const formatDecimal = (value) => {
                             <div v-for="account in yearData.funds" :key="account.id" class="flow-root py-3 m-4 border-2 border-indigo-400 ">
                                 <dl class="-my-3 divide-y divide-gray-100 text-base">
                                     <div class="grid grid-cols-1 gap-1 p-3 bg-indigo-100 sm:grid-cols-3 sm:gap-4 border-b-2 border-indigo-400">
-                                        <dt class="font-medium text-indigo-900 sm:col-span-2">{{ account.accountClass }} </dt>
+                                        <dt class="font-bold text-indigo-900 sm:col-span-2">{{ account.accountClass }} </dt>
                                         <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(account.amount) }}</dd>
                                     </div>
                                     <div v-for="allocation in account.allocations" :key="allocation.id" class="grid grid-cols-1 gap-1 pl-10 p-3 even:bg-gray-200/90 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900 sm:col-span-2">{{ allocation.semester }} - {{ allocation.description }}</dt>
+                                        <dt class="font-bold text-gray-900 sm:col-span-2">{{ allocation.semester }} - {{ allocation.description }}</dt>
                                         <dd class="text-gray-700 sm:col-span-1 text-right">{{ formatDecimal(allocation.amount) }}</dd>
                                     </div>
                                 </dl>
@@ -255,7 +255,7 @@ const formatDecimal = (value) => {
                             <div class="flow-root py-3 m-4">
                                 <dl class="-my-3 divide-y divide-gray-100 text-base">
                                     <div class="grid grid-cols-1 gap-1 p-3 bg-indigo-900 sm:grid-cols-3 sm:gap-4 rounded-lg shadow-sm text-gray-100">
-                                        <dt class="font-medium">Total Amount</dt>
+                                        <dt class="font-bold">Total Amount</dt>
                                         <dd class="sm:col-span-2 text-right">{{ formatDecimal(yearData.totalAmount) }}</dd>
                                     </div>
                                 </dl>
@@ -298,7 +298,7 @@ const formatDecimal = (value) => {
                                 <InputError class="mt-2" :message="storeFund.errors.fundId" />
                             </div>
                             <div class="relative z-0 w-full group my-3">
-                                <input v-model="storeFund.amount" type="number" name="amount" id="amount" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <input v-model="storeFund.amount" type="text" name="amount" id="amount" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                 <label for="amount" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Designated Amount</label>
                                 <InputError class="mt-2" :message="storeFund.errors.amount" />
                             </div>

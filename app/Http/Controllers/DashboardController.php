@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\IarTransaction;
-use App\Models\ItemClass;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Models\ProductInventory;
@@ -36,22 +34,23 @@ class DashboardController extends Controller
         $period = [
             'day' => null,
             'month' => null,
-            'year' => Carbon::now()->addYear()->format('Y'),
+            'year' => Carbon::now()->format('Y'),
         ];
 
         $products = Product::where('prod_status', 'active')->count();
+        $ppmpYear = Carbon::now()->addYear()->format('Y');
 
         $core = [
-            'product' => $products,#
-            'reOrder' => $this->countReorderProductItem(),#
-            'iarTransaction' => $this->countIarPendingTransactions($period),#year, month, day
-            'risTransaction' => $this->countRisTransactionThisDay($period),#year, month, day
-            'prTransaction'=> $this->countDraftedPurchaseRequest($period),#year, month, day
-            'availableProductItem' => $this->countAvailableProductItem(),#
-            'expiringProduct' => $this->countExpiringProductItem(),#
-            'outOfStockProducts' => $this->countOutOfStockProductItem(),#
-            'ppmpTransactions' => $this->countPpmpUploaded($period['year']),#year
-            'consolidatedPpmp' => $this->checkApprovedApp($period['year']),#year
+            'product' => $products,
+            'reOrder' => $this->countReorderProductItem(),
+            'iarTransaction' => $this->countIarPendingTransactions($period),
+            'risTransaction' => $this->countRisTransactionThisDay($period),
+            'prTransaction'=> $this->countDraftedPurchaseRequest($period),
+            'availableProductItem' => $this->countAvailableProductItem(),
+            'expiringProduct' => $this->countExpiringProductItem(),
+            'outOfStockProducts' => $this->countOutOfStockProductItem(),
+            'ppmpTransactions' => $this->countPpmpUploaded($ppmpYear),
+            'consolidatedPpmp' => $this->checkApprovedApp($ppmpYear),
         ];
 
         $priceEvaluation = $this->monitorProductItemsPriceStatus() ?? collect();
@@ -90,8 +89,8 @@ class DashboardController extends Controller
                     'description' => $productDetails->prod_desc,
                     'unit' => $productDetails->prod_unit,
                     'count' => $product->count,
-                    'total_quantity' => $product->total_quantity,
-                    'average' => $product->avg_qty_per_transaction,
+                    'total_quantity' => $this->formatToInteger($product->total_quantity),
+                    'average' => number_format($product->avg_qty_per_transaction, 2),
                 ];
             });
         }) ?? [];
@@ -99,23 +98,26 @@ class DashboardController extends Controller
         return response()->json(['products' => $queryIssuances]);
     }
 
-    private function countIarPendingTransactions(array $period): int
+    private function countIarPendingTransactions(array $period)
     {
+ 
         $query = IarTransaction::where('status', 'pending')
             ->when(isset($period['year']), function ($q) use ($period) {
-                $q->whereYear('created_at', $period['year']);
+                $q->whereYear('date', $period['year']);
             })
             ->when(isset($period['month']), function ($q) use ($period) {
-                $q->whereMonth('created_at', $period['month']);
+                $month = str_pad($period['month'], 2, '0', STR_PAD_LEFT);
+                $q->whereMonth('date', $month);
             })
             ->when(isset($period['day']), function ($q) use ($period) {
-                $q->whereDay('created_at', $period['day']);
+                $day = str_pad($period['day'], 2, '0', STR_PAD_LEFT);
+                $q->whereDay('date', $day);
             });
         
-        return $query->count();
+        return $this->formatToInteger($query->count());
     }
 
-    private function countRisTransactionThisDay(array $period): int
+    private function countRisTransactionThisDay(array $period)
     {
         $query = RisTransaction::when(isset($period['year']), function ($q) use ($period) {
                 $q->whereYear('created_at', $period['year']);
@@ -127,10 +129,10 @@ class DashboardController extends Controller
                 $q->whereDay('created_at', $period['day']);
             });
         
-        return $query->count();
+        return $this->formatToInteger($query->count());
     }
 
-    private function countDraftedPurchaseRequest(array $period): int
+    private function countDraftedPurchaseRequest(array $period)
     {
         $query = PrTransaction::where('pr_status', 'draft')
             ->when(isset($period['year']), function ($q) use ($period) {
@@ -143,36 +145,40 @@ class DashboardController extends Controller
                 $q->whereDay('created_at', $period['day']);
             });
         
-        return $query->count();
+        return $this->formatToInteger($query->count());
     }
 
-    private function countAvailableProductItem(): int
+    private function countAvailableProductItem()
     {
-        return ProductInventory::where('qty_on_stock', '>', 0)->count();
+        $countItem = ProductInventory::where('qty_on_stock', '>', 0)->count();
+        return $this->formatToInteger($countItem);
     }  
 
-    private function countExpiringProductItem(): int
+    private function countExpiringProductItem()
     {   
-        return ProductInventoryTransaction::where('type', ['purchase', 'adjustment'])
+        $countTransaction = ProductInventoryTransaction::where('type', ['purchase', 'adjustment'])
             ->where('dispatch', 'incomplete')
             ->whereNotNull('date_expiry')
             ->where('date_expiry', '<=', now()->addDays(90))
             ->count();
+        return $this->formatToInteger($countTransaction);
     }
 
-    private function countReorderProductItem(): int
+    private function countReorderProductItem()
     {
-        return ProductInventory::whereColumn('qty_on_stock', '<=', 'reorder_level')->where('qty_on_stock', '!=', 0)->count();
+        $countItem = ProductInventory::whereColumn('qty_on_stock', '<=', 'reorder_level')->where('qty_on_stock', '!=', 0)->count();
+        return $this->formatToInteger($countItem);
     }
 
-    private function countOutOfStockProductItem(): int
+    private function countOutOfStockProductItem()
     {
-        return Product::where('prod_status', 'active')
+        $countItem = Product::where('prod_status', 'active')
             ->where(function ($query) {
                 $query->whereHas('inventory', fn($q) => $q->where('qty_on_stock', 0))
                     ->orDoesntHave('inventory');
             })
             ->count();
+        return $this->formatToInteger($countItem);
     }
 
     private function pastMonths(int $months = 5): Collection
@@ -252,7 +258,7 @@ class DashboardController extends Controller
         return $latestPrice ? (float) $latestPrice->prod_price : 0;
     }
 
-    private function countPpmpUploaded(string $year, string $type = 'individual')
+    private function countPpmpUploaded(int $year, string $type = 'individual')
     {
         $transactions =  PpmpTransaction::where('ppmp_year', $year)
             ->where('ppmp_type', $type)
@@ -281,8 +287,8 @@ class DashboardController extends Controller
 
     public function filterByDate(Request $request)
     {
-        $year = $request->period->year;
         $products = Product::where('prod_status', 'active')->count();
+        $year = $request->period['year'];
 
         $core = [
             'product' => $products,
@@ -296,6 +302,7 @@ class DashboardController extends Controller
             'ppmpTransactions' => $this->countPpmpUploaded($year),
             'consolidatedPpmp' => $this->checkApprovedApp($year),
         ];
+        
         return response()->json($core);
     }
 
