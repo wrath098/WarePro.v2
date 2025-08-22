@@ -3,11 +3,29 @@
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import PrintButton from '@/Components/Buttons/PrintButton.vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import Modal from '@/Components/Modal.vue';
+    import { computed, ref } from 'vue';
+    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import DangerButton from '@/Components/DangerButton.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const props = defineProps({
         products: Object,
     });
+
+    const isLoading = ref(false);
+    const modalState = ref(null);
+    const showModal = (modalType) => { modalState.value = modalType; }
+    const closeModal = () => { modalState.value = null; }
+    const isPrintPriceOpen = computed(() => modalState.value === 'priceAdjustment');
+
+    const priceForm = ref({
+        adjustment: 100,
+    });
+
+    const openAdjustmentModal = () => {
+        modalState.value = 'priceAdjustment';
+    }
 
     const tableOptions = {
         ordering: false,
@@ -44,8 +62,15 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
+                        <button @click="openAdjustmentModal()" class="flex items-center justify-center text-white bg-rose-900 hover:bg-rose-500 font-medium rounded-lg text-sm  px-4 py-1 text-center me-2 transition duration-150 ease-in-out">
+                            <span class="mr-2">Print Price</span>
+                            <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
+                                <path fill="currentColor" d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/>
+                                <path fill="currentColor" fill-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
                         <PrintButton v-if="hasPermission('print-price-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.PriceActiveList')" class="mx-1 my-1 lg:my-0" target="_blank">
-                            <span class="mr-2">Print</span>
+                            <span class="mr-2">Price Timeline</span>
                         </PrintButton>
                     </li>
                 </ol>
@@ -74,7 +99,11 @@
                                     Unit Of Measure
                                 </th>
                                 <th v-for="(price, index) in products[0]?.price" :key="index" class="px-6 py-3 w-1/12">
-                                    <span>Price </span> <br>( {{ index+1 }} )
+                                    <span v-if="index === 0">Latest</span>
+                                    <span v-else-if="index === 1">Previous</span>
+                                    <span v-else-if="index === 2">3rd Latest</span>
+                                    <span v-else-if="index === 3">4th Latest</span>
+                                    <span v-else>Oldest</span>
                                 </th>
                             </tr>
                         </thead>
@@ -105,6 +134,43 @@
             </div>
         </div>
     </AuthenticatedLayout>
+    <Modal :show="isPrintPriceOpen" @close="closeModal"> 
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Print Price</h3>
+                    <p class="text-sm text-gray-500"> Set the price adjustment.</p>
+                    <div class="mt-5">
+                        <p class="text-sm text-[#86591e]">Enter a value between 100% and 120% to adjust the price.</p>
+                        <div class="relative z-0 w-full group my-2">
+                            <input v-model="priceForm.adjustment" type="number" name="adjustment" id="adjustment" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                            <label for="adjustment" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Price Adjustment</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <a :href="route('generatePdf.priceAdjusted', { adjustment: priceForm.adjustment })" target="_blank" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                Print 
+            </a>
+
+            <DangerButton @click="closeModal"> 
+                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                Cancel
+            </DangerButton>
+        </div>
+    </Modal>
 </template>
 <style scoped>
 :deep(table.dataTable) {

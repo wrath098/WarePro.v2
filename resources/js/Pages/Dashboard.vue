@@ -532,11 +532,11 @@ onMounted(() => {
         text-align: center;
     }
 
-    :deep([data-v-8e8f4dea] table.dataTable tbody > tr > td:nth-child(2)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(2)) {
         text-align: left !important;
     }
 
-    :deep([data-v-8e8f4dea] table.dataTable tbody > tr > td:nth-child(6)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(6)) {
         text-align: right !important;
     }
 </style>

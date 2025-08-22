@@ -26,6 +26,7 @@ use App\Http\Controllers\Pdf\EmergencyPpmpController;
 use App\Http\Controllers\Pdf\InventoryController;
 use App\Http\Controllers\Pdf\IssuanceController;
 use App\Http\Controllers\Pdf\MonthlyInventoryReportController;
+use App\Http\Controllers\Pdf\PriceAdustedController;
 use App\Http\Controllers\Pdf\PriceListActiveController;
 use App\Http\Controllers\Pdf\ProductListActiveController;
 use App\Http\Controllers\Pdf\PsDbmController;
@@ -102,7 +103,7 @@ Route::middleware('auth')->prefix('funds')->group(function () {
 });
 
 Route::middleware('auth')->prefix('categories')->group(function () {
-    Route::middleware('componentAccess')->get('/', [CategoryController::class, 'index'])->name('category.display.active');
+    Route::middleware('componentAccess')->get('/{fund}', [CategoryController::class, 'index'])->name('category.display.active');
     Route::post('/save', [CategoryController::class, 'store'])->name('category.store');
     Route::post('/update', [CategoryController::class, 'update'])->name('category.update');
     Route::post('/restore/{catId}', [CategoryController::class, 'restore'])->name('category.restore');
@@ -262,6 +263,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/stock-card-as-of', [AsOfStockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard.AsOf');
     Route::get('/summary-consolidated-ppmp/{ppmp}', [SummaryOfConsolidatedPpmpController::class, 'generatePdf_summaryOfConso'])->name('generatePdf.summaryOfConsolidated');
     Route::get('/issuance', [IssuanceController::class, 'generatePdf_Issuance'])->name('generatePdf.issuance');    
+    Route::get('/price-adjusted', [PriceAdustedController::class, 'generate_priceAdjusted'])->name('generatePdf.priceAdjusted');  
 });
 
 Route::middleware('auth')->prefix('word')->group(function () {

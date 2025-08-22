@@ -8,6 +8,8 @@ use App\Services\ProductService;
 use App\Services\MyPDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SsmiController extends Controller
 {
@@ -21,6 +23,12 @@ class SsmiController extends Controller
     }
 
     public function generatePdf_ssmi(Request $request){
+        // $response = Http::withHeaders([
+        //     'x-api-key' => '2idqUEqD16WlkMwoWohuluNqFIm9ZqKmsw4GuSsM15E'
+        // ])->get('http://192.168.2.50/api/getEmployees');
+
+        // dd($response->json());
+
         $query = $request->filters;
 
         $startDate = Carbon::parse($query['startDate']);
@@ -58,8 +66,8 @@ class SsmiController extends Controller
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle('SSMI');
-        $pdf->SetSubject('Summary of Supplies and Materials Issued');
+        $pdf->SetTitle('RSMI');
+        $pdf->SetSubject('Report of Supplies and Materials Issued');
         $pdf->SetKeywords('Benguet, WarePro, Consolidated List');
         
         $pdf->setPrintHeader(false);
@@ -82,7 +90,7 @@ class SsmiController extends Controller
                     <h5>PROVINCIAL GENERAL SERVICES OFFICE</h5>
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
-                    <h3>SUMMARY OF SUPPLIES & MATERIALS ISSUED</h3>
+                    <h3>REPORT OF SUPPLIES AND MATERIALS ISSUED</h3>
                     <h5>For the Period of '. $duration .'</h5>
                 </div>
             </div>

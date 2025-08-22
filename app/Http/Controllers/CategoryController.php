@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Fund;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,21 +21,11 @@ class CategoryController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(): Response
+    public function index(Fund $fund): Response
     {   
-        $categories = $this->productService->getActiveCategory();
-        $funds = $this->productService->getActiveFunds();
-
-        $funds = $funds->map(function ($fund) {
-            return [
-                'id' => $fund->id,
-                'name' => $fund->fund_name
-            ];
-        });
-
-        $categories->load('funder', 'creator');
+        $fund->load('categories');
                     
-        $categories = $categories->map(function ($category) {
+        $categories = $fund->categories->map(function ($category) {
             return [
                 'id' => $category->id,
                 'code' => $category->cat_code,
@@ -48,7 +39,7 @@ class CategoryController extends Controller
 
         return Inertia::render('Category/Index', [
             'activeCategories' => $categories,
-            'funds' => $funds, 
+            'funds' => $fund, 
             'authUserId' => Auth::id()
         ]); 
     }

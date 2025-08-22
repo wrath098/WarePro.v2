@@ -35,7 +35,7 @@
 
     const props = defineProps({
         activeCategories: Object,
-        funds: Array,
+        funds: Object,
         authUserId: Number,
     });
 
@@ -210,11 +210,19 @@
                             Components
                         </a>
                     </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="mx-2.5 text-gray-800 ">/</span>
+                            <a :href="route('fund.display.all')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                Account Classification
+                            </a>
+                        </div>
+                    </li>
                     <li :aria-current="!isTrashedActive ? 'page' : undefined">
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
-                            <a :href="route('category.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                Categories
+                            <a :href="''" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                                {{ funds.fund_name }}
                             </a>
                         </div>
                     </li>
@@ -230,7 +238,7 @@
                 <ol v-if="hasAnyRole(['Developer']) || hasPermission('create-category') || hasPermission('view-trashed-category')">
                     <li class="flex flex-col lg:flex-row">
                         <AddButton v-if="hasAnyRole(['Developer']) || hasPermission('create-category')" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
-                            <span class="mr-2">New Item Class</span>
+                            <span class="mr-2">New Category</span>
                         </AddButton>
                         <TrashedButton v-if="hasAnyRole(['Developer']) || hasPermission('view-trashed-category')" @click="fetchTrashedCategories" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
@@ -324,8 +332,8 @@
                                 <div class="relative z-0 w-full group mt-8">
                                     <select v-model="form.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                         <option value="" disabled selected>Please choose the Account Classification applicable</option>
-                                        <option v-for="fund in funds" :key="fund.id" :value="fund.id">
-                                            {{ fund.name }}
+                                        <option :value="funds.id">
+                                            {{ funds.fund_name }}
                                         </option>
                                     </select>
                                     <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
@@ -336,6 +344,7 @@
                                     <label for="category" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
                                     <InputError class="mt-2" :message="form.errors.catName" />
                                 </div>
+                                <!--UNCOMMENT FOR CATEGORY CODE -->
                                 <!-- <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.catCode" type="number" name="categoryCode" id="categoryCode" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
                                     <label for="categoryCode" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Code</label>

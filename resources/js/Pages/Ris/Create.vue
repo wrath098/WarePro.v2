@@ -299,8 +299,8 @@
                             <th class="px-6 py-3 w-[10%] text-center border-2 border-[#7393dc]">Unit of Measurement</th>
                             <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Qty (1st)</th>
                             <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Qty (2nd)</th>
-                            <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Stock Available</th>
                             <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Remaining Qty</th>
+                            <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Stock Available</th>
                             <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Requested Qty</th>
                             <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Action</th>
                         </tr>
@@ -340,10 +340,10 @@
                                 <input v-model="row.treshSecondQty" type="number" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.stockAvailable" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.remainingQty" type="number" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.remainingQty" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.stockAvailable" type="number" class="w-full text-center border-0" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
                                 <input :min="0" :max="row.remainingQty" v-model="row.requestedQty" @input="requestedItemQtyDebounced(row)" type="number" class="w-full rounded-md input-red-when-disabled" :disabled="row.stockAvailable == 0 || row.remainingQty == 0"/>

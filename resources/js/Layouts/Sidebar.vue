@@ -124,17 +124,17 @@ const officeUser = hasAnyRole(['Office User']);
                                         </SubSidebarLink>
                                     </li>
                                     <li v-if="hasPermission('view-account-class') || hasAnyRole(['Developer'])">
-                                        <SubSidebarLink :href="route('fund.display.all')" :active="route().current('fund.display.all')">
-                                            <ArrowHeadRight :class="{ 'text-white' : route().current('fund.display.all')}"/>
+                                        <SubSidebarLink :href="route('fund.display.all')" :active="route().current('fund.display.all') || route().current('category.display.active')">
+                                            <ArrowHeadRight :class="{ 'text-white' : route().current('fund.display.all') || route().current('category.display.active')}"/>
                                             Account Classification
                                         </SubSidebarLink>
                                     </li>
-                                    <li v-if="hasPermission('view-category') || hasAnyRole(['Developer'])">
+                                    <!-- <li v-if="hasPermission('view-category') || hasAnyRole(['Developer'])">
                                         <SubSidebarLink :href="route('category.display.active')" :active="route().current('category.display.active')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('category.display.active')}"/>
                                             Categories
                                         </SubSidebarLink>
-                                    </li>
+                                    </li> -->
                                     <li v-if="hasPermission('view-item-class') || hasAnyRole(['Developer'])">
                                         <SubSidebarLink :href="route('item.display.active')" :active="route().current('item.display.active')">
                                             <ArrowHeadRight :class="{ 'text-white' : route().current('item.display.active')}"/>
@@ -556,7 +556,7 @@ const officeUser = hasAnyRole(['Office User']);
                                         <li>
                                             <SubSidebarLink :href="route('view.ssmi')" :active="route().current('view.ssmi')">
                                                 <ArrowHeadRight :class="{ 'text-white' : route().current('view.ssmi')}"/>
-                                                <span class="ml-3">Summary of Supplies and Materials Issued</span>
+                                                <span class="ml-3">Report of Supplies and Materials Issued</span>
                                             </SubSidebarLink>
                                         </li>
                                     </ul>

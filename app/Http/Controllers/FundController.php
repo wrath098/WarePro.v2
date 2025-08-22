@@ -215,6 +215,7 @@ class FundController extends Controller
     private function getActiveFund()
     {
         $funds = Fund::where('fund_status', 'active')
+            ->with('categories')
             ->orderBy('fund_name')
             ->get()
             ->map(function($fund) {
@@ -225,6 +226,7 @@ class FundController extends Controller
                     'description' => $fund->description,
                     'created_by' => $fund->created_by,
                     'nameOfCreator' => $this->getUserName($fund->created_by),
+                    'categories' => $fund->categories
                 ];
             });
 
