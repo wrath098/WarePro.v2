@@ -49,7 +49,7 @@ class PriceListActiveController extends Controller
                     <h5>PROVINCIAL GENERAL SERVICES OFFICE</h5>
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
-                    <h4>PRODUCT PRICE LIST</h4>
+                    <h4>PRODUCT PRICE TIMELINE</h4>
                     <h5>OFFICE & JANITORIAL SUPPLIES</h5>
                 </div>
             </div>

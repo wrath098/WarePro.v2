@@ -1,14 +1,12 @@
 <script setup>
     import { Head, useForm, usePage } from '@inertiajs/vue3';
-    import { ref, reactive, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
     import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
-    import PrintButton from '@/Components/Buttons/PrintButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import ModifyButton from '@/Components/Buttons/ModifyButton.vue';
     import Swal from 'sweetalert2';
@@ -17,6 +15,7 @@
     import RecycleIcon from '@/Components/Buttons/RecycleIcon.vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
     import InputError from '@/Components/InputError.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -275,6 +274,21 @@
             width: '16.666667%'
         },
     ];
+
+    function formattedAmount(model, field) {
+        const value = model[field];
+        if (!value) return '';
+        const number = parseFloat(value.replace(/,/g, ''));
+        return isNaN(number) ? value : number.toLocaleString();
+    }
+
+    function handleAmountInput(e, model, field) {
+        const raw = e.target.value.replace(/,/g, '');
+        if (/^\d*\.?\d*$/.test(raw)) {
+            model[field] = raw;
+        }
+    }
+
 </script>
 
 <template>
@@ -315,15 +329,42 @@
                         <AddButton v-if="hasPermission('create-product-item') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">New Product Item</span>
                         </AddButton>
-                        <PrintButton v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.ProductActiveList')" target="_blank" class="mx-1 my-1 lg:my-0">
-                            <span class="mr-2">Print </span>
-                        </PrintButton>
-                        <a v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generate.product.active.list.word')" target="_blank" class="flex items-center justify-center text-white bg-blue-900 hover:bg-blue-500 font-medium rounded-lg text-sm  px-4 py-1 text-center me-2 transition duration-150 ease-in-out mx-1 my-1 lg:my-0">
-                            <span class="mr-2">Word</span>
-                            <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M17 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4zM2.859 2.877l12.57-1.795a.5.5 0 0 1 .571.494v20.848a.5.5 0 0 1-.57.494L2.858 21.123a1 1 0 0 1-.859-.99V3.867a1 1 0 0 1 .859-.99M11 8v4.989L9 11l-1.99 2L7 8H5v8h2l2-2l2 2h2V8z"/>
-                            </svg>
-                        </a>
+                        <Dropdown>
+                            <template #trigger>
+                                <span class="inline-flex rounded-md">
+                                    <button type="button" class="inline-flex items-center rounded-md border border-transparent px-3 py-2 text-sm font-medium leading-4 bg-rose-900 text-gray-50 transition duration-150 ease-in-out hover:bg-rose-800 focus:outline-none">
+                                        Print
+                                        <svg
+                                            class="-me-0.5 ms-2 h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </span>
+                            </template>
+                            <template #content>
+                                <a v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.ProductActiveList')" target="_blank" rel="noopener noreferrer" class="flex flex-row w-full px-4 py-2 text-start text-base leading-5 text-gray-900 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                    <span class="mr-2">PDF File</span> 
+                                    <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
+                                        <path fill="currentColor" d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/>
+                                        <path fill="currentColor" fill-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" clip-rule="evenodd"/>
+                                    </svg>
+                                </a>
+                                <a v-if="hasPermission('print-product-list') || hasAnyRole(['Developer'])" :href="route('generate.product.active.list.word')" target="_blank" rel="noopener noreferrer" class="flex flex-row w-full px-4 py-2 text-start text-base leading-5 text-gray-900 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                    <span class="mr-2">Word File</span>
+                                    <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M17 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4zM2.859 2.877l12.57-1.795a.5.5 0 0 1 .571.494v20.848a.5.5 0 0 1-.57.494L2.858 21.123a1 1 0 0 1-.859-.99V3.867a1 1 0 0 1 .859-.99M11 8v4.989L9 11l-1.99 2L7 8H5v8h2l2-2l2 2h2V8z"/>
+                                    </svg>
+                                </a>
+                            </template>
+                        </Dropdown>
                         <TrashedButton v-if="hasPermission('view-trashed-product-items') || hasAnyRole(['Developer'])" @click="fetchTrashedItems" class="mx-1 my-1 lg:my-0" :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                             <span class="mr-2">Trashed</span>
                         </TrashedButton>
@@ -414,7 +455,7 @@
                                     </div>
                                     <div class="grid lg:grid-cols-2 lg:gap-6 mt-3">
                                         <div class="relative z-0 w-full group">
-                                            <input v-model="create.prodPrice" type="number" name="prodPrice" id="prodPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                                            <input :value="formattedAmount(create, 'prodPrice')" @input="e => handleAmountInput(e, create, 'prodPrice')" type="text" name="prodPrice" id="prodPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                                             <label for="prodPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
                                             <InputError class="mt-2" :message="create.errors.prodPrice" />
                                         </div>
@@ -521,7 +562,7 @@
                                         <InputError class="mt-2" :message="edit.errors.prodDesc" />
                                     </div>
                                     <div class="relative z-0 w-full mb-5 group">
-                                        <input v-model="edit.prodPrice" type="text" name="editProdPrice" id="editProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                        <input :value="formattedAmount(edit, 'prodPrice')" @input="e => handleAmountInput(e, edit, 'prodPrice')" type="text" name="editProdPrice" id="editProdPrice" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                         <label for="editProdPrice" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit Price</label>
                                         <InputError class="mt-2" :message="edit.errors.prodPrice" />
                                     </div>

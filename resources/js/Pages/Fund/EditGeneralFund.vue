@@ -97,6 +97,37 @@ const balanceAmount = (accountClass, account) => {
         });
     }
 };
+
+function formatNumber(value) {
+    if (typeof value === 'number') value = value.toString();
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function unformatNumber(value) {
+    return value.replace(/,/g, '');
+}
+
+function handleAmountInput(event, target, type) {
+    const rawValue = this.unformatNumber(event.target.value);
+    const numericValue = rawValue.replace(/\D/g, '');
+
+    target.amount = numericValue;
+
+    event.target.value = this.formatNumber(numericValue);
+
+    if (type === 'allocation') {
+      const account = this.updateBudget.funds.find(acc => acc.allocations?.some(alloc => alloc === target));
+      if (account) {
+        this.balanceAmount(account, target);
+      }
+    }
+}
+
+const formattedTotalAmount = computed(() => {
+  const raw = Number(updateBudget.totalAmount || 0);
+  return formatNumber(raw.toString());
+});
+
 </script>
 <template>
     <Head title="General Fund" />
@@ -152,9 +183,9 @@ const balanceAmount = (accountClass, account) => {
                                 Total Amount
                             </label>
                             <input
-                                v-model="updateBudget.totalAmount"
+                                :value="formattedTotalAmount"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="grid-first-name" type="number" placeholder="Total Amount" readonly>
+                                id="grid-first-name" type="text" placeholder="Total Amount" readonly>
                         </div>
                         <div class="relative isolate flex overflow-hidden bg-gray-600 px-6 py-2.5 rounded-md">
                             <div class="flex flex-wrap">
@@ -168,10 +199,11 @@ const balanceAmount = (accountClass, account) => {
                                 {{ account.accountClass }}
                             </label>
                             <input
-                                v-model="account.amount"
+                                :value="formatNumber(account.amount)"
+                                @input="e => handleAmountInput(e, account, 'account')"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 :id="'account-' + account.id" 
-                                type="number" 
+                                type="text" 
                                 :disabled="account.allocations != null" 
                                 placeholder="" 
                                 required
@@ -182,10 +214,11 @@ const balanceAmount = (accountClass, account) => {
                                         {{ allocation.semester }} - {{ allocation.description }}
                                     </label>
                                     <input
-                                        v-model="allocation.amount"
+                                        :value="formatNumber(allocation.amount)"
+                                        @input="e => handleAmountInput(e, allocation, 'allocation')"
                                         class="w-full shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline disabled:bg-gray-300"
                                         :id="'allocation-' + allocation.id" 
-                                        type="number" 
+                                        type="text" 
                                         placeholder="" 
                                         :disabled="allocation.description !== 'Contingency'"
                                         @keyup="balanceAmount(account, allocation)"

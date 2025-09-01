@@ -323,20 +323,20 @@ const columns = [
                         </div>
                         <div class="p-4 rounded-lg">
                             <h4 class="text-base font-semibold text-gray-500">Categories</h4>
-                            <ul>
-                                <li v-for="category in fund.categories" :key="category.id" class="my-1 w-full">
-                                    <p class="text-gray-500 hover:underline">
-                                        <span class="text-xs font-bold p-1 text-indigo-700 rounded-md bg-indigo-100">{{ category.cat_code.padStart(2, '0') }}</span>
-                                        {{ category.cat_name }}
-                                    </p>
+                            <ul v-if="fund.categories.length > 0">
+                                <li v-for="category in fund.categories" :key="category.id" class="my-1 w-full grid grid-cols-12 gap-2">
+                                    <p class="flex justify-center items-center text-xs font-bold p-1 text-indigo-700 rounded-md bg-indigo-100 col-span-1">{{ category.cat_code.padStart(2, '0') }}</p>
+                                    <p class="col-span-11 text-gray-500 hover:underline">{{ category.cat_name }}</p>
                                 </li>
+                            </ul>
+                            <ul v-else>
+                                <li class="text-gray-500 hover:underline">No category available.</li>
                             </ul>
                         </div>
                     </li>
                 </ul>
-                <div class="relative overflow-x-auto">
+                <div v-if="isTrashedActive" class="relative overflow-x-auto bg-slate-100 p-2">
                     <DataTable
-                        v-if="isTrashedActive"
                         class="display table-hover table-striped shadow-lg rounded-lg"
                         :columns="columns"
                         :data="trashedFund.data"

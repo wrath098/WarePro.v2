@@ -222,7 +222,7 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="''" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                {{ funds.fund_name }}
+                                {{ funds.name }}
                             </a>
                         </div>
                     </li>
@@ -247,7 +247,7 @@
                 </ol>
             </nav>
         </template>
-
+        
         <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
@@ -329,13 +329,9 @@
                             <p class="text-sm text-gray-500"> Enter the details for the New Category you wish to add.</p>
                             <div class="mt-2">
                                 <input type="hidden" v-model="form.createdBy">
+                                <input type="hidden" v-model="form.fundId">
                                 <div class="relative z-0 w-full group mt-8">
-                                    <select v-model="form.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                        <option value="" disabled selected>Please choose the Account Classification applicable</option>
-                                        <option :value="funds.id">
-                                            {{ funds.fund_name }}
-                                        </option>
-                                    </select>
+                                    <input :value="funds.name" type="text" name="fundId" id="fundId" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" readonly required />
                                     <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
                                     <InputError class="mt-2" :message="form.errors.fundId" />
                                 </div>
@@ -398,8 +394,8 @@
                                 <div class="relative z-0 w-full group my2">
                                     <select v-model="editForm.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required disabled>
                                         <option value="" disabled selected>Please choose the Account Classification applicable</option>
-                                        <option v-for="fund in funds" :key="fund.id" :value="fund.id">
-                                            {{ fund.name }}
+                                        <option :value="funds.id">
+                                            {{ funds.name }}
                                         </option>
                                     </select>
                                     <label for="fundId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>

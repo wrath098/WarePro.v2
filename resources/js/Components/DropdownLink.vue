@@ -6,12 +6,17 @@ defineProps({
         type: String,
         required: true,
     },
+    target: {
+        type: String,
+        default: null,
+    },
 });
 </script>
 
 <template>
     <Link
         :href="href"
+        :target="target"
         class="block w-full px-4 py-2 text-start text-base leading-5 text-gray-900 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out"
     >
         <slot />

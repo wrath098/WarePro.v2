@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -9,6 +9,7 @@ import AddButton from '@/Components/Buttons/AddButton.vue';
 import Swal from 'sweetalert2';
 import useAuthPermission from '@/Composables/useAuthPermission';
 import InputError from '@/Components/InputError.vue';
+import { watch } from 'vue';
 
 const {hasAnyRole, hasPermission} = useAuthPermission();
 const page = usePage();
@@ -58,11 +59,16 @@ const showModal = (modalType) => { modalState.value = modalType; }
 const closeModal = () => { modalState.value = null; }
 const isAddModalOpen = computed(() => modalState.value === 'add');
 
+const proposedBudget = reactive({
+    amount: ''
+});
+
 const storeFund = useForm({
     fundId: '',
     year: '',
-    amount: '',
+    amount: proposedBudget.amount,
 });
+
 
 const submit = () => {
     isLoading.value = true;
@@ -121,6 +127,23 @@ const formatDecimal = (value) => {
         maximumFractionDigits: 2
     }).format(value);
 };
+
+const formattedAmount = computed(() => {
+    if (!proposedBudget.amount) return '';
+    const number = parseFloat(proposedBudget.amount.replace(/,/g, ''));
+    return isNaN(number) ? proposedBudget.amount : number.toLocaleString();
+})
+
+function handleInput(e) {
+    const raw = e.target.value.replace(/,/g, '');
+    if (/^\d*\.?\d*$/.test(raw)) {
+        proposedBudget.amount = raw;
+    }
+}
+
+watch(() => proposedBudget.amount, (val) => {
+    storeFund.amount = val;
+})
 </script>
 
 <template>
@@ -298,7 +321,7 @@ const formatDecimal = (value) => {
                                 <InputError class="mt-2" :message="storeFund.errors.fundId" />
                             </div>
                             <div class="relative z-0 w-full group my-3">
-                                <input v-model="storeFund.amount" type="text" name="amount" id="amount" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <input :value="formattedAmount" @input="handleInput" type="text" name="amount" id="amount" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
                                 <label for="amount" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Designated Amount</label>
                                 <InputError class="mt-2" :message="storeFund.errors.amount" />
                             </div>

@@ -24,6 +24,13 @@ class CategoryController extends Controller
     public function index(Fund $fund): Response
     {   
         $fund->load('categories');
+
+        $activeFund = $this->productService->getActiveFunds();
+
+        $formattedFunds = [
+            'id' => $fund->id,
+            'name' => $fund->fund_name
+        ];
                     
         $categories = $fund->categories->map(function ($category) {
             return [
@@ -39,7 +46,7 @@ class CategoryController extends Controller
 
         return Inertia::render('Category/Index', [
             'activeCategories' => $categories,
-            'funds' => $fund, 
+            'funds' => $formattedFunds, 
             'authUserId' => Auth::id()
         ]); 
     }

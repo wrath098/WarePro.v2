@@ -7,6 +7,7 @@
     import { computed, ref } from 'vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const props = defineProps({
@@ -39,7 +40,7 @@
     <Head title="Price List" />
     <AuthenticatedLayout>
         <template #header>
-            <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
+            <nav class="flex justify-between flex-row" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
                     <li class="inline-flex items-center" aria-current="page">
                         <a :href="route('product.display.active')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
@@ -62,16 +63,44 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
-                        <button @click="openAdjustmentModal()" class="flex items-center justify-center text-white bg-rose-900 hover:bg-rose-500 font-medium rounded-lg text-sm  px-4 py-1 text-center me-2 transition duration-150 ease-in-out">
-                            <span class="mr-2">Print Price</span>
-                            <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
-                                <path fill="currentColor" d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/>
-                                <path fill="currentColor" fill-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <PrintButton v-if="hasPermission('print-price-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.PriceActiveList')" class="mx-1 my-1 lg:my-0" target="_blank">
-                            <span class="mr-2">Price Timeline</span>
-                        </PrintButton>
+                        <Dropdown class="w-32">
+                            <template #trigger>
+                                <span class="inline-flex rounded-md">
+                                    <button type="button" class="inline-flex items-center rounded-md border border-transparent px-3 py-2 text-sm font-medium leading-4 bg-rose-900 text-gray-50 transition duration-150 ease-in-out hover:bg-rose-800 focus:outline-none">
+                                        Print Price
+                                        <svg
+                                            class="-me-0.5 ms-2 h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </span>
+                            </template>
+                            <template #content>
+                                <button @click="openAdjustmentModal()" class="flex flex-row w-full px-4 py-2 text-start text-base leading-5 text-gray-900 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                    <span class="mr-2">Adj. Price</span>
+                                    <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
+                                        <path fill="currentColor" d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/>
+                                        <path fill="currentColor" fill-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+
+                                <a v-if="hasPermission('print-price-list') || hasAnyRole(['Developer'])" :href="route('generatePdf.PriceActiveList')" target="_blank" rel="noopener noreferrer" class="flex flex-row w-full px-4 py-2 text-start text-base leading-5 text-gray-900 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                    <span class="mr-2">Timeline</span> 
+                                    <svg class="w-6 h-6" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
+                                        <path fill="currentColor" d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/>
+                                        <path fill="currentColor" fill-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" clip-rule="evenodd"/>
+                                    </svg>
+                                </a>
+                            </template>
+                        </Dropdown>
                     </li>
                 </ol>
             </nav>
