@@ -178,7 +178,8 @@ class DraftConsolidatedPpmpController extends Controller
                                             $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
                                             $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
                                             $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                            $text .= '<tr style="font-size: 9px; text-align: center;">
+                                            $text .= $prodQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+                                            $text .= '
                                                 <td width="40px">' . $product->prod_oldNo . '</td>
                                                 <td width="45px">' . $product->prod_newNo . '</td>
                                                 <td width="190px" style="text-align: left;">' . $product->prod_desc . '</td>
@@ -350,7 +351,8 @@ class DraftConsolidatedPpmpController extends Controller
                                             $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
                                             $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
                                             $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                            $text .= '<tr style="font-size: 9px; text-align: center;">
+                                            $text .= $prodQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+                                            $text .= '
                                                 <td width="40px">' . $product->prod_oldNo . '</td>
                                                 <td width="45px">' . $product->prod_newNo . '</td>
                                                 <td width="190px" style="text-align: left;">' . $product->prod_desc . '</td>
@@ -557,7 +559,7 @@ class DraftConsolidatedPpmpController extends Controller
     private function formattedAndSortedParticulars($ppmpTransaction)
     {
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
-            $prodPrice = (float)$this->productService->getLatestPrice($items->prod_id) * $ppmpTransaction->price_adjustment;
+            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
             #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
             //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
 

@@ -36,30 +36,28 @@ class PpmpTransactionController extends Controller
     }
 
     public function index(): Response
-    {   
-        $currentYear = Carbon::now()->year;
-        
-        $officePpmpExist = PpmpTransaction::where(function($query) use ($currentYear) {
-                $query->where(function($query) {
-                    $query->whereIn('ppmp_type', ['individual', 'emergency']);
-                })
-                ->where('ppmp_version', 1)
-                ->whereYear('created_at', $currentYear);
-            })
+    {          
+        $officePpmpExist = PpmpTransaction::whereIn('ppmp_type', ['individual', 'emergency'])
+            ->where('ppmp_version', 1)
             ->with(['requestee', 'creator'])
             ->orderBy('created_at', 'desc')
-            ->get()
+            ->paginate(50)
             ->map(function ($ppmp) {
                 return [
                     'id' => $ppmp->id,
                     'ppmpCode' => $ppmp->ppmp_code,
-                    'ppmpType' => $ppmp->ppmp_type == 'individual' ? 'Office' : ucfirst($ppmp->ppmp_type),
+                    'ppmpType' => $ppmp->ppmp_type === 'individual' ? 'Office' : ucfirst($ppmp->ppmp_type),
                     'basedPrice' => ((float) $ppmp->price_adjustment * 100) . '%',
                     'officeId' => $ppmp->office_id,
-                    'officeCode' => $ppmp->requestee->office_name ?? '',
-                    'creator' => $ppmp->creator->name ?? ''
+                    'officeCode' => $ppmp->requestee->office_code ?? '',
+                    'officeName' => $ppmp->requestee->office_name ?? '',
+                    'creator' => $ppmp->creator->name ?? '',
+                    'createdAt' => [
+                        'display' => optional($ppmp->created_at)->format('M d, Y'),
+                        'raw' => optional($ppmp->created_at)->toDateString(),
+                    ],
                 ];
-        });
+            });
         
         $office = Office::where('office_status', 'active')
             ->orderBy('office_name')
@@ -326,7 +324,7 @@ class PpmpTransactionController extends Controller
         });
 
         $formattedOverallPrice = number_format($grandTotal, 2, '.', ',');
-        $createdAt = $ppmpTransaction->created_at->format('F d, Y');
+        $createdAt = $ppmpTransaction->created_at->format('M d, Y');
 
         return Inertia::render('Ppmp/Individual', [
             'ppmp' =>  $ppmpTransaction,

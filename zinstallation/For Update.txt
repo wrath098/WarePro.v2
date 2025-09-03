@@ -1,1 +1,2 @@
-Update Product measurement
+#Update default value of column 'qty_adjustment' and 'tresh_adjustment' from the ppmp_transactions table
+#Run php artisan migrate to update the added column on ppmp_transactions table

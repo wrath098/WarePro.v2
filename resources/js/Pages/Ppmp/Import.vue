@@ -155,14 +155,19 @@
 
     const columns = [
         {
-            data: 'officeCode',
-            title: 'Office Code',
+            data: 'createdAt.raw',
+            title: 'Date Raw Created',
+            visible: false,
+        },
+        {
+            data: 'officeName',
+            title: 'Office Name',
             width: '25%'
         },
         {
-            data: 'ppmpCode',
-            title: 'Transaction No#',
-            width: '15%'
+            data: 'officeCode',
+            title: 'Office Code',
+            width: '10%'
         },
         {
             data: 'ppmpType',
@@ -170,9 +175,9 @@
             width: '15%',
         },
         {
-            data: 'basedPrice',
-            title: 'Price Adjustment',
-            width: '10%'
+            data: 'createdAt.display',
+            title: 'Date Created',
+            width: '15%'
         },
         {
             data: 'creator',
@@ -309,7 +314,6 @@
                                 </div>
                             </form>
                         </div>
-
                         <div class="col-span-2 p-2 bg-white rounded-md shadow mt-5 lg:mt-0">
                             <div class="bg-white p-2 overflow-hidden">
                                 <div class="relative overflow-x-auto">
@@ -319,7 +323,8 @@
                                         :data="officePpmps"
                                         :options="{  paging: true,
                                             searching: true,
-                                            ordering: true
+                                            ordering: true,
+                                            order: [[0, 'desc']]
                                         }">
                                             <template #action="props">
                                                 <ViewButton v-if="hasPermission('view-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('indiv.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>

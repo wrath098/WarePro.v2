@@ -51,12 +51,8 @@ class EmergencyPpmpController extends Controller
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>OFFICE & JANITORIAL SUPPLIES</h4>
-                    <h5>'. $ppmp->ppmp_year.'</h5>
+                    <h5>Emergency Purchase</h5>
                 </div>
-            </div>
-            <div style="line-height: 0.80;">
-                <h5>FPP CODE: <u> </u></h5>
-                <h5>END USER / OFFICE: ' . strtoupper($ppmp->requestee->office_name) . '</h5>
             </div>
             <br>
             ';     
@@ -155,7 +151,7 @@ class EmergencyPpmpController extends Controller
             'prodCode' => $this->productService->getProductCode($particular->prod_id),
             'prodName' => $this->productService->getProductName($particular->prod_id),
             'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPrice($particular->prod_id),
+            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
         ]);
         
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');

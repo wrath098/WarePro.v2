@@ -211,11 +211,18 @@
                         </div>
                     </li>
                 </ol>
-                <ol>
-                    <li class="flex flex-col lg:flex-row">
+                <ol class="flex flex-col lg:flex-row">
+                    <li>
                         <AddButton v-if="hasPermission('create-office-ppmp-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Add New Particular</span>
                         </AddButton>
+                    </li>
+                    <li v-if="ppmp.ppmp_type == 'individual'">
+                        <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id})" target="_blank" class="mx-1 my-1 lg:my-0">
+                            <span class="mr-2">Print</span>
+                        </PrintButton>
+                    </li>
+                    <li v-else>
                         <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.emergencyPpmp', { ppmp: ppmp.id})" target="_blank" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Print</span>
                         </PrintButton>
@@ -234,7 +241,7 @@
                             </div>
 
                             <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
-                                <dl class="-my-3 divide-y divide-gray-100 text-base">
+                                <dl class="-my-3 divide-y divide-gray-100 text-base font-semibold">
                                     <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                                         <dt class="font-medium text-gray-900">Requestee</dt>
                                         <dd class="text-gray-700 sm:col-span-2">: {{ ppmp.requestee.office_name }}</dd>
@@ -287,7 +294,7 @@
                                         :data="ppmpParticularsArray"
                                         :options="{  paging: true,
                                             searching: true,
-                                            ordering: false
+                                            ordering: false,
                                         }">
                                             <template #action="props">
                                                 <EditButton v-if="hasPermission('edit-office-ppmp-particular') ||  hasAnyRole(['Developer'])" @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>

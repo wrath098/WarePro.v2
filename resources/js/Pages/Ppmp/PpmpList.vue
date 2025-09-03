@@ -69,12 +69,12 @@
         {
             data: 'ppmp_code',
             title: 'Transaction No#',
-            width: '12%'
+            visible: false,
         },
         {
             data: 'requestee.office_code',
             title: 'Office Code',
-            width: '10%'
+            width: '12%'
         },
         {
             data: 'requestee.office_name',
@@ -83,13 +83,13 @@
         },
         {
             data: 'ppmp_year',
-            title: 'PPMP for Year',
+            title: 'PPMP CY',
             width: '10%'
         },
         {
             data: 'ppmp_type',
             title: 'Type',
-            width: '8%',
+            width: '10%',
             render: function(data) {
                 return data 
                     ? data == 'individual' 
@@ -99,6 +99,17 @@
             }
         },
         {
+            data: 'created_at',
+            title: 'Date Created',
+            render: function(data, type, row) {
+                if (!data) return '';
+                const date = new Date(data);
+                const options = { month: 'short', day: '2-digit', year: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            },
+            width: '15%'
+        },
+        {
             data: 'updater.name',
             title: 'Updated By',
             width: '20%'
@@ -106,7 +117,7 @@
         {
             data: null,
             title: 'Action',
-            width: '15%',
+            width: '8%',
             render: '#action',
         },
     ];
@@ -157,7 +168,8 @@
                         :data="ppmpTransaction"
                         :options="{  paging: true,
                             searching: true,
-                            ordering: false
+                            ordering: false,
+                            order: [[0, 'desc']]
                         }"> 
                             <template #action="props">
                                 <ul v-if="ppmp.status == 'Draft'">
@@ -325,10 +337,6 @@
     }
 
     :deep(table.dataTable tbody > tr > td:nth-child(2)) {
-        text-align: left !important;
-    }
-
-    :deep(table.dataTable tbody > tr > td:nth-child(3)) {
         text-align: left !important;
     }
 </style>

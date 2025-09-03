@@ -27,7 +27,7 @@ class DraftOfficePpmpController extends Controller
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code) . ' - Adjusted');
+        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code));
         $pdf->SetSubject('Individual PPMP Particulars');
         $pdf->SetKeywords('Benguet, WarePro, Individual List');
 
@@ -275,7 +275,7 @@ class DraftOfficePpmpController extends Controller
             'prodCode' => $this->productService->getProductCode($particular->prod_id),
             'prodName' => $this->productService->getProductName($particular->prod_id),
             'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPrice($particular->prod_id),
+            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
         ]);
         
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
@@ -321,7 +321,8 @@ class DraftOfficePpmpController extends Controller
         $firstQtyAmount = (float) $particular['qtyFirst'] * (float) $particular['prodPrice'];
         $secondQtyAmount = (float) $particular['qtySecond'] * (float) $particular['prodPrice'];
         $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-        $text .= '<tr style="font-size: 9px; text-align: center;">
+        $text .= $prodQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+        $text .= '
             <td width="40px">' . $product->prod_oldNo . '</td>
             <td width="45px">' . $product->prod_newNo . '</td>
             <td width="195px" style="text-align: left;">' . $product->prod_desc . '</td>
@@ -354,7 +355,8 @@ class DraftOfficePpmpController extends Controller
     {
         $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
         $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
-        $text .= '<tr style="font-size: 9px; text-align: center;">
+        $text .= $firstQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+        $text .= '
             <td width="40px">' . $product->prod_oldNo . '</td>
             <td width="45px">' . $product->prod_newNo . '</td>
             <td width="252px" style="text-align: left;">'. $product->prod_desc . '</td>
