@@ -23,11 +23,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Rap2hpoutre\FastExcel\FastExcel;
 
-
-
 class PpmpTransactionController extends Controller
 {
-
     protected $productService;
 
     public function __construct(ProductService $productService)
@@ -343,6 +340,7 @@ class PpmpTransactionController extends Controller
         $ppmpTransaction->load('updater', 'consolidated');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
         $countTrashedItems = $ppmpTransaction->consolidated()->onlyTrashed()->count();
+        $accountClass = $this->productService->getActiveFunds();
 
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
@@ -381,6 +379,7 @@ class PpmpTransactionController extends Controller
         return Inertia::render('Ppmp/Consolidated', [
             'ppmp' =>  $ppmpTransaction,
             'countTrashed' => $countTrashedItems,
+            'accountClass' => $accountClass,
             'user' => Auth::id(),
         ]);
     }
@@ -522,6 +521,148 @@ class PpmpTransactionController extends Controller
             return back()->with('error', 'Updating of PPMP Failed. Please try again!');
         }
     }
+
+    public function updateInitialAdjustment(Request $request)
+    {
+        $consoPpmpId = $request->input('ppmpId');
+        $adjustmentType = $request->input('adjustmentType');
+        $customData = $request->input('customInitAdjustment') 
+            ? array_filter($request->input('customInitAdjustment'), function($value) {
+                return !is_null($value);
+            })
+            : null;
+
+        DB::beginTransaction();
+
+        try {
+            $consoTransactionInfo = PpmpTransaction::find($consoPpmpId);
+
+            if(!$consoTransactionInfo) {
+                DB::rollBack();
+                return back()->with('error', 'Consolidated PPMP Id not found. Please select valid transaction and try again.');
+            }
+
+            $allProductsId = $adjustmentType == 'grouped' 
+                ? $this->getAllProducts_groupedType() 
+                : $this->getAllProducts_customType($customData);
+
+            $officePpmpIds = json_decode($consoTransactionInfo->office_ppmp_ids);
+
+            $this->initOfficePpmpAdjustment($allProductsId, $officePpmpIds, $customData, $consoTransactionInfo->id);
+
+            $consoTransactionInfo->update([
+                'baseline_adjustment_type' => 'custom',
+                'init_qty_adjustment' => json_encode($customData),
+                'updated_by' => Auth::id()
+            ]);
+
+            DB::commit();
+
+        }catch (\Exception $e) {
+            DB::rollBack();
+            Log::error(['Update Consolidated Initial Adjustment' => $e->getMessage()]);
+        }
+    }
+
+    private function getAllProducts_customType($customAdjustment)
+    {
+        $allProducts = collect();
+        foreach($customAdjustment as $accountId => $value) {
+                $fund = Fund::with([
+                'categories' => function ($q) {
+                    $q->where('cat_status', 'active')->select('id', 'fund_id', 'cat_code', 'cat_name');
+                },
+                'categories.items' => function ($q) {
+                    $q->where('item_status', 'active')->select('id', 'cat_id', 'item_code', 'item_name');
+                },
+                'categories.items.products' => function ($q) {
+                    $q->where('prod_status', 'active')->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+                }
+            ])
+            ->where('id', $accountId)
+            ->where('fund_status', 'active')
+            ->first(['id', 'fund_name']);
+
+            $productIds = collect();
+            if ($fund) {
+                foreach ($fund->categories as $category) {
+                    foreach ($category->items as $item) {
+                        foreach ($item->products as $product) {
+                            $productIds->push($product->id);
+                        }
+                    }
+                }
+                $allProducts->put($accountId, $productIds->unique()->values());
+            }
+        }
+
+        return $allProducts;
+    }
+
+    private function getAllProducts_groupedType()
+    {
+        $funds = $this->productService->getActiveProduct_FundModel();
+
+        $productIds = $funds->flatMap(function ($fund) {
+            return $fund->categories->flatMap(function ($category) {
+                return $category->items->flatMap(function ($item) {
+                    return $item->products->pluck('id');
+                });
+            });
+        })->unique()->values();
+
+        return $productIds;
+    }
+
+    private function initOfficePpmpAdjustment($products, $officePpmps, $customData, $updatingTransactionId)
+    {
+        $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmps)->keyBy('id');
+
+        foreach ($products as $index => $productIds) {
+            $customValue = $customData[$index] ?? 100;
+            $adjustment = (float)$customValue / 100;
+
+            foreach ($productIds as $prodId) {
+
+                $consoFirstQty = 0;
+                $consoSecondQty = 0;
+
+                foreach($officePpmps as $ppmpId) {
+                    $transaction = $ppmpTransactions[$ppmpId] ?? null;
+
+                    if (!$transaction) continue;
+
+                    $matchedParticular = $transaction->particulars->firstWhere('prod_id', $prodId);
+
+                    if ($matchedParticular) {
+                        $isProductExempted = $this->productService->validateProductExcemption($prodId);
+                        $adjustedFirstQty = $this->calculateAdjustedQty($matchedParticular->qty_first, $adjustment, $isProductExempted);
+                        $adjustedSecondQty = $this->calculateAdjustedQty($matchedParticular->qty_second, $adjustment, $isProductExempted);
+
+                        $consoFirstQty += $adjustedFirstQty;
+                        $consoSecondQty += $adjustedSecondQty;
+
+                        $matchedParticular->update([
+                            'adjusted_firstQty' => $adjustedFirstQty,
+                            'adjusted_secondQty' => $adjustedSecondQty,
+                        ]);
+                    }
+
+                    $transaction->update(['baseline_adjustment_type' => 'custom', 'init_qty_adjustment' => json_encode($customData), 'updated_by' => Auth::id()]);
+                }
+
+                $consoParticularInfo = PpmpConsolidated::where('trans_id', $updatingTransactionId)->where('prod_id', $prodId)->first();
+                if($consoParticularInfo) {
+                    $consoParticularInfo->update([
+                        'qty_first' => $consoFirstQty,
+                        'qty_second' => $consoSecondQty,
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
+        }
+    }
+
 
     public function destroy(Request $request)
     {
@@ -744,7 +885,7 @@ class PpmpTransactionController extends Controller
     private function calculateAdjustedQty($qty, $adjustment, $isExempted)
     {
         if (!$isExempted && $qty > 1) {
-            return floor((int)$qty * (float)$adjustment);
+            return floor((int)$qty * $adjustment);
         }
 
         return (int)$qty;

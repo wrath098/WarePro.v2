@@ -50,6 +50,8 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+require __DIR__.'/auth.php';
+
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::any('/import', [ProductController::class, 'importProduct'])->name('product.import');
@@ -174,6 +176,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::post('/copy-ppmp', [PpmpTransactionController::class, 'storeCopy'])->name('make.copy.ppmp');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
     Route::any('/create-consolidated', [PpmpTransactionController::class, 'storeConsolidated'])->name('consolidated.ppmp.store');
+    Route::post('/update-adjustment', [PpmpTransactionController::class, 'updateInitialAdjustment'])->name('updateInitialAdjustment');
     // Route::post('/update', [PpmpTransactionController::class, 'updateConsolidatedDescription'])->name('indiv.ppmp.update');
     Route::delete('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
     Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
@@ -282,8 +285,8 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/filter-dashboard', [DashboardController::class, 'filterByDate'])->name('filter.dashboard');
 });
 
+
+
 Route::fallback(function () {
     return Inertia::render('Auth/NotFound', ['isAuth' => Auth::check()]);
 });
-
-require __DIR__.'/auth.php';

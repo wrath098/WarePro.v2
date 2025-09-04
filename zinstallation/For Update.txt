@@ -1,2 +1,6 @@
 #Update default value of column 'qty_adjustment' and 'tresh_adjustment' from the ppmp_transactions table
 #Run php artisan migrate to update the added column on ppmp_transactions table
+
+#Update table row id#70 'office_ppmp_ids' with values '[37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,67]' on ppmp_transactions table
+
+calculateAdjustedQty

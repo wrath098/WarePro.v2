@@ -21,6 +21,7 @@
     const props = defineProps({
         ppmp: Object,
         countTrashed: Number,
+        accountClass: Object,
         user: Number,
     });
 
@@ -46,6 +47,14 @@
         user: props.user,
     });
 
+    const editAdjustment = useForm({
+        ppmpId: '',
+        adjustmentType: '',
+        initAdjustment: '',
+        customInitAdjustment: [],
+        user: props.user,
+    });
+
     const dropParticular = useForm({
         pId: '',
         user: props.user,
@@ -58,6 +67,7 @@
     const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
     const isEditPPModalOpen = computed(() => modalState.value === 'edit');
     const isDropPPModalOpen = computed(() => modalState.value === 'drop');
+    const isEditAdjustment = computed(() => modalState.value === 'adjustment');
 
     const openEditPpmpModal = (particular) => {
         editParticular.partId = particular.pId;
@@ -66,6 +76,13 @@
         editParticular.firstQty = numberWithoutCommas(particular.qtyFirst);
         editParticular.secondQty = numberWithoutCommas(particular.qtySecond);
         modalState.value = 'edit';
+    }
+
+    const openAdjustmentPpmpModal = (ppmp) => {
+        editAdjustment.ppmpId = ppmp.id;
+        editAdjustment.adjustmentType = ppmp.baseline_adjustment_type;
+        editAdjustment.initAdjustment = ppmp.qty_adjustment * 100;
+        modalState.value = 'adjustment';
     }
 
     const openDropPpmpModal = (particular) => {
@@ -114,6 +131,7 @@
     const submitEdit = () => submitRequest('put', route('conso-particular-update', { ppmpConsolidated: editParticular.partId }), editParticular);
     const submitDrop = () => submitRequest('delete', route('conso-particular-destroy', { ppmpConsolidated: dropParticular.pId }), dropParticular);
     const submitAdd = () => submitRequest('post', route('conso-particular-store'), addParticular);
+    const submitAdjustment = () => submitRequest('post', route('updateInitialAdjustment'), editAdjustment);
 
     const columns = [
         {
@@ -218,6 +236,13 @@
                                 <span class="ml-2">Add Particular</span>   
                             </button> -->
 
+                            <button @click="openAdjustmentPpmpModal(ppmp)" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M3 21V5.8L5.3 3h13.4L21 5.8v2.325l-5 5V8H8v8l4-2l2.075 1.05L12 17.1V21zm11 0v-3.075l6.575-6.55l3.075 3.05L17.075 21zm6.575-5.6l.925-.975l-.925-.925l-.95.95zM5.4 6h13.2l-.85-1H6.25z"/>
+                                </svg>
+                                <span class="ml-2">Edit</span>   
+                            </button>
+
                             <div v-if="hasPermission('print-app-summary-overview') ||  hasAnyRole(['Developer'])">
                                 <a v-if="ppmp.ppmp_type == 'Consolidated'" :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                     <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -258,57 +283,6 @@
                             <div class="bg-white rounded-lg shadow-md hover:shadow-lg">
                                 <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
                                     <div class="font-bold text-lg">PPMP Information</div>
-                                    <div v-if="hasPermission('add-app-particular') || hasPermission('print-app-summary-overview') || hasPermission('print-app') || hasPermission('confirm-app-finalization') || hasAnyRole(['Developer'])" class="flex items-center">
-                                        <div class="rounded-full mx-1">
-                                            <Dropdown>
-                                                <template #trigger>
-                                                    <button class="flex items-center rounded-full transition">
-                                                        <span class="sr-only">Open options</span>
-                                                        <svg class="w-7 h-7 text-indigo-100 hover:text-emerald-200" fill="currentColor" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                                            <path d="m23.365,3.699l-1.322,1.322-3.064-3.064,1.234-1.234c.801-.801,2.108-.955,2.985-.237,1.009.825,1.064,2.316.166,3.214Zm-5.8-.328l-5.296,5.296c-.813.813-1.269,1.915-1.269,3.064v.769c0,.276.224.5.5.5h.769c1.149,0,2.251-.457,3.064-1.269l5.296-5.296-3.064-3.064Zm3.707,10.514l-.451-.26c.102-.544.153-1.088.153-1.625s-.051-1.081-.153-1.625l-.29-1.015-3.784,3.784c-1.196,1.196-2.786,1.855-4.478,1.855h-.77c-1.379,0-2.5-1.121-2.5-2.5v-.77c0-1.691.659-3.281,1.855-4.478l4.119-4.119v-.134c0-1.654-1.346-3-3-3s-3,1.346-3,3v.522c-1.047.37-2.016.929-2.857,1.649l-.45-.259c-.693-.398-1.501-.504-2.277-.295-.773.208-1.419.706-1.818,1.4-.4.694-.505,1.503-.296,2.277.208.773.706,1.419,1.401,1.819l.451.259c-.102.544-.153,1.088-.153,1.626s.051,1.082.153,1.626l-.451.259c-.695.4-1.192,1.046-1.401,1.819-.209.774-.104,1.583.295,2.276.399.695,1.045,1.193,1.819,1.401.776.21,1.584.104,2.277-.295l.45-.259c.841.721,1.81,1.279,2.857,1.649v.522c0,1.654,1.346,3,3,3s3-1.346,3-3v-.522c1.047-.37,2.016-.929,2.857-1.649l.45.259c.695.399,1.503.505,2.277.295.773-.208,1.419-.706,1.819-1.401.825-1.434.329-3.271-1.105-4.096Z"/>
-                                                        </svg>
-                                                    </button>
-                                                </template>
-                                                <template #content>
-
-                                                    <!-- UNCOMMENT IF YOU NEED TO ADD A PARTICULAR IN CONSOLIDATED PPMP-->
-                                                    <!-- <button v-if="hasPermission('add-app-particular') ||  hasAnyRole(['Developer'])" @click="showModal('add')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
-                                                        </svg>
-                                                        <span class="ml-2">Add Particular</span>   
-                                                    </button> -->
-
-                                                    <div v-if="hasPermission('print-app-summary-overview') ||  hasAnyRole(['Developer'])">
-                                                        <a v-if="ppmp.ppmp_type == 'Consolidated'" :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                                            <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                                <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
-                                                            </svg>
-                                                            <span class="ml-2">Summary Overview</span>
-                                                        </a>
-                                                    </div>
-                                                    <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'initial'})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                                        <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
-                                                        </svg>
-                                                        <span class="ml-2">Print Consolidation - Initial</span>
-                                                    </a>
-                                                    <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'with_proposed_budget'})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                                        <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
-                                                        </svg>
-                                                        <span class="ml-2">Print Consolidation - With Budget Proposal</span>
-                                                    </a>
-                                                    <button v-if="hasPermission('confirm-app-finalization') ||  hasAnyRole(['Developer'])" @click="showModal('confirm')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-100 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                                            <path d="m12,7V.46c.913.346,1.753.879,2.465,1.59l3.484,3.486c.712.711,1.245,1.551,1.591,2.464h-6.54c-.552,0-1-.449-1-1Zm-3.416,12h-3.584c-.552,0-1-.448-1-1s.448-1,1-1h3.07c-.041-.328-.07-.66-.07-1s.022-.672.063-1h-3.063c-.552,0-1-.448-1-1s.448-1,1-1h3.593c.296-.728.699-1.398,1.185-2h-4.778c-.552,0-1-.448-1-1s.448-1,1-1h5.774c-.479-.531-.774-1.23-.774-2V.024c-.161-.011-.322-.024-.485-.024h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h10c.114,0,.221-.026.333-.034-3.066-.254-5.641-2.234-6.749-4.966Zm12.327.497c.939-1.319,1.365-3.028.96-4.843-.494-2.211-2.277-3.996-4.49-4.481-4.365-.956-8.163,2.843-7.208,7.208.485,2.213,2.27,3.996,4.481,4.49,1.816.406,3.525-.021,4.843-.96l2.796,2.796c.39.39,1.024.39,1.414,0h0c.39-.39.39-1.024,0-1.414l-2.796-2.796Zm-4.135-1.033l-.004.004c-.744.744-2.058.746-2.823-.019l-1.515-1.575c-.372-.387-.372-.999,0-1.386h0c.393-.409,1.047-.409,1.44,0l1.495,1.553,2.9-2.971c.392-.402,1.038-.402,1.43,0h0c.38.388.38,1.009,0,1.397l-2.925,2.997Z"/>
-                                                        </svg>
-                                                        <span class="ml-2">Proceed as Final/Approve</span>   
-                                                    </button>
-                                                </template>
-                                            </Dropdown>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
                                     <dl class="-my-3 divide-y divide-gray-100 text-base">
@@ -406,6 +380,64 @@
         </div>
 
     </AuthenticatedLayout>
+    <Modal :show="isEditAdjustment" @close="closeModal"> 
+        <form @submit.prevent="submitAdjustment">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Edit Adjustment</h3>
+                        <p class="text-sm text-gray-500"> Enter the details you want to update on the input field.</p>
+                        <div class="mt-5">
+                            <div class="relative z-0 w-full my-3 group">
+                                <select v-model="editAdjustment.adjustmentType" name="adjustmentType" id="adjustmentType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <option disabled selected value="">Select Type</option>
+                                    <option value="grouped">Group</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                                <label for="adjustmentType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Adjustment Type</label>
+                            </div>
+                        </div>
+                        <div v-if="editAdjustment.adjustmentType == 'grouped'" class="mt-5">
+                            <div class="mt-5">
+                                <p class="text-sm text-[#86591e]"> Initial Quantity Adjustment</p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="editAdjustment.initAdjustment" type="text" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                    <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="editAdjustment.adjustmentType == 'custom'" class="mt-5">
+                            <p class="text-sm text-[#86591e]"> Initial Quantity Adjustment : Value must be within 50 to 99</p>
+                            <div v-for="account in accountClass" :key="account.id" class="relative z-0 w-full group my-2">
+                                <input v-model="editAdjustment.customInitAdjustment[account.id]" type="text" name="qtyAdjustment" :id="'qtyAdjustment-' + account.id" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label :for="'qtyAdjustment-' + account.id" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{ account.fund_name}}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Confirm 
+                </SuccessButton>
+
+                <DangerButton @click="closeModal"> 
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Cancel
+                </DangerButton>
+            </div>
+        </form>
+    </Modal>
     <Modal :show="isAddPPModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitAdd">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
