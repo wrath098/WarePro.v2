@@ -623,34 +623,33 @@ class PpmpTransactionController extends Controller
             $adjustment = (float)$customValue / 100;
 
             foreach ($productIds as $prodId) {
-
                 $consoFirstQty = 0;
                 $consoSecondQty = 0;
+                $matchedParticulars = $ppmpTransactions->flatMap(function ($transaction) use ($prodId) {
+                    return $transaction->particulars->filter(function ($particular) use ($prodId) {
+                        return $particular->prod_id == $prodId;
+                    });
+                });
 
-                foreach($officePpmps as $ppmpId) {
-                    $transaction = $ppmpTransactions[$ppmpId] ?? null;
+                if($matchedParticulars) {
 
-                    if (!$transaction) continue;
-
-                    $matchedParticular = $transaction->particulars->firstWhere('prod_id', $prodId);
-
-                    if ($matchedParticular) {
-                        $isProductExempted = $this->productService->validateProductExcemption($prodId);
-                        $adjustedFirstQty = $this->calculateAdjustedQty($matchedParticular->qty_first, $adjustment, $isProductExempted);
-                        $adjustedSecondQty = $this->calculateAdjustedQty($matchedParticular->qty_second, $adjustment, $isProductExempted);
-
+                    $isProductExempted = $this->productService->validateProductExcemption($prodId);
+                    $matchedParticulars->map(function ($items) use ($adjustment, $isProductExempted, &$consoFirstQty, &$consoSecondQty){
+                        $adjustedFirstQty = $this->calculateAdjustedQty($items->qty_first, $adjustment, $isProductExempted);
+                        $adjustedSecondQty = $this->calculateAdjustedQty($items->qty_second, $adjustment, $isProductExempted);
+                        
                         $consoFirstQty += $adjustedFirstQty;
                         $consoSecondQty += $adjustedSecondQty;
-
-                        $matchedParticular->update([
+                        
+                        $items->update([
                             'adjusted_firstQty' => $adjustedFirstQty,
                             'adjusted_secondQty' => $adjustedSecondQty,
                         ]);
-                    }
-
-                    $transaction->update(['baseline_adjustment_type' => 'custom', 'init_qty_adjustment' => json_encode($customData), 'updated_by' => Auth::id()]);
+                        
+                    });
+                    
                 }
-
+                
                 $consoParticularInfo = PpmpConsolidated::where('trans_id', $updatingTransactionId)->where('prod_id', $prodId)->first();
                 if($consoParticularInfo) {
                     $consoParticularInfo->update([
