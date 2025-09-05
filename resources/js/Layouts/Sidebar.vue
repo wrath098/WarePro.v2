@@ -55,7 +55,7 @@ const officeUser = hasAnyRole(['Office User']);
 
 <template>
     <div class="lg:block">
-        <aside class="fixed w-80 h-[calc(100vh-8rem)] z-50 overflow-y-auto select-none top-24 lg:left-8 transition-all rounded-lg p-2 bg-slate-50">
+        <aside class="fixed w-80 h-[calc(100vh-8rem)] z-50 overflow-y-auto select-none top-24 lg:left-8 transition-all rounded-lg p-2 bg-zinc-300">
             <nav class="text-sm text-gray-700 mb-5">
                 <div class="overflow-hidden py-3 px-3 h-full">
                     <ul class="space-y-2">
@@ -105,7 +105,7 @@ const officeUser = hasAnyRole(['Office User']);
                                         <span class="text-sm font-bold tracking-wide text-gray-400">CORE</span>
                                     </p>
                                 </li>
-                                <li v-if="components">
+                                <li v-if="components" class="mb-1">
                                     <SidebarDropdown 
                                         :active="route().current('fund.display.all') || route().current('item.display.active') || route().current('office.display.active') || route().current('category.display.active') || route().current('general.fund.display') || route().current('general.fund.editFundAllocation')"
                                         >

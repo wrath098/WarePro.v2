@@ -36,19 +36,18 @@ const submit = () => {
     <GuestLayout>
         <Head title="Log in" />
 
-        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
+        <div v-if="status" class="mb-4 font-medium text-sm text-gray-300">
             {{ status }}
         </div>
 
         <div class="relative py-3 sm:max-w-xl sm:mx-auto">
-            <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-            <div class="relative py-5 bg-gray-100 shadow-lg sm:rounded-3xl ">
+            <div class="relative py-5 sm:rounded-3xl ">
                 <div class="flex justify-center items-center py-5">
                     <img src="/WarePro.v2/assets/images/Winvexis.png" alt="Winvexis">
                 </div>
                 <form class="px-4 sm:px-16" @submit.prevent="submit">
                     <div>
-                        <InputLabel for="email" value="Email" />
+                        <InputLabel for="email" value="Email"/>
 
                         <TextInput
                             id="email"
@@ -80,7 +79,7 @@ const submit = () => {
                     <div class="block mt-4">
                         <label class="flex items-center">
                             <Checkbox name="remember" v-model:checked="form.remember" />
-                            <span class="ms-2 text-lg text-gray-600">Remember me</span>
+                            <span class="ms-2 text-lg text-gray-200">Remember me</span>
                         </label>
                     </div>
 
@@ -92,8 +91,8 @@ const submit = () => {
                 </form>
 
                 <div class="flex flex-col justify-center items-center bg-primary pt-10 text-sm">
-                    <p class="text-gray-500 font-bold text-center">© Provincial General Services Office</p>
-                    <p class="text-gray-300">Built by IT Dev Team, inspired by users.</p>
+                    <p class="text-gray-300 font-bold text-center">© Provincial General Services Office</p>
+                    <p class="text-gray-500">Built by IT Dev Team, inspired by users.</p>
                 </div>
 
             </div>

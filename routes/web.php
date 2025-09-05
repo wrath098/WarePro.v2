@@ -113,7 +113,7 @@ Route::middleware('auth')->prefix('categories')->group(function () {
     Route::post('/deactivate', [CategoryController::class, 'deactivate'])->name('category.deactivate');
 
     #AJAX
-    Route::get('/trashed-categories', [CategoryController::class, 'showTrashedCategories'])->name('category.show.trashed');
+    Route::get('/{fund}/trashed-categories', [CategoryController::class, 'showTrashedCategories'])->name('category.show.trashed');
 });
 
 Route::middleware('auth')->prefix('items')->group(function () {

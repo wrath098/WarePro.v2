@@ -165,43 +165,43 @@ const formattedTotalAmount = computed(() => {
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
-                <div class="relative isolate flex overflow-hidden bg-indigo-600 px-6 py-2.5 rounded-md">
-                    <div class="flex flex-wrap">
-                        <p class="text-base text-gray-100">
-                            <strong class="font-semibold">Proposed Budget for {{ year }}</strong>
-                            <svg viewBox="0 0 2 2" class="mx-2 inline size-0.5 fill-current" aria-hidden="true"><circle cx="1" cy="1" r="1" /></svg>
-                            <span class="text-sm">Please enter the required data in the input field.</span>
-                        </p>
-                    </div>
+        <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-4">
+            <div class="relative isolate flex overflow-hidden bg-indigo-600 px-6 py-2.5 rounded-md">
+                <div class="flex flex-wrap">
+                    <p class="text-base text-gray-100">
+                        <strong class="font-semibold">Proposed Budget for {{ year }}</strong>
+                        <svg viewBox="0 0 2 2" class="mx-2 inline size-0.5 fill-current" aria-hidden="true"><circle cx="1" cy="1" r="1" /></svg>
+                        <span class="text-sm">Please enter the required data in the input field.</span>
+                    </p>
                 </div>
-                <div>
+            </div>
+            <div>
                 <form @submit.prevent="submitForm">
                     <div class="p-6">
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-bold mb-2" for="card_number">
+                            <label class="block text-zinc-700 font-bold mb-2" for="card_number">
                                 Total Amount
                             </label>
                             <input
                                 :value="formattedTotalAmount"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 bg-zinc-100 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="grid-first-name" type="text" placeholder="Total Amount" readonly>
                         </div>
-                        <div class="relative isolate flex overflow-hidden bg-gray-600 px-6 py-2.5 rounded-md">
+                        <div class="relative isolate flex overflow-hidden bg-zinc-600 px-6 py-2.5 rounded-md">
                             <div class="flex flex-wrap">
                                 <p class="text-base text-gray-100">
                                     <strong class="font-semibold">Budget Allocations</strong>
                                 </p>
                             </div>
                         </div>
-                        <div v-for="account in updateBudget.funds" :key="account.id" class="my-4 mx-4 bg-blue-100/60 shadow-md rounded-md p-2">
-                            <label class="block text-gray-700 font-bold mb-2" :for="'account-' + account.id">
+                        <div v-for="account in updateBudget.funds" :key="account.id" class="my-4 mx-4 bg-zinc-100/60 shadow-md rounded-md p-2">
+                            <label class="block text-zinc-700 font-bold mb-2" :for="'account-' + account.id">
                                 {{ account.accountClass }}
                             </label>
                             <input
                                 :value="formatNumber(account.amount)"
                                 @input="e => handleAmountInput(e, account, 'account')"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                class="bg-zinc-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 :id="'account-' + account.id" 
                                 type="text" 
                                 :disabled="account.allocations != null" 
@@ -228,7 +228,7 @@ const formattedTotalAmount = computed(() => {
                             </div>
                         </div>
                         <div class="w-full flex justify-center">
-                            <button type="submit" class="inline-flex items-center rounded cursor-pointer bg-[#273ef1] px-6 py-3 font-semibold text-white transition [box-shadow:rgb(171,_196,245)-8px_8px] hover:[box-shadow:rgb(171,_196,_245)0px_0px]">
+                            <button type="submit" class="inline-flex items-center rounded cursor-pointer bg-[#1022a7] px-6 py-3 font-semibold text-white transition [box-shadow:rgb(171,_196,245)-8px_8px] hover:[box-shadow:rgb(171,_196,_245)0px_0px]">
                                 <span class="mr-2">Submit</span>
                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 15 16">
                                     <path fill="currentColor" d="M12.49 7.14L3.44 2.27c-.76-.41-1.64.3-1.4 1.13l1.24 4.34c.05.18.05.36 0 .54l-1.24 4.34c-.24.83.64 1.54 1.4 1.13l9.05-4.87a.98.98 0 0 0 0-1.72Z"/>
@@ -240,8 +240,8 @@ const formattedTotalAmount = computed(() => {
             </div>
         </div>
         <Modal :show="modalState" @close="closeModal">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
+            <div class="bg-zinc-100 h-auto">
+                <div class="p-6  md:mx-auto">
                     <svg class="text-indigo-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
                     </svg>

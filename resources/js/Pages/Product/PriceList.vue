@@ -106,10 +106,10 @@
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+        <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-8">
             <div class="overflow-hidden shadow-sm sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto">
-                    <DataTable class="display table-hover table-striped shadow-lg rounded-lg" :options="tableOptions">
+                    <DataTable class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100" :options="tableOptions">
                         <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-3 w-1/12">
@@ -164,27 +164,27 @@
         </div>
     </AuthenticatedLayout>
     <Modal :show="isPrintPriceOpen" @close="closeModal"> 
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-100 sm:mx-0 sm:h-10 sm:w-10">
                     <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                     </svg>
                 </div>
                 <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Print Price</h3>
-                    <p class="text-sm text-gray-500"> Set the price adjustment.</p>
+                    <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Print Price</h3>
+                    <p class="text-sm text-zinc-700"> Set the price adjustment.</p>
                     <div class="mt-5">
-                        <p class="text-sm text-[#86591e]">Enter a value between 100% and 120% to adjust the price.</p>
+                        <p class="text-sm font-semibold text-[#1a0037]">Enter a value between 100% and 120% to adjust the price.</p>
                         <div class="relative z-0 w-full group my-2">
                             <input v-model="priceForm.adjustment" type="number" name="adjustment" id="adjustment" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                            <label for="adjustment" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Price Adjustment</label>
+                            <label for="adjustment" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Price Adjustment</label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <a :href="route('generatePdf.priceAdjusted', { adjustment: priceForm.adjustment })" target="_blank" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -225,6 +225,7 @@
 }
 
 :deep(div.dt-container .dt-search input) {
+    background-color: #fafafa;
     border: 1px solid #03244d;
     margin-right: 1px;
     width: 250px;

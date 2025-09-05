@@ -275,23 +275,23 @@ const columns = [
                 </ol>
             </nav>
         </template>
-        <div class="my-4 max-w-screen-2xl rounded-md mb-8">
+        <div class="my-4 w-screen-2xl rounded-md mb-8">
             <div class="overflow-hidden sm:rounded-lg">
                 <ul v-if="!isTrashedActive" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <li v-for="fund in activeFund" :key="fund.id" class="h-auto shadow-md rounded-lg bg-gray-50 transition-transform transform">
+                    <li v-for="fund in activeFund" :key="fund.id" class="h-auto shadow-md rounded-lg bg-zinc-300 transition-transform transform">
                         <div class="flex-1 flex items-start justify-between p-4 rounded-lg">
                             <div class="flex flex-col gap-1">
-                                <h4 class="text-xl font-semibold text-indigo-600 hover:underline">
+                                <h4 class="text-xl font-semibold text-indigo-900 hover:underline">
                                     <a v-if="hasPermission('view-category') || hasAnyRole(['Developer'])" :href="route('category.display.active', { fund: fund.id })">{{ fund.fund_name }}</a>
                                 </h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-500">
-                                    <span class="font-medium">Description: </span> {{ fund.description || 'No Description' }}
+                                <p class="text-sm text-zinc-700 font-semibold">
+                                    <span>Description: </span> {{ fund.description || 'No Description' }}
                                 </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-500">
-                                    <span class="font-medium">Status: </span> {{ fund.fund_status }}
+                                <p class="text-sm text-zinc-700 font-semibold">
+                                    <span>Status: </span> {{ fund.fund_status }}
                                 </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-500">
-                                    <span class="font-medium">Added By: </span> {{ fund.nameOfCreator }}
+                                <p class="text-sm text-zinc-700 font-semibold">
+                                    <span>Added By: </span> {{ fund.nameOfCreator }}
                                 </p>
                             </div>
                             <div v-if="hasAnyRole(['Developer']) || hasPermission('edit-account-class') || hasPermission('delete-account-class')" class="flex items-center">
@@ -322,22 +322,22 @@ const columns = [
                             </div>
                         </div>
                         <div class="p-4 rounded-lg">
-                            <h4 class="text-base font-semibold text-gray-500">Categories</h4>
+                            <h4 class="text-base font-semibold text-zinc-700">Categories</h4>
                             <ul v-if="fund.categories.length > 0">
                                 <li v-for="category in fund.categories" :key="category.id" class="my-1 w-full grid grid-cols-12 gap-2">
-                                    <p class="flex justify-center items-center text-xs font-bold p-1 text-indigo-700 rounded-md bg-indigo-100 col-span-1">{{ category.cat_code.padStart(2, '0') }}</p>
-                                    <p class="col-span-11 text-gray-500 hover:underline">{{ category.cat_name }}</p>
+                                    <p class="flex justify-center items-center text-xs font-bold p-1 text-zinc-700 rounded-md bg-zinc-100 col-span-1">{{ category.cat_code.padStart(2, '0') }}</p>
+                                    <p class="col-span-11 font-medium text-zinc-600 hover:underline">{{ category.cat_name }}</p>
                                 </li>
                             </ul>
                             <ul v-else>
-                                <li class="text-gray-500 hover:underline">No category available.</li>
+                                <li class="font-medium text-zinc-600 hover:underline">No category available.</li>
                             </ul>
                         </div>
                     </li>
                 </ul>
-                <div v-if="isTrashedActive" class="relative overflow-x-auto bg-slate-100 p-2">
+                <div v-if="isTrashedActive" class="relative overflow-x-auto bg-zinc-300 p-4">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="trashedFund.data"
                         :options="{  paging: true,
@@ -353,33 +353,34 @@ const columns = [
         </div>
         <Modal :show="isAddModalOpen" @close="closeModal"> 
             <form @submit.prevent="submit">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                             <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" clip-rule="evenodd"/>
                                 <path fill-rule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" clip-rule="evenodd"/>
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> New Fund Cluster</h3>
+                            <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> New Fund Cluster</h3>
+                            <p class="text-sm text-zinc-700 mb-4"> Enter the details for the New Cluster you wish to add.</p>
+
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500 mb-4"> Enter the details for the New Cluster you wish to add.</p>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.fundName" type="text" name="fundName" id="fundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
-                                    <label for="fundName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
+                                    <label for="fundName" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
                                     <InputError class="mt-2" :message="form.errors.fundName" />
                                 </div>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="form.fundDesc" type="text" name="fundDesc" id="fundDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
-                                    <label for="fundDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Description (<i>Opptional</i>)</label>
+                                    <label for="fundDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Description (<i>Opptional</i>)</label>
                                     <InputError class="mt-2" :message="form.errors.fundDesc" />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -399,34 +400,34 @@ const columns = [
     </AuthenticatedLayout>
     <Modal :show="isEditModalOpen" @close="closeModal"> 
         <form @submit.prevent="editFormSubmit">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" clip-rule="evenodd"/>
                             <path fill-rule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> Edit Fund Cluster</h3>
-                        <p class="text-sm text-gray-500"> Enter the details for the New Cluster you wish to update.</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Edit Fund Cluster</h3>
+                        <p class="text-sm text-zinc-700"> Enter the details for the New Cluster you wish to update.</p>
                         <div class="mt-8">
                             <input type="hidden" v-model="editForm.fundId" id="edit_fundId">
                             <input type="hidden" v-model="editForm.updatedBy" id="edit_updatedBy">
                             <div class="relative z-0 w-full group my-2">
-                                <input v-model="editForm.fundName" type="text" name="editFundName" id="editFundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required />
-                                <label for="editFundName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
+                                <input v-model="editForm.fundName" type="text" name="editFundName" id="editFundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required />
+                                <label for="editFundName" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
                                 <InputError class="mt-2" :message="editForm.errors.fundName" />
                             </div>
                             <div class="relative z-0 w-full group my-3">
-                                <input v-model="editForm.fundDesc" type="text" name="editFundDesc" id="editFundDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" />
-                                <label for="editFundDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Description (<i>Opptional</i>)</label>
+                                <input v-model="editForm.fundDesc" type="text" name="editFundDesc" id="editFundDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" />
+                                <label for="editFundDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Description (<i>Opptional</i>)</label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -447,9 +448,9 @@ const columns = [
         <form @submit.prevent="dropFormSubmit">
             <input type="hidden" v-model="dropForm.fundId">
             <input type="hidden" v-model="dropForm.updatedBy">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
-                    <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
+                    <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
                     </svg>
 
@@ -479,15 +480,15 @@ const columns = [
     </Modal>
     <Modal :show="isConfirmModalOpen" @close="closeModal"> 
         <form @submit.prevent="confirmFormSubmit">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
                     <svg class="text-indigo-700 w-16 h-16 mx-auto my-6" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512" fill="currentColor">
                         <path fill-rule="evenodd" d="M18.5,3h-5.53c-.08,0-.16-.02-.22-.05l-3.16-1.58c-.48-.24-1.02-.37-1.56-.37h-2.53C2.47,1,0,3.47,0,6.5v11c0,3.03,2.47,5.5,5.5,5.5h13c3.03,0,5.5-2.47,5.5-5.5V8.5c0-3.03-2.47-5.5-5.5-5.5Zm2.5,14.5c0,1.38-1.12,2.5-2.5,2.5H5.5c-1.38,0-2.5-1.12-2.5-2.5V8H20.95c.03,.16,.05,.33,.05,.5v9Zm-3.13-3.71c.39,.39,.39,1.02,0,1.41l-3.16,3.16c-.63,.63-1.71,.18-1.71-.71v-1.66H7.5c-.83,0-1.5-.67-1.5-1.5s.67-1.5,1.5-1.5h5.5v-1.66c0-.89,1.08-1.34,1.71-.71l3.16,3.16Z"/>
                     </svg>
                     <div class="text-center">
                         <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Confirm as Approved!</h3>
-                        <p class="text-gray-600 my-2">Confirming this action will remark the selected PPMP as Final/Approved. This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
+                        <p class="text-zinc-700 my-2">Confirming this action will remark the selected PPMP as Final/Approved. This action can't be undone.</p>
+                        <p class="text-zinc-900"> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -510,34 +511,34 @@ const columns = [
     </Modal>
     <Modal :show="isAddCartegoryModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitNewCategory">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" clip-rule="evenodd"/>
                             <path fill-rule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline"> New Category</h3>
-                        <p class="text-sm text-gray-500"> Enter the details for the New Category you wish to add.</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> New Category</h3>
+                        <p class="text-sm text-zinc-700"> Enter the details for the New Category you wish to add.</p>
                         <div class="mt-8">
                             <input type="hidden" v-model="addCategoryForm.fundId" id="addfundId">
                             <input type="hidden" v-model="addCategoryForm.createdBy" id="createdBy">
                             <div class="relative z-0 w-full group my-2">
-                                <input v-model="addCategoryForm.fundName" type="text" name="addFundName" id="addFundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required readonly />
-                                <label for="editFundName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
+                                <input v-model="addCategoryForm.fundName" type="text" name="addFundName" id="addFundName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required readonly />
+                                <label for="editFundName" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Fund Name</label>
                                 <InputError class="mt-2" :message="addCategoryForm.errors.fundName" />
                             </div>
                             <div class="relative z-0 w-full group my-3">
-                                <input v-model="addCategoryForm.catName" type="text" name="categoryName" id="categoryName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label for="categoryName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
+                                <input v-model="addCategoryForm.catName" type="text" name="categoryName" id="categoryName" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required/>
+                                <label for="categoryName" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Category Name</label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -580,6 +581,7 @@ const columns = [
 
     :deep(div.dt-container .dt-search input) {
         border: 1px solid #03244d;
+        background-color: #fafafa;
         margin-right: 1px;
         width: 250px;
     }

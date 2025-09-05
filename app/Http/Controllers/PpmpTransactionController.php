@@ -632,7 +632,7 @@ class PpmpTransactionController extends Controller
                 });
 
                 if($matchedParticulars) {
-
+                    
                     $isProductExempted = $this->productService->validateProductExcemption($prodId);
                     $matchedParticulars->map(function ($items) use ($adjustment, $isProductExempted, &$consoFirstQty, &$consoSecondQty){
                         $adjustedFirstQty = $this->calculateAdjustedQty($items->qty_first, $adjustment, $isProductExempted);

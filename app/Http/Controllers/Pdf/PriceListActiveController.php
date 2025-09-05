@@ -76,11 +76,11 @@ class PriceListActiveController extends Controller
                     <th width="63px">New Stock No.</th>
                     <th width="376px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
-                    <th width="63px">Price <br> (1)</th>
-                    <th width="63px">Price <br> (2)</th>
-                    <th width="63px">Price <br> (3)</th>
-                    <th width="63px">Price <br> (4)</th>
-                    <th width="63px">Price <br> (5)</th>
+                    <th width="63px">Price <br> (Latest)</th>
+                    <th width="63px">Price <br> (Previous)</th>
+                    <th width="63px">Price <br> (3 Latest)</th>
+                    <th width="63px">Price <br> (4 Latest)</th>
+                    <th width="63px">Price <br> (Oldest)</th>
                 </tr>';
     }
 

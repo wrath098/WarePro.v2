@@ -25,8 +25,6 @@ class CategoryController extends Controller
     {   
         $fund->load('categories');
 
-        $activeFund = $this->productService->getActiveFunds();
-
         $formattedFunds = [
             'id' => $fund->id,
             'name' => $fund->fund_name
@@ -42,7 +40,10 @@ class CategoryController extends Controller
                 'fundName' => $category->funder->fund_name ?? '',
                 'creatorName' => $category->creator->name,
             ];
-        });  
+        })->filter(function ($category) {
+            return $category['status'] !== 'Deactivated';
+        })
+        ->values();
 
         return Inertia::render('Category/Index', [
             'activeCategories' => $categories,
@@ -182,10 +183,11 @@ class CategoryController extends Controller
         }       
     }
 
-    public function showTrashedCategories()
+    public function showTrashedCategories(Request $request)
     {
-        $query = Category::where('cat_status', 'deactivated')
-            ->with(['funder', 'updater'])
+        $categories = Category::with(['funder', 'updater'])
+            ->where('fund_id', $request->fundId)
+            ->where('cat_status', 'deactivated')
             ->orderBy('cat_code')
             ->get()
             ->map(function ($category) {
@@ -201,7 +203,7 @@ class CategoryController extends Controller
                 ];
             });
 
-        return response()->json(['data' => $query]);
+        return response()->json(['data' => $categories]);
     }
 
     public function deactivate(Request $request) {

@@ -221,11 +221,11 @@
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl mb-8">
+        <div class="my-4 w-screen-2xl mb-8">
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
                     <div class="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:gap-4">
-                        <div class="bg-white p-2 rounded-md shadow">
+                        <div class="bg-zinc-300 p-2 rounded-md shadow">
                             <form @submit.prevent="submit" class="space-y-5 px-2 relative">
                                 <div v-if="isLoading" class="absolute text-indigo-800 bg-white bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
                                     <div class="flex items-center">
@@ -239,43 +239,43 @@
                                         </svg>
                                     </div>
                                 </div>
-                                <p class="mb-1 block text-base font-medium text-[#86591e]">PPMP Information</p>
+                                <p class="mb-3 block text-xl font-bold text-zinc-700">PPMP Information</p>
                                 <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="create.ppmpType" @change="filterOfficeNoPpmp" name="ppmpType" id="ppmpType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <select v-model="create.ppmpType" @change="filterOfficeNoPpmp" name="ppmpType" id="ppmpType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                                         <option value="" disabled selected>Select PPMP Type</option>
                                         <option value="individual">Office</option>
                                         <option value="contingency">Emergency</option>
                                     </select>
-                                    <label for="ppmpType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
+                                    <label for="ppmpType" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
                                 </div>
                                 <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="create.ppmpYear" @change="filterOfficeNoPpmp" name="ppmpYear" id="ppmpYear" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <select v-model="create.ppmpYear" @change="filterOfficeNoPpmp" name="ppmpYear" id="ppmpYear" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                                         <option value="" disabled selected>Select year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                                     </select>
-                                    <label v-if="create.ppmpType == 'individual'" for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
-                                    <label v-else for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">APP Calendar Year</label>
+                                    <label v-if="create.ppmpType == 'individual'" for="ppmpYear" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
+                                    <label v-else for="ppmpYear" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">APP Calendar Year</label>
                                 </div>
                                 <div class="relative z-0 w-full my-3 group" v-if="create.ppmpType == 'contingency'">
-                                    <select v-model="create.ppmpSem" name="ppmpSem" id="ppmpSem" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <select v-model="create.ppmpSem" name="ppmpSem" id="ppmpSem" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                                         <option value="" disabled selected>Select Semester</option>
                                         <option value="1">1st Semester</option>
                                         <option value="2">2nd Semester</option>
                                     </select>
-                                    <label for="ppmpSem" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Semester</label>
+                                    <label for="ppmpSem" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Semester</label>
                                 </div>
                                 <div class="relative z-0 w-full my-3 group">
-                                    <select v-model="create.office" name="office" id="office" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                    <select v-model="create.office" name="office" id="office" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                                         <option value="" disabled selected>Select Office</option>
                                         <option v-for="office in officeList.data" :key="office.id" :value="office.id">{{ office.name }}</option>
                                     </select>
-                                    <label for="office" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>
+                                    <label for="office" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>
                                     <InputError class="mt-2" :message="create.errors.office" />
                                 </div>
                                 <div class="pt-4"> 
-                                    <p class="mb-5 block text-base font-medium text-[#86591e]">Upload File</p>
+                                    <p class="mb-5 block text-base font-semibold text-zinc-700">Upload File</p>
 
-                                    <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-gray-100 hover:bg-gray-200" @dragover.prevent @drop="onDrop">
+                                    <div class="mb-8 border-2 border-dashed border-slate-400 hover:border-slate-600 bg-zinc-100 hover:bg-zinc-200" @dragover.prevent @drop="onDrop">
                                         <input type="file" ref="fileInput" @change="onFileChange" multiple name="files[]" id="file" class="sr-only" accept=".xls,.xlsx"/>
                                         <label for="file" class="relative flex min-h-[200px] items-center justify-center rounded-md border border-dashed border-[#e0e0e0] p-12 text-center cursor-pointer">
                                             <div class="cursor-pointer w-full mx-auto flex flex-col items-center justify-center">
@@ -301,7 +301,7 @@
                                     </div>
 
                                     <div v-if="file">
-                                        <h4 class="text-sm font-medium text-[#86591e]">Selected Files: <span class="text-base text-gray-700 italic">{{ file.name }}</span></h4>
+                                        <h4 class="text-sm font-semibold text-zinc-700">Selected Files: <span class="text-base text-gray-700 italic">{{ file.name }}</span></h4>
                                     </div>
                                 </div>
 
@@ -314,11 +314,12 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-span-2 p-2 bg-white rounded-md shadow mt-5 lg:mt-0">
-                            <div class="bg-white p-2 overflow-hidden">
+                        <div class="col-span-2 p-2 bg-zinc-300 rounded-md shadow mt-5 lg:mt-0">
+                            <div class="p-2 overflow-hidden">
+                                <p class="mb-3 block text-xl font-bold text-zinc-700">Submitted PPMPs and Emergency Procurements</p>
                                 <div class="relative overflow-x-auto">
                                     <DataTable
-                                        class="display table-hover table-striped shadow-lg rounded-lg"
+                                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                                         :columns="columns"
                                         :data="officePpmps"
                                         :options="{  paging: true,
@@ -341,14 +342,14 @@
         <Modal :show="isDropPpmpModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitDropPpmp">
                 <input type="hidden" v-model="edit.ppmpId">
-                <div class="bg-gray-100 h-auto">
-                    <div class="bg-white p-6  md:mx-auto">
-                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <div class="bg-zinc-300 h-auto">
+                    <div class="p-6  md:mx-auto">
+                        <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
                         </svg>
                         <div class="text-center">
-                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Drop PPMP?</h3>
-                            <p class="text-gray-600 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
+                            <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Drop PPMP?</h3>
+                            <p class="text-zinc-700 my-2">Confirming this action will permanently remove the selected PPMP including its particulars into the list. This action cannot be redo.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
@@ -409,6 +410,7 @@
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

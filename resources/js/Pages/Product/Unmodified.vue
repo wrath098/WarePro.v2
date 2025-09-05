@@ -9,6 +9,7 @@
     import AddButton from '@/Components/Buttons/AddButton.vue';
     import Swal from 'sweetalert2';
     import useAuthPermission from '@/Composables/useAuthPermission';
+import InputError from '@/Components/InputError.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -201,11 +202,11 @@
                 </ol>
             </nav>
         </template>
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+        <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="exemptedProducts"
                         :options="{  paging: true,
@@ -221,38 +222,38 @@
         </div>
         <Modal :show="isAddUnmodifiedModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitAddUnmodified">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                             <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Add New Product to be Unmodified</h3>
+                            <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Add New Product to be Unmodified</h3>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> Enter the details of the Product you wish to add on unmodified.</p>
+                                <p class="text-sm text-zinc-700"> Enter the details of the Product you wish to add on unmodified.</p>
                                 <div class="mt-5">
-                                    <p class="text-sm text-[#86591e]"> Product Information</p>
+                                    <p class="text-sm font-semibold text-[#1a0037]"> Product Information</p>
                                     <div class="relative z-0 w-full group my-2">
-                                        <input v-model="stockNo" @input="fetchData" type="text" name="stockNo" id="stockNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                        <label for="stockNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
+                                        <input v-model="stockNo" @input="fetchData" type="text" name="stockNo" id="stockNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required />
+                                        <label for="stockNo" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
                                     </div>
                                     <div v-if="stockData">
                                         <div>
                                             <div class="relative z-0 w-full my-5 group">
-                                                <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.desc"></textarea>
-                                                <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
+                                                <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled :value="stockData.desc"></textarea>
+                                                <label for="prodDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
                                             </div>
                                             <div class="relative z-0 lg:w-1/2 my-5 group">
-                                                <input type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.unit"/>
-                                                <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                                <input type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled :value="stockData.unit"/>
+                                                <label for="prodDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
                                             </div>                               
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mt-5">
-                                    <p class="text-sm text-[#86591e]"> PPMP Calendar Year</p>
+                                    <p class="text-sm font-semibold text-[#1a0037]"> PPMP Calendar Year</p>
                                     <select v-model="create.ppmpYear" class="mt-2 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                         <option disabled value="">Select the Ppmp Year</option>
                                         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
@@ -262,7 +263,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -282,15 +283,15 @@
         <Modal :show="isDropUnmodifiedModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitDropUnmodify">
                 <input type="hidden" v-model="edit.prodId">
-                <div class="bg-gray-100 h-auto">
-                    <div class="bg-white p-6  md:mx-auto">
-                        <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <div class="bg-zinc-300 h-auto">
+                    <div class="p-6  md:mx-auto">
+                        <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
                         </svg>
 
                         <div class="text-center">
-                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Move to Trash!</h3>
-                            <p class="text-gray-600 my-2">Confirming this action will remove the selected Product into the list. This action can't be undone.</p>
+                            <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Move to Trash!</h3>
+                            <p class="text-zinc-700 my-2">Confirming this action will remove the selected Product into the list. This action can't be undone.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
@@ -338,6 +339,7 @@
 }
 
 :deep(div.dt-container .dt-search input) {
+    background-color: #fafafa;
     border: 1px solid #03244d;
     margin-right: 1px;
     width: 250px;
