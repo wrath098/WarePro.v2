@@ -21,7 +21,7 @@ use App\Http\Controllers\Pdf\ApprovedOfficePpmpQuantityController;
 use App\Http\Controllers\Pdf\AsOfStockCardController;
 use App\Http\Controllers\Pdf\DraftConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
-use App\Http\Controllers\Pdf\DraftOfficePpmpController;
+use App\Http\Controllers\Pdf\OfficePpmpController;
 use App\Http\Controllers\Pdf\EmergencyPpmpController;
 use App\Http\Controllers\Pdf\InventoryController;
 use App\Http\Controllers\Pdf\IssuanceController;
@@ -253,7 +253,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/beginning-balance', [InventoryController::class, 'generatePdf_productInventoryList'])->name('generatePdf.productInventoryList');
     Route::get('/consolidated-ppmp-list/{ppmp}', [DraftConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
-    Route::get('/drafted-office-ppmp-list/{ppmp}', [DraftOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
+    Route::get('/drafted-office-ppmp-list/{ppmp}', [OfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
     Route::get('/draft-adjusted-ppmp-list', [DraftAdjustedOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftAdjustedPpmp');
     Route::get('/emergency-ppmp/{ppmp}', [EmergencyPpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.emergencyPpmp');
     Route::get('/monthly-product-inventory', [MonthlyInventoryReportController::class, 'generatePdf_MonthlyInventoryReport'])->name('generatePdf.MonthlyInventoryReport');

@@ -225,8 +225,16 @@
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
                     <div class="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:gap-4">
-                        <div class="bg-zinc-300 p-2 rounded-md shadow">
-                            <form @submit.prevent="submit" class="space-y-5 px-2 relative">
+                        <div class="bg-zinc-300 rounded-md shadow">
+                            <div class="bg-zinc-400 px-4 py-5 sm:px-6 rounded-t-lg">
+                                <h3 class="font-bold text-lg leading-6 text-zinc-900">
+                                    Annual Procurement Plan (PPMP)
+                                </h3>
+                                <p class="text-sm text-zinc-500">
+                                    Fill in the PPMP details.
+                                </p>
+                            </div>
+                            <form @submit.prevent="submit" class="space-y-5 p-5 relative">
                                 <div v-if="isLoading" class="absolute text-indigo-800 bg-white bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
                                     <div class="flex items-center">
                                         <span class="text-3xl mr-4">Uploading</span>
@@ -239,7 +247,6 @@
                                         </svg>
                                     </div>
                                 </div>
-                                <p class="mb-3 block text-xl font-bold text-zinc-700">PPMP Information</p>
                                 <div class="relative z-0 w-full my-3 group">
                                     <select v-model="create.ppmpType" @change="filterOfficeNoPpmp" name="ppmpType" id="ppmpType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                                         <option value="" disabled selected>Select PPMP Type</option>
@@ -316,7 +323,6 @@
                         </div>
                         <div class="col-span-2 p-2 bg-zinc-300 rounded-md shadow mt-5 lg:mt-0">
                             <div class="p-2 overflow-hidden">
-                                <p class="mb-3 block text-xl font-bold text-zinc-700">Submitted PPMPs and Emergency Procurements</p>
                                 <div class="relative overflow-x-auto">
                                     <DataTable
                                         class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
@@ -404,6 +410,7 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;

@@ -278,100 +278,126 @@
         <div class="my-4 max-w-screen-2xl mb-8">
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
-                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-4">
-                        <div class="transition-shadow duration-300">
-                            <div class="bg-white rounded-lg shadow-md hover:shadow-lg">
-                                <div class="bg-indigo-600 text-white p-4 flex justify-between rounded-t-md">
-                                    <div class="font-bold text-lg">PPMP Information</div>
-                                </div>
-                                <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
-                                    <dl class="-my-3 divide-y divide-gray-100 text-base">
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Version</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">V.{{ ppmp.ppmp_version }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Transaction No.</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_code }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Description</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.description }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Type</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_type }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Price Adjustment</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.price_adjustment * 100 }}%</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Quantity Adjustment</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.qty_adjustment * 100 }}% of the original quantity</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Maximum Allowed Quantity per Office</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.tresh_adjustment * 100 }}% of the adjustment quantity</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Calendar Year</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.ppmp_year }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Total Items Listed</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalItems }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Total Amount</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.totalAmount }}</dd>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Updated By</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.updater.name }}</dd>
-                                        </div>
-                                        
-                                        <div v-if="ppmp && ppmp.remarks != null" class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                            <dt class="font-medium text-gray-900">Remarks</dt>
-                                            <dd class="text-gray-700 sm:col-span-2">{{ ppmp.remarks }}</dd>
-                                        </div>
-                                    </dl>
-                                </div>
-                            </div>
-                            <div v-if="countTrashed > 0" class="py-2">
-                                <div class="rounded-lg bg-red-200 text-red-900 text-md font-semibold p-2 border-2 border-red-300 shadow-sm">
-                                    <p>Item/s on Trashed : <span>{{ countTrashed }}</span></p>
-                                </div>  
-                            </div>
+                    <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
+                        <div class="bg-zinc-400 px-4 py-5 sm:px-6 rounded-t-lg">
+                            <h3 class="font-bold text-lg leading-6 text-zinc-900">
+                                APP Information
+                            </h3>
+                            <p class="text-sm text-zinc-700">
+                                ID# [{{ ppmp.ppmp_code }}]
+                            </p>
                         </div>
-
-                        <div class="col-span-3 p-2 bg-white rounded-md shadow mt-5 lg:mt-0">
-                            <div class="bg-white p-2 overflow-hidden">
-                                <div class="relative overflow-x-auto">
-                                    <DataTable
-                                        class="display table-hover table-striped shadow-lg rounded-lg"
-                                        :columns="columns"
-                                        :data="ppmp.transactions"
-                                        :options="{  paging: true,
-                                            searching: true,
-                                            ordering: false
-                                        }">
-                                            <template #action="props">
-                                                <EditButton v-if="hasPermission('edit-app-particular') ||  hasAnyRole(['Developer'])" @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>
-                                                <RemoveButton v-if="hasPermission('delete-app-particular') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Remove"/>
-                                            </template>
-                                    </DataTable>
+                        <div class="grid grid-cols-1 gap-0 lg:grid-cols-2 lg:gap-2">
+                            <dl class="font-semibold text-base">
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Description
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.description }}
+                                    </dd>
                                 </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Account Classess
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.account_class_ids }}
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Number of Offices
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.office_ppmp_ids }}
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Number Of Item Listed
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.totalItems }}
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        APP for CY
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.ppmp_year }}
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Date Created
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.formatted_created }}
+                                    </dd>
+                                </div>
+                            </dl>
+                            <dl class="font-semibold text-base">
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Updated By
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.updater.name }}
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Price Adjustment
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.price_adjustment * 100 }}%
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Initial Quantity Adjustment
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.init_qty_adjustment }} Null
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Final Quantity Adjustment
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        {{ ppmp.init_qty_adjustment }} Null
+                                    </dd>
+                                </div>
+                                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-gray-600">
+                                        Total Amount
+                                    </dt>
+                                    <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                        Php. {{ ppmp.totalAmount }}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="col-span-3 p-2 bg-zinc-300 rounded-md shadow mt-5 lg:mt-0">
+                        <div class="p-2 overflow-hidden">
+                            <div class="relative overflow-x-auto">
+                                <DataTable
+                                    class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
+                                    :columns="columns"
+                                    :data="ppmp.transactions"
+                                    :options="{  paging: true,
+                                        searching: true,
+                                        ordering: false
+                                    }">
+                                        <template #action="props">
+                                            <EditButton v-if="hasPermission('edit-app-particular') ||  hasAnyRole(['Developer'])" @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>
+                                            <RemoveButton v-if="hasPermission('delete-app-particular') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Remove"/>
+                                        </template>
+                                </DataTable>
                             </div>
                         </div>
                     </div>
@@ -382,16 +408,16 @@
     </AuthenticatedLayout>
     <Modal :show="isEditAdjustment" @close="closeModal"> 
         <form @submit.prevent="submitAdjustment">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Edit Adjustment</h3>
-                        <p class="text-sm text-gray-500"> Enter the details you want to update on the input field.</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Edit Initial Adjustment</h3>
+                        <p class="text-sm text-zinc-700"> Enter the details you want to update on the input field.</p>
                         <div class="mt-5">
                             <div class="relative z-0 w-full my-3 group">
                                 <select v-model="editAdjustment.adjustmentType" name="adjustmentType" id="adjustmentType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
@@ -491,33 +517,32 @@
     </Modal>
     <Modal :show="isEditPPModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitEdit">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update Quantity</h3>
-                        <p class="text-sm text-gray-500"> Enter the quantity you want to update on the input field.</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Update Quantity</h3>
+                        <p class="text-sm text-zinc-700"> Enter the quantity you want to update on the input field.</p>
                         <div class="mt-3">
-                            <p class="text-sm text-gray-500"> Product Information: </p>
+                            <p class="text-sm font-semibold text-[#1a0037]"> Product Information: </p>
                             <input v-model="editParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" readonly>
-                            
                             <textarea v-model="editParticular.prodDesc" type="text" id="prodCode" class="mt-2 p-2 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" readonly></textarea>
                         </div>
                         <div class="mt-5">
-                            <p class="text-sm text-gray-500"> Quantity: </p>
+                            <p class="text-sm font-semibold text-[#1a0037]"> Quantity: </p>
                             <div class="relative mt-1">
-                                <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                    <span class="text-gray-600 text-sm font-semibold">1st Qty: </span>
+                                <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-2 pointer-events-none">
+                                    <span class="text-zinc-700 text-sm font-semibold">1st Qty: </span>
                                 </div>
                                 <input v-model="editParticular.firstQty" type="number" id="firstQty" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="First Semester" required>
                             </div>
                             <div class="relative mt-1">
-                                <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                    <span class="text-gray-600 text-sm font-semibold">2nd Qty: </span>
+                                <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-2 pointer-events-none">
+                                    <span class="text-zinc-700 text-sm font-semibold">2nd Qty: </span>
                                 </div>
                                 <input v-model="editParticular.secondQty" type="number" id="secondQty" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Second Semester">
                             </div>
@@ -544,15 +569,15 @@
     </Modal>
     <Modal :show="isDropPPModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitDrop">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
-                    <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
+                    <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
                     </svg>
 
                     <div class="text-center">
-                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Move to Trash!</h3>
-                        <p class="text-gray-600 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
+                        <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Move to Trash!</h3>
+                        <p class="text-zinc-700 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
                         <p> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
@@ -624,12 +649,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

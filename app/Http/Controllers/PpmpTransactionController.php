@@ -32,7 +32,7 @@ class PpmpTransactionController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(): Response
+    public function index(): Response#
     {          
         $officePpmpExist = PpmpTransaction::whereIn('ppmp_type', ['individual', 'emergency'])
             ->where('ppmp_version', 1)
@@ -73,7 +73,7 @@ class PpmpTransactionController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request)#
     {
         DB::beginTransaction();
 
@@ -154,14 +154,72 @@ class PpmpTransactionController extends Controller
         }
     }
 
-    public function storeCopy(Request $request)
+    public function storeConsolidated(Request $request)#
+    {
+        DB::beginTransaction();
+
+        try {
+            $countUnavailableProduct = 0;
+
+            #Validate if more than 1 Office PPMP is existed
+            $queryTransaction = $this->getQueryTransaction($request);
+            if (!$queryTransaction) {
+                DB::rollBack();
+                return back()->with(['error' => 'Request is incomplete. Please check the input fields and try again.']);
+            }
+
+            #Format Consolidation Data to create
+            $data = $this->prepareConsolidationData($request);
+
+            #Validate Condolidated Data already exist
+            $existingConsoPpmp = $this->validateConsoPpmp($data);
+            
+            #Create Transaction
+            $createConsolidation = $this->createPpmpTransaction($data);
+
+            #Get Office PPMP based on the request
+            $individualPpmp = $this->getIndividualPpmpTransactionsWithParticulars($data);
+
+            #Store Office PPMP ids to $data
+            $data['officePpmpIds'] = json_encode($individualPpmp->pluck('id'));
+
+            #Process consolidate office ppmp particulars
+            $this->processOriginalVersion($individualPpmp, $createConsolidation->id, $data, $countUnavailableProduct);
+
+            #Update transaction details/information
+            $createConsolidation->update([
+                'account_class_ids' => $data['accountClass'],
+                'office_ppmp_ids' => $data['officePpmpIds'],
+            ]);
+
+            DB::commit();
+            return redirect()->route('conso.ppmp.type', ['type' => 'consolidated', 'status' => 'draft'])
+                    ->with('message', 'Consolidated has been generated successfully!' . ($countUnavailableProduct > 0 ? ' ' . $countUnavailableProduct . ' products were not consolidated due to unavailability on the current product list.' : ''));
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+            Log::error("Consolidating PPMP Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $request
+            ]);
+
+            return back()->with(['error' => 'Consolidating PPMP Failed. Please try again!']);
+        }
+    }
+
+    public function storeCopy(Request $request)#
     { 
         DB::beginTransaction();
         
         try {
+            #Initialize User ID
             $userId = Auth::id();
+
+            #Get Transaction
             $transaction = PpmpTransaction::with('consolidated')->findOrFail($request->ppmpId);
 
+            #Format data for new transaction
             $transactionDetails = [
                 'ppmpType' => $transaction->ppmp_type,
                 'ppmpYear' => $transaction->ppmp_year,
@@ -169,8 +227,10 @@ class PpmpTransactionController extends Controller
                 'user' => $userId,
             ];
 
+            #Create new transaction
             $newTransaction = $this->createPpmpTransaction($transactionDetails);
-
+            
+            #Create new transaction's particular in bulk
             $consolidatedData = $transaction->consolidated->map(function ($particular) use ($newTransaction, $userId) {
                 return [
                     'qty_first'   => $particular->qty_first,
@@ -184,11 +244,13 @@ class PpmpTransactionController extends Controller
                     'updated_at' => now(),
                 ];
             })->toArray();
-
             PpmpConsolidated::insert($consolidatedData);
             
             $newTransaction->update([
                 'description' => $request->ppmpDesc,
+                'account_class_ids' => $transaction->account_class_ids,
+                'office_ppmp_ids' => $transaction->office_ppmp_ids,
+                'init_qty_adjustment' => $transaction->init_qty_adjustment,
                 'remarks' => 'Duplicate copy of Transaction No. ' . $transaction->ppmp_code,
             ]);
 
@@ -204,50 +266,6 @@ class PpmpTransactionController extends Controller
             ]);
 
             return redirect()->back()->with('error', 'Failed to copy PPMP. Please try again.');
-        }
-    }
-
-    public function storeConsolidated(Request $request)
-    {
-        DB::beginTransaction();
-
-        try {
-            $countUnavailableProduct = 0;
-
-            $queryTransaction = $this->getQueryTransaction($request);
-            if (!$queryTransaction) {
-                DB::rollBack();
-                return back()->with(['error' => 'Request is incomplete. Please try again.']);
-            }
-
-            $data = $this->prepareConsolidationData($request, $queryTransaction);
-            $existingConsoPpmp = $this->validateConsoPpmp($data);
-            $data['newVersion'] = $existingConsoPpmp ? $existingConsoPpmp->ppmp_version + 1 : 1;
-
-            $createConsolidation = $this->createPpmpTransaction($data);
-            $individualPpmp = $this->getIndividualPpmpTransactionsWithParticulars($data);
-
-            if ($request->selectedVersion == "original") {
-                $this->processOriginalVersion($individualPpmp, $createConsolidation, $data, $countUnavailableProduct);
-            } elseif ($request->selectedVersion == "adjustment") {
-                $this->processAdjustmentVersion($individualPpmp, $createConsolidation, $data, $countUnavailableProduct);
-            }
-
-            $this->finalizeConsolidation($createConsolidation, $data);
-
-            DB::commit();
-            return redirect()->route('conso.ppmp.type', ['type' => 'consolidated', 'status' => 'draft'])
-                    ->with('message', 'Consolidated has been generated successfully!' . ($countUnavailableProduct > 0 ? ' ' . $countUnavailableProduct . ' products were not consolidated due to unavailability on the current product list.' : ''));
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-            Log::error("Consolidating PPMP Failed: ", [
-                'user' => Auth::user()->name,
-                'error' => $e->getMessage(),
-                'data' => $request
-            ]);
-
-            return back()->with(['error' => 'Consolidating PPMP Failed. Please try again!']);
         }
     }
 
@@ -337,15 +355,31 @@ class PpmpTransactionController extends Controller
     public function showConsolidatedPpmp(PpmpTransaction $ppmpTransaction)
     {
         $totalAmount = 0;
+
+        #Get transaction particulars
         $ppmpTransaction->load('updater', 'consolidated');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
+
+        #Format transaction account class and count office ppmp
+        $accountClassIds = json_decode($ppmpTransaction->account_class_ids ?? '[]');
+        $funds = Fund::whereIn('id', $accountClassIds)->get()->pluck('fund_name');
+        $ppmpTransaction->account_class_ids = $funds->isNotEmpty() ? $funds->implode(', ') : 'N/a';
+
+        $officePpmpIds = json_decode($ppmpTransaction->office_ppmp_ids, true);
+        $ppmpTransaction->office_ppmp_ids = is_array($officePpmpIds) ? count($officePpmpIds) : 0;
+        
+        #Count trashed particulars
         $countTrashedItems = $ppmpTransaction->consolidated()->onlyTrashed()->count();
+
+        #Get active account class
         $accountClass = $this->productService->getActiveFunds();
 
+        #Format transaction particulars
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
+            
             #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
-            //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            #$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
             
             $firstAmount = $items->qty_first * $prodPrice;
             $secondAmount = $items->qty_second * $prodPrice;
@@ -372,10 +406,12 @@ class PpmpTransactionController extends Controller
 
         $sortedParticulars = $groupParticulars->sortBy('prodCode');
 
+        $ppmpTransaction->formatted_created = $ppmpTransaction->created_at->format('M d, Y');
         $ppmpTransaction->transactions = $sortedParticulars->values();
         $ppmpTransaction->totalItems = $sortedParticulars->count();
         $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
 
+        //dd($ppmpTransaction->toArray());
         return Inertia::render('Ppmp/Consolidated', [
             'ppmp' =>  $ppmpTransaction,
             'countTrashed' => $countTrashedItems,
@@ -421,16 +457,17 @@ class PpmpTransactionController extends Controller
 
     public function showConsolidatedPpmp_Type(Request $request): Response
     {
-        $individualList = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_version')
+        #Get Transactions
+        $individualList = PpmpTransaction::select('ppmp_type', 'ppmp_year')
             ->where('ppmp_type', 'individual')
             ->where('ppmp_status', 'draft')
             ->get();
 
+        #Format Transaction
         $result = $individualList->groupBy('ppmp_type')->map(function ($group) {
                 $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
                     return [
                         'ppmp_year' => $yearGroup->first()->ppmp_year,
-                        'versions' => $yearGroup->pluck('ppmp_version')->unique()
                     ];
                 })->values()->all();
             
@@ -440,20 +477,26 @@ class PpmpTransactionController extends Controller
                 ];
             })->values()->all();
         
+        #Get Account Classess
+        $accountClass = $this->productService->getActiveFunds()->pluck('fund_name', 'id');
+        
+        #Get latest 20 Consolidion Transaction
         $transactions = PpmpTransaction::with('updater')
             ->where('ppmp_type', $request->type)
             ->where('ppmp_status', $request->status)
             ->orderBy('created_at', 'desc')
+            ->limit(20)
             ->get();
 
+        #Format Transaction
         $transactions = $transactions->map(function ($transaction) {
+            $accountClassIds = json_decode($transaction->account_class_ids ?? '[]');
+            $funds = Fund::whereIn('id', $accountClassIds)->get()->pluck('fund_name');
+            $funds = $funds->isNotEmpty() ? $funds->implode(', ') : 'N/a';
             $priceAdjustment = $transaction->price_adjustment ? ((float)$transaction->price_adjustment * 100) : 0;
-            $qtyAdjust = $transaction->qty_adjustment ? ((float)$transaction->qty_adjustment * 100) : 0;
-            $threshold = $transaction->tresh_adjustment ? ((float)$transaction->tresh_adjustment * 100) : 0;
-            $details = '<i><b>@</b>'. $priceAdjustment . '% ' . 'Price Adjustment' . '<br>'
-                    .'<b>@</b>'. $qtyAdjust . '% ' . 'Quantity Adjustment' .  '<br>' 
-                    .'<b>@</b>' . $threshold . '% ' . 'Maximum Adjustment' . '<br>'
-                    . ($transaction->remarks ? '<b>@</b>'. $transaction->remarks . '</i>': '</i>');
+            $details = '<b>Account Classifications: </b>'. $funds .'<br>'
+                    . '<b>@</b>'. $priceAdjustment . '% Price Adjustment' . '<br>'
+                    . ($transaction->remarks ? '<b>@</b>'. $transaction->remarks : '');
 
             return [
                 'id' => $transaction->id,
@@ -468,7 +511,12 @@ class PpmpTransactionController extends Controller
 
         $request['status'] = ucfirst($request['status']);
         $request['type'] = ucfirst($request['type']);
-        return Inertia::render('Ppmp/DraftConsolidatedList', ['ppmp' => $request, 'transactions' => $transactions, 'individualList' => $result]);
+        return Inertia::render('Ppmp/DraftConsolidatedList', [
+            'ppmp' => $request, 
+            'transactions' => $transactions, 
+            'individualList' => $result,
+            'accountClass' => $accountClass,
+        ]);
     }
 
     public function showOfficeListWithNoPpmp(Request $request)
@@ -736,7 +784,7 @@ class PpmpTransactionController extends Controller
         }
     }
 
-    private function createPpmpTransaction(array $validatedData)
+    private function createPpmpTransaction(array $validatedData)#
     {
         return PpmpTransaction::create([
             'ppmp_code' => now()->format('YmdHis'),
@@ -806,12 +854,12 @@ class PpmpTransactionController extends Controller
             ->exists();
     }
 
-    private function validateConsoPpmp(array $validatedData)
+    private function validateConsoPpmp(array $validatedData)#
     {
         return PpmpTransaction::where('ppmp_type', 'consolidated')
             ->where('ppmp_year', $validatedData['ppmpYear'])
             ->where('ppmp_status', $validatedData['ppmpStatus'])
-            ->orderBy('created_at', 'desc')
+            ->where('account_class_ids', $validatedData['accountClass'])
             ->first();
     }
 
@@ -890,9 +938,9 @@ class PpmpTransactionController extends Controller
         return (int)$qty;
     }
 
-    private function getQueryTransaction($request)
+    private function getQueryTransaction($request)#
     {
-        if ($request->selectedVersion == "original" || $request->selectedVersion == "adjustment") {
+        if (!empty($request->selectedAccounts)) {
             return PpmpTransaction::where('ppmp_year', $request->selectedYear)
                 ->where('ppmp_type', $request->selectedType)
                 ->where('ppmp_status', 'draft')
@@ -901,27 +949,28 @@ class PpmpTransactionController extends Controller
         return null;
     }
 
-    private function prepareConsolidationData($request, $queryTransaction)
+    private function prepareConsolidationData($request)#
     {
         return [
             'ppmpType' => 'consolidated',
             'ppmpYear' => $request->selectedYear,
             'ppmpStatus' => 'draft',
-            'basePrice' => $request->selectedVersion == "original" ? $queryTransaction->price_adjustment : ((float)$request->priceAdjust / 100),
-            'qtyAdjust' => $request->selectedVersion == "original" ? 1.00 : ((float)$request->qtyAdjust / 100),
-            'threshold' => ((float)$request->threshold / 100),
+            'basePrice' => (float)$request->priceAdjust / 100,
+            'accountClass' => json_encode($request->selectedAccounts),
             'office' => null,
             'user' => Auth::id(),
         ];
     }
 
-    private function processOriginalVersion($individualPpmp, $createConsolidation, $data, &$countUnavailableProduct)
+    private function processOriginalVersion($individualPpmp, $consoTransactionId, $data, &$countUnavailableProduct)#
     {
+        #Group transaction's particular by product id
         $groupParticulars = $individualPpmp->flatMap(function ($transaction) {
             return $transaction->particulars;
         })->groupBy('prod_id');
 
-        $this->saveConsolidatedParticulars($groupParticulars, $createConsolidation, $data, $countUnavailableProduct);
+        #Execute store consolidation method
+        $this->saveConsolidatedParticulars($groupParticulars, $consoTransactionId, $data, $countUnavailableProduct);
     }
 
     private function processAdjustmentVersion($individualPpmp, $createConsolidation, $data, &$countUnavailableProduct)
@@ -935,46 +984,35 @@ class PpmpTransactionController extends Controller
         $this->saveConsolidatedParticulars($groupParticulars, $createConsolidation, $data, $countUnavailableProduct);
     }
 
-    private function saveConsolidatedParticulars($groupParticulars, $createConsolidation, $data, &$countUnavailableProduct)
+    private function saveConsolidatedParticulars($groupParticulars, $consoTransactionId, $data, &$countUnavailableProduct)#
     {
-        $groupParticulars->map(function ($items) use ($createConsolidation, $data, &$countUnavailableProduct) {
+        #Map Particular Items
+        $groupParticulars->map(function ($items) use ($consoTransactionId, $data, &$countUnavailableProduct) {
+            #Verify Item if active
             $isProductFound = $this->productService->verifyProductIfActive($items->first()->prod_id);
             if (!$isProductFound) {
                 $countUnavailableProduct++;
                 return null;
             }
 
+            #Get latest product price
             $prodPriceId = $this->productService->getLatestPriceIdentification($items->first()->prod_id);
 
-            if ($data['qtyAdjust'] == 1)
-            {
-                $qtyFirst = (int) $items->sum('qty_first');
-                $qtySecond = (int) $items->sum('qty_second');
-            } else {
-                $qtyFirst = (int) $items->sum('adjusted_firstQty');
-                $qtySecond = (int) $items->sum('adjusted_secondQty');
-            }
+            #Add all quantity
+            $qtyFirst = (int) $items->sum('qty_first');
+            $qtySecond = (int) $items->sum('qty_second');
             
+            #Create consolidated's particular
             PpmpConsolidated::create([
                 'qty_first' => $qtyFirst,
                 'qty_second' => $qtySecond,
                 'prod_id' => $items->first()->prod_id,
                 'price_id' => $prodPriceId,
-                'trans_id' => $createConsolidation->id,
+                'trans_id' => $consoTransactionId,
                 'created_by' => $data['user'],
                 'updated_by' => $data['user'],
             ]);
         });
-    }
-
-    private function finalizeConsolidation($createConsolidation, $data)
-    {
-        $createConsolidation->update([
-            'price_adjustment' => $data['basePrice'],
-            'qty_adjustment' => $data['qtyAdjust'],
-            'tresh_adjustment' => $data['threshold'],
-            'ppmp_version' => $data['newVersion'],
-        ]);
     }
 
     private function formattedAndSortedParticulars($ppmpTransaction) {

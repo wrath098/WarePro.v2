@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\PpmpTransaction;
 use App\Services\PpmpPDF;
 use App\Services\ProductService;
+use Illuminate\Http\Request;
 
-class DraftOfficePpmpController extends Controller
+class OfficePpmpController extends Controller
 {
     protected $productService;
 
@@ -16,8 +17,9 @@ class DraftOfficePpmpController extends Controller
         $this->productService = $productService;
     }
 
-    public function generatePdf_Ppmp(PpmpTransaction $ppmp)
+    public function generatePdf_Ppmp(PpmpTransaction $ppmp, Request $request)
     {
+        $version = $request->query('version');
         $ppmp->load('particulars', 'requestee');
         $totalQtySecond = $ppmp->particulars()->sum('qty_second');
 

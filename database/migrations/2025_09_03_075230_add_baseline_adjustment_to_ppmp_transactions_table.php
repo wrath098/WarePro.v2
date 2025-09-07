@@ -12,17 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ppmp_transactions', function (Blueprint $table) {
-            $table->string('office_ppmp_ids')
+            $table->string('account_class_ids')
                 ->nullable()
                 ->after('description')
+                ->comment('Consolidated Account Classess');
+            $table->string('office_ppmp_ids')
+                ->nullable()
+                ->after('account_class_ids')
                 ->comment('Consolidated Office PPMP');
-            $table->string('baseline_adjustment_type')
-                ->default('grouped')
-                ->after('office_ppmp_ids')
-                ->comment('Allowed values: grouped, custom');
             $table->string('init_qty_adjustment')
                 ->nullable()
-                ->after('baseline_adjustment_type')
+                ->after('office_ppmp_ids')
                 ->comment('Initial Quantity Adjustment');;
         });
     }
@@ -33,8 +33,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ppmp_transactions', function (Blueprint $table) {
+            $table->dropColumn('account_class_ids');
             $table->dropColumn('office_ppmp_ids');
-            $table->dropColumn('baseline_adjustment_type');
             $table->dropColumn('init_qty_adjustment');
         });
     }

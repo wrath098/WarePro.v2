@@ -12,6 +12,7 @@
     import useAuthPermission from '@/Composables/useAuthPermission';
     import InputError from '@/Components/InputError.vue';
     import IconButton from '@/Components/Buttons/IconButton.vue';
+    import Checkbox from '@/Components/Checkbox.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -23,6 +24,7 @@
         ppmp: Object,
         transactions: Object,
         individualList: Object,
+        accountClass: Object,
     });
 
     const edit = useForm({
@@ -43,10 +45,8 @@
     const generateConsolidated = useForm({
         selectedType: '',
         selectedYear: '',
-        selectedVersion: '',
+        selectedAccounts: [],
         priceAdjust:100,
-        qtyAdjust:100,
-        threshold: 100,
     });
 
     const openDropPpmpModal = (ppmp) => {
@@ -123,12 +123,12 @@
         {
             data: 'description',
             title: 'Description',
-            width: '20%'
+            width: '15%'
         },
         {
             data: 'details',
             title: 'Other Details',
-            width: '20%'
+            width: '30%'
         },
         {
             data: 'updatedBy',
@@ -199,11 +199,11 @@
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
-            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
-                <div class="relative overflow-x-auto">
+        <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4">
+                <div class="relative">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="transactions"
                         :options="{  paging: true,
@@ -231,68 +231,54 @@
     </AuthenticatedLayout>
     <Modal :show="isConsolidateModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitConsolidated">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Consolidate PPMP</h3>
-                        <p class="text-sm text-gray-500"> Enter the details to generate a consolidated PPMP you wish to consolidate.</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Consolidate PPMP</h3>
+                        <p class="text-sm text-zinc-700"> Enter the details to generate a consolidated PPMP you wish to consolidate.</p>
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]">PPMP Information: </p>
+                            <p class="text-sm font-semibold text-[#1a0037]">PPMP Information: </p>
                             <div class="relative z-0 w-full my-3 group">
                                 <select v-model="generateConsolidated.selectedType" @change="onTypeChange(generateConsolidated)" name="selectedType" id="selectedType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                     <option value="" disabled selected>Select Type</option>
                                     <option v-for="type in props.individualList" :key="type.ppmp_type" :value="type.ppmp_type">{{ type.ppmp_type == 'individual' ? 'Office' : type.ppmp_type }}</option>
                                 </select>
-                                <label for="selectedType" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
+                                <label for="selectedType" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Type</label>
                             </div>
-                            <div class="relative z-0 w-full my-3 group" v-if="filteredYears.length">
+                            <div class="relative z-0 w-full my-3 group">
                                 <select v-model="generateConsolidated.selectedYear" @change="onYearChange(generateConsolidated)" name="selectedYear" id="selectedYear" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
                                     <option value="" disabled selected>Select Year</option>
                                     <option v-for="year in filteredYears" :key="year.ppmp_year" :value="year.ppmp_year">{{ year.ppmp_year }}</option>
                                 </select>
-                                <label for="selectedYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Year</label>
+                                <label for="selectedYear" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Year</label>
                             </div>
-                            <div class="relative z-0 w-full my-3 group" v-if="filteredVersion.length">
-                                <select v-model="generateConsolidated.selectedVersion" name="selectedVersion" id="selectedVersion" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                                    <option value="" disabled selected>Select Version</option>
-                                    <option value="original">Original Quantity</option>
-                                    <option value="adjustment">Adjust Quantity</option>
-                                </select>
-                                <label for="selectedVersion" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">PPMP Version</label>
-                            </div>
-                        </div>
-                        <div v-if="generateConsolidated.selectedVersion" >
-                            <div v-if="generateConsolidated.selectedVersion == 'adjustment'" class="mt-5">
-                                <p class="text-sm text-[#86591e]"> Adjustment: <span class="text-sm text-[#8f9091]">This will adjust the quantity of each item requested by the various offices.</span></p>
-                                <div class="relative z-0 w-full group my-2">
-                                    <input v-model="generateConsolidated.qtyAdjust" type="number" min="50" max="99" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                    <label for="qtyAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 99</label>
-                                </div>
-                            </div>
-                            <div class="mt-5">
-                                <p class="text-sm text-[#86591e]"> Threshold: <span class="text-sm text-[#8f9091]">This will set the quantity limit for each item requested by the various offices.</span></p>
-                                <div class="relative z-0 w-full group my-2">
-                                    <input v-model="generateConsolidated.threshold" type="number" min="50" max="100" name="threshold" id="threshold" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                    <label for="threshold" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>
+                            <div class="w-full my-4">
+                                <label class="block mb-2 text-sm font-semibold text-[#1a0037]">
+                                    Check Account Class to Consolidate:
+                                </label>
+
+                                <div v-for="(account, index) in accountClass" :key="index" class="flex items-center space-x-2 mb-2">
+                                    <Checkbox v-model:checked="generateConsolidated.selectedAccounts" :value="index"/>
+                                    <span class="text-sm text-gray-800">{{ account }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]"> Price Adjustment: <span class="text-sm text-[#8f9091]">This will increase the latest prices of product items by a percentage.</span></p>
+                            <p class="text-sm font-semibold text-[#1a0037]"> Price Adjustment: <span class="text-sm font-medium text-[#8f9091]">Increase the prices of a product item by a percentage.</span></p>
                             <div class="relative z-0 w-full group my-2">
                                 <input v-model="generateConsolidated.priceAdjust" type="number" min="100" max="120" name="priceAdjust" id="priceAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label for="priceAdjust" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 100 to 120</label>
+                                <label for="priceAdjust" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 100 to 120</label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -311,29 +297,29 @@
     </Modal>
     <Modal :show="isEditPpmpModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitEditPpmp">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-[#86591e]" id="modal-headline">Create Duplicate of Consolidated PPMP</h3>
-                        <p class="text-sm text-gray-500">Provide a description for the copied consolidated PPMP.</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Create Duplicate of Consolidated PPMP</h3>
+                        <p class="text-sm text-zinc-700">Provide a description for the copied consolidated PPMP.</p>
                         
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]">PPMP Description</p>
+                            <p class="text-sm font-semibold text-[#1a0037]">PPMP Description</p>
                             <div class="relative z-0 w-full group my-2">
                                 <input v-model="edit.ppmpDesc" type="text" name="ppmpDesc" id="ppmpDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label for="ppmpDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter description</label>
+                                <label for="ppmpDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter description</label>
                                 <InputError class="mt-2" :message="edit.errors.ppmpId" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -353,9 +339,9 @@
     <Modal :show="isDropPpmpModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitDropPpmp">
             <input type="hidden" v-model="edit.ppmpId">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
-                    <svg class="text-red-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
+                    <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
                     </svg>
                     <div class="text-center">
@@ -401,12 +387,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;
@@ -414,6 +402,10 @@
 
     :deep(div.dt-length > label) {
         display: none;
+    }
+
+    :deep(table.dataTable tbody > tr > td:nth-child(3)) {
+        text-align: left !important;
     }
 
     :deep(table.dataTable tbody > tr > td:nth-child(4)) {
