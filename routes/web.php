@@ -19,7 +19,7 @@ use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\ApprovedOfficePpmpQuantityController;
 use App\Http\Controllers\Pdf\AsOfStockCardController;
-use App\Http\Controllers\Pdf\DraftConsolidatedPpmpController;
+use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\OfficePpmpController;
 use App\Http\Controllers\Pdf\EmergencyPpmpController;
@@ -177,6 +177,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');
     Route::any('/create-consolidated', [PpmpTransactionController::class, 'storeConsolidated'])->name('consolidated.ppmp.store');
     Route::post('/update-adjustment', [PpmpTransactionController::class, 'updateInitialAdjustment'])->name('updateInitialAdjustment');
+    Route::post('/update-final-adjustment', [PpmpTransactionController::class, 'updateFinalAdjustment'])->name('updateFinalAdjustment');
     // Route::post('/update', [PpmpTransactionController::class, 'updateConsolidatedDescription'])->name('indiv.ppmp.update');
     Route::delete('/drop', [PpmpTransactionController::class, 'destroy'])->name('indiv.ppmp.destroy');
     Route::post('/individual-ppmp/create', [PpmpParticularController::class, 'store'])->name('indiv.particular.store');
@@ -251,7 +252,7 @@ Route::middleware('auth')->prefix('ris')->group(function () {
 Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/approved-office-ppmp-list/{ppmp}', [ApprovedOfficePpmpQuantityController::class, 'generatePdf_Ppmp'])->name('generatePdf.ApprovedOfficePpmp');
     Route::get('/beginning-balance', [InventoryController::class, 'generatePdf_productInventoryList'])->name('generatePdf.productInventoryList');
-    Route::get('/consolidated-ppmp-list/{ppmp}', [DraftConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
+    Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
     Route::get('/drafted-office-ppmp-list/{ppmp}', [OfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
     Route::get('/draft-adjusted-ppmp-list', [DraftAdjustedOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftAdjustedPpmp');

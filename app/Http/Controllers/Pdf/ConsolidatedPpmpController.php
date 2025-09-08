@@ -8,7 +8,7 @@ use App\Services\PpmpPDF;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
-class DraftConsolidatedPpmpController extends Controller
+class ConsolidatedPpmpController extends Controller
 {
     protected $productService;
 
@@ -27,7 +27,7 @@ class DraftConsolidatedPpmpController extends Controller
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle('Consolidated PPMP');
+        $pdf->SetTitle('Consolidated PPMP | ' . $type);
         $pdf->SetSubject('Consolidated PPMP Particulars');
         $pdf->SetKeywords('Benguet, WarePro, Consolidated List');
         
@@ -49,7 +49,7 @@ class DraftConsolidatedPpmpController extends Controller
         $table .= $this->tableHeader();
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $type == 'initial' ? $this->tableContent($ppmp) : $this->tableContent_withBudget($ppmp) ;
+        $table .= $this->tableContent($ppmp, $type);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -138,182 +138,9 @@ class DraftConsolidatedPpmpController extends Controller
                     <th width="32px" style="text-align: center;">QTY</th>
                     <th width="50px" style="text-align: center;">AMT</th>
                 </tr>';
-    }
+    }   
 
-    protected function tableContent(PpmpTransaction $ppmpTransaction)
-    {
-        $text = '';
-
-        $recapitulation = [];
-        $ppmpTransaction->load('updater', 'consolidated');
-
-        $sortedParticulars = $this->formattedAndSortedParticulars($ppmpTransaction);
-        $funds = $this->productService->getAllProduct_FundModel();
-
-        foreach ($funds as $fund) {
-
-            $fundFirstTotal = 0; 
-            $fundSecondTotal = 0;
-            $fundTotal = 0;
-
-            if ($fund->categories->isNotEmpty()) {
-                $text .= $this->generateFundHeader($fund);
-
-                foreach ($fund->categories as $category) {
-                    if ($category->items->isNotEmpty()) {
-                        $text .= $this->generateCategoryHeader($category);
-
-                    $catFirstTotal = 0; 
-                    $catSecondTotal = 0;
-                    $catTotal = 0;
-        
-                        foreach ($category->items as $item) {
-                            if ($item->products->isNotEmpty()) {  
-                                foreach ($item->products as $product) {
-                                    $matchedParticulars = $sortedParticulars->where('prodCode', $product->prod_newNo);
-
-                                    if ($matchedParticulars->isNotEmpty()) {
-                                        foreach ($matchedParticulars as $particular) {
-                                            $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
-                                            $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
-                                            $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
-                                            $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                            $text .= $prodQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
-                                            $text .= '
-                                                <td width="40px">' . $product->prod_oldNo . '</td>
-                                                <td width="45px">' . $product->prod_newNo . '</td>
-                                                <td width="190px" style="text-align: left;">' . $product->prod_desc . '</td>
-                                                <td width="45px">' . $product->prod_unit. '</td>
-                                                <td width="45px" style="text-align: right;">' . $this->formatToFloat($particular['prodPrice'], 2, '.', ',') . '</td>
-                                                <td width="40px" style="text-align: right;">' . $this->formatToInteger($prodQty, 0, '.', ',') . '</td>
-                                                <td width="60px" style="text-align: right;">' . $this->formatToFloat($prodQtyAmount, 2, '.', ',') . '</td>
-                                                <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? $this->formatToInteger($particular['qtyFirst'], 0, '.', ',') : '-') . '</td>
-                                                <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? $this->formatToFloat($firstQtyAmount, 2, '.', ',') : '-') . '</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="32px" style="text-align: right;">' . ($particular['qtySecond'] != 0 ? $this->formatToInteger($particular['qtySecond'], 0, '.', ',') : '-') . '</td>
-                                                <td width="50px" style="text-align: right;">' . ($secondQtyAmount != 0 ? $this->formatToFloat($secondQtyAmount, 2, '.', ',') : '-') . '</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                            </tr>';
-
-                                            $catFirstTotal += $firstQtyAmount; 
-                                            $catSecondTotal += $secondQtyAmount;
-                                            $catTotal += $prodQtyAmount;
-                                        }
-                                    }
-                                }  
-                            }         
-                        }
-                        $recapitulation[$fund->fund_name][] =  [
-                            'name' => sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name,
-                            'total' => $catTotal,
-                            'firstSem' => $catFirstTotal,
-                            'secondSem' => $catSecondTotal,
-                        ];
-                    }
-                    $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="365px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
-                            <td width="100px" style="text-align: right;">' . ($catTotal != 0 ? $this->formatToFloat($catTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? $this->formatToFloat($catFirstTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="82px" style="text-align: right;">' . ($catSecondTotal != 0 ? $this->formatToFloat($catSecondTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                        </tr>';
-
-                    $fundFirstTotal += $catFirstTotal; 
-                    $fundSecondTotal += $catSecondTotal;
-                    $fundTotal += $catTotal;
-                }
-            }
-
-            $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id) ?? 0;
-            $contingency = $capitalOutlay - $fundTotal;
-            $wholeNumber = floor($contingency);
-            $cents = $contingency - $wholeNumber;
-            $halfWholeNumber = floor($wholeNumber / 2);
-
-            $contingencyFirst = $wholeNumber - $halfWholeNumber;
-            $contingencySecond = $halfWholeNumber + $cents;
-
-            $recapitulation[$fund->fund_name][] = [
-                'name' => 'Contingency',
-                'total' => $contingency,
-                'firstSem' => $contingencyFirst,
-                'secondSem' => $contingencySecond,
-            ];
-        }
-
-        $text .= '
-                <tr>
-                    <td width="100%" style="line-height: 0.00001; border:1px solid black; border-left:1px solid white;  border-right:1px solid white;"></td>
-                </tr>
-                ';
-        
-        $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                    <td width="100%" style="line-height: 2; border:1px solid black;">Recapitulation</td>
-                </tr>';
-
-        $overAllAmount = 0;
-        $overAllFirstAmount = 0;
-        $overAllSecondAmount = 0;
-
-        foreach ($recapitulation as $expenses => $fund) {
-          
-            $allAmount = 0;
-            $firstAmount = 0;
-            $secondAmount = 0;
-
-            foreach ($fund as $cat) {
-                if($cat['name'] != 'Contingency') {
-
-                    $allAmount += $cat['total'];
-                    $firstAmount += $cat['firstSem'];
-                    $secondAmount += $cat['secondSem'];
-
-                    $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                        <td width="375px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;"> <span style="color:white;">&nbsp&nbsp</span>'. $cat['name'] .'</td>
-                        <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;">'. $this->formatToFloat($cat['total'], 2, '.', ',') .'</td>
-                        <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. $this->formatToFloat($cat['firstSem'], 2, '.', ',') .'</td>
-                        <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
-                        <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. $this->formatToFloat($cat['secondSem'], 2, '.', ',') .'</td>
-                        <td width="175px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #000;"></td>
-                    </tr>';
-
-                    $overAllAmount += $cat['total'];
-                    $overAllFirstAmount += $cat['firstSem'];
-                    $overAllSecondAmount += $cat['secondSem'];
-                }
-            }
-        }
-        $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                    <td width="375px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;">Grand Total</td>
-                    <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;"><u>'. $this->formatToFloat($overAllAmount, 2, '.', ',') .'</u></td>
-                    <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"><u>'. $this->formatToFloat($overAllFirstAmount, 2, '.', ',') .'</u></td>
-                    <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
-                    <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"><u>'. $this->formatToFloat($overAllSecondAmount, 2, '.', ',') .'</u></td>
-                    <td width="175px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #000;"></td>
-                </tr>';
-        
-        return $text;
-    
-    }
-
-    protected function tableContent_withBudget(PpmpTransaction $ppmpTransaction)
+    protected function tableContent(PpmpTransaction $ppmpTransaction, $type)
     {
         $text = '';
 
@@ -430,63 +257,68 @@ class DraftConsolidatedPpmpController extends Controller
                         </tr>';
             }
 
-            #UNCOMMENT IF THE CONTINGENCY IS NEEDED
-            // $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id) ?? 0;
-            // $contingency = $capitalOutlay - $fundTotal;
-            // $wholeNumber = floor($contingency);
-            // $cents = $contingency - $wholeNumber;
-            // $halfWholeNumber = floor($wholeNumber / 2);
+            if($type == 'contingency') {
+                $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id) ?? 0;
+                $contingency = $capitalOutlay - $fundTotal;
+                $wholeNumber = floor($contingency);
+                $cents = $contingency - $wholeNumber;
+                $halfWholeNumber = floor($wholeNumber / 2);
 
-            // $contingencyFirst = $wholeNumber - $halfWholeNumber;
-            // $contingencySecond = $halfWholeNumber + $cents;
+                $contingencyFirst = $wholeNumber - $halfWholeNumber;
+                $contingencySecond = $halfWholeNumber + $cents;
 
-            // $grandTotalFirstQty = $fundFirstTotal + $contingencyFirst;
-            // $grandTotalSecondQty = $fundSecondTotal + $contingencySecond;
-            // $granTotal = $fundTotal + $contingency;
+                $grandTotalFirstQty = $fundFirstTotal + $contingencyFirst;
+                $grandTotalSecondQty = $fundSecondTotal + $contingencySecond;
+                $granTotal = $fundTotal + $contingency;
 
-            // $grandTotalFirstQty = $fundFirstTotal + $contingencyFirst;
-            // $grandTotalSecondQty = $fundSecondTotal + $contingencySecond;
-            // $granTotal = $fundTotal + $contingency;
+                $grandTotalFirstQty = $fundFirstTotal + $contingencyFirst;
+                $grandTotalSecondQty = $fundSecondTotal + $contingencySecond;
+                $granTotal = $fundTotal + $contingency;
 
-            // $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-            //             <td width="365px">Total Amount of Contingency</td>
-            //             <td width="100px" style="text-align: right;">' . ($contingency != 0 ? $this->formatToFloat($contingency, 2, '.', ',') : '-') . '</td>
-            //             <td width="82px" style="text-align: right;">' . ($contingencyFirst != 0 ? $this->formatToFloat($contingencyFirst, 2, '.', ',') : '-') . '</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="82px" style="text-align: right;">' . ($contingencySecond != 0 ? $this->formatToFloat($contingencySecond, 2, '.', ',') : '-') . '</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //         </tr>
-            //         <tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-            //             <td width="365px">Grand Total</td>
-            //             <td width="100px" style="text-align: right;">' . ($granTotal != 0 ? $this->formatToFloat($granTotal, 2, '.', ',') : '-') . '</td>
-            //             <td width="82px" style="text-align: right;">' . ($grandTotalFirstQty != 0 ? $this->formatToFloat($grandTotalFirstQty, 2, '.', ',') : '-') . '</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="82px" style="text-align: right;">' . ($grandTotalSecondQty != 0 ? $this->formatToFloat($grandTotalSecondQty, 2, '.', ',') : '-') . '</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //             <td width="25px">-</td>
-            //         </tr>';
-            // $recapitulation[$fund->fund_name][] = [
-            //     'name' => 'Contingency',
-            //     'total' => $contingency,
-            //     'firstSem' => $contingencyFirst,
-            //     'secondSem' => $contingencySecond,
-            // ];
+            
+                $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                        <td width="365px">Total Amount of Contingency</td>
+                        <td width="100px" style="text-align: right;">' . ($contingency != 0 ? $this->formatToFloat($contingency, 2, '.', ',') : '-') . '</td>
+                        <td width="82px" style="text-align: right;">' . ($contingencyFirst != 0 ? $this->formatToFloat($contingencyFirst, 2, '.', ',') : '-') . '</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="82px" style="text-align: right;">' . ($contingencySecond != 0 ? $this->formatToFloat($contingencySecond, 2, '.', ',') : '-') . '</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                    </tr>
+                    <tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                        <td width="365px">Grand Total</td>
+                        <td width="100px" style="text-align: right;">' . ($granTotal != 0 ? $this->formatToFloat($granTotal, 2, '.', ',') : '-') . '</td>
+                        <td width="82px" style="text-align: right;">' . ($grandTotalFirstQty != 0 ? $this->formatToFloat($grandTotalFirstQty, 2, '.', ',') : '-') . '</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="82px" style="text-align: right;">' . ($grandTotalSecondQty != 0 ? $this->formatToFloat($grandTotalSecondQty, 2, '.', ',') : '-') . '</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                        <td width="25px">-</td>
+                    </tr>';
+            
+
+                $recapitulation[$fund->fund_name][] = [
+                    'name' => 'Contingency',
+                    'total' => $contingency,
+                    'firstSem' => $contingencyFirst,
+                    'secondSem' => $contingencySecond,
+                ];
+            }
         }
+
         $text .= '<tr>
                     <td style="border:1px solid #fff;" width="100%">
                         <p style="font-size: 10px; line-height: 0.4;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
@@ -519,7 +351,8 @@ class DraftConsolidatedPpmpController extends Controller
                 $secondAmount += $cat['secondSem'];
                 if($cat['name'] != 'Contingency') {
                     $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                        <td width="375px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;"> <span style="color:white;">&nbsp&nbsp</span>'. $cat['name'] .'</td>
+                        <td width="55px" style="border-left:1px solid #000; border-right:0px solid #fff; border-bottom:1px solid #000;"></td>
+                        <td width="320px" style="border-left:0px solid #fff; border-right:0px solid #fff; border-bottom:1px solid #000;">'. $cat['name'] .'</td>
                         <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;">'. $this->formatToFloat($cat['total'], 2, '.', ',') .'</td>
                         <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. $this->formatToFloat($cat['firstSem'], 2, '.', ',') .'</td>
                         <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
@@ -528,7 +361,8 @@ class DraftConsolidatedPpmpController extends Controller
                     </tr>';
                 } else {
                     $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                        <td width="375px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;"> <span style="color:white;">&nbsp&nbsp&nb</span>'. $cat['name'] .'</td>
+                        <td width="75px" style="border-left:1px solid #000; border-right:0px solid #fff; border-bottom:1px solid #000;"></td>
+                        <td width="300px" style="border-left:0px solid #fff; border-right:0px solid #fff; border-bottom:1px solid #000;">'. $cat['name'] .'</td>
                         <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;">'. $this->formatToFloat($cat['total'], 2, '.', ',') .'</td>
                         <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. $this->formatToFloat($cat['firstSem'], 2, '.', ',') .'</td>
                         <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
@@ -565,9 +399,6 @@ class DraftConsolidatedPpmpController extends Controller
     {
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
             $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
-            #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
-            //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
-
             $qtyFirst = (int) $items->qty_first;
             $qtySecond = (int) $items->qty_second;
 

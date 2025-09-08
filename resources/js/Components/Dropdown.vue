@@ -7,7 +7,7 @@ const props = defineProps({
         default: 'right',
     },
     width: {
-        type: String,
+        type: [String, Number],
         default: '48',
     },
     contentClasses: {
@@ -26,9 +26,17 @@ onMounted(() => document.addEventListener('keydown', closeOnEscape));
 onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 
 const widthClass = computed(() => {
-    return {
-        48: 'w-36',
-    }[props.width.toString()];
+    const widthMap = {
+        32: 'w-32',
+        36: 'w-36',
+        40: 'w-40',
+        48: 'w-48',
+        56: 'w-56',
+        64: 'w-64',
+        full: 'w-full',
+    };
+
+    return widthMap[props.width.toString()] || 'w-36';
 });
 
 const alignmentClasses = computed(() => {

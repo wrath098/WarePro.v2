@@ -23,7 +23,11 @@ return new class extends Migration
             $table->string('init_qty_adjustment')
                 ->nullable()
                 ->after('office_ppmp_ids')
-                ->comment('Initial Quantity Adjustment');;
+                ->comment('Initial Quantity Adjustment');
+            $table->string('final_qty_adjustment')
+                ->nullable()
+                ->after('init_qty_adjustment')
+                ->comment('Final Quantity Adjustment');;
         });
     }
 
@@ -36,6 +40,7 @@ return new class extends Migration
             $table->dropColumn('account_class_ids');
             $table->dropColumn('office_ppmp_ids');
             $table->dropColumn('init_qty_adjustment');
+            $table->dropColumn('final_qty_adjustment');
         });
     }
 };
