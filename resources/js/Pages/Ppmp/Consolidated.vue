@@ -311,7 +311,7 @@
                                 </div>
                                 <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                     <dt class="text-gray-600">
-                                        Number of Offices
+                                        No. of Offices
                                     </dt>
                                     <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
                                         {{ ppmp.office_ppmp_ids }}
@@ -319,7 +319,7 @@
                                 </div>
                                 <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                     <dt class="text-gray-600">
-                                        Number Of Item Listed
+                                        No. Of Item Listed
                                     </dt>
                                     <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
                                         {{ ppmp.totalItems }}
@@ -364,7 +364,7 @@
                                         Initial Quantity Adjustment
                                     </dt>
                                     <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
-                                        {{ ppmp.init_qty_adjustment }}
+                                        {{ ppmp.init_qty_adjustment ?? 'Not Available'}}
                                     </dd>
                                 </div>
                                 <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -377,7 +377,7 @@
                                 </div>
                                 <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                     <dt class="text-gray-600">
-                                        Number Of Trashed Items
+                                        No. Of Trashed Items
                                     </dt>
                                     <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
                                         {{ countTrashed }}

@@ -401,7 +401,7 @@ class PpmpTransactionController extends Controller
         });
 
         $sortedParticulars = $groupParticulars->sortBy('prodCode');
-        $ppmpTransaction->init_qty_adjustment = json_decode($ppmpTransaction->init_qty_adjustment ?? '[]');
+        $ppmpTransaction->init_qty_adjustment = $ppmpTransaction->init_qty_adjustment;
         $ppmpTransaction->formatted_created = $ppmpTransaction->created_at->format('M d, Y');
         $ppmpTransaction->transactions = $sortedParticulars->values();
         $ppmpTransaction->totalItems = $sortedParticulars->count();
@@ -800,18 +800,18 @@ class PpmpTransactionController extends Controller
 
             #Perform adjustment
             if($adjustmentType == 'grouped') {
-                $this->all_initOfficePpmpAdjustment($officePpmpIds, $groupData, $consoTransactionInfo->id);
+                $this->all_finalOfficePpmpAdjustment($officePpmpIds, $groupData, $consoTransactionInfo->id);
 
                 $consoTransactionInfo->update([
-                    'init_qty_adjustment' => json_encode(['all' => $groupData]),
+                    'final_qty_adjustment' => json_encode(['all' => $groupData]),
                     'updated_by' => Auth::id()
                 ]);
             } else {
                 $allProductsId = $this->getAllProducts_customType($customData);
-                $this->custom_initOfficePpmpAdjustment($allProductsId, $officePpmpIds, $customData, $consoTransactionInfo->id);
+                $this->custom_finalOfficePpmpAdjustment($allProductsId, $officePpmpIds, $customData, $consoTransactionInfo->id);
 
                 $consoTransactionInfo->update([
-                    'init_qty_adjustment' => json_encode($customData),
+                    'final_qty_adjustment' => json_encode($customData),
                     'updated_by' => Auth::id()
                 ]);
             }
@@ -821,6 +821,110 @@ class PpmpTransactionController extends Controller
         }catch (\Exception $e) {
             DB::rollBack();
             Log::error(['Update Consolidated Initial Adjustment' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'An unexpected error occurred. Please try again.');
+        }
+    }
+
+    private function all_finalOfficePpmpAdjustment($officePpmps, $adjustmentPercentage, $updatingTransactionId)
+    {
+        #Get all office ppmp transaction
+        $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmps)->keyBy('id');
+        $adjustment = (float)$adjustmentPercentage / 100;
+
+        #Updated all initials quantity adjustment
+        foreach ($ppmpTransactions as $transaction) {
+            $transaction->final_qty_adjustment = ['all' => (int)$adjustmentPercentage];
+            $transaction->save();
+        }
+
+        #Group transactions by product Id
+        $groupedParticulars = $ppmpTransactions->flatMap(function ($transaction) {
+            return $transaction->particulars->filter(function ($particular) {
+                return !is_null($particular->prod_id);
+            });
+        })->groupBy('prod_id');
+
+        $groupedParticulars->map(function($transactions) use ($adjustment, $updatingTransactionId) {
+            #Validate excemption
+            $isProductExempted = $this->productService->validateProductExcemption($transactions->first()->prod_id);
+            $consoFirstQty = 0;
+            $consoSecondQty = 0;
+
+            #Update each transaction particulars 
+            foreach ($transactions as $transaction) {
+                $adjustedFirstQty = $this->calculateAdjustedQty($transaction->adjusted_firstQty, $adjustment, $isProductExempted);
+                $adjustedSecondQty = $this->calculateAdjustedQty($transaction->adjusted_secondQty, $adjustment, $isProductExempted);
+
+                $consoFirstQty += $adjustedFirstQty;
+                $consoSecondQty += $adjustedSecondQty;
+
+                $transaction->update([
+                    'tresh_first_qty' => $adjustedFirstQty,
+                    'tresh_second_qty' => $adjustedSecondQty,
+                ]);
+            }
+
+            #Validate and update consolidated particular
+            $consoParticularInfo = PpmpConsolidated::where('trans_id', $updatingTransactionId)->where('prod_id', $transactions->first()->prod_id)->first();
+            if($consoParticularInfo) {
+                $consoParticularInfo->update([
+                    'qty_first' => $consoFirstQty,
+                    'qty_second' => $consoSecondQty,
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+        });
+    }
+
+    private function custom_finalOfficePpmpAdjustment($products, $officePpmps, $customData, $updatingTransactionId)
+    {
+        #Get all office ppmp transaction
+        $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmps)->keyBy('id');
+
+        #Account Class Loop
+        foreach ($products as $index => $productIds) {
+            $customValue = $customData[$index] ?? 100;
+            $adjustment = (float)$customValue / 100;
+
+            #Products under an account class
+            foreach ($productIds as $prodId) {
+                $consoFirstQty = 0;
+                $consoSecondQty = 0;
+                
+                #Grouped transaction's particular
+                $matchedParticulars = $ppmpTransactions->flatMap(function ($transaction) use ($prodId) {
+                    return $transaction->particulars->filter(function ($particular) use ($prodId) {
+                        return $particular->prod_id == $prodId;
+                    });
+                });
+
+                #Update each transaction particulars 
+                if($matchedParticulars) {
+                    $isProductExempted = $this->productService->validateProductExcemption($prodId);
+                    $matchedParticulars->map(function ($items) use ($adjustment, $isProductExempted, &$consoFirstQty, &$consoSecondQty){
+                        $adjustedFirstQty = $this->calculateAdjustedQty($items->adjusted_firstQty, $adjustment, $isProductExempted);
+                        $adjustedSecondQty = $this->calculateAdjustedQty($items->adjusted_secondQty, $adjustment, $isProductExempted);
+                        
+                        $consoFirstQty += $adjustedFirstQty;
+                        $consoSecondQty += $adjustedSecondQty;
+                        
+                        $items->update([
+                            'tresh_first_qty' => $adjustedFirstQty,
+                            'tresh_second_qty' => $adjustedSecondQty,
+                        ]);
+                    });
+                }
+                
+                #Validate and update consolidated particular
+                $consoParticularInfo = PpmpConsolidated::where('trans_id', $updatingTransactionId)->where('prod_id', $prodId)->first();
+                if($consoParticularInfo) {
+                    $consoParticularInfo->update([
+                        'qty_first' => $consoFirstQty,
+                        'qty_second' => $consoSecondQty,
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
         }
     }
 

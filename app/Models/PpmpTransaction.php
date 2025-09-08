@@ -22,6 +22,7 @@ class PpmpTransaction extends Model
         'office_ppmp_ids',
         'init_qty_adjustment',
         'price_adjustment',
+        'final_qty_adjustment',
         'ppmp_status',
         'ppmp_year',
         'office_id',
