@@ -17,10 +17,8 @@ use App\Http\Controllers\PrTransactionController;
 use App\Http\Controllers\Forms\PrMultiStepFormController;
 use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
-use App\Http\Controllers\Pdf\ApprovedOfficePpmpQuantityController;
 use App\Http\Controllers\Pdf\AsOfStockCardController;
 use App\Http\Controllers\Pdf\ConsolidatedPpmpController;
-use App\Http\Controllers\Pdf\DraftAdjustedOfficePpmpController;
 use App\Http\Controllers\Pdf\OfficePpmpController;
 use App\Http\Controllers\Pdf\EmergencyPpmpController;
 use App\Http\Controllers\Pdf\InventoryController;
@@ -166,7 +164,7 @@ Route::middleware('auth')->prefix('products')->group(function () {
 Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::middleware('ppmpAccess')->group(function() {
         Route::get('/', [PpmpTransactionController::class, 'index'])->name('import.ppmp.index');
-        Route::get('/ppmp-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
+        Route::get('/office-list', [PpmpTransactionController::class, 'showIndividualPpmp_Type'])->name('indiv.ppmp.type');
         Route::get('/consolidated-ppmp-list', [PpmpTransactionController::class, 'showConsolidatedPpmp_Type'])->name('conso.ppmp.type');
     });
     
@@ -250,12 +248,10 @@ Route::middleware('auth')->prefix('ris')->group(function () {
 });
 
 Route::middleware('auth')->prefix('pdf')->group(function () {
-    Route::get('/approved-office-ppmp-list/{ppmp}', [ApprovedOfficePpmpQuantityController::class, 'generatePdf_Ppmp'])->name('generatePdf.ApprovedOfficePpmp');
     Route::get('/beginning-balance', [InventoryController::class, 'generatePdf_productInventoryList'])->name('generatePdf.productInventoryList');
     Route::get('/consolidated-ppmp-list/{ppmp}', [ConsolidatedPpmpController::class, 'generatePdf_ConsolidatedPpmp'])->name('generatePdf.ConsolidatedPpmp');
     Route::get('/consolidated-ppmp-list-approved/{ppmp}', [ApprovedConsolidatedPpmpController::class, 'generatePdf_ApprovedConsolidatedPpmp'])->name('generatePdf.ApprovedConsolidatedPpmp');
     Route::get('/drafted-office-ppmp-list/{ppmp}', [OfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftedOfficePpmp');
-    Route::get('/draft-adjusted-ppmp-list', [DraftAdjustedOfficePpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.DraftAdjustedPpmp');
     Route::get('/emergency-ppmp/{ppmp}', [EmergencyPpmpController::class, 'generatePdf_Ppmp'])->name('generatePdf.emergencyPpmp');
     Route::get('/monthly-product-inventory', [MonthlyInventoryReportController::class, 'generatePdf_MonthlyInventoryReport'])->name('generatePdf.MonthlyInventoryReport');
     Route::get('/price-list-active', [PriceListActiveController::class, 'generatePdf_priceListActive'])->name('generatePdf.PriceActiveList');

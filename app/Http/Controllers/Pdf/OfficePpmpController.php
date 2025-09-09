@@ -29,7 +29,7 @@ class OfficePpmpController extends Controller
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code));
+        $pdf->SetTitle(strtoupper($ppmp->requestee->office_code) . ' | ' . strtoupper($version) );
         $pdf->SetSubject('Individual PPMP Particulars');
         $pdf->SetKeywords('Benguet, WarePro, Individual List');
 
@@ -69,7 +69,7 @@ class OfficePpmpController extends Controller
         $table .= $this->tableHeader($totalQtySecond);
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($ppmp, $totalQtySecond);
+        $table .= $this->tableContent($ppmp, $totalQtySecond, $version);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -88,10 +88,10 @@ class OfficePpmpController extends Controller
         return $this->tableHeaderForFirstSemester();
     }
 
-    protected function tableContent($ppmp, $totalQtySecond)
+    protected function tableContent($ppmp, $totalQtySecond, $version)
     {
         $text = '';
-        $sortedParticulars = $this->formattedAndSortedParticulars($ppmp);
+        $sortedParticulars = $this->formattedAndSortedParticulars($ppmp, $version);
         $funds = $this->productService->getAllProduct_FundModel();
         $categories = $this->productService->getAllProduct_Category();
         $productsOnCategory = $this->countProductsWithinCategory($categories, $sortedParticulars);
@@ -268,17 +268,55 @@ class OfficePpmpController extends Controller
                 </tr>';        
     }
 
-    private function formattedAndSortedParticulars($ppmp)
+    private function formattedAndSortedParticulars($ppmp, $requestType)
     {
-        $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
-            'id' => $particular->id,
-            'qtyFirst' => $particular->qty_first,
-            'qtySecond' => $particular->qty_second,
-            'prodCode' => $this->productService->getProductCode($particular->prod_id),
-            'prodName' => $this->productService->getProductName($particular->prod_id),
-            'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
-            'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
-        ]);
+        if (!$ppmp->particulars) {
+            return collect([]);
+        }
+
+        $getProductData = function ($particular) {
+            return [
+                'prodCode' => $this->productService->getProductCode($particular->prod_id),
+                'prodName' => $this->productService->getProductName($particular->prod_id),
+                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodPrice' => $this->productService->getLatestPriceId($particular->price_id),
+            ];
+        };
+
+        $ppmpParticulars = collect();
+
+        switch ($requestType) {
+            case 'raw':
+                $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
+                    'id' => $particular->id,
+                    'qtyFirst' => $particular->qty_first,
+                    'qtySecond' => $particular->qty_second,
+                    ...$getProductData($particular),
+                ]);
+                break;
+
+            case 'initial':
+                $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
+                    'id' => $particular->id,
+                    'qtyFirst' => $particular->adjusted_firstQty,
+                    'qtySecond' => $particular->adjusted_secondQty,
+                    ...$getProductData($particular),
+                ]);
+                break;
+
+            case 'final':
+                $ppmpParticulars = $ppmp->particulars->map(fn($particular) => [
+                    'id' => $particular->id,
+                    'qtyFirst' => $particular->tresh_first_qty,
+                    'qtySecond' => $particular->tresh_second_qty,
+                    ...$getProductData($particular),
+                ]);
+                break;
+
+            default:
+                $ppmpParticulars = collect();
+                break;
+        }
         
         $sortedParticulars = $ppmpParticulars->sortBy('prodCode');
 

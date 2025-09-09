@@ -130,11 +130,51 @@
         });
     };
 
-    const submit = () => submitRequest('post', route('proceed.to.final.ppmp', { ppmpTransaction: form.conId}), form);
     const submitEdit = () => submitRequest('put', route('conso-particular-update', { ppmpConsolidated: editParticular.partId }), editParticular);
     const submitDrop = () => submitRequest('delete', route('conso-particular-destroy', { ppmpConsolidated: dropParticular.pId }), dropParticular);
     const submitAdjustment = () => submitRequest('post', route('updateInitialAdjustment'), editAdjustment);
     const submitFinalAdjustment = () => submitRequest('post', route('updateFinalAdjustment'), editFinalAdjustment);
+
+    const submit = async () => {
+        const confirm = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Proceed!'
+        });
+    
+        if (!confirm.isConfirmed) return;
+
+        isLoading.value = true;
+        form.post(route('proceed.to.final.ppmp', { ppmpTransaction: form.conId }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (errMessage) {
+                    Swal.fire('Error!', errMessage.value, 'error');
+                    isLoading.value = false;
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Success',
+                    text: message.value || 'Successfully Finalized Consolidated PPMP.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    closeModal();
+                    isLoading.value = false;
+                });
+            },
+            onError: (errors) => {
+                const errorMessage = Object.values(errors).flat().join('\n') || 'An error occurred.';
+                Swal.fire('Error!', errorMessage, 'error');
+                isLoading.value = false;
+            }
+        });
+    };
 
     const columns = [
         {
@@ -488,7 +528,10 @@
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                         <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Edit Final Quantity Adjustment</h3>
-                        <p class="text-sm text-zinc-700"> Enter the desired adjustment.</p>
+                        <p class="text-sm text-zinc-700">
+                            Sets the final item quantity limit for each office request. 
+                            <strong>Note:</strong> Applies only to office requests; consolidated particulars remain unchanged.
+                        </p>
                         <div class="mt-5">
                             <p class="text-sm font-semibold text-[#1a0037]">Adjustment Type </p>
                             <div class="relative z-0 w-full my-3 group">

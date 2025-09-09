@@ -134,12 +134,6 @@ const officeUser = hasAnyRole(['Office User']);
                                                     Account Classification
                                                 </SubSidebarLink>
                                             </li>
-                                            <!-- <li v-if="hasPermission('view-category') || hasAnyRole(['Developer'])">
-                                                <SubSidebarLink :href="route('category.display.active')" :active="route().current('category.display.active')">
-                                                    <ArrowHeadRight :class="{ 'text-white' : route().current('category.display.active')}"/>
-                                                    Categories
-                                                </SubSidebarLink>
-                                            </li> -->
                                             <li v-if="hasPermission('view-item-class') || hasAnyRole(['Developer'])">
                                                 <SubSidebarLink :href="route('item.display.active')" :active="route().current('item.display.active')">
                                                     <ArrowHeadRight :class="{ 'text-white' : route().current('item.display.active')}"/>
@@ -211,45 +205,28 @@ const officeUser = hasAnyRole(['Office User']);
                                             :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
                                             fill="currentColor" 
                                             aria-hidden="true" 
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path fill="currentColor" d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z"/>
-                                            <path fill="currentColor" d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z"/>
+                                            viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M17 23v-3h-3v-2h3v-3h2v3h3v2h-3v3zm-9-6q.425 0 .713-.288T9 16t-.288-.712T8 15t-.712.288T7 16t.288.713T8 17m0-4q.425 0 .713-.288T9 12t-.288-.712T8 11t-.712.288T7 12t.288.713T8 13m0-4q.425 0 .713-.288T9 8t-.288-.712T8 7t-.712.288T7 8t.288.713T8 9m3 4h6v-2h-6zm0-4h6V7h-6zM5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v8.825q-.675-.4-1.437-.6t-1.563-.2q-1.325 0-2.475.525T13.55 15H11v2h1.35q-.175.475-.262.975T12 19q0 .5.075 1t.25 1z"/>
                                         </svg>
                                         <span class="ml-3 font-semibold">CREATE OFFICE PPMP</span>
                                     </SidebarLink>
                                 </li>
                                 <li v-if="hasPermission('view-office-ppmp-list') ||  hasAnyRole(['Developer'])" class="mb-1">
-                                    <SidebarDropdown :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})">
+                                    <SidebarLink 
+                                        v-if="hasPermission('create-office-ppmp') ||  hasAnyRole(['Developer'])"
+                                        :href="route('indiv.ppmp.type')" 
+                                        :active="route().current('indiv.ppmp.type')"
+                                    >
                                         <svg 
-                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                            :class="{'text-white': route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}"
-                                            fill="currentColor" 
-                                            aria-hidden="true" 
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 16 16"
-                                        >
-                                            <path fill="currentColor" fill-rule="evenodd" d="M2.9 1L5 3.1l-.8.7L3 2.6V7H2V2.5L.8 3.8l-.7-.7L2.2 1h.7zM3 13.4V9H2v4.4L.8 12.2l-.7.7L2.2 15h.7L5 12.9l-.7-.7L3 13.4zM8.5 7h-2L6 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM7 6h1V5H7v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM12 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM7 11h1v-1H7v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM12 12h2v-2h-2v2zm-1-2H9v1h2v-1zm0-5H9v1h2V5z" clip-rule="evenodd"/>
+                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" 
+                                            :class="{'text-white': route().current('indiv.ppmp.type')}"
+                                            fill="currentColor"
+                                            aria-hidden="true"
+                                            viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M10.501 11.724L.631 7.16c-.841-.399-.841-1.014 0-1.376l9.87-4.563c.841-.399 2.194-.399 2.998 0l9.87 4.563c.841.398.841 1.014 0 1.376l-9.87 4.563c-.841.362-2.194.362-2.998 0zm0 5.468l-9.87-4.563c-.841-.399-.841-1.014 0-1.376l3.363-1.558l6.507 3.006c.841.398 2.194.398 2.998 0l6.507-3.006l3.363 1.558c.841.398.841 1.014 0 1.376l-9.87 4.563c-.841.398-2.194.398-2.998 0m0 0L.631 12.63c-.841-.399-.841-1.014 0-1.376l3.363-1.558l6.507 3.006c.841.398 2.194.398 2.998 0l6.507-3.006l3.363 1.558c.841.398.841 1.014 0 1.376l-9.87 4.563c-.841.398-2.194.398-2.998 0m0 5.613l-9.87-4.563c-.841-.398-.841-1.014 0-1.376l3.436-1.593l6.398 2.97c.84.398 2.193.398 2.997 0l6.398-2.97l3.436 1.593c.841.4.841 1.014 0 1.376l-9.87 4.563c-.768.362-2.12.362-2.925 0"/>
                                         </svg>
                                         <span class="flex-1 ml-3 text-left whitespace-nowrap font-semibold">OFFICE PPMP</span>
-                                        <ArrowDown :class="{'text-white': route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'}) || route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}" />
-                                        
-                                        <template #dropdown-items>
-                                            <li>
-                                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'draft'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'})">
-                                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'draft'})}"/>
-                                                    Draft
-                                                </SubSidebarLink>
-                                            </li>
-                                            <li>
-                                                <SubSidebarLink :href="route('indiv.ppmp.type', { type: 'individual' , status: 'approved'})" :active="route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})">
-                                                    <ArrowHeadRight :class="{ 'text-white' : route().current('indiv.ppmp.type', { type: 'individual' , status: 'approved'})}"/>
-                                                    Approved
-                                                </SubSidebarLink>
-                                            </li>
-                                        </template>
-                                    </SidebarDropdown>
+                                    </SidebarLink>
                                 </li>
                                 <li v-if="hasPermission('view-app-list') ||  hasAnyRole(['Developer'])">
                                     <SidebarDropdown :active="route().current('conso.ppmp.type') || route().current('conso.ppmp.show')">
@@ -258,10 +235,8 @@ const officeUser = hasAnyRole(['Office User']);
                                             :class="{'text-white': route().current('conso.ppmp.type') || route().current('conso.ppmp.show')}"
                                             fill="currentColor" 
                                             aria-hidden="true" 
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 16 16"
-                                        >
-                                            <path fill="currentColor" fill-rule="evenodd" d="M1.5 1h2v1H2v12h1.5v1h-2l-.5-.5v-13l.5-.5zm6 6h-2L5 6.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 6h1V5H6v1zm7.5 1h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 6h2V4h-2v2zm-3.5 6h-2l-.5-.5v-2l.5-.5h2l.5.5v2l-.5.5zM6 11h1v-1H6v1zm7.5 2h-3l-.5-.5v-3l.5-.5h3l.5.5v3l-.5.5zM11 12h2v-2h-2v2zm-1-2H8v1h2v-1zm0-5H8v1h2V5z" clip-rule="evenodd"/>
+                                            viewBox="0 0 16 16">
+                                            <path fill="currentColor" d="M0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6zM2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3m2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1"/>
                                         </svg>
                                         <span class="flex-1 ml-3 text-left whitespace-nowrap font-semibold">CONSOLIDATED PPMP</span>
                                         <ArrowDown :class="{'text-white': route().current('conso.ppmp.type') || route().current('conso.ppmp.show')}" />

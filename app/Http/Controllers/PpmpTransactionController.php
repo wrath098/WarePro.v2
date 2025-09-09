@@ -267,36 +267,53 @@ class PpmpTransactionController extends Controller
 
     public function storeAsFinal(Request $request, PpmpTransaction $ppmpTransaction)
     {
-        DB::beginTransaction();
-        
-        $officePpmpStatus = 'individual';
-        $year = $ppmpTransaction->ppmp_year;
-        $type = $ppmpTransaction->ppmp_type;
-        $status = $ppmpTransaction->ppmp_status;
-        $qtyAdjustment = $ppmpTransaction->qty_adjustment;
-        $qtyThreshold = $ppmpTransaction->tresh_adjustment;
         $userId = $request->user;
         $recapitulation = [];
+        
+        #Validate Consolidation if approved transaction is already exist
+        $isApprovedExist = $this->validateApprovedConsolidation($ppmpTransaction);
+        if($isApprovedExist) {
+            return back()->with('error', 'Approved Consolidated Transaction is already exist. Please verify and try again.');
+        }
 
-        $officePpmp = $this->fetchOfficeWithPpmp($officePpmpStatus, $year);
+        #Office PPMP Transaction IDs
+        $officePpmpIds = json_decode($ppmpTransaction->office_ppmp_ids, true);
+        if(!$officePpmpIds) {
+            return back()->with('error', 'No Office PPMP Transaction found. Please verify and try again.');
+        }
+
+        #Validate Adjustment if exist
+        if(!$ppmpTransaction->init_qty_adjustment && !$ppmpTransaction->final_qty_adjustment) {
+            return back()->with('error', 'No adjustment found. Please verify and try again.');
+        }
+
+        DB::beginTransaction();
 
         try {
-
-            $isTransactionExist = $this->fetchApprovedConsolidatedPpmp($year, $type);
-
-            if ($isTransactionExist) {
-                DB::rollBack();
-                return redirect()->back()->with([
-                    'error' => 'Approved PPMP already exist with transaction No.' . $isTransactionExist->ppmp_code
-                ]);
-            }
-
+            #Sort and Format Consolidated Particulars
             $sortedParticulars = $this->formattedAndSortedParticulars($ppmpTransaction);
+
+            #Get all product
             $funds = $this->productService->getAllProduct_FundModel();
 
-            $this->recapitulation($sortedParticulars, $funds, $recapitulation, $year);
-            $this->processFundAllocations($recapitulation, $year);
-            $this->updateOfficePpmpAdjustmentAndThreshold($officePpmp, $userId, $qtyAdjustment, $qtyThreshold);
+            #Validate proposed budget if exist
+            $accountClassIds = json_decode($ppmpTransaction->account_class_ids, true);
+            $existingRecords = CapitalOutlay::whereIn('fund_id', $accountClassIds)
+                ->where('year', $ppmpTransaction->ppmp_year)
+                ->pluck('fund_id')
+                ->toArray();
+
+            #Disburse proposed budget    
+            if($existingRecords) {
+                $this->recapitulation($sortedParticulars, $funds, $recapitulation, $ppmpTransaction->ppmp_year);
+                $this->processFundAllocations($recapitulation, $ppmpTransaction->ppmp_year);
+            }
+
+            #Adjustment Json Decode
+            $initAdjustment = json_decode($ppmpTransaction->init_qty_adjustment, true);
+            $finalAdjustment = json_decode($ppmpTransaction->final_qty_adjustment, true);
+
+            $this->updateOfficePpmpAdjustmentAndThreshold($officePpmpIds, $userId, $initAdjustment, $finalAdjustment);
 
             $ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
             DB::commit();
@@ -320,8 +337,6 @@ class PpmpTransactionController extends Controller
 
         $availableProducts = $ppmpTransaction->ppmp_type === 'individual'
             ? $this->getActiveProductList()
-            // UNCOMMENT IF EMERGENCY PRODUCT LIST IS WITHIN CONSOLIDATION ONLY
-            // : $this->getConsolidatedProductList($ppmpTransaction);
             : $this->getActiveProductList();
 
         $ppmpParticulars = $ppmpTransaction->ppmp_type === 'individual'
@@ -415,38 +430,28 @@ class PpmpTransactionController extends Controller
         ]);
     }
 
-    public function showIndividualPpmp_Type(Request $request): Response
-    {
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year')
-            ->where(function($query) {
-                $query->whereIn('ppmp_type', ['individual', 'emergency']);
-            })
-            ->where('ppmp_status', 'draft')
-            ->get();
-        
-        $result = $transactions->groupBy('ppmp_type')->map(function ($group) {
-            $years = $group->groupBy('ppmp_year')->map(function ($yearGroup) {
-                return [
-                    'ppmp_year' => $yearGroup->first()->ppmp_year,
-                ];
-            })->values()->all();
-        
-            return [
-                'ppmp_type' => $group->first()->ppmp_type,
-                'years' => $years
-            ];
-        })->values()->all();
-        
+    public function showIndividualPpmp_Type()
+    {       
         $ppmpTransactions = PpmpTransaction::with('requestee', 'updater')
             ->whereIn('ppmp_type', ['individual', 'emergency'])
-            ->where('ppmp_status', $request->status)
             ->orderBy('ppmp_code', 'desc')
-            ->get();
+            ->get()
+            ->map(fn($q) => [
+                'id' => $q->id,
+                'ppmpCode' => $q->ppmp_code,
+                'ppmpYear' => $q->ppmp_year,
+                'ppmpStatus' => ucfirst($q->ppmp_status),
+                'ppmpType' => $q->ppmp_type,
+                'officeName' => $q->requestee->office_name,
+                'officeCode' => $q->requestee->office_code,
+                'dateCreated' => $q->created_at->format('M d, Y'),
+                'updatedBy' => $q->updater->name,
+                'initAdjustment' => $q->init_qty_adjustment ?? null,
+                'finalAdjustment' => $q->final_qty_adjustment ?? null,
+                'priceAdjustment' => $q->price_adjustment,
+            ]);
 
-        $request['status'] = ucfirst($request['status']);
-        $request['type'] = ucfirst($request['type']);
-
-        return Inertia::render('Ppmp/PpmpList', ['ppmpTransaction' =>  $ppmpTransactions, 'ppmp' =>  $request, 'types' => $result]);
+        return Inertia::render('Ppmp/PpmpList', ['ppmpTransaction' =>  $ppmpTransactions]);
     }
 
     public function showConsolidatedPpmp_Type(Request $request): Response
@@ -844,7 +849,7 @@ class PpmpTransactionController extends Controller
             });
         })->groupBy('prod_id');
 
-        $groupedParticulars->map(function($transactions) use ($adjustment, $updatingTransactionId) {
+        $groupedParticulars->map(function($transactions) use ($adjustment) {
             #Validate excemption
             $isProductExempted = $this->productService->validateProductExcemption($transactions->first()->prod_id);
             $consoFirstQty = 0;
@@ -861,16 +866,6 @@ class PpmpTransactionController extends Controller
                 $transaction->update([
                     'tresh_first_qty' => $adjustedFirstQty,
                     'tresh_second_qty' => $adjustedSecondQty,
-                ]);
-            }
-
-            #Validate and update consolidated particular
-            $consoParticularInfo = PpmpConsolidated::where('trans_id', $updatingTransactionId)->where('prod_id', $transactions->first()->prod_id)->first();
-            if($consoParticularInfo) {
-                $consoParticularInfo->update([
-                    'qty_first' => $consoFirstQty,
-                    'qty_second' => $consoSecondQty,
-                    'updated_by' => Auth::id(),
                 ]);
             }
         });
@@ -913,16 +908,6 @@ class PpmpTransactionController extends Controller
                             'tresh_second_qty' => $adjustedSecondQty,
                         ]);
                     });
-                }
-                
-                #Validate and update consolidated particular
-                $consoParticularInfo = PpmpConsolidated::where('trans_id', $updatingTransactionId)->where('prod_id', $prodId)->first();
-                if($consoParticularInfo) {
-                    $consoParticularInfo->update([
-                        'qty_first' => $consoFirstQty,
-                        'qty_second' => $consoSecondQty,
-                        'updated_by' => Auth::id(),
-                    ]);
                 }
             }
         }
@@ -1203,17 +1188,11 @@ class PpmpTransactionController extends Controller
         });
     }
 
-    private function formattedAndSortedParticulars($ppmpTransaction) {
+    private function formattedAndSortedParticulars($ppmpTransaction)
+    {
         $ppmpTransaction->load('consolidated');
         $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use ($ppmpTransaction) {
-            $prodPrice = (float)$this->productService->getLatestPrice($items->prod_id) * (float)$ppmpTransaction->price_adjustment;
-            #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
-            //$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
-            $latestPriceId = $this->productService->getLatestPriceIdentification($items->prod_id);
-
-            if ($items->price_id !== $latestPriceId) {
-                $items->update(['price_id' => $latestPriceId]);
-            }
+            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * (float)$ppmpTransaction->price_adjustment;
 
             $qtyFirst = (int) $items->qty_first;
             $qtySecond = (int) $items->qty_second;
@@ -1344,32 +1323,55 @@ class PpmpTransactionController extends Controller
         }
     }
 
-    private function updateOfficePpmpAdjustmentAndThreshold($officePpmp, $userId, float $qtyAdjustment, float $qtyThreshold)
+    private function updateOfficePpmpAdjustmentAndThreshold($officePpmpIds, $userId, $initAdjustment, $finalAdjustment)
     {
-        foreach ($officePpmp as $ppmp) {
-            foreach ($ppmp->particulars as $particular) {
-                $isProductExempted = $this->productService->validateProductExcemption($particular->prod_id);
-                $adjustedFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyAdjustment, $isProductExempted);
-                $adjustedSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyAdjustment, $isProductExempted);
+        #Get all office ppmp transaction
+        $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmpIds)->keyBy('id');
 
-                $thresholdFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyThreshold, $isProductExempted);
-                $thresholdSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyThreshold, $isProductExempted);
+        dd($ppmpTransactions->toArray(), $initAdjustment, $finalAdjustment);
+        // foreach ($officePpmp as $ppmp) {
+        //     foreach ($ppmp->particulars as $particular) {
+        //         $isProductExempted = $this->productService->validateProductExcemption($particular->prod_id);
+        //         $adjustedFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyAdjustment, $isProductExempted);
+        //         $adjustedSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyAdjustment, $isProductExempted);
 
-                $particular->update([
-                    'adjusted_firstQty' => $adjustedFirstQty,
-                    'adjusted_secondQty' => $adjustedSecondQty,
-                    'tresh_first_qty' => $thresholdFirstQty,
-                    'tresh_second_qty' => $thresholdSecondQty , 
-                ]);
+        //         $thresholdFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyThreshold, $isProductExempted);
+        //         $thresholdSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyThreshold, $isProductExempted);
+
+        //         $particular->update([
+        //             'adjusted_firstQty' => $adjustedFirstQty,
+        //             'adjusted_secondQty' => $adjustedSecondQty,
+        //             'tresh_first_qty' => $thresholdFirstQty,
+        //             'tresh_second_qty' => $thresholdSecondQty , 
+        //         ]);
+        //     }
+
+        //     $ppmp->update([
+        //         'qty_adjustment' => $qtyAdjustment,
+        //         'tresh_adjustment' => $qtyThreshold,
+        //         'ppmp_status' => 'approved',
+        //         'updated_by' => $userId , 
+        //     ]);
+        // }
+    }
+
+    private function mapProductsToFundIds()
+    {
+        $funds = $this->productService->getAllProduct_FundModel();
+
+        $map = collect();
+
+        foreach ($funds as $fund) {
+            foreach ($fund->categories as $category) {
+                foreach ($category->items as $item) {
+                    foreach ($item->products as $product) {
+                        $map->put($product->id, $fund->id);
+                    }
+                }
             }
-
-            $ppmp->update([
-                'qty_adjustment' => $qtyAdjustment,
-                'tresh_adjustment' => $qtyThreshold,
-                'ppmp_status' => 'approved',
-                'updated_by' => $userId , 
-            ]);
         }
+
+        return $map;
     }
 
     private function getActiveProductList()
