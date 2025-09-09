@@ -303,7 +303,7 @@ class PpmpTransactionController extends Controller
                 ->pluck('fund_id')
                 ->toArray();
 
-            #Disburse proposed budget    
+            #Disburse proposed budget to account class and categories    
             if($existingRecords) {
                 $this->recapitulation($sortedParticulars, $funds, $recapitulation, $ppmpTransaction->ppmp_year);
                 $this->processFundAllocations($recapitulation, $ppmpTransaction->ppmp_year);
@@ -313,11 +313,18 @@ class PpmpTransactionController extends Controller
             $initAdjustment = json_decode($ppmpTransaction->init_qty_adjustment, true);
             $finalAdjustment = json_decode($ppmpTransaction->final_qty_adjustment, true);
 
-            $this->updateOfficePpmpAdjustmentAndThreshold($officePpmpIds, $userId, $initAdjustment, $finalAdjustment);
+            $this->updateOfficePpmpAdjustmentAndThreshold($officePpmpIds, $accountClassIds, $initAdjustment, $finalAdjustment);
+
+            PpmpTransaction::whereIn('id', $officePpmpIds)->update([
+                'init_qty_adjustment'   => $ppmpTransaction->init_qty_adjustment,
+                'final_qty_adjustment' => $ppmpTransaction->final_qty_adjustment,
+                'ppmp_status' => 'approved',
+                'updated_by' => $userId,
+            ]);
 
             $ppmpTransaction->update(['ppmp_status' => 'approved', 'updated_by' => $userId]);
             DB::commit();
-            return redirect()->route('conso.ppmp.type', ['type' => $type, 'status' => $status])->with('message', 'Proceeding to Approved PPMP successfully executed');
+            return redirect()->route('conso.ppmp.type', ['type' => 'consolidated', 'status' => 'approved'])->with('message', 'Proceeding to Approved PPMP successfully executed');
 
         } catch (\Exception $e) {
 
@@ -639,13 +646,13 @@ class PpmpTransactionController extends Controller
         foreach($customAdjustment as $accountId => $value) {
                 $fund = Fund::with([
                 'categories' => function ($q) {
-                    $q->where('cat_status', 'active')->select('id', 'fund_id', 'cat_code', 'cat_name');
+                    $q->where('cat_status', 'active')->select('id', 'fund_id');
                 },
                 'categories.items' => function ($q) {
-                    $q->where('item_status', 'active')->select('id', 'cat_id', 'item_code', 'item_name');
+                    $q->where('item_status', 'active')->select('id', 'cat_id', );
                 },
                 'categories.items.products' => function ($q) {
-                    $q->where('prod_status', 'active')->select('id', 'item_id', 'prod_newNo', 'prod_desc', 'prod_unit', 'prod_oldNo');
+                    $q->where('prod_status', 'active')->select('id', 'item_id');
                 }
             ])
             ->where('id', $accountId)
@@ -1066,10 +1073,31 @@ class PpmpTransactionController extends Controller
 
     private function getIndividualPpmpTransactionsWithParticulars($request)
     {
-        return PpmpTransaction::with('particulars')
-            ->where('ppmp_year', $request['ppmpYear'])
+        #Account class ids
+        $accountClassIds = json_decode($request['accountClass'], true);
+
+        #Flip account class ids as indexes
+        $flipped = array_flip($accountClassIds);
+
+        #Get product ids
+        $accountsItems = $this->getAllProducts_customType($flipped);
+
+        #Flat array
+        $allowedParticulars = collect($accountsItems)
+            ->flatten(1)
+            ->unique()
+            ->values();
+
+        
+        return PpmpTransaction::where('ppmp_year', $request['ppmpYear'])
             ->where('ppmp_type', 'individual')
             ->where('ppmp_status', $request['ppmpStatus'])
+            ->whereHas('particulars', function ($query) use ($allowedParticulars) {
+                $query->whereIn('prod_id', $allowedParticulars->all());
+            })
+            ->with(['particulars' => function ($query) use ($allowedParticulars) {
+                $query->whereIn('prod_id', $allowedParticulars->all());
+            }])
             ->get();
     }
 
@@ -1116,7 +1144,7 @@ class PpmpTransactionController extends Controller
     private function calculateAdjustedQty($qty, $adjustment, $isExempted)
     {
         if (!$isExempted && $qty > 1) {
-            return floor((int)$qty * $adjustment);
+            return floor((int)$qty * (float)$adjustment);
         }
 
         return (int)$qty;
@@ -1323,36 +1351,55 @@ class PpmpTransactionController extends Controller
         }
     }
 
-    private function updateOfficePpmpAdjustmentAndThreshold($officePpmpIds, $userId, $initAdjustment, $finalAdjustment)
+    private function updateOfficePpmpAdjustmentAndThreshold($officePpmpIds, $accountClassIds, $initAdjustment, $finalAdjustment)
     {
         #Get all office ppmp transaction
         $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmpIds)->keyBy('id');
 
-        dd($ppmpTransactions->toArray(), $initAdjustment, $finalAdjustment);
-        // foreach ($officePpmp as $ppmp) {
-        //     foreach ($ppmp->particulars as $particular) {
-        //         $isProductExempted = $this->productService->validateProductExcemption($particular->prod_id);
-        //         $adjustedFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyAdjustment, $isProductExempted);
-        //         $adjustedSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyAdjustment, $isProductExempted);
+        #Flip account class ids as indexes
+        $flipped = array_flip($accountClassIds);
 
-        //         $thresholdFirstQty = $this->calculateAdjustedQty($particular->qty_first, $qtyThreshold, $isProductExempted);
-        //         $thresholdSecondQty = $this->calculateAdjustedQty($particular->qty_second, $qtyThreshold, $isProductExempted);
+        #Get product ids
+        $accountsItems = $this->getAllProducts_customType($flipped);
 
-        //         $particular->update([
-        //             'adjusted_firstQty' => $adjustedFirstQty,
-        //             'adjusted_secondQty' => $adjustedSecondQty,
-        //             'tresh_first_qty' => $thresholdFirstQty,
-        //             'tresh_second_qty' => $thresholdSecondQty , 
-        //         ]);
-        //     }
+        #Validate Inital Adjustment
+        $isInitSingleAdjustment = count($initAdjustment) === 1;
+        $singleInitValue = reset($initAdjustment);
 
-        //     $ppmp->update([
-        //         'qty_adjustment' => $qtyAdjustment,
-        //         'tresh_adjustment' => $qtyThreshold,
-        //         'ppmp_status' => 'approved',
-        //         'updated_by' => $userId , 
-        //     ]);
-        // }
+        #Validate Final Adjustment
+        $isFinalSingleAdjustment = count($finalAdjustment) === 1;
+        $singleFinalValue = reset($finalAdjustment);
+
+        #Transform Ppmp Transaction's particular into associative array
+        $allParticulars = $ppmpTransactions->flatMap(fn($tx) => $tx->particulars);
+
+        #Group particulars by id
+        $particularsByProdId = $allParticulars->groupBy('prod_id');
+
+        foreach($accountsItems as $account => $ids) {
+            $initialValue = $isInitSingleAdjustment ? $singleInitValue : ($initAdjustment[$account] ?? null);
+            $finalValue = $isFinalSingleAdjustment ? $singleFinalValue : ($finalAdjustment[$account] ?? null);
+            
+            foreach($ids as $prodId) {
+                $groupedParticulars = $particularsByProdId[$prodId] ?? collect();
+
+                $groupedParticulars->each(function($particular) use ($initialValue, $finalValue) {
+                    $isProductExempted = $this->productService->validateProductExcemption($particular->prod_id);
+                    $firstQtyInitial = $this->calculateAdjustedQty($particular->qty_first, $initialValue, $isProductExempted);
+                    $secondQtyInitial = $this->calculateAdjustedQty($particular->qty_second, $initialValue, $isProductExempted);
+
+                    $firstQtyFinal = $this->calculateAdjustedQty($firstQtyInitial, $finalValue, $isProductExempted);
+                    $secondQtyFinal = $this->calculateAdjustedQty($secondQtyInitial, $finalValue, $isProductExempted);
+
+                    $particular->update([
+                        'adjusted_firstQty' => $firstQtyInitial,
+                        'adjusted_secondQty' => $secondQtyInitial,
+                        'tresh_first_qty' => $firstQtyFinal,
+                        'tresh_second_qty' => $secondQtyFinal , 
+                    ]);
+                });
+            }
+        }
     }
 
     private function mapProductsToFundIds()
