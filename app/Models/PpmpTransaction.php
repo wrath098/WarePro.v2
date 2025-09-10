@@ -12,6 +12,8 @@ class PpmpTransaction extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const STATUS_APPROVED = 'approved';
+
     protected $table = 'ppmp_transactions';
 
     protected $fillable = [

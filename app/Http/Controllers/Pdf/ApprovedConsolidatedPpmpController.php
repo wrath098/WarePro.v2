@@ -16,8 +16,9 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $this->productService = $productService;
     }
 
-    public function generatePdf_ApprovedConsolidatedPpmp(PpmpTransaction $ppmp)
+    public function generatePdf_ApprovedConsolidatedPpmp(PpmpTransaction $ppmp, Request $request)
     {
+        $version = $request->query('version');
         $pdf = new PpmpPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false, $ppmp->ppmp_code);
 
         $logoPath = public_path('assets/images/benguet_logo.png');
@@ -25,7 +26,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle('Consolidated PPMP | ' . $ppmp->ppmp_status);
+        $pdf->SetTitle(strtoupper($version) . ' | Consolidated');
         $pdf->SetSubject('Consolidated PPMP Particulars');
         $pdf->SetKeywords('Benguet, WarePro, Consolidated List');
         
@@ -61,7 +62,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $table .= $this->consolidationHeader();
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($ppmp);
+        $table .= $this->tableContent($ppmp, $version);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -71,7 +72,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $pdf->Output('cPPMP-' . strtoupper($ppmp->ppmp_status) . '-' . $ppmp->ppmp_status . '.pdf', 'I');
     }
 
-    protected function tableContent(PpmpTransaction $ppmpTransaction)
+    protected function tableContent(PpmpTransaction $ppmpTransaction, $version)
     {
         $text = '';
 
@@ -193,11 +194,12 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                         </tr>';
             }
            
-            $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id);
+            if($version == 'contingency') {
+                $capitalOutlay = $this->productService->getCapitalOutlay($ppmpTransaction->ppmp_year, $fund->id);
 
-            if($capitalOutlay > 0) {
                 $firstSem = '1st';
                 $secondSem = '2nd';
+
                 $contingency = $capitalOutlay - $fundTotal;
                 $contingencyFirst = $this->productService->getCapitalOutlayContingency($ppmpTransaction->ppmp_year, $fund->id, $firstSem);
                 $contingencySecond = $this->productService->getCapitalOutlayContingency($ppmpTransaction->ppmp_year, $fund->id, $secondSem);

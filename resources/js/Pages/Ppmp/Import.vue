@@ -226,11 +226,11 @@
                 <div class="mx-4 lg:mx-0">
                     <div class="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:gap-4">
                         <div class="bg-zinc-300 rounded-md shadow">
-                            <div class="bg-zinc-400 px-4 py-5 sm:px-6 rounded-t-lg">
-                                <h3 class="font-bold text-lg leading-6 text-zinc-900">
+                            <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                                <h3 class="font-bold text-lg leading-6 text-zinc-300">
                                     Annual Procurement Plan (PPMP)
                                 </h3>
-                                <p class="text-sm text-zinc-500">
+                                <p class="text-sm text-zinc-300">
                                     Fill in the PPMP details.
                                 </p>
                             </div>

@@ -152,25 +152,26 @@
         form.post(route('proceed.to.final.ppmp', { ppmpTransaction: form.conId }), {
             preserveScroll: true,
             onSuccess: () => {
-                if (errMessage) {
-                    Swal.fire('Error!', errMessage.value, 'error');
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: errMessage.value,
+                        icon: 'error'
+                    });
                     isLoading.value = false;
                     return;
                 }
 
-                Swal.fire({
-                    title: 'Success',
-                    text: message.value || 'Successfully Finalized Consolidated PPMP.',
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                }).then(() => {
-                    closeModal();
-                    isLoading.value = false;
-                });
+                closeModal();
+                isLoading.value = false;
             },
             onError: (errors) => {
                 const errorMessage = Object.values(errors).flat().join('\n') || 'An error occurred.';
-                Swal.fire('Error!', errorMessage, 'error');
+                Swal.fire({
+                    title: 'Error!',
+                    text: errorMessage,
+                    icon: 'error'
+                });
                 isLoading.value = false;
             }
         });

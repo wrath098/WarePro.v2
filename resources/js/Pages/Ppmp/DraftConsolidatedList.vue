@@ -1,6 +1,6 @@
 <script setup>
     import { Head, useForm, usePage } from '@inertiajs/vue3';
-    import { ref, computed } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
@@ -13,12 +13,33 @@
     import InputError from '@/Components/InputError.vue';
     import IconButton from '@/Components/Buttons/IconButton.vue';
     import Checkbox from '@/Components/Checkbox.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const isLoading = ref(false);
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
+
+    onMounted(() => {
+        if (message.value) {
+            Swal.fire({
+                title: 'Success',
+                text: message.value,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        if (errMessage.value) {
+            Swal.fire({
+                title: 'Failed',
+                text: errMessage.value,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    });
 
     const props = defineProps({
         ppmp: Object,
@@ -37,7 +58,7 @@
     const showModal = (modalType) => { modalState.value = modalType; }
     const closeModal = () => { modalState.value = null; }
     const isConsolidateModalOpen = computed(() => modalState.value === 'copy');
-     const isEditPpmpModalOpen = computed(() => modalState.value === 'edit');
+    const isEditPpmpModalOpen = computed(() => modalState.value === 'edit');
     const isDropPpmpModalOpen = computed(() => modalState.value === 'drop');
 
     const filteredYears = ref([]);
@@ -203,15 +224,16 @@
             <div class="overflow-hidden p-4">
                 <div class="relative">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
+                        class="display responsive table-hover table-striped bg-zinc-100"
                         :columns="columns"
                         :data="transactions"
-                        :options="{  paging: true,
+                        :options="{
+                            paging: true,
                             searching: true,
-                            ordering: false
+                            ordering: false,
                         }">
                             <template #action="props">
-                                <span v-if="ppmp.status == 'Draft'">
+                                <div v-if="ppmp.status == 'Draft'">
                                     <ViewButton v-if="hasPermission('view-app') ||  hasAnyRole(['Developer'])" :href="route('conso.ppmp.show', { ppmpTransaction: props.cellData.id })" tooltip="View"/>
                                     <IconButton v-if="hasPermission('edit-consolidation') ||  hasAnyRole(['Developer'])" @click="openEditModal(props.cellData)" class="w-full inline-flex justify-center text-base sm:ml-3 sm:w-auto sm:text-sm" tooltip="Create a Copy">
                                         <svg class="w-7 h-7 text-indigo-800 hover:text-indigo-600" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -219,10 +241,46 @@
                                         </svg>
                                     </IconButton>
                                     <RemoveButton v-if="hasPermission('delete-app') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Trash"/>
-                                </span>
-                                <span v-if="ppmp.status == 'Approved'">
-                                    <Print v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: props.cellData.id})" tooltip="Print" />
-                                </span>
+                                </div>
+                                <div v-if="ppmp.status == 'Approved'" class="flex justify-center">
+                                    <Dropdown width="56">
+                                        <template #trigger>
+                                            <button class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 flex items-center gap-2">
+                                                <span class="sr-only">Open options</span>
+                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg"viewBox="0 0 16 16">
+                                                    <g fill="currentColor">
+                                                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1"/>
+                                                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2zm2.5 1a.5.5 0 1 0 0-1a.5.5 0 0 0 0 1"/>
+                                                    </g>
+                                                </svg>
+                                                Print
+                                                <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <a 
+                                                :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: props.cellData.id, version: 'raw'})"
+                                                target="_blank" 
+                                                class="flex w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                    <path fill="currentColor" d="M12 2v6a2 2 0 0 0 2 2h6v10a2 2 0 0 1-2 2h-7.103a2.7 2.7 0 0 0 .092-.5H11a2 2 0 0 0 2-2V16a2.5 2.5 0 0 0-2.007-2.451A2.75 2.75 0 0 0 8.25 11h-3.5q-.392.001-.75.104V4a2 2 0 0 1 2-2zm1.5.5V8a.5.5 0 0 0 .5.5h5.5zM3 13.75c0-.966.784-1.75 1.75-1.75h3.5c.966 0 1.75.784 1.75 1.75v.75h.5A1.5 1.5 0 0 1 12 16v3.5a1 1 0 0 1-1 1h-1v.75A1.75 1.75 0 0 1 8.25 23h-3.5A1.75 1.75 0 0 1 3 21.25v-.75H2a1 1 0 0 1-1-1V16a1.5 1.5 0 0 1 1.5-1.5H3zm5.5 0a.25.25 0 0 0-.25-.25h-3.5a.25.25 0 0 0-.25.25v.75h4zm-4 5.5v2c0 .138.112.25.25.25h3.5a.25.25 0 0 0 .25-.25v-2a.25.25 0 0 0-.25-.25h-3.5a.25.25 0 0 0-.25.25"/>
+                                                </svg>
+                                                <span class="ml-2 text-sm">Raw File Format</span>   
+                                            </a>
+                                            <a 
+                                                :href="route('generatePdf.ApprovedConsolidatedPpmp', { ppmp: props.cellData.id, version: 'contingency'})"
+                                                target="_blank" 
+                                                class="flex w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                    <path fill="currentColor" d="M12 2v6a2 2 0 0 0 2 2h6v10a2 2 0 0 1-2 2h-7.103a2.7 2.7 0 0 0 .092-.5H11a2 2 0 0 0 2-2V16a2.5 2.5 0 0 0-2.007-2.451A2.75 2.75 0 0 0 8.25 11h-3.5q-.392.001-.75.104V4a2 2 0 0 1 2-2zm1.5.5V8a.5.5 0 0 0 .5.5h5.5zM3 13.75c0-.966.784-1.75 1.75-1.75h3.5c.966 0 1.75.784 1.75 1.75v.75h.5A1.5 1.5 0 0 1 12 16v3.5a1 1 0 0 1-1 1h-1v.75A1.75 1.75 0 0 1 8.25 23h-3.5A1.75 1.75 0 0 1 3 21.25v-.75H2a1 1 0 0 1-1-1V16a1.5 1.5 0 0 1 1.5-1.5H3zm5.5 0a.25.25 0 0 0-.25-.25h-3.5a.25.25 0 0 0-.25.25v.75h4zm-4 5.5v2c0 .138.112.25.25.25h3.5a.25.25 0 0 0 .25-.25v-2a.25.25 0 0 0-.25-.25h-3.5a.25.25 0 0 0-.25.25"/>
+                                                </svg>
+                                                <span class="ml-2 text-sm">Contingency Format</span>   
+                                            </a>
+                                        </template>
+                                    </Dropdown>
+                                </div>
                             </template>
                     </DataTable>
                 </div>

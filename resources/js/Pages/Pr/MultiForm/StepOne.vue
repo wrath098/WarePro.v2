@@ -21,11 +21,27 @@
         qtyAdjust: 100,
     });
 
-    const onTypeChange = (context) => {
-        const type = props.toPr.find(typ => typ.ppmp_type === context.selectedType);
-        filteredYear.value = type ? type.years : [];
-        generatePr.selectedYear = '';
+    const fetchPpmpTransaction = ref([]);
+    const onTypeChange = async (context) => {
+        try {
+            const response = await axios.get('../../api/ppmp-type', { params: { type: context.selectedType } });
+            fetchPpmpTransaction.value = response.data;
+        } catch (error) {
+            console.error('Error fetching office data:', error);
+        }
     };
+
+    // const fetchOfficePpmp = async () => {
+    //     if (searchOfficePpmp.officeId && searchOfficePpmp.year) {
+    //         try {
+    //             const response = await axios.get('api/office-ppmp-particulars', { params: searchOfficePpmp });
+    //             officePpmpParticulars.value = response.data;
+    //             requestDataTable.value = response.data ? true : false;
+    //         } catch (error) {
+    //             console.error('Error fetching office data:', error);
+    //         }
+    //     }
+    // };
 
     const onYearChange = (context) => {
         const type = props.toPr.find(typ => typ.ppmp_type === context.selectedType);
@@ -95,18 +111,23 @@
                 </ol>
             </nav>
         </template>
-        <div class="flex items-center justify-center mt-5 rounded-md bg-white shadow-md">
-            <div class="mx-auto w-full max-w-[550px] bg-white rounded-md border-2 border-indigo-900 shadow-lg my-4">
+        <div class="flex items-center justify-center mt-5 rounded-md bg-zinc-300 shadow-sm mb-8">
+            <div class="mx-auto w-full max-w-[550px] bg-zinc-100 rounded-md shadow-lg my-4">
                 <form @submit.prevent="nextStep">
-                    <div class="px-6 py-4 bg-indigo-900 text-white rounded-t">
-                        <h1 class="text-lg font-bold">Step 1: Procurement Requests Information</h1>
+                    <div class="bg-zinc-600 px-6 py-4 rounded-t-lg">
+                        <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                            Step 1: Procurement Requests Information
+                        </h3>
+                        <p class="text-sm text-zinc-300">
+                            Fill in the following input fields.
+                        </p>
                     </div>
                     <div class="p-4 rounded-md">
                         <div class="mb-5">
-                            <label for="ppmpType" class="mb-3 block text-base font-medium text-[#07074D]">
+                            <label for="ppmpType" class="mb-3 block text-base font-semibold text-[#1a0037]">
                                 Items for Procurement
                             </label>
-                            <select v-model="generatePr.selectedType" @change="onTypeChange(generatePr)" id="ppmpType" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                            <select v-model="generatePr.selectedType" @change="onTypeChange(generatePr)" id="ppmpType" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                 <option value="" selected disabled>Select Type</option>
                                 <option v-for="type in props.toPr" :key="type.ppmp_type" :value="type.ppmp_type">
                                     {{ type.ppmp_type }}
@@ -114,15 +135,19 @@
                             </select>
                         </div>
                         <div v-if="filteredYear.length" class="mb-5">
-                            <label for="ppmpYear" class="mb-3 block text-base font-medium text-[#07074D]">
+                            <label for="ppmpYear" class="mb-2 block text-base font-semibold text-[#1a0037]">
                                 Year of the Selected Type
                             </label>
-                            <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" id="ppmpYear" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                            <div class="relative z-0 w-full group my-2">
+                                <input type="number" name="year" id="year" class="block py-2.5 px-0 w-full text-sm font-semibold text-zinc-700 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label for="year" class="font-semibold text-zinc-700 ml-2 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
+                            </div>
+                            <!-- <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" id="ppmpYear" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                 <option value="" disabled>Select Year</option>
                                 <option v-for="year in filteredYear" :key="year.ppmp_year" :value="year.ppmp_year">
                                     {{ year.ppmp_year }}
                                 </option>
-                            </select>
+                            </select> -->
                         </div>
                         <div v-if="filteredPpmpList.length" class="mb-5">
                             <label for="ppmpCode" class="mb-3 block text-base font-medium text-[#07074D]">

@@ -313,6 +313,20 @@ class PrMultiStepFormController extends Controller
         }
     }
 
+    public function filterToPurchase(Request $request)
+    {
+        Log::info($request->toArray());
+        $type = strtolower($request->input('type'));
+        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description', 'ppmp_status')
+            ->when($type, function ($query) use ($type) {
+                return $query->where('ppmp_type', $type);
+            })
+            ->whereNull('remarks')
+            ->get();
+        
+        return response()->json($transactions);
+    }
+
     private function getConsolidatedTransactionWithParticulars($request) {
         $result = PpmpTransaction::with('consolidated')->where('ppmp_code', $request)->first();
         return $result;

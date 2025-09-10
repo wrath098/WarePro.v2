@@ -258,7 +258,7 @@
                                         Type
                                     </dt>
                                     <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
-                                        {{ ppmp.ppmp_type == 'individual' ? 'Office' : ppmp.ppmp_type }}
+                                        {{ ppmp.ppmp_type == 'Individual' ? 'Office' : ppmp.ppmp_type }}
                                     </dd>
                                 </div>
                                 <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">

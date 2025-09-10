@@ -27,7 +27,7 @@ class ConsolidatedPpmpController extends TemplateController
 
         $pdf->SetCreator(SYSTEM_GENERATOR);
         $pdf->SetAuthor(SYSTEM_DEVELOPER);
-        $pdf->SetTitle('Consolidated PPMP | ' . $type);
+        $pdf->SetTitle(strtoupper($type) . ' | Consolidated');
         $pdf->SetSubject('Consolidated PPMP Particulars');
         $pdf->SetKeywords('Benguet, WarePro, Consolidated List');
         

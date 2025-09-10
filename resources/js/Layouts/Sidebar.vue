@@ -331,15 +331,14 @@ const officeUser = hasAnyRole(['Office User']);
                                     <SidebarDropdown
                                         v-if="hasPermission('view-purchase-request-list') ||  hasAnyRole(['Developer'])"
                                         :active="route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase') || route().current('pr.form.step1') || route().current('pr.form.step2') || route().current('pr.display.transactions') || route().current('pr.show.particular')">
-                                        <svg
-                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
+                                        <svg 
+                                            class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white" 
                                             :class="{'text-white': route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase') || route().current('pr.form.step1') || route().current('pr.form.step2') || route().current('pr.display.transactions') || route().current('pr.show.particular')}"
                                             fill="currentColor" 
                                             aria-hidden="true" 
-                                            xmlns="http://www.w3.org/2000/svg" 
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path fill="currentColor" fill-rule="evenodd" d="M10 2.25a1.75 1.75 0 0 0-1.582 1c-.684.006-1.216.037-1.692.223A3.25 3.25 0 0 0 5.3 4.563c-.367.493-.54 1.127-.776 1.998l-.047.17l-.513 2.964c-.185.128-.346.28-.486.459c-.901 1.153-.472 2.87.386 6.301c.545 2.183.818 3.274 1.632 3.91C6.31 21 7.435 21 9.685 21h4.63c2.25 0 3.375 0 4.189-.635c.814-.636 1.086-1.727 1.632-3.91c.858-3.432 1.287-5.147.386-6.301a2.186 2.186 0 0 0-.487-.46l-.513-2.962l-.046-.17c-.237-.872-.41-1.506-.776-2a3.25 3.25 0 0 0-1.426-1.089c-.476-.186-1.009-.217-1.692-.222A1.75 1.75 0 0 0 14 2.25h-4Zm8.418 6.896l-.362-2.088c-.283-1.04-.386-1.367-.56-1.601a1.75 1.75 0 0 0-.768-.587c-.22-.086-.486-.111-1.148-.118A1.75 1.75 0 0 1 14 5.75h-4a1.75 1.75 0 0 1-1.58-.998c-.663.007-.928.032-1.148.118a1.75 1.75 0 0 0-.768.587c-.174.234-.277.56-.56 1.6l-.362 2.089C6.58 9 7.91 9 9.685 9h4.63c1.775 0 3.105 0 4.103.146ZM8 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Zm8.75.75a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4ZM12 12.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 576 512">
+                                            <path fill="currentColor" d="M0 24C0 10.7 10.7 0 24 0h45.5c22 0 41.5 12.8 50.6 32h411c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3H170.7l5.4 28.5c2.2 11.3 12.1 19.5 23.6 19.5H488c13.3 0 24 10.7 24 24s-10.7 24-24 24H199.7c-34.6 0-64.3-24.6-70.7-58.5l-51.6-271c-.7-3.8-4-6.5-7.9-6.5H24C10.7 48 0 37.3 0 24m128 440a48 48 0 1 1 96 0a48 48 0 1 1-96 0m336-48a48 48 0 1 1 0 96a48 48 0 1 1 0-96"/>
                                         </svg>
                                         <span class="flex-1 ml-3 text-left whitespace-nowrap font-semibold">PURCHASE REQUEST</span>
                                         <ArrowDown :class="{'text-white': route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase') || route().current('pr.form.step1') || route().current('pr.form.step2') || route().current('pr.display.transactions') || route().current('pr.show.particular')}" />
@@ -378,7 +377,7 @@ const officeUser = hasAnyRole(['Office User']);
                                             aria-hidden="true" 
                                             xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 24 24">
-                                            <path fill="currentColor" d="M1 20v-2h5v-2H2v-2h4v-2H3.05v-2H6V7.05l-1.95-4.2L5.85 2L8.2 7h11.6l-1.95-4.15l1.8-.85L22 7v13zm11-7h4q.425 0 .713-.288T17 12t-.288-.712T16 11h-4q-.425 0-.712.288T11 12t.288.713T12 13"/>
+                                            <path fill="currentColor" d="m17.275 18.125l-.425-.425q-.225-.225-.537-.225t-.538.225t-.225.525t.225.525l.975.975q.225.225.525.225t.525-.225l2.425-2.375q.225-.225.225-.538t-.225-.537t-.538-.225t-.537.225zM17 9q.425 0 .713-.288T18 8t-.288-.712T17 7H7q-.425 0-.712.288T6 8t.288.713T7 9zm1 14q-2.075 0-3.537-1.463T13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23M3 21.875V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v5.5q0 .425-.35.688t-.775.137q-.7-.175-1.425-.25T17 11H7q-.425 0-.712.288T6 12t.288.713T7 13h6.1q-.425.425-.787.925T11.675 15H7q-.425 0-.712.288T6 16t.288.713T7 17h4.075q-.05.25-.062.488T11 18q0 .65.125 1.275t.325 1.25q.125.275-.1.438t-.425-.038l-.075-.075q-.15-.15-.35-.15t-.35.15l-.8.8q-.15.15-.35.15t-.35-.15l-.8-.8q-.15-.15-.35-.15t-.35.15l-.8.8q-.15.15-.35.15t-.35-.15l-.8-.8q-.15-.15-.35-.15t-.35.15l-.8.8z"/>
                                         </svg>
                                         <span class="ml-3 font-semibold">PURCHASE ORDER</span>
                                     </SidebarLink>
