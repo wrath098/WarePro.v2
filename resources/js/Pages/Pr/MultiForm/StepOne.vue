@@ -1,54 +1,113 @@
 <script setup>
-    import { ref, computed, onMounted } from 'vue';
+    import { ref, computed, onMounted, watch } from 'vue';
     import { Head, useForm, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';   
     import Swal from 'sweetalert2';
+    import Checkbox from '@/Components/Checkbox.vue';
     
     const page = usePage();
+    const loading = ref(false);
 
     const props = defineProps({
         toPr: Object,
     });
 
-    const filteredYear = ref([]);
-    const filteredPpmpList = ref([]);
     const generatePr = useForm({
         selectedType: '',
         selectedYear: '',
         selectedppmpCode: '',
         semester: '',
         prDesc:'',
-        qtyAdjust: 100,
+        selectedAccounts: [],
+        qtyAdjust: ''
     });
 
     const fetchPpmpTransaction = ref([]);
-    const onTypeChange = async (context) => {
-        try {
-            const response = await axios.get('../../api/ppmp-type', { params: { type: context.selectedType } });
-            fetchPpmpTransaction.value = response.data;
-        } catch (error) {
-            console.error('Error fetching office data:', error);
+    const onTypeChange = async () => {
+        if (generatePr.selectedType && generatePr.selectedYear) {
+            loading.value = true;
+            try {
+                const response = await axios.get('../../api/ppmp-type', {
+                    params: { 
+                    type: generatePr.selectedType,
+                    year: generatePr.selectedYear,
+                    },
+                });
+
+                fetchPpmpTransaction.value = response.data;
+            } catch (error) {
+                console.error('Error fetching office data:', error);
+                fetchPpmpTransaction.value = [];
+            } finally {
+                loading.value = false;
+            }
+        } else {
+            fetchPpmpTransaction.value = [];
         }
     };
 
-    // const fetchOfficePpmp = async () => {
-    //     if (searchOfficePpmp.officeId && searchOfficePpmp.year) {
-    //         try {
-    //             const response = await axios.get('api/office-ppmp-particulars', { params: searchOfficePpmp });
-    //             officePpmpParticulars.value = response.data;
-    //             requestDataTable.value = response.data ? true : false;
-    //         } catch (error) {
-    //             console.error('Error fetching office data:', error);
-    //         }
-    //     }
-    // };
+    const years = generateYears();
+    function generateYears() {
+        const currentYear = new Date().getFullYear() + 1;
+        return Array.from({ length: 3 }, (_, i) => currentYear - i);
+    }
 
-    const onYearChange = (context) => {
-        const type = props.toPr.find(typ => typ.ppmp_type === context.selectedType);
-        const year = type ? type.years.find(yer => yer.ppmp_year === context.selectedYear) : null;
-        filteredPpmpList.value = year ? year.ppmpNo : [];
-        generatePr.selectedppmpCode = '';
+    const searchTransaction = ref('');
+    const debouncedQuery = ref('');
+    const showSuggestions = ref(false);
+    const selectionMade = ref(false);
+    let timer = null;
+
+    watch(searchTransaction, (newVal) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            if (selectionMade.value) {
+                selectionMade.value = false;
+                return;
+            }
+            debouncedQuery.value = newVal.trim();
+            showSuggestions.value = !!debouncedQuery.value;
+        }, 500);
+    });
+
+    const filterSuggestions = computed(() => {
+        if (!Array.isArray(fetchPpmpTransaction.value)) return [];
+
+        if (!debouncedQuery.value) return [];
+
+        return fetchPpmpTransaction.value
+            .map(item => item.ppmp_code)
+            .filter(code => code.toLowerCase().includes(debouncedQuery.value.toLowerCase()));
+        }
+    );
+
+    const selectSuggestion = (code) => {
+        searchTransaction.value = code;
+        generatePr.selectedppmpCode = code;
+        showSuggestions.value = false;
+        selectionMade.value = true;
+        const selected = fetchPpmpTransaction.value.find(item => item.ppmp_code === code);
+        generatePr.qtyAdjust = selected.adjustment;
+        if (selected?.account_class) {
+            generatePr.selectedAccounts = Object.keys(selected.account_class).map(String);
+        }
     };
+
+    const selectedTransaction = computed(() => {
+        return fetchPpmpTransaction.value.find(
+            (item) => item.ppmp_code === searchTransaction.value
+        ) ?? null;
+    });
+
+    const accountClassList = computed(() => {
+        if (!selectedTransaction.value || !selectedTransaction.value.account_class) {
+            return [];
+        }
+        return Object.entries(selectedTransaction.value.account_class).map(([id, name]) => ({
+            id,
+            name,
+        }));
+    });
 
     const nextStep = () => {
         generatePr.get(route('pr.form.step2'));
@@ -75,6 +134,8 @@
             });
         }
     });
+
+    
 </script>
 <template>
     <Head title="Purchase Request" />
@@ -127,46 +188,54 @@
                             <label for="ppmpType" class="mb-3 block text-base font-semibold text-[#1a0037]">
                                 Items for Procurement
                             </label>
-                            <select v-model="generatePr.selectedType" @change="onTypeChange(generatePr)" id="ppmpType" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                            <select v-model="generatePr.selectedType" @change="onTypeChange" id="ppmpType" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                 <option value="" selected disabled>Select Type</option>
-                                <option v-for="type in props.toPr" :key="type.ppmp_type" :value="type.ppmp_type">
-                                    {{ type.ppmp_type }}
+                                <option v-for="type in props.toPr" :key="type.ppmpType" :value="type.ppmpType">
+                                    {{ type.ppmpType }}
                                 </option>
                             </select>
                         </div>
-                        <div v-if="filteredYear.length" class="mb-5">
+                        <div class="mb-7">
                             <label for="ppmpYear" class="mb-2 block text-base font-semibold text-[#1a0037]">
                                 Year of the Selected Type
                             </label>
-                            <div class="relative z-0 w-full group my-2">
-                                <input type="number" name="year" id="year" class="block py-2.5 px-0 w-full text-sm font-semibold text-zinc-700 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label for="year" class="font-semibold text-zinc-700 ml-2 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Year</label>
-                            </div>
-                            <!-- <select v-model="generatePr.selectedYear" @change="onYearChange(generatePr)" id="ppmpYear" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                            <select v-model="generatePr.selectedYear" @change="onTypeChange" id="ppmpYear" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                 <option value="" disabled>Select Year</option>
-                                <option v-for="year in filteredYear" :key="year.ppmp_year" :value="year.ppmp_year">
-                                    {{ year.ppmp_year }}
-                                </option>
-                            </select> -->
-                        </div>
-                        <div v-if="filteredPpmpList.length" class="mb-5">
-                            <label for="ppmpCode" class="mb-3 block text-base font-medium text-[#07074D]">
-                                Transaction No#
-                            </label>
-                            <select v-model="generatePr.selectedppmpCode"  id="ppmpCode" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
-                                <option value="" disabled>Select Transaction</option>
-                                <option v-for="code in filteredPpmpList" :key="code" :value="code">
-                                    {{ code }}
+                                <option v-for="year in years" :key="year" :value="year">
+                                    {{ year }}
                                 </option>
                             </select>
                         </div>
-                        <div v-if="generatePr.selectedType == 'Consolidated'" class="-mx-3 flex flex-wrap">
+                        <div v-if="loading" class="mb-5">
+                            <p class="block italic text-sm font-medium text-[#074d2a]">
+                                Loading Transaction...
+                            </p>
+                        </div>
+                        <div v-else-if="fetchPpmpTransaction.length > 0" class="mb-5">
+                            <div class="relative z-0 w-full group my-2">
+                                <input v-model="searchTransaction" name="transactionCode" type="text" id="transactionCode" autocomplete="off" class="block py-2.5 px-6 w-full text-sm font-semibold text-zinc-700 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
+                                <label for="transactionCode" class="font-semibold text-zinc-700 ml-2 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Transaction Code</label>
+                            </div>
+                            <ul v-if="filterSuggestions.length && showSuggestions" class="border border-gray-300 rounded max-h-48 overflow-auto bg-white shadow-md">
+                                <li v-for="code in filterSuggestions" :key="code" @click="selectSuggestion(code)" class="px-4 py-2 hover:bg-blue-100 cursor-pointer">
+                                    {{ code }}
+                                </li>
+                            </ul>
+                            <div v-if="filterSuggestions.length == 0 && showSuggestions" class="border border-gray-300 rounded max-h-48 overflow-auto bg-white shadow-md">
+                                <p class="px-4 py-2 italic text-rose-600">No available/approved transaction found!</p>
+                            </div>
+                        </div>
+                        <div v-else class="mb-5 italic text-rose-600">
+                            <p>{{ fetchPpmpTransaction.message }}</p>
+                        </div>
+                        
+                        <div v-if="generatePr.selectedType == 'Consolidated' && fetchPpmpTransaction.length > 0" class="-mx-3 flex flex-wrap">
                             <div class="w-full px-3 sm:w-1/2">
                                 <div class="mb-5">
-                                    <label for="semester" class="mb-3 block text-base font-medium text-[#07074D]">
+                                    <label for="semester" class="mb-3 block text-base font-semibold text-[#1a0037]">
                                         Milestone
                                     </label>
-                                    <select v-model="generatePr.semester" id="semester" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                    <select v-model="generatePr.semester" id="semester" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                         <option value="" disabled>Select to Semester</option>
                                         <option value="qty_first">January (1st Semester)</option>
                                         <option value="qty_second">May (2nd Semester)</option>
@@ -175,10 +244,10 @@
                             </div>
                             <div class="w-full px-3 sm:w-1/2">
                                 <div class="mb-5">
-                                    <label for="prDescription" class="mb-3 block text-base font-medium text-[#07074D]">
+                                    <label for="prDescription" class="mb-3 block text-base font-semibold text-[#1a0037]">
                                         Mode of Procurement
                                     </label>
-                                    <select v-model="generatePr.prDesc" id="prDescription" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md" required>
+                                    <select v-model="generatePr.prDesc" id="prDescription" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                         <option value="" disabled>Select Description</option>
                                         <option value="nc">For Bidding</option>
                                         <option value="dc">Direct Contract</option>
@@ -186,22 +255,31 @@
                                     </select> 
                                 </div>
                             </div>
-                            <div class="w-full px-3">
+                            <div v-if="accountClassList.length" class="w-full px-3">
                                 <div class="mb-5">
-                                    <label for="qtyAdjust" class="mb-3 block text-base font-medium text-[#07074D]">
-                                        Quantity to Procure:
-                                        <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span>
+                                    <label for="semester" class="mb-3 block text-base font-semibold text-[#1a0037]">
+                                        Check Account Classification
                                     </label>
-                                    <input 
-                                        v-model="generatePr.qtyAdjust"
-                                        type="number"
-                                        id="qtyAdjust"
-                                        min="50"
-                                        max="100"
-                                        placeholder="Enter from 50 to 100"
-                                        class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                                    />
+                                    <div v-for="account in accountClassList" :key="account.id" class="flex space-x-2 mb-2">
+                                        <Checkbox v-model:checked="generatePr.selectedAccounts" :value="account.id" />
+                                        <span class="text-sm text-gray-800">{{ account.name }}</span>
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="mb-5 w-full px-3">
+                                <label for="qtyAdjust" class="mb-3 block text-base font-semibold text-[#1a0037]">
+                                    Quantity to Procure:
+                                    <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span>
+                                </label>
+                                <input 
+                                    v-model="generatePr.qtyAdjust"
+                                    type="number"
+                                    id="qtyAdjust"
+                                    min="50"
+                                    max="100"
+                                    placeholder="Enter from 50 to 100"
+                                    class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700  outline-none focus:border-[#6A64F1] focus:shadow-md"
+                                />
                             </div>
                         </div>
 

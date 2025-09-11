@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Forms;
 
 use App\Http\Controllers\Controller;
 use App\Models\CapitalOutlay;
+use App\Models\Fund;
 use App\Models\PpmpConsolidated;
 use App\Models\PpmpTransaction;
 use App\Models\PrParticular;
@@ -12,6 +13,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -28,50 +30,84 @@ class PrMultiStepFormController extends Controller
 
     public function stepOne(): Response
     {
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description', 'ppmp_status')
-            ->whereIn('ppmp_type', ['consolidated', 'emergency'])
-            ->whereNull('remarks')
-            ->get();
-
-        $resultToPr = $transactions->groupBy('ppmp_type')->map(function ($typeGroup) {
-            return [
-                'ppmp_type' => ucfirst($typeGroup->first()->ppmp_type),
-                'years' => $typeGroup->groupBy('ppmp_year')->map(function ($yearGroup) {
-                    return [
-                        'ppmp_year' => $yearGroup->first()->ppmp_year,
-                        'ppmpNo' => $yearGroup->map(function ($item) {
-                            return $item->ppmp_code . ' - ' . $item->description;
-                        })->all()
-                    ];
-                })->values()->all()
-            ];
-        })->values()->all();
+        #Fetch Transaction Types and cache in 1hr
+        $transactions = Cache::remember('ppmp_types_step_one', 3600, function () {
+            return PpmpTransaction::select('ppmp_type')
+                ->where('ppmp_type', '!=', 'individual')
+                ->whereNull('remarks')
+                ->groupBy('ppmp_type')
+                ->get()
+                ->map(fn($q) => [
+                    'ppmpType' => ucfirst($q->ppmp_type),
+                ]);
+        });
 
         return Inertia::render('Pr/MultiForm/StepOne', [
-            'toPr' => $resultToPr,
+            'toPr' => $transactions,
         ]);
     }
 
     public function stepTwo(Request $request)
     {
-        $queryCOde = explode(' - ', $request->selectedppmpCode);
-        $selectedppmpCode = (int) $queryCOde[0];
+        dd($request->toArray());
+        #Initialize
+        $transactionCode = strtolower($request->input(['selectedppmpCode']));
         $selectedType = $request->input(['selectedType']);
+        $selectedYear = $request->input(['selectedYear']);
+        $semester = $request->input(['semester']);
+        $pr_desc = $request->input(['prDesc']);
+        $selectedAccounts = $request->input(['selectedAccounts']);
+        $adjustment = $request->input(['qtyAdjust']);
 
-        $transaction = $selectedType != 'Emergency'
-            ? $this->getConsolidatedTransactionWithParticulars($selectedppmpCode)
-            : $this->getEmergencyParticulars($selectedppmpCode, $selectedType);
+        #Get transaction
+        $validateTransaction = PpmpTransaction::where('ppmp_code', $transactionCode)
+            ->where('ppmp_type', $selectedType)
+            ->where('ppmp_year', $selectedYear)
+            ->where('ppmp_status', PpmpTransaction::STATUS_APPROVED)
+            ->first();
 
+        #Validate transaction
+        if(!$validateTransaction) {
+            return redirect()->back()->with('error', 'Transaction details not matched. Please verify and try again!');
+        }
+
+        #Prepare purchase request information
+        $convertAdjustment = (float)$adjustment / 100;
+        $accounts = array_flip($selectedAccounts);
         $purchaseRequestInfo = [
-            'semester' => $request->semester,
-            'desc' => $request->prDesc,
-            'qty_adjustment' => $request->qtyAdjust,
-            'transId' => $transaction->id,
+            'semester' => $semester,
+            'desc' => $pr_desc,
+            'adjustment' => $convertAdjustment,
+            'accountId' => $accounts,
+            'transId' => $validateTransaction->id,
             'user' => Auth::id(),
         ];
 
+        #Load particulars
+        $validateTransaction->load('consolidated');
+
+        #Initialize office ppmp ids
+        $officePpmpIds = json_decode($validateTransaction->office_ppmp_ids, true);
+
+        #Get all office ppmp transaction
+        $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmpIds)->keyBy('id');
+        $groupedParticulars = $ppmpTransactions->flatMap(function ($transaction) {
+            return $transaction->particulars->filter(function ($particular) {
+                return !is_null($particular->prod_id);
+            });
+        })->groupBy('prod_id');
+
+        $summedByProdId = $groupedParticulars->map(function ($items, $prodId) {
+            return [
+                'id' => $prodId,
+                'firstSem' => $items->sum('tresh_first_qty'),
+                'secondSem' => $items->sum('tresh_second_qty'),
+            ];
+        });
+
+        #Process Emergency Purchase Request
         if($selectedType == 'Emergency') {
-            $particulars = $this->formatEmergencyParticulars($transaction);
+            $particulars = $this->formatEmergencyParticulars($validateTransaction);
 
             $sortResult = $particulars->sortBy('prodCode');
             
@@ -80,14 +116,16 @@ class PrMultiStepFormController extends Controller
                 'prInfo' => $purchaseRequestInfo,
             ]);
         }
-    
-        $prOnPpmp = $this->getAllPrTransactionUnderPpmp($transaction, $request->semester);
+        
+        #Process Consolidation Purchase Request
+        #Get purchase request from the consolidation
+        $prOnPpmp = $this->getAllPrTransactionUnderPpmp($validateTransaction, $semester);
+        $priceAdjustment = (int)$validateTransaction->price_adjustment;
 
-        $priceAdjustment = (int)$transaction->price_adjustment;
-        $qtyAdjustment = (float)$request->qtyAdjust / 100;
+        #Process PRs if 1st Semester and no available purchase request
+        if($semester == 'qty_first' && $prOnPpmp->isEmpty()){
 
-
-        if($request->semester == 'qty_first' && $prOnPpmp->isEmpty()){
+            
             $result = $transaction->consolidated->map(function ($items) use ($transaction, $priceAdjustment, $qtyAdjustment) {
                 $qty = 0;
                 $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $priceAdjustment;
@@ -124,6 +162,7 @@ class PrMultiStepFormController extends Controller
                 'toPr' => $sortResult,
                 'prInfo' => $purchaseRequestInfo,
             ]);
+    
         } elseif ($request->semester == 'qty_first' && $prOnPpmp->isNotEmpty()) {
             $basedParticulars = $transaction->consolidated->map(function ($particular) use ($priceAdjustment) {
                 $prodPrice = (float)$this->productService->getLatestPriceId($particular->price_id) * $priceAdjustment;
@@ -315,21 +354,47 @@ class PrMultiStepFormController extends Controller
 
     public function filterToPurchase(Request $request)
     {
-        Log::info($request->toArray());
+        #Initialize
         $type = strtolower($request->input('type'));
-        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description', 'ppmp_status')
+        $year = $request->input('year');
+
+        #Get transactions
+        $transactions = PpmpTransaction::select('ppmp_type', 'ppmp_year', 'ppmp_code', 'description', 'ppmp_status', 'account_class_ids', 'final_qty_adjustment')
             ->when($type, function ($query) use ($type) {
                 return $query->where('ppmp_type', $type);
             })
+            ->when($year, function ($query) use ($year) {
+                return $query->where('ppmp_year', $year);
+            })
+            ->where('ppmp_status', PpmpTransaction::STATUS_APPROVED)
             ->whereNull('remarks')
-            ->get();
+            ->get()
+            ->map(function($transaction) {
+                #Get account class name
+                $accountClassIds = json_decode($transaction->account_class_ids, true);
+                $accountClass = Fund::findMany($accountClassIds)->pluck('fund_name', 'id');
+
+                #Get maximum adjustment
+                $adjustment = json_decode($transaction->final_qty_adjustment, true);
+                $convert = array_map('floatval', $adjustment);
+                $maxValue = $convert ? max($convert) : 100;
+
+                return [
+                    'ppmp_type' => $transaction->ppmp_type,
+                    'ppmp_code' => $transaction->ppmp_code,
+                    'account_class' => $accountClass,
+                    'adjustment' => $maxValue,
+                ];
+            });
+        
+        #Return if transaction is empty
+        if ($transactions->isEmpty()) {
+            return response()->json([
+                'message' => 'No available/approved transaction found!'
+            ]);
+        }
         
         return response()->json($transactions);
-    }
-
-    private function getConsolidatedTransactionWithParticulars($request) {
-        $result = PpmpTransaction::with('consolidated')->where('ppmp_code', $request)->first();
-        return $result;
     }
 
     private function createNewPurchaseRequest($request) {
@@ -389,14 +454,6 @@ class PrMultiStepFormController extends Controller
         $qtyOnPr = $pr->purchaseRequest->sum('qty');
 
         return $qtyOnPr ?? 0;
-    }
-
-    private function getEmergencyParticulars($code, $type)
-    {
-        return PpmpTransaction::with('consolidated')
-            ->where('ppmp_type', $type)
-            ->where('ppmp_code', $code)
-            ->first();
     }
 
     private function formatEmergencyParticulars($particulars) 
