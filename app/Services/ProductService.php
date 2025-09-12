@@ -180,6 +180,17 @@ class ProductService
         return $priceResult->id ?? null;
     }
 
+    public function getProductInfo($id)
+        {
+            $product = Product::withTrashed()->findOrFail($id);
+
+            return [
+                'code' => $product->prod_newNo,
+                'unit' => $product->prod_unit,
+                'description' => $product->prod_desc,
+            ];
+        }
+
     public function getProductName($id)
     {
         $product = Product::withTrashed()->findOrFail($id);

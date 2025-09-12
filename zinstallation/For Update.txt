@@ -13,3 +13,4 @@
 #final_qty_adjustment = {"all":"100"}
 
 #Drop column 'qty_adjustment', 'tresh_adjustment' and 'ppmp_version' from the ppmp_transactions table
+#Drop column 'qty_adjustment' from the pr_transactions table

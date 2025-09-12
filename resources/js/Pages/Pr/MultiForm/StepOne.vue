@@ -56,6 +56,7 @@
     const debouncedQuery = ref('');
     const showSuggestions = ref(false);
     const selectionMade = ref(false);
+    const adjustment = ref('');
     let timer = null;
 
     watch(searchTransaction, (newVal) => {
@@ -87,7 +88,7 @@
         showSuggestions.value = false;
         selectionMade.value = true;
         const selected = fetchPpmpTransaction.value.find(item => item.ppmp_code === code);
-        generatePr.qtyAdjust = selected.adjustment;
+        adjustment.value = selected.adjustment;
         if (selected?.account_class) {
             generatePr.selectedAccounts = Object.keys(selected.account_class).map(String);
         }
@@ -255,31 +256,31 @@
                                     </select> 
                                 </div>
                             </div>
-                            <div v-if="accountClassList.length" class="w-full px-3">
-                                <div class="mb-5">
-                                    <label for="semester" class="mb-3 block text-base font-semibold text-[#1a0037]">
-                                        Check Account Classification
-                                    </label>
-                                    <div v-for="account in accountClassList" :key="account.id" class="flex space-x-2 mb-2">
-                                        <Checkbox v-model:checked="generatePr.selectedAccounts" :value="account.id" />
-                                        <span class="text-sm text-gray-800">{{ account.name }}</span>
+                            <div v-if="accountClassList.length">
+                                <div class="w-full px-3">
+                                    <div class="mb-5">
+                                        <label for="semester" class="mb-3 block text-base font-semibold text-[#1a0037]">
+                                            Check Account Classification
+                                        </label>
+                                        <div v-for="account in accountClassList" :key="account.id" class="flex space-x-2 mb-2">
+                                            <Checkbox v-model:checked="generatePr.selectedAccounts" :value="account.id" />
+                                            <span class="text-sm text-gray-800">{{ account.name }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="mb-5 w-full px-3">
-                                <label for="qtyAdjust" class="mb-3 block text-base font-semibold text-[#1a0037]">
-                                    Quantity to Procure:
-                                    <span class="text-sm text-[#8f9091]">Value: 50% - 100%</span>
-                                </label>
-                                <input 
-                                    v-model="generatePr.qtyAdjust"
-                                    type="number"
-                                    id="qtyAdjust"
-                                    min="50"
-                                    max="100"
-                                    placeholder="Enter from 50 to 100"
-                                    class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700  outline-none focus:border-[#6A64F1] focus:shadow-md"
-                                />
+                                <div class="w-full p-3 mb-5 bg-amber-300 rounded-lg">
+                                    <div class="flex items-start space-x-3">
+                                        <Checkbox 
+                                            v-model="generatePr.qtyAdjust" 
+                                            :value="true" 
+                                            aria-describedby="threshold-description"
+                                        />
+                                        <p id="threshold-description" class="text-sm text-gray-800 text-justify">
+                                            If checked, the values will be based on the set final quantity adjustment on consolidated ppmp with <span class="font-semibold">({{ adjustment }}%)</span>. 
+                                            If unchecked, the system will use the adjusted quantity based on the proposed budget.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -282,10 +282,15 @@ class PpmpTransactionController extends Controller
         if(!$officePpmpIds) {
             return back()->with('error', 'No Office PPMP Transaction found. Please verify and try again.');
         }
+        
+        #Validate Initial Adjustment if exist
+        if (empty($ppmpTransaction->init_qty_adjustment)) {
+            return back()->with('error', 'No initial adjustment found. Please verify and try again.');
+        }
 
-        #Validate Adjustment if exist
-        if(!$ppmpTransaction->init_qty_adjustment && !$ppmpTransaction->final_qty_adjustment) {
-            return back()->with('error', 'No adjustment found. Please verify and try again.');
+        #Validate Final Adjustment if exist
+        if (empty($ppmpTransaction->final_qty_adjustment)) {
+            return back()->with('error', 'No final adjustment found. Please verify and try again.');
         }
 
         #Validate proposed budget if exist
@@ -641,41 +646,6 @@ class PpmpTransactionController extends Controller
             DB::rollBack();
             Log::error(['Update Consolidated Initial Adjustment' => $e->getMessage()]);
         }
-    }
-
-    private function getAllProducts_customType($customAdjustment)
-    {
-        $allProducts = collect();
-        foreach($customAdjustment as $accountId => $value) {
-                $fund = Fund::with([
-                'categories' => function ($q) {
-                    $q->where('cat_status', 'active')->select('id', 'fund_id');
-                },
-                'categories.items' => function ($q) {
-                    $q->where('item_status', 'active')->select('id', 'cat_id', );
-                },
-                'categories.items.products' => function ($q) {
-                    $q->where('prod_status', 'active')->select('id', 'item_id');
-                }
-            ])
-            ->where('id', $accountId)
-            ->where('fund_status', 'active')
-            ->first(['id', 'fund_name']);
-
-            $productIds = collect();
-            if ($fund) {
-                foreach ($fund->categories as $category) {
-                    foreach ($category->items as $item) {
-                        foreach ($item->products as $product) {
-                            $productIds->push($product->id);
-                        }
-                    }
-                }
-                $allProducts->put($accountId, $productIds->unique()->values());
-            }
-        }
-
-        return $allProducts;
     }
 
     private function custom_initOfficePpmpAdjustment($products, $officePpmps, $customData, $updatingTransactionId)

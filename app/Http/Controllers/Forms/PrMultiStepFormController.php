@@ -49,7 +49,6 @@ class PrMultiStepFormController extends Controller
 
     public function stepTwo(Request $request)
     {
-        dd($request->toArray());
         #Initialize
         $transactionCode = strtolower($request->input(['selectedppmpCode']));
         $selectedType = $request->input(['selectedType']);
@@ -72,41 +71,25 @@ class PrMultiStepFormController extends Controller
         }
 
         #Prepare purchase request information
-        $convertAdjustment = (float)$adjustment / 100;
         $accounts = array_flip($selectedAccounts);
         $purchaseRequestInfo = [
             'semester' => $semester,
             'desc' => $pr_desc,
-            'adjustment' => $convertAdjustment,
             'accountId' => $accounts,
             'transId' => $validateTransaction->id,
             'user' => Auth::id(),
         ];
 
         #Load particulars
-        $validateTransaction->load('consolidated');
-
-        #Initialize office ppmp ids
-        $officePpmpIds = json_decode($validateTransaction->office_ppmp_ids, true);
-
-        #Get all office ppmp transaction
-        $ppmpTransactions = PpmpTransaction::with('particulars')->findMany($officePpmpIds)->keyBy('id');
-        $groupedParticulars = $ppmpTransactions->flatMap(function ($transaction) {
-            return $transaction->particulars->filter(function ($particular) {
-                return !is_null($particular->prod_id);
-            });
-        })->groupBy('prod_id');
-
-        $summedByProdId = $groupedParticulars->map(function ($items, $prodId) {
-            return [
-                'id' => $prodId,
-                'firstSem' => $items->sum('tresh_first_qty'),
-                'secondSem' => $items->sum('tresh_second_qty'),
-            ];
-        });
-
+        $accountProductIds = $this->getAllProducts_customType($accounts);
+        $allowedParticulars = collect($accountProductIds)
+            ->flatten(1)
+            ->unique()
+            ->values();
+        
         #Process Emergency Purchase Request
         if($selectedType == 'Emergency') {
+            $validateTransaction->load('consolidated');
             $particulars = $this->formatEmergencyParticulars($validateTransaction);
 
             $sortResult = $particulars->sortBy('prodCode');
@@ -118,65 +101,114 @@ class PrMultiStepFormController extends Controller
         }
         
         #Process Consolidation Purchase Request
+        #Initialize
+        $officePpmpIds = json_decode($validateTransaction->office_ppmp_ids, true); #Office ppmp ids
+        $priceAdjustment = (float)$validateTransaction->price_adjustment; #Price Adjustment
+
+        #Verify if application of final adjustment is true
+        if(filter_var($adjustment, FILTER_VALIDATE_BOOLEAN)) {
+
+            #Get all office ppmp transaction
+            $ppmpTransactions = PpmpTransaction::whereHas('particulars', function ($query) use ($allowedParticulars) {
+                    $query->whereIn('prod_id', $allowedParticulars->all());
+                })
+                ->with(['particulars' => function ($query) use ($allowedParticulars) {
+                    $query->whereIn('prod_id', $allowedParticulars->all());
+                }])
+                ->findMany($officePpmpIds)
+                ->keyBy('id');
+           
+            #Group transaction's particular by product id
+            $groupedParticulars = $ppmpTransactions->flatMap(function ($transaction) {
+                return $transaction->particulars->filter(function ($particular) {
+                    return !is_null($particular->prod_id);
+                });
+            })->groupBy('prod_id');
+
+            #Returns a new array
+            $consolidatedParticulars = $groupedParticulars->map(function ($items, $prodId) {
+                return [
+                    'prodId' => $prodId,
+                    'priceId' => $items->first()->price_id,
+                    'firstSem' => $items->sum('tresh_first_qty'),
+                    'secondSem' => $items->sum('tresh_second_qty'),
+                ];
+            })->values();
+        } else {
+            #Load Consolidated Particulars
+            $validateTransaction->load(['consolidated' => function ($query) use ($allowedParticulars) {
+                $query->whereIn('prod_id', $allowedParticulars->all());
+            }]);
+
+            #Returns a new array
+            $consolidatedParticulars = $validateTransaction->consolidated->map(function($items) {
+                return [
+                    'prodId' => $items->prod_id,
+                    'priceId' => $items->price_id,
+                    'firstSem' => $items->qty_first,
+                    'secondSem' => $items->qty_second,
+                ];
+            })->values();
+        }
+
         #Get purchase request from the consolidation
         $prOnPpmp = $this->getAllPrTransactionUnderPpmp($validateTransaction, $semester);
-        $priceAdjustment = (int)$validateTransaction->price_adjustment;
 
         #Process PRs if 1st Semester and no available purchase request
         if($semester == 'qty_first' && $prOnPpmp->isEmpty()){
 
-            
-            $result = $transaction->consolidated->map(function ($items) use ($transaction, $priceAdjustment, $qtyAdjustment) {
-                $qty = 0;
-                $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $priceAdjustment;
-                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            #Format and Filter Particulars
+            $result = $consolidatedParticulars->map(function($item) use ($priceAdjustment){
+                $latestPrice = (float)($this->productService->getLatestPriceId($item['priceId']) ?? 0);
+                $prodPrice = $latestPrice * $priceAdjustment;
 
-                $productQtyExemption = $this->productService->validateProductExcemption($items->prod_id, $transaction->ppmp_year);
+                $firstAmount = (int)$item['firstSem'] * $prodPrice;
 
-                if($productQtyExemption && $items->qty_first < 2) {
-                    $qty = $items->qty_first;
-                } else {
-                    $qty = floor($items->qty_first * $qtyAdjustment);
-                }
-                
-                $firstAmount = $qty * $prodPrice;
+                #Product information
+                $prodoctInfo = $this->productService->getProductInfo($item['prodId']);
     
                 return [
-                    'pId' => $items->id, 
-                    'prodId' => $items->prod_id,
-                    'prodCode' => $this->productService->getProductCode($items->prod_id),
-                    'prodName' => $this->productService->getProductName($items->prod_id),
-                    'prodUnit' => $this->productService->getProductUnit($items->prod_id),
+                    'prodId' => $item['prodId'],
+                    'prodCode' => $prodoctInfo['code'],
+                    'prodName' => $prodoctInfo['description'],
+                    'prodUnit' => $prodoctInfo['unit'],
                     'prodPrice' => $prodPrice,
-                    'qty' => $qty,
+                    'qty' => $item['firstSem'],
                     'amount' => number_format($firstAmount, 2, '.', ','),
                 ];
-            });
+            })->values()->sortBy('prodCode');
 
+            #Validate particulars if empty
             if ($result->isEmpty()) {
                 return redirect()->route('pr.form.step1')->with(['error' => 'No available items to procure!']);
             }
 
-            $sortResult = $result->sortBy('prodCode');
             return Inertia::render('Pr/MultiForm/StepTwo', [
-                'toPr' => $sortResult,
+                'toPr' => $result,
                 'prInfo' => $purchaseRequestInfo,
             ]);
-    
+        
+        #Process PRs if 1st Semester and purchase request exist
         } elseif ($request->semester == 'qty_first' && $prOnPpmp->isNotEmpty()) {
-            $basedParticulars = $transaction->consolidated->map(function ($particular) use ($priceAdjustment) {
-                $prodPrice = (float)$this->productService->getLatestPriceId($particular->price_id) * $priceAdjustment;
-                $prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+
+            #Format and Filter Particulars then use product id as array key
+            $ppmpParticulars = $consolidatedParticulars->map(function ($item) use ($priceAdjustment) {
+                $latestPrice = (float)($this->productService->getLatestPriceId($item['priceId']) ?? 0);
+                $prodPrice = $latestPrice * $priceAdjustment;
+
+                #Total Quantity
+                $totalAmount = (int)$item['firstSem'] + (int)$item['secondSem'];
+
                 return [
-                    'pId' => $particular->id,
-                    'prod_id' => $particular->prod_id,
-                    'qty' => $particular->qty_first,
-                    'totalQty' => $particular->qty_first + $particular->qty_second, 
+                    'prodId' => $item['prodId'],
+                    'qty' => $item['firstSem'],
+                    'totalQty' => $totalAmount, 
                     'prodPrice' => $prodPrice,
                 ];
-            });
+            })->keyBy('prodId');
 
-            $groupParticulars = $prOnPpmp->flatMap(function ($pr) {
+            #Map and group PR particulars
+            $prParticulars = $prOnPpmp->flatMap(function ($pr) {
                 return $pr->prParticulars;
             })->groupBy('prod_id')->map(function ($items) {              
                 $qty = (int) $items->sum('qty');
@@ -187,53 +219,43 @@ class PrMultiStepFormController extends Controller
                 ];
             });
 
-            $basedParticulars = $basedParticulars->keyBy('prod_id');
 
-            $result = $basedParticulars->map(function ($group) use ($groupParticulars, $transaction, $qtyAdjustment) {
-                $groupQty = $groupParticulars->get($group['prod_id'], ['qty' => 0])['qty'];
-                $qty = 0;
+            #Map consolidated particulars
+            $result = $ppmpParticulars->map(function ($particular) use ($prParticulars, $validateTransaction) {
 
-                if ($group['qty'] <= 0) {
-                    return null;
-                } else {
-                    $productQtyExemption = $this->productService->validateProductExcemption($group['prod_id'], $transaction->ppmp_year);
-                    if($productQtyExemption && $group['qty'] < 2) {
-                        $qty = $group['qty'];
-                    } else {
-                        $qty = floor($group['qty'] * $qtyAdjustment);
-                    }
-                }
-
-                $remainingQty = $qty - $groupQty;
-                $amount = $remainingQty * $group['prodPrice'];
-
-                $productQtyOnPr = $this->getPrUnderPpmpParticular($group['pId']);
-                $overAllAvailableQty = $group['totalQty'] - $productQtyOnPr;
-
-                if ($remainingQty <= 0 || $overAllAvailableQty <= 0) {
+                #Find particular id on pr particular then return the quantity from pr
+                $productQtyOnPr = $prParticulars->get($particular['prodId'], ['qty' => 0])['qty'];
+                
+                #Return null if particular is 0
+                if ($particular['prodId'] <= 0) {
                     return null;
                 }
+
+                #Calculate remaining quantity particular on consolidated
+                $remainingQty = $particular['qty'] - $productQtyOnPr;
+                $amount = $remainingQty * $particular['prodPrice'];
+
+                #Product information
+                $prodoctInfo = $this->productService->getProductInfo($particular['prodId']);
 
                 return [
-                    'pId' => $group['pId'],
-                    'prodId' => $group['prod_id'],
-                    'prodCode' => $this->productService->getProductCode($group['prod_id']),
-                    'prodName' => $this->productService->getProductName($group['prod_id']),
-                    'prodUnit' => $this->productService->getProductUnit($group['prod_id']),
-                    'prodPrice' => $group['prodPrice'],
+                    'prodId' => $particular['prodId'],
+                    'prodCode' => $prodoctInfo['code'],
+                    'prodName' => $prodoctInfo['description'],
+                    'prodUnit' => $prodoctInfo['unit'],
+                    'prodPrice' => $particular['prodPrice'],
                     'qty' => $remainingQty,
                     'amount' => number_format($amount, 2, '.', ','),
                 ];
-            })->filter()->values();
+            })->filter()->values()->sortBy('prodCode');
 
+            #Validate particulars if empty
             if ($result->isEmpty()) {
                 return redirect()->route('pr.form.step1')->with(['error' => 'No available items to procure!']);
             }
 
-            $sortResult = $result->sortBy('prodCode');
-
             return Inertia::render('Pr/MultiForm/StepTwo', [
-                'toPr' => $sortResult,
+                'toPr' => $result,
                 'prInfo' => $purchaseRequestInfo,
             ]);
         } else {
@@ -299,24 +321,31 @@ class PrMultiStepFormController extends Controller
 
     public function submit(Request $request)
     {
+        #Initialize
+        $userId = Auth::id();
+        $selectedItems = $request->input('selectedItems');
+        $prTransactionInfo = $request->input('prTransactionInfo');
+
+        #Validate transaction id
+        $transaction = PpmpTransaction::findOrFail($prTransactionInfo['transId']);
+        if(!$transaction) {
+            return redirect()->route('pr.form.step1')->with(['error' => 'Transaction ID invalid.!']);
+        }
+
+        #Begin transaction
         DB::beginTransaction();
         
         try {
-            $userId = Auth::id();
-            $selectedItems = $request->input('selectedItems');
-            $prTransactionInfo = $request->input('prTransactionInfo');
 
-            $ppmpTrans = PpmpTransaction::findOrFail($prTransactionInfo['transId']);
-
-            if($ppmpTrans->ppmp_type == 'emergency') {
-
-                $emergencyTransactions = $this->getAllTransaction($ppmpTrans->ppmp_year, $ppmpTrans->ppmp_type);
+            #Validate transaction if emergency
+            if($transaction->ppmp_type == 'emergency') {
+                $emergencyTransactions = $this->getAllTransaction($transaction->ppmp_year, $transaction->ppmp_type);
                 $calculatedData = $this->calculateTotalOfEmergencyPr($emergencyTransactions);
                 $grandTotalOfPurchases = $calculatedData->sum(function ($item) {
                     return $item['transaction']['total_amount'];
                 });
 
-                $emergencyFund = $this->getTotalAmountOfEmergencyFund($ppmpTrans->ppmp_year);
+                $emergencyFund = $this->getTotalAmountOfEmergencyFund($transaction->ppmp_year);
 
                 $totalAmountToPurchase = collect($selectedItems)->reduce(function ($carry, $item) {
                     return $carry + ((int) $item['qty'] * (float) $item['prodPrice']);
@@ -334,15 +363,22 @@ class PrMultiStepFormController extends Controller
                 $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
                 $createPrParticulars = $this->createNewPurchaseRequestParticulars($selectedItems, $createNewPurchaseRequest->id, $userId);
                 
-                $ppmpTrans->update(['remarks' => 'PR']);
+                $transaction->update(['remarks' => 'PR']);
                 
                 DB::commit();
                 return redirect()->route('pr.display.transactions')->with(['message' => 'Successfully executed the request. You accumulated ' . $percantage . '% of the total amount of the alloted contingency fund.']);
             }            
 
-            $createNewPurchaseRequest = $this->createNewPurchaseRequest($prTransactionInfo);
-            $createPrParticulars = $this->createNewPurchaseRequestParticulars($selectedItems, $createNewPurchaseRequest->id, $userId);
+            #Execute if transaction is conslidated
+            #Store New Purchase Rrequest Transaction
+            $newPr_onConsolidated = $this->createNewPurchaseRequest($prTransactionInfo);
 
+            #Validate if success
+            if($newPr_onConsolidated) {
+                $this->createNewPurchaseRequestParticulars($selectedItems, $newPr_onConsolidated->id, $userId);
+            }
+
+            #Commit Transaction
             DB::commit();
             return redirect()->route('pr.display.transactions')->with(['message' => 'Successfully executed the request.']);
         } catch (\Exception $e) {
@@ -397,21 +433,20 @@ class PrMultiStepFormController extends Controller
         return response()->json($transactions);
     }
 
-    private function createNewPurchaseRequest($request) {
-        $request['qty_adjustment'] = (float)$request['qty_adjustment'] / 100;
-
+    private function createNewPurchaseRequest($request) 
+    {
         return PrTransaction::create([
             'pr_no' => now()->format('YmdHis'),
             'semester' => $request['semester'] ?? null,
             'pr_desc' => $request['desc'] ?? 'emergency',
-            'qty_adjustment' => $request['qty_adjustment'] ?? null,
             'trans_id' => $request['transId'] ?? null,
             'created_by' => $request['user'] ?? null,
             'updated_by' => $request['user'] ?? null,
         ]);
     }
 
-    private function createNewPurchaseRequestParticulars($selectedItems, $prId, $userId) {
+    private function createNewPurchaseRequestParticulars($selectedItems, $prId, $userId)
+    {
         $particulars = [];
 
         foreach ($selectedItems as $item) {
@@ -422,7 +457,6 @@ class PrMultiStepFormController extends Controller
                 "unitPrice" => (float) $item['prodPrice'],
                 "qty" => (int)$item['qty'],
                 "pr_id" => $prId,
-                "conpar_id" => $item['pId'],
                 "updated_by" => $userId,
             ];
         }
