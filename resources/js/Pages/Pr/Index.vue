@@ -77,7 +77,7 @@
             render: (data, type, row) => {
                 return `
                 <span class="${data === 'Draft' 
-                    ? 'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-yellow-300' 
+                    ? 'bg-amber-200 text-amber-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-amber-700' 
                     : 'bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-green-300'}">
                     ${data}
                 </span>
@@ -121,11 +121,11 @@
             </nav>
         </template>
 
-        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
-            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+        <div class="my-4 w-full bg-zinc-300 shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4">
                 <div class="relative overflow-x-auto">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="props.pendingPr"
                         :options="{  paging: true,
@@ -163,12 +163,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+    background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

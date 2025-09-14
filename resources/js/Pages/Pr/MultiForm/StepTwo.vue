@@ -178,14 +178,19 @@
             </nav>
         </template>
 
-        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
-            <div class="px-6 py-4 bg-indigo-900 text-white rounded-t mb-5">
-                <h1 class="text-lg font-bold">Step 2: Purchase Request Particulars</h1>
+        <div class="my-4 w-full bg-zinc-300 shadow rounded-md mb-8">
+            <div class="bg-zinc-600 px-6 py-4 rounded-t-lg">
+                <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                    Step 2: Purchase Request Particulars
+                </h3>
+                <p class="text-sm text-zinc-300">
+                    Select the following particulars you want to add on the list.
+                </p>
             </div>
 
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="overflow-hidden">
                         <div class="relative overflow-x-auto md:overflow-hidden">
                             
                             <div class="h-auto m-2 flex justify-end items-center px-2">
@@ -253,7 +258,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="particular in sortedParticularList" :key="particular.prodCode" class="bg-white border-b hover:bg-gray-100">
+                                            <tr v-for="particular in sortedParticularList" :key="particular.prodCode" class="bg-zinc-100 border-b hover:bg-zinc-400">
                                                 <td class="px-6 py-3 text-center border-r-2 border-[#7393dc]">
                                                     <input 
                                                         type="checkbox" 
