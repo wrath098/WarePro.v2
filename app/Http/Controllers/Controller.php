@@ -80,4 +80,9 @@ abstract class Controller
 
         return $allProducts;
     }
+
+    protected function getFundNames(array $fundIds)
+    {
+        return Fund::whereIn('id', $fundIds)->get()->pluck('fund_name');
+    }
 }

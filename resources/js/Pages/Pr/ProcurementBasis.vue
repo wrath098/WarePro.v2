@@ -49,13 +49,8 @@
         },
         {
             data: 'ppmpYear',
-            title: 'PPMP for Year',
+            title: 'PPMP for CY',
             width: '10%'
-        },
-        {
-            data: 'details',
-            title: 'Other Details',
-            width: '20%'
         },
         {
             data: 'pr',
@@ -65,7 +60,7 @@
         {
             data: 'prList',
             title: 'Purchase Request/s',
-            width: '20%',
+            width: '40%',
         },
         {
             data: 'createdAt',
@@ -109,11 +104,11 @@
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl bg-white shadow rounded-md mb-8">
+        <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="ppmpArray"
                         :options="{  paging: true,

@@ -39,39 +39,39 @@
 
     const columns = [
         {
-            data: 'pr_no',
-            title: 'Purchase Request No#',
+            data: 'prNo',
+            title: 'Trans. No#',
             width: '10%'
         },
         {
-            data: 'ppmp_controller.ppmp_code',
-            title: 'PPMP No#',
-            width: '10%'
+            data: 'prDescription',
+            title: 'Details',
+            width: '20%'
         },
         {
-            data: 'pr_desc',
-            title: 'Mode of Procurement',
-            width: '15%'
-        },
-        {
-            data: function(row) {
-                return row.semester ? `${row.qty_adjustment}% of ${row.semester}` : `${row.qty_adjustment}%`;
-            },
+            data: 'accountClass',
             title: 'Procured Items',
-            width: '15%'
+            width: '20%'
         },
         {
-            data: 'formatted_created_at',
+            data: 'totalAmount',
+            title: 'Amount',
+            width: '15%',
+            render: (data) => {
+                return `
+                <span>
+                    ₱ ${data}
+                </span>
+                `;
+            },
+        },
+        {
+            data: 'createdAt',
             title: 'Created At',
             width: '10%'
         },
         {
-            data: 'updater.name',
-            title: 'Update By',
-            width: '15%'
-        },
-        {
-            data: 'pr_status',
+            data: 'prStatus',
             title: 'Status',
             width: '10%',
             render: (data, type, row) => {
@@ -179,5 +179,14 @@
     :deep(div.dt-length > label) {
         display: none;
     }
+
+    :deep(table.dataTable tbody > tr > td:nth-child(2)) {
+        text-align: left !important;
+    }
+
+    :deep(table.dataTable tbody > tr > td:nth-child(4)) {
+        text-align: right !important;
+    }
+
 
 </style>

@@ -353,6 +353,11 @@ class PrMultiStepFormController extends Controller
             return redirect()->route('pr.form.step1')->with(['error' => 'Transaction ID invalid.!']);
         }
 
+        #Validate selected items if null
+        if(!$selectedItems) {
+            return back()->with(['error' => 'No items were selected!']);
+        }
+
         #Begin transaction
         DB::beginTransaction();
         
@@ -396,8 +401,9 @@ class PrMultiStepFormController extends Controller
 
             #Validate if success
             if($newPr_onConsolidated) {
+                $flipAccountId = array_flip($prTransactionInfo['accountId']);
                 $this->createNewPurchaseRequestParticulars($selectedItems, $newPr_onConsolidated->id, $userId);
-                $newPr_onConsolidated->update(['pr_remarks' => json_encode($prTransactionInfo['accountId'], true)]);
+                $newPr_onConsolidated->update(['pr_remarks' => json_encode($flipAccountId, true)]);
             }
 
             #Commit Transaction

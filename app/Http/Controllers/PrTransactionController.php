@@ -27,17 +27,32 @@ class PrTransactionController extends Controller
     {
         $descriptionMap = $this->procurementType();
 
-        $pendingPr = PrTransaction::with('ppmpController', 'updater')
+        $pendingPr = PrTransaction::with('ppmpController', 'updater', 'prParticulars')
             ->where('pr_status', 'draft')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($pr) use ($descriptionMap) {
-                $pr->semester = $pr->semester == 'qty_first' ? 'First Semester' : 'Second Semester';
-                $pr->pr_desc = $descriptionMap[$pr->pr_desc] ?? null;
-                $pr->qty_adjustment = $pr->qty_adjustment * 100;
-                $pr->pr_status = ucfirst($pr->pr_status);
-                $pr->formatted_created_at = $pr->created_at->format('F d, Y');
-                return $pr;
+                $fundIds = json_decode($pr->pr_remarks ?? '[]');
+                $fundNames = $this->getFundNames($fundIds);
+                $prSemester = $pr->semester == 'qty_first' ? 'First Semester' : 'Second Semester';
+                $prDescription = $descriptionMap[$pr->pr_desc] ?? null;
+
+                $details = '<b>Mode: </b>'. $prDescription . '<br>' . '<b>Milestone: </b>'. $prSemester . '<br>';
+
+                $totalAmount = $pr->prParticulars->sum(function ($item) {
+                    return floatval($item->unitPrice) * intval($item->qty);
+                });
+
+                return [
+                    'id' => $pr->id,
+                    'prNo' => $pr->pr_no,
+                    'prDescription' => $details ?? null,
+                    'prStatus' => ucfirst($pr->pr_status),
+                    'accountClass' => $fundNames,
+                    'createdBy' => $pr->updater->name,
+                    'createdAt' => $pr->created_at->format('M d, Y'),
+                    'totalAmount' => number_format($totalAmount, 2)
+                ];
             });
 
         return Inertia::render('Pr/Index', [
@@ -45,16 +60,15 @@ class PrTransactionController extends Controller
         ]);
     }
 
-    public function showProcurementBasis() {
-        $ppmpList = PpmpTransaction::with(['purchaseRequests', 'updater'])
+    public function showProcurementBasis() 
+    {
+        #Get and Filter PPMP Transaction with PR
+        $ppmpListWithRequests = PpmpTransaction::with(['purchaseRequests', 'updater'])
             ->whereIn('ppmp_type', ['consolidated', 'contingency'])
+            ->whereHas('purchaseRequests')
             ->orderBy('created_at', 'desc')
-            ->limit(500)
+            ->limit(100)
             ->get();
-
-        $ppmpListWithRequests = $ppmpList->filter(function ($ppmp) {
-            return $ppmp->purchaseRequests->isNotEmpty();
-        });
 
         $ppmpPrNos = $ppmpListWithRequests->mapWithKeys(function ($ppmp) {
             return [$ppmp->id => $ppmp->purchaseRequests->pluck('pr_no')];
@@ -89,7 +103,9 @@ class PrTransactionController extends Controller
 
     public function showAvailableToPurchase(PpmpTransaction $ppmpTransaction) 
     {
+        dd($ppmpTransaction->toArray());
         $transaction = $ppmpTransaction->load(['consolidated', 'purchaseRequests.prParticulars']);
+
 
         $total = $transaction->purchaseRequests->map(function($pr) {
             return isset($pr->prParticulars) ? $pr->prParticulars->sum(function($particular) {
@@ -168,6 +184,11 @@ class PrTransactionController extends Controller
         $prTransaction['totalItems'] = $reformatParticular->count();
         $grandTotal = $reformatParticular->sum(fn($particular) => ((float) $particular->unitPrice * $particular->qty));
 
+        $accountClassIds = json_decode($prTransaction->pr_remarks ?? '[]');
+        $prTransaction->pr_remarks = $this->getFundNames($accountClassIds);
+
+        $prTransaction->created_at_formatted = optional($prTransaction->created_at)->format('M d, Y');
+
         $prTransaction['formattedOverallPrice'] = number_format($grandTotal, 2, '.', ',');
         return Inertia::render('Pr/PendingParticular', [
             'pr' =>  $prTransaction,
@@ -184,74 +205,104 @@ class PrTransactionController extends Controller
         return Inertia::render('Pr/Inprogress', ['prOnProgress' => $prOnProgress]);
     }
 
-    public function approvedAll(PrTransaction $prTransaction) {
+    public function approvedAll(PrTransaction $prTransaction) 
+    {
+        #Begintransaction
         DB::beginTransaction();
 
         try{
-            $particulars = $this->getAllDraftedParticulars($prTransaction->id);
-            if ($particulars->isNotEmpty()) {
-                PrParticular::whereIn('id', $particulars->pluck('id'))
-                    ->update(['status' => 'approved', 'updated_by' => Auth::id()]);
-            }
-    
-            $prTransaction->lockForUpdate();
-            $prTransaction->update(['pr_status' => 'approved', 'updated_by' => Auth::id()]);
+            #Get PR particulars with 'draft' status
+            $updatedCount = $prTransaction->prParticulars()
+                ->where('status', 'draft')
+                ->update([
+                    'status' => 'approved',
+                    'updated_by' => Auth::id(),
+                ]);
+            
+            #Update PR Transaction
+            $prTransaction->update([
+                'pr_status' => 'approved', 
+                'updated_by' => Auth::id()
+            ]);
 
+            #Commit
             DB::commit();
             return redirect()->route('pr.display.transactions')
-                ->with(['message' => "{$particulars->count()} items successfully approved for the selected Purchase Request."]);
+                ->with(['message' => "$updatedCount item(s) successfully approved for the selected Purchase Request."]);
+
         } catch (\Exception $e) {
+            #Rollback
             DB::rollBack();
-            Log::error("Failed to approve PR transaction ID: {$prTransaction->id}. Error: " . $e->getMessage());
+            Log::error("Failed to approve PR transaction ID: {$prTransaction->pr_no}. Error: " . $e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to approve all the items. Please refer to your system administrator.']);
         }
     }
 
-    public function failedAll(PrTransaction $prTransaction) {
+    public function failedAll(PrTransaction $prTransaction)
+    {
+        #Begin transaction
         DB::beginTransaction();
 
         try{
-            $prTransaction->loadCount(['prParticulars' => function ($query) {
+
+            #Count approved pr particular
+            $prTransaction->loadCount(['prParticulars as approved_particulars_count' => function ($query) {
                 $query->where('status', 'approved');
             }]);
             
-            $particulars = $this->getAllDraftedParticulars($prTransaction->id);
+            #Get PR Particulars
+            $prTransaction->load(['prParticulars' => function($query) {
+                $query->withTrashed()
+                    ->whereIN('status', ['draft', 'failed']);
+            }]);
 
-            if($prTransaction->pr_particulars_count == 0) {
+            #Initialize PR particular
+            $particulars = $prTransaction->prParticulars;
+
+            #Validate if PR transaction has no approved particular/s
+            if($prTransaction->approved_particulars_count == 0) {
+
+                #Validate PR particulars is not empty
                 if ($particulars->isNotEmpty()) {
-                    PrParticular::whereIn('id', $particulars->pluck('id'))->delete();
+
+                    #Force delete particulars
+                    PrParticular::whereIn('id', $particulars->pluck('id'))->forceDelete();
                 }
 
-                $prTransaction->lockForUpdate();
-                $prTransaction->update(['updated_by' => Auth::id()]);
-                $prTransaction->delete();
+                #Force delete transaction
+                $prTransaction->forceDelete();
 
+                #Commit
                 DB::commit();
                 return redirect()->route('pr.display.transactions')
                     ->with(['message' => 'Successfully removed the Purchase Request from the list.']);
             }
 
+            #If PR Transaction has approved particular/s
+            #Validate PR particulars is not empty
             if ($particulars->isNotEmpty()) {
-                PrParticular::whereIn('id', $particulars->pluck('id'))->delete();
+
+                #Force delete particulars
+                PrParticular::whereIn('id', $particulars->pluck('id'))->forceDelete();
             }
 
-            $prTransaction->lockForUpdate();
-            $prTransaction->update(['pr_status' => 'approved', 'updated_by' => Auth::id()]);
+            #Update PR transaction to approved
+            $prTransaction->update([
+                'pr_status' => 'approved',
+                'updated_by' => Auth::id()
+            ]);
 
+            #Commit
             DB::commit();
             return redirect()->route('pr.display.transactions')
-                ->with(['message' => 'Successfully marked the items as failed in the selected Purchase Request.']);
+                ->with(['message' => 'Transaction moved to purchase order. Unapproved items have been removed.']);
         } catch (\Exception $e) {
+
+            #Rollback
             DB::rollBack();
             Log::error("Failed to mark PR transaction ID: {$prTransaction->id} as failed. Error: " . $e->getMessage());
             return redirect()->back()->with(['error' => 'Failed to mark the Purchase Request as failed. Please refer to your system administrator.']);
         }
-    }
-
-    private function getAllDraftedParticulars($transactioId) {
-        return PrParticular::where('pr_id', $transactioId)
-            ->where('status', 'draft')
-            ->get();
     }
 
     private function getPrUnderPpmpParticular($ppmpParticularId)

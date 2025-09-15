@@ -320,7 +320,7 @@
             </nav>
         </template>
 
-        <div class="my-4 max-w-screen-2xl mb-8">
+        <div class="my-4 w-screen-2xl mb-8">
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
                     <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
