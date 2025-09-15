@@ -55,12 +55,19 @@
         {
             data: 'pr',
             title: 'No# of PR/s',
-            width: '10%'
+            width: '8%'
         },
         {
             data: 'prList',
             title: 'Purchase Request/s',
-            width: '40%',
+            width: '30%',
+        },
+        {
+            data: function(row) {
+                return `₱ ${row.totalAmount}`;
+            },
+            title: 'Accumulated Amount',
+            width: '12%',
         },
         {
             data: 'createdAt',
@@ -96,7 +103,7 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="route('pr.display.procurementBasis')" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                Procurement Basis List
+                                PPMP-PR Overview
                             </a>
                         </div>
                     </li>
@@ -163,12 +170,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;
@@ -178,11 +187,11 @@
         display: none;
     }
 
-    :deep(table.dataTable tbody > tr > td:nth-child(4)) {
+    :deep(table.dataTable tbody > tr > td:nth-child(5)) {
         text-align: left !important;
     }
 
     :deep(table.dataTable tbody > tr > td:nth-child(6)) {
-        text-align: left !important;
+        text-align: right !important;
     }
 </style>

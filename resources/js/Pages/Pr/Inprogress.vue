@@ -115,7 +115,14 @@
                 </ol>
             </nav>
         </template>
-        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
+        <div v-if="true" class="my-4 w-full bg-zinc-300 shadow rounded-md mb-8">
+            <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
+                <div class="relative overflow-x-auto text-center">
+                    <h4>Maintenance!</h4>
+                </div>
+            </div>
+        </div>
+        <div v-else class="my-4 w-full bg-white shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
                     <DataTable

@@ -63,35 +63,35 @@ class PrTransactionController extends Controller
     public function showProcurementBasis() 
     {
         #Get and Filter PPMP Transaction with PR
-        $ppmpListWithRequests = PpmpTransaction::with(['purchaseRequests', 'updater'])
+        $ppmpListWithRequests = PpmpTransaction::with(['purchaseRequests.prParticulars', 'updater'])
             ->whereIn('ppmp_type', ['consolidated', 'contingency'])
             ->whereHas('purchaseRequests')
             ->orderBy('created_at', 'desc')
             ->limit(100)
             ->get();
 
-        $ppmpPrNos = $ppmpListWithRequests->mapWithKeys(function ($ppmp) {
-            return [$ppmp->id => $ppmp->purchaseRequests->pluck('pr_no')];
-        });
-
-        $prNumbersString = $ppmpPrNos->flatten()->implode(', ');
-
-        $formattedList = $ppmpListWithRequests->map(function ($transaction) use ($ppmpPrNos, $prNumbersString) {
-            $qtyAdjustment = (int) ((float) $transaction->qty_adjustment * 100);
-            $treshAdjustment = (int) ((float) $transaction->tresh_adjustment * 100);
-            $details = '<i><b>@</b>'. $qtyAdjustment . '% ' . 'Quantity Adjustment' .  '<br>' 
-                    .'<b>@</b>' . $treshAdjustment . '% ' . 'Maximum Adjustment' . '<br>'
-                    . ($transaction->remarks ? '<b>@</b>'. $transaction->remarks . '</i>': '</i>');
+        #Format List
+        $formattedList = $ppmpListWithRequests->map(function ($transaction) {
+            #Total amount of PR transactions
+            $total = $transaction->purchaseRequests->map(function($pr) {
+                return isset($pr->prParticulars) ? $pr->prParticulars->sum(function($particular) {
+                    return (float)$particular['unitPrice'] * (int)$particular['qty'];
+                }) : 0;
+            })->sum();
+            
+            #Get PR Transaction Code
+            $prCode = $transaction->purchaseRequests->pluck('pr_no');
+            $formatPrCode = $prCode->flatten()->implode(', ');
 
             return [
                 'id' => $transaction->id,
                 'code' => $transaction->ppmp_code,
                 'type' => ucfirst($transaction->ppmp_type),
                 'ppmpYear' => $transaction->ppmp_year,
-                'prList' => $prNumbersString,
-                'details' => $details,
+                'prList' => $formatPrCode,
+                'totalAmount' => number_format($total, 2),
                 'pr' => $transaction->purchaseRequests->count(),
-                'createdAt' => $transaction->updated_at->format('F d, Y'),
+                'createdAt' => $transaction->updated_at->format('M d, Y'),
                 'updatedBy' => optional($transaction->updater)->name ?? null,
             ];
         });
@@ -102,39 +102,53 @@ class PrTransactionController extends Controller
     }
 
     public function showAvailableToPurchase(PpmpTransaction $ppmpTransaction) 
-    {
-        dd($ppmpTransaction->toArray());
+    {   
+        #Get and Filter PPMP Transaction with PR
         $transaction = $ppmpTransaction->load(['consolidated', 'purchaseRequests.prParticulars']);
 
-
+        #Get Accumulated total amount
         $total = $transaction->purchaseRequests->map(function($pr) {
             return isset($pr->prParticulars) ? $pr->prParticulars->sum(function($particular) {
                 return (float)$particular['unitPrice'] * (int)$particular['qty'];
             }) : 0;
         })->sum();
 
+        #Prepare PPMP Transaction details
         $ppmp = [
+            'ppmpType' => ucfirst($transaction->ppmp_type),
             'ppmpCode' => $transaction->ppmp_code,
             'ppmpYear' => $transaction->ppmp_year,
             'totalAmount' => $total ? number_format($total, 2, '.', ',') : 0,
             'prCount' => $transaction->purchaseRequests->count(),
         ];
 
-        $particulars = $transaction->consolidated->map(function ($particular) {
-            $totalQtyRequested = ($particular->qty_first + $particular->qty_second);
+        #Get total quantity of products 
+        $groupedParticulars = $transaction->purchaseRequests->flatMap(function ($pr) {
+                return $pr->prParticulars;
+            })
+            ->groupBy('prod_id')
+            ->mapWithKeys(function ($items, $key) {
+                return [$key => $items->sum('qty')];
+            });
 
-            $totalOnPr = $this->getPrUnderPpmpParticular($particular->id);
-            $firstRemaining = $particular->qty_first >= $totalOnPr ? $particular->qty_first - $totalOnPr : 0;
+        #Format Particulars
+        $particulars = $transaction->consolidated->map(function ($particular) use ($groupedParticulars) {
+            $totalQtyRequested = ($particular->qty_first + $particular->qty_second); #total on ppmp
+            $totalOnPr = $groupedParticulars[$particular->prod_id] ?? 0; #total on pr
+            
+            #Validate total of ppmp first and second sem qty
+            $firstRemaining = $particular->qty_first >= $totalOnPr ? $particular->qty_first - $totalOnPr : 0; 
             $secondRemaining = $firstRemaining > 0 ? $particular->qty_second : $totalQtyRequested - $totalOnPr;
             $availableQty = $totalQtyRequested - $totalOnPr;
             
-            $description = $this->productService->getProductName($particular->prod_id);
+            #Get product info
+            $productInfo = $this->productService->getProductInfo($particular->prod_id);
 
             return [
                 'prodId' => $particular->id,
-                'prodCode' => $this->productService->getProductCode($particular->prod_id),
-                'prodName' => Str::limit($description, 90, '...'),
-                'prodUnit' => $this->productService->getProductUnit($particular->prod_id),
+                'prodCode' => $productInfo['code'],
+                'prodName' => Str::limit($productInfo['description'], 90, '...'),
+                'prodUnit' => $productInfo['unit'],
                 'totalQtyRequested' => number_format($totalQtyRequested, 0, '.', ','),
                 'firstQty' => number_format($particular->qty_first, 0, '.', ','),
                 'secondQty' => number_format($particular->qty_second, 0, '.', ','),

@@ -359,7 +359,7 @@ const officeUser = hasAnyRole(['Office User']);
                                                 <li v-if="hasPermission('view-procurement-basis') ||  hasAnyRole(['Developer'])">
                                                     <SubSidebarLink :href="route('pr.display.procurementBasis')" :active="route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase')">
                                                         <ArrowHeadRight :class="{ 'text-white' : route().current('pr.display.procurementBasis') || route().current('pr.display.availableToPurchase')}"/>
-                                                        PRs in APP
+                                                        PPMP-PR Overview
                                                     </SubSidebarLink>
                                                 </li>
                                             </ul>
@@ -420,15 +420,12 @@ const officeUser = hasAnyRole(['Office User']);
                                     <SidebarDropdown
                                         v-if="hasAnyRole(['Developer']) || hasPermission('create-ris-transaction') || hasPermission('view-ris-transactions')"
                                         :active="route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')" class="mb-1">
-                                            <svg
+                                            <svg 
                                                 class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
                                                 :class="{ 'text-white' : route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')}"
-                                                fill="currentColor" 
-                                                aria-hidden="true" 
                                                 xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 2048 2048"
-                                            >
-                                                <path fill="currentColor" d="M896 1537V936L256 616v880l544 273l-31 127l-641-320V472L960 57l832 415v270q-70 11-128 45V616l-640 320v473l-128 128zM754 302l584 334l247-124l-625-313l-206 103zm206 523l240-120l-584-334l-281 141l625 313zm888 71q42 0 78 15t64 41t42 63t16 79q0 39-15 76t-43 65l-717 717l-377 94l94-377l717-716q29-29 65-43t76-14zm51 249q21-21 21-51q0-31-20-50t-52-20q-14 0-27 4t-23 15l-692 692l-34 135l135-34l692-691z"/>
+                                                viewBox="0 0 24 24">
+                                                <path fill="currentColor" d="M9 11q-.85 0-1.425-.575T7 9V4q0-.825.575-1.412T9 2h6v9zm8 0V2h3q.825 0 1.413.588T22 4v5q0 .85-.587 1.425T20 11zM8 21v-8h6.8q.35 0 .6.2t.35.475t.038.575t-.338.525L13.975 16H10v1.5h4.5l4.05-3.35q.55-.4 1.163-.5t1.212.05t1.138.513t.912.937L17.1 20.075q-.55.45-1.2.688T14.55 21zm-5 1q-.425 0-.712-.288T2 21v-7q0-.425.288-.712T3 13h3v8q0 .425-.288.713T5 22z"/>
                                             </svg>
                                             <span class="flex-1 ml-3 text-left whitespace-nowrap font-semibold">REQUISITION (RIS)</span>
                                             <ArrowDown :class="{'text-white': route().current('create.ris') || route().current('ris.display.logs') || route().current('ris.show.items')}" />

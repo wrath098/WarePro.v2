@@ -111,7 +111,9 @@
     });
 
     const nextStep = () => {
-        generatePr.get(route('pr.form.step2'));
+        generatePr.get(route('pr.form.step2'), {}, {
+            preserveState: true,
+        });
     };
 
     const message = computed(() => page.props.flash.message);
