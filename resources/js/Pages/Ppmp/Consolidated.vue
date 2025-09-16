@@ -324,11 +324,11 @@
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
                     <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
-                        <div class="bg-zinc-400 px-4 py-5 sm:px-6 rounded-t-lg">
-                            <h3 class="font-bold text-lg leading-6 text-zinc-900">
+                        <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                            <h3 class="font-bold text-lg leading-6 text-zinc-300">
                                 APP Information
                             </h3>
-                            <p class="text-sm text-zinc-700">
+                            <p class="text-sm text-zinc-300">
                                 ID# [{{ ppmp.ppmp_code }}]
                             </p>
                         </div>

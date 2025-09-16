@@ -393,8 +393,8 @@ onMounted(() => {
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-4">
                     <div class="flex items-center bg-zinc-300 rounded-md overflow-hidden">
                         <div class="p-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-                                <path fill="currentColor" d="M15.363 14.658a.5.5 0 1 1-.713.7l-2.97-3.023a.5.5 0 0 1 .001-.7A3.9 3.9 0 1 0 8.9 12.8a.5.5 0 1 1 0 .999a4.9 4.9 0 1 1 3.821-1.833zM3.094 13a.5.5 0 1 1 0 1H2.5A2.5 2.5 0 0 1 0 11.5v-9A2.5 2.5 0 0 1 2.5 0h9A2.5 2.5 0 0 1 14 2.5v.599a.5.5 0 1 1-1 0V2.5A1.5 1.5 0 0 0 11.5 1h-9A1.5 1.5 0 0 0 1 2.5v9A1.5 1.5 0 0 0 2.5 13zM2.5 3a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m-4 2a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m-2 1a.5.5 0 1 1 0 1a.5.5 0 0 1 0-1m0 3a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m6-6a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m2 0a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1m-8 8a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M16.5 12c2.5 0 4.5 2 4.5 4.5c0 .88-.25 1.71-.69 2.4l3.08 3.1L22 23.39l-3.12-3.07c-.69.43-1.51.68-2.38.68c-2.5 0-4.5-2-4.5-4.5s2-4.5 4.5-4.5m0 2a2.5 2.5 0 0 0-2.5 2.5a2.5 2.5 0 0 0 2.5 2.5a2.5 2.5 0 0 0 2.5-2.5a2.5 2.5 0 0 0-2.5-2.5M10 2h4a2 2 0 0 1 2 2v2h4a2 2 0 0 1 2 2v5.03A6.49 6.49 0 0 0 16.5 10a6.5 6.5 0 0 0-6.5 6.5c0 1.75.69 3.33 1.81 4.5H4a2 2 0 0 1-2-2V8c0-1.11.89-2 2-2h4V4c0-1.11.89-2 2-2m4 4V4h-4v2z"/>
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
@@ -409,8 +409,8 @@ onMounted(() => {
                     </div>
                     <div class="flex items-center bg-zinc-300 rounded-md overflow-hidden">
                         <div class="p-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 2048 2048">
-                                <path fill="currentColor" d="M896 1537V936L256 616v880l544 273l-31 127l-641-320V472L960 57l832 415v270q-70 11-128 45V616l-640 320v473l-128 128zM754 302l584 334l247-124l-625-313l-206 103zm206 523l240-120l-584-334l-281 141l625 313zm888 71q42 0 78 15t64 41t42 63t16 79q0 39-15 76t-43 65l-717 717l-377 94l94-377l717-716q29-29 65-43t76-14zm51 249q21-21 21-51q0-31-20-50t-52-20q-14 0-27 4t-23 15l-692 692l-34 135l135-34l692-691z"/>
+                            <svg class="h-12 w-12 text-cyan-600" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M9 11q-.85 0-1.425-.575T7 9V4q0-.825.575-1.412T9 2h6v9zm8 0V2h3q.825 0 1.413.588T22 4v5q0 .85-.587 1.425T20 11zM8 21v-8h6.8q.35 0 .6.2t.35.475t.038.575t-.338.525L13.975 16H10v1.5h4.5l4.05-3.35q.55-.4 1.163-.5t1.212.05t1.138.513t.912.937L17.1 20.075q-.55.45-1.2.688T14.55 21zm-5 1q-.425 0-.712-.288T2 21v-7q0-.425.288-.712T3 13h3v8q0 .425-.288.713T5 22z"/>
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
@@ -464,11 +464,8 @@ onMounted(() => {
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-4 mt-8">
                     <div class="flex items-center bg-zinc-300 rounded-md overflow-hidden">
                         <div class="p-4">
-                            <svg class="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M7.24 2H5.34C3.15 2 2 3.15 2 5.33V7.23C2 9.41 3.15 10.56 5.33 10.56H7.23C9.41 10.56 10.56 9.41 10.56 7.23V5.33C10.57 3.15 9.42 2 7.24 2Z" fill="currentColor"/>
-                                <path opacity="0.4" d="M18.6695 2H16.7695C14.5895 2 13.4395 3.15 13.4395 5.33V7.23C13.4395 9.41 14.5895 10.56 16.7695 10.56H18.6695C20.8495 10.56 21.9995 9.41 21.9995 7.23V5.33C21.9995 3.15 20.8495 2 18.6695 2Z" fill="#292D32"/>
-                                <path d="M18.6695 13.4302H16.7695C14.5895 13.4302 13.4395 14.5802 13.4395 16.7602V18.6602C13.4395 20.8402 14.5895 21.9902 16.7695 21.9902H18.6695C20.8495 21.9902 21.9995 20.8402 21.9995 18.6602V16.7602C21.9995 14.5802 20.8495 13.4302 18.6695 13.4302Z" fill="currentColor"/>
-                                <path opacity="0.4" d="M7.24 13.4302H5.34C3.15 13.4302 2 14.5802 2 16.7602V18.6602C2 20.8502 3.15 22.0002 5.33 22.0002H7.23C9.41 22.0002 10.56 20.8502 10.56 18.6702V16.7702C10.57 14.5802 9.42 13.4302 7.24 13.4302Z" fill="#292D32"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path fill="currentColor" fill-rule="evenodd" d="M0 4.6A2.6 2.6 0 0 1 2.6 2h18.8A2.6 2.6 0 0 1 24 4.6v.8A2.6 2.6 0 0 1 21.4 8H21v10.6c0 1.33-1.07 2.4-2.4 2.4H5.4C4.07 21 3 19.93 3 18.6V8h-.4A2.6 2.6 0 0 1 0 5.4zM2.6 4a.6.6 0 0 0-.6.6v.8a.6.6 0 0 0 .6.6h18.8a.6.6 0 0 0 .6-.6v-.8a.6.6 0 0 0-.6-.6zM8 10a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2z" clip-rule="evenodd"/>
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
@@ -483,8 +480,8 @@ onMounted(() => {
                     </div>
                     <div class="flex items-center bg-zinc-300 rounded-md overflow-hidden">
                         <div class="p-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 256 256">
-                                <path fill="currentColor" d="M128 20a108 108 0 1 0 108 108A108.12 108.12 0 0 0 128 20Zm0 192a84 84 0 1 1 84-84a84.09 84.09 0 0 1-84 84Zm-12-80V80a12 12 0 0 1 24 0v52a12 12 0 0 1-24 0Zm28 40a16 16 0 1 1-16-16a16 16 0 0 1 16 16Z"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2m-6 16h-2v-2h2zm0-4h-2v-5h2zm6-7H5V7h14z"/>
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
@@ -499,11 +496,17 @@ onMounted(() => {
                     </div>
                     <div class="flex items-center bg-zinc-300 rounded-md overflow-hidden">
                         <div class="p-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <g fill="currentColor">
-                                    <path d="M9.446 3.25c-1.133 0-2.058 0-2.79.098c-.763.103-1.425.325-1.954.854c-.529.529-.751 1.19-.854 1.955c-.098.73-.098 1.656-.098 2.79v6.06c-.465.013-.76.056-1 .194a1.5 1.5 0 0 0-.549.549C2 16.098 2 16.565 2 17.5s0 1.402.201 1.75a1.5 1.5 0 0 0 .549.549C3.098 20 3.565 20 4.5 20s1.402 0 1.75-.201a1.5 1.5 0 0 0 .549-.549C7 18.902 7 18.435 7 17.5s0-1.402-.201-1.75a1.5 1.5 0 0 0-.549-.549c-.24-.138-.535-.181-1-.195V9c0-1.2.002-2.024.085-2.643c.08-.598.224-.89.428-1.094c.203-.204.496-.348 1.094-.428C7.476 4.752 8.3 4.75 9.5 4.75h5c1.2 0 2.024.002 2.643.085c.598.08.89.224 1.094.428c.204.203.348.496.428 1.094c.083.619.085 1.443.085 2.643v1.19l-.72-.72a.75.75 0 1 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l2-2a.75.75 0 1 0-1.06-1.06l-.72.72V8.945c0-1.133 0-2.058-.098-2.79c-.103-.763-.325-1.425-.854-1.954c-.529-.529-1.19-.751-1.955-.854c-.73-.098-1.656-.098-2.79-.098H9.447Z"/>
-                                    <path d="M9.701 15.75c-.201.348-.201.815-.201 1.75s0 1.402.201 1.75a1.5 1.5 0 0 0 .549.549c.348.201.815.201 1.75.201s1.402 0 1.75-.201a1.5 1.5 0 0 0 .549-.549c.201-.348.201-.815.201-1.75s0-1.402-.201-1.75a1.5 1.5 0 0 0-.549-.549C13.402 15 12.935 15 12 15s-1.402 0-1.75.201a1.5 1.5 0 0 0-.549.549ZM17 17.5c0-.935 0-1.402.201-1.75a1.5 1.5 0 0 1 .549-.549C18.098 15 18.565 15 19.5 15s1.402 0 1.75.201a1.5 1.5 0 0 1 .549.549c.201.348.201.815.201 1.75s0 1.402-.201 1.75a1.5 1.5 0 0 1-.549.549c-.348.201-.815.201-1.75.201s-1.402 0-1.75-.201a1.5 1.5 0 0 1-.549-.549C17 18.902 17 18.435 17 17.5Z"/>
-                                </g>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                                <defs>
+                                    <mask id="ipSOrder0">
+                                        <g fill="none" stroke-linejoin="round" stroke-width="4">
+                                            <path fill="#fff" stroke="#fff" d="M33.05 7H38a2 2 0 0 1 2 2v33a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h7v3h14V7z"/>
+                                            <path stroke="#fff" stroke-linecap="round" d="M17 4h14v6H17z"/>
+                                            <path stroke="#000" stroke-linecap="round" d="m27 19l-8 8.001h10.004l-8.004 8"/>
+                                        </g>
+                                    </mask>
+                                </defs>
+                                <path fill="currentColor" d="M0 0h48v48H0z" mask="url(#ipSOrder0)"/>
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
@@ -519,26 +522,8 @@ onMounted(() => {
                     </div>
                     <div class="flex items-center bg-zinc-300 rounded-md overflow-hidden">
                         <div class="p-4">
-                            <svg class="h-12 w-12 text-rose-600" fill="currentColor" stroke="currentColor" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 544.527 544.527" xml:space="preserve">
-                                <g>
-                                    <g>
-                                        <polygon points="286.334,234.111 148.331,234.111 152.68,286.132 281.986,286.132 		"/>
-                                        <polygon points="144.993,384.052 138.331,301.432 22.951,301.432 44.117,384.052 		"/>
-                                        <polygon points="146.278,399.352 48.199,399.352 60.916,448.312 150.284,448.312 		"/>
-                                        <path d="M424.71,253.111c16.849-16.87,33.694-34.299,50.542-49.6h43.568c27.54,0,27.54-48.96,0-48.96h-52.381
-                                            c-5.125,0-9.36,1.799-12.741,4.045c-1.983,1.077-3.927,2.708-5.777,4.56c-21.105,21.132-42.21,42.402-63.318,63.535
-                                            c-2.312,2.316-3.95,4.36-5.067,7.42h-77.567l-4.349,52.021h118.178L424.71,253.111z"/>
-                                        <polygon points="18.869,286.132 137.046,286.132 132.698,234.111 5.053,234.111 		"/>
-                                        <polygon points="268.748,448.312 272.754,399.352 161.912,399.352 165.914,448.312 		"/>
-                                        <polygon points="411.715,301.432 296.334,301.432 289.67,384.052 390.549,384.052 		"/>
-                                        <polygon points="386.467,399.352 288.385,399.352 284.382,448.312 373.749,448.312 		"/>
-                                        <polygon points="280.701,301.432 153.965,301.432 160.626,384.052 274.036,384.052 		"/>
-                                        <circle cx="108.117" cy="503.339" r="41.188"/>
-                                        <circle cx="326.546" cy="503.339" r="41.188"/>
-                                        <path d="M125.351,171.366l3.418-29.707c121.029,13.926,163.694,52.405,163.694,52.405S290.615,46.846,141.651,29.707L145.069,0
-                                            L5.506,70.759L125.351,171.366z"/>
-                                    </g>
-                                </g>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-rose-600" fill="currentColor" stroke="currentColor" viewBox="0 0 576 512">
+                                <path fill="currentColor" d="M0 24C0 10.7 10.7 0 24 0h45.5c22 0 41.5 12.8 50.6 32h411c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3H170.7l5.4 28.5c2.2 11.3 12.1 19.5 23.6 19.5H488c13.3 0 24 10.7 24 24s-10.7 24-24 24H199.7c-34.6 0-64.3-24.6-70.7-58.5l-51.6-271c-.7-3.8-4-6.5-7.9-6.5H24C10.7 48 0 37.3 0 24m128 440a48 48 0 1 1 96 0a48 48 0 1 1-96 0m336-48a48 48 0 1 1 0 96a48 48 0 1 1 0-96"/>
                             </svg>
                         </div>
                         <div class="px-4 text-gray-700">
@@ -569,7 +554,7 @@ onMounted(() => {
             <div class="overflow-hidden px-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-200"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="fastMovingItems.products"
                         :options="{  

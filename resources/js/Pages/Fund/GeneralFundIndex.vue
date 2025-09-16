@@ -210,9 +210,9 @@ watch(() => proposedBudget.amount, (val) => {
                     </section>
                     <ul v-if="!isFetchClick" class="col-span-3 bg-zinc-300 rounded-md">
                         <li v-for="(yearData, year) in generalFund" :key="year" class="rounded-md pb-2 mb-2">
-                            <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">
+                            <div class="flex-1 flex items-start justify-between rounded-t-lg bg-zinc-600 p-2">
                                 <div class="flex flex-col gap-1">
-                                    <h2 class="text-lg font-semibold text-zinc-50">{{ year }} | Summary Overview</h2>
+                                    <h2 class="text-lg font-semibold text-zinc-300">{{ year }} | Summary Overview</h2>
                                 </div>
                                 <div v-if="hasAnyRole(['Developer']) || hasPermission('edit-proposed-budget')" class="flex items-center">
                                     <a :href="route('general.fund.editFundAllocation', { budgetDetails: yearData, year: year})" class="flex items-center rounded-md transition text-gray-100 px-1 hover:text-indigo-800 hover:bg-gray-100">
@@ -249,9 +249,9 @@ watch(() => proposedBudget.amount, (val) => {
 
                     <ul v-if="isFetchClick" class="col-span-3 bg-zinc-300 rounded-md">
                         <li v-for="(yearData, year) in newBudgetInformation.data" :key="year" class="rounded-md pb-2 mb-2">
-                            <div class="flex-1 flex items-start justify-between rounded-lg bg-indigo-600 p-2">
+                            <div class="flex-1 flex items-start justify-between rounded-t-lg bg-zinc-600 p-2">
                                 <div class="flex flex-col gap-1">
-                                    <h2 class="text-lg font-semibold text-gray-50">{{ year }} | Summary Overview</h2>
+                                    <h2 class="text-lg font-semibold text-zinc-300">{{ year }} | Summary Overview</h2>
                                 </div>
                                 <div class="flex items-center">
                                     <a :href="route('general.fund.editFundAllocation', { budgetDetails: yearData, year: year})" class="flex items-center rounded-md transition text-gray-100 px-1 hover:text-indigo-800 hover:bg-gray-100" title="Edit">

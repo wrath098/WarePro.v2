@@ -253,13 +253,13 @@
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
                     <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
-                        <div class="bg-zinc-400 px-4 py-5 sm:px-6 rounded-t-lg">
-                            <h3 class="flex items-center font-bold text-lg leading-6 text-zinc-900">
+                        <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                            <h3 class="flex items-center font-bold text-lg leading-6 text-zinc-300">
                                 Purchase Request Information
 
-                                <span v-if="hasPermission('print-purchase-request') || hasAnyRole(['Developer'])" class="ml-3 rounded-full p-1 hover:bg-indigo-800 transition-colors duration-500 cursor-pointer">
+                                <span v-if="hasPermission('print-purchase-request') || hasAnyRole(['Developer'])" class="ml-3 rounded-full p-1 hover:bg-zinc-300 transition-colors duration-500 cursor-pointer">
                                     <a v-if="pr.pr_desc != 'PS-DBM'" :href="route('generatePdf.PurchaseRequestDraft', { pr: pr.id })" target="_blank" class="flex items-center rounded-full transition" aria-label="Print Purchase Request Draft" rel="noopener noreferrer">
-                                        <svg class="w-7 h-7 text-zinc-800 hover:text-zinc-100 transition duration-150" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" >
+                                        <svg class="w-7 h-7 text-zinc-300 hover:text-zinc-900 transition duration-150" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" >
                                             <path stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z" />
                                         </svg>
                                     </a>
@@ -271,7 +271,7 @@
                                     </a>
                                 </span>
                             </h3>
-                            <p class="text-sm text-zinc-700">
+                            <p class="text-sm text-zinc-300">
                                 ID# [{{ pr.pr_no }}] 
                                 <span :class="{
                                     'bg-amber-200 text-amber-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-amber-700': pr.pr_status === 'Draft',

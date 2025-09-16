@@ -219,19 +219,21 @@
             </nav>
         </template>
         <div class="w-full px-4 lg:px-0 my-4">
-            <div class="w-full bg-white h-auto mb-2 rounded-md shadow-md">
-                <div class="bg-indigo-800 text-white p-4 flex justify-between rounded-t-md">
-                    <div class="flex flex-wrap">
-                        <p class="text-lg text-gray-100">
-                            <strong class="font-semibold">Product Information and Date of Duration</strong>
-                        </p>
-                    </div>
+            <div class="w-full bg-zinc-300 h-auto mb-2 rounded-md shadow-md">
+                <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                    <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                        Product Information and Date of Duration
+                    </h3>
+                    <p class="text-sm text-zinc-300">
+                        Displays the stock card or transaction history of a specific product based on the selected item and date range.
+                    </p>
                 </div>
+
                 <form @submit.prevent="fetchproductTransactions">
                     <div class="grid gap-2 grid-cols-1 lg:grid-cols-4 lg:gap-6 my-5 mx-3">
                         <div class="lg:col-span-4 relative z-50 w-full group my-3">
-                            <input v-model="searchProductInfo.product" @input="debouncedFetchProduct" type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-medium text-gray-700 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                            <label for="fetchProduct" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
+                            <input v-model="searchProductInfo.product" @input="debouncedFetchProduct" type="text" name="fetchProduct" id="fetchProduct" class="block py-2.5 px-0 w-full text-medium text-gray-700 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required />
+                            <label for="fetchProduct" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Product</label>
                             
                             <ul v-if="productList.data" class="absolute w-full h-auto bg-white border border-gray-500 rounded-b-lg">
                                 <li
@@ -245,13 +247,13 @@
                             </ul>
                         </div>
                         <div class="relative z-0 my-5 group">
-                            <input v-model="searchProductInfo.startDate" type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                            <label for="from" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
+                            <input v-model="searchProductInfo.startDate" type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required />
+                            <label for="from" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
                         </div>
 
                         <div class="relative z-0 my-5 group">
-                            <input v-model="searchProductInfo.endDate" type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                            <label for="to" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
+                            <input v-model="searchProductInfo.endDate" type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required />
+                            <label for="to" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
                         </div>
 
                         <div class="lg:col-span-2 relative z-0 w-full my-5 lg:flex justify-around items-center group">
@@ -295,7 +297,7 @@
                     </div>
                 </form>
             </div>
-            <div class="bg-white shadow-md sm:rounded-lg p-4">
+            <div class="bg-zinc-300 shadow-md sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto md:overflow-hidden">
                     <div v-if="isLoading" class="absolute bg-white text-indigo-800 bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
                         <div class="flex items-center">
@@ -310,7 +312,7 @@
                         </div>
                     </div>
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="productTransactions.data"
                         :options="{  
@@ -377,12 +379,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

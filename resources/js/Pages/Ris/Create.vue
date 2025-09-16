@@ -65,7 +65,7 @@
         }
     ]);
 
-    function addRow() {
+    const addRow = () => {
         rows.push({
             id: '',
             prodInvId: '',
@@ -258,40 +258,41 @@
                 </ol>
             </nav>
         </template>
-        <div class="w-full my-4 bg-white shadow rounded-md">
-            <div class="bg-indigo-800 text-white p-4 flex justify-between rounded-t-md">
-                <div class="flex flex-wrap">
-                    <p class="text-lg text-gray-100">
-                        <strong class="font-semibold">Requested Product Information</strong>
-                    </p>
-                </div>
+        <div class="w-full my-4 bg-zinc-300 shadow rounded-md">
+            <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                    Requested Product Information
+                </h3>
+                <p class="text-sm text-zinc-300">
+                    Fill in the following input fields.
+                </p>
             </div>
             <div class="p-4 shadow-md sm:rounded-lg">
                 <div class="grid lg:grid-cols-2 lg:gap-6 mb-5">
                     <div class="relative z-0 w-full group mb-5 lg:mb-0">
-                        <select v-model="searchOfficePpmp.officeId" @change="fetchOfficePpmp" name="officeId" id="officeId" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" :disabled="requestData?.length > 0" required>
+                        <select v-model="searchOfficePpmp.officeId" @change="fetchOfficePpmp" name="officeId" id="officeId" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" :disabled="requestData?.length > 0" required>
                             <option value="" disabled selected class="pl-5">Select Office/End-User</option>
                             <option v-for="user in office" :key="user.id" :value="user.id" class="ml-5">{{ user.office_code }}</option>
                             <option value="others" class="ml-5">OTHERS...</option>
                         </select>
-                        <label for="officeId" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office/End-User</label>
+                        <label for="officeId" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office/End-User</label>
                     </div>
 
                     <div class="relative z-0 w-full group">
-                        <select v-model="searchOfficePpmp.year" @change="fetchOfficePpmp" name="ppmpYear" id="ppmpYear"  class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                        <select v-model="searchOfficePpmp.year" @change="fetchOfficePpmp" name="ppmpYear" id="ppmpYear"  class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                             <option value="" disabled selected>Select year</option>
                             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
                         </select>
-                        <label for="ppmpYear" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
+                        <label for="ppmpYear" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div v-if="requestDataTable" class="w-full my-4 bg-white shadow rounded-md">
+        <div v-if="requestDataTable" class="w-full my-4 bg-zinc-300 shadow rounded-md">
             <div class="w-full p-4 relative">
                 <table class="w-full text-sm text-left rtl:text-right text-[#03244d] border-2 border-[#7393dc] rounded-md">
-                    <thead class="text-[#03244d] uppercase bg-[#d8d8f6] ">
+                    <thead class="text-[#03244d] uppercase bg-[#d8d8f6]">
                         <tr class="rounded-md">
                             <th class="px-6 py-3 text-center border-2 border-[#7393dc] hidden">Id</th>
                             <th class="px-6 py-3 w-[10%] text-center border-2 border-[#7393dc]">Stock No.</th>
@@ -305,7 +306,7 @@
                             <th class="px-6 py-3 w-[8%] text-center border-2 border-[#7393dc]">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-zinc-200">
                         <tr v-for="(row, index) in rows" :key="index">
                             <td class="p-1 border-2 border-[#7393dc] hidden"><input v-model="row.id" type="text" /></td>
                             <td class="p-1 border-2 border-[#7393dc]">
@@ -314,7 +315,7 @@
                                     @focus="row.showStockSuggestions = true"
                                     @blur="row.showStockSuggestions = false"
                                     type="text"
-                                    class="w-full rounded-md"/>
+                                    class="w-full rounded-md "/>
 
                                 <ul v-if="row.showStockSuggestions && row.suggestions?.length" class="absolute text-left z-10 w-full bg-white border border-gray-300 mt-1 max-h-52 overflow-y-auto rounded shadow">
                                     <li v-for="(item, i) in row.suggestions" :key="i" @mousedown.prevent="selectSuggestion(row, item)" class="px-4 py-2 cursor-pointer hover:bg-blue-100">
@@ -331,19 +332,19 @@
                                 <input v-model="row.description" @input="getFilteredDescription(row)" type="text" class="w-full rounded-md" />
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.unit" type="text" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.unit" type="text" class="w-full text-center border-0 bg-zinc-200" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.treshFirstQty" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.treshFirstQty" type="number" class="w-full text-center border-0 bg-zinc-200" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.treshSecondQty" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.treshSecondQty" type="number" class="w-full text-center border-0 bg-zinc-200" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.remainingQty" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.remainingQty" type="number" class="w-full text-center border-0 bg-zinc-200" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
-                                <input v-model="row.stockAvailable" type="number" class="w-full text-center border-0" disabled/>
+                                <input v-model="row.stockAvailable" type="number" class="w-full text-center border-0 bg-zinc-200" disabled/>
                             </td>
                             <td class="p-1 text-center border-2 border-[#7393dc]">
                                 <input :min="0" :max="row.remainingQty" v-model="row.requestedQty" @input="requestedItemQtyDebounced(row)" type="number" class="w-full rounded-md input-red-when-disabled" :disabled="row.stockAvailable == 0 || row.remainingQty == 0"/>
@@ -371,24 +372,24 @@
             </div>
         </div>
 
-        <div v-if="requestData?.length > 0" class="w-full my-4 p-4 bg-white shadow rounded-md mb-8">
+        <div v-if="requestData?.length > 0" class="w-full my-4 p-4 bg-zinc-300 shadow rounded-md mb-8">
             <form @submit.prevent="submit" class="mx-auto mt-10">
                 <div class="grid grid-cols-2 gap-6">
                     <div class="relative z-0 w-full mb-5 group">
                         <input v-model="create.risNo" type="text" name="risNo" id="risNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                        <label for="risNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">RIS Number</label>
+                        <label for="risNo" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">RIS Number</label>
                     </div>
                     <div class="relative z-0 w-full mb-5 group">
                         <input v-model="create.receivedBy" type="text" name="receivedBy" id="receivedBy" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                        <label for="receivedBy" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Issued To (Name of the Person)</label>
+                        <label for="receivedBy" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Issued To (Name of the Person)</label>
                     </div>
                     <div v-if="searchOfficePpmp.officeId == 'others'" class="relative z-0 w-full mb-5 group">
                         <input v-model="create.remarks" type="text" name="remarks" id="remarks" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                        <label for="remarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Remarks/Description</label>
+                        <label for="remarks" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Remarks/Description</label>
                     </div>
                     <div class="relative z-0 w-full mb-5 group">
                         <input v-model="create.risDate" type="date" name="risDate" id="risDate" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                        <label for="risDate" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Date of Issuance</label>
+                        <label for="risDate" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Date of Issuance</label>
                     </div>
                 </div>
                 <div class="my-10 px-5">

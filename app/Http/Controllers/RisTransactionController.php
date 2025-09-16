@@ -543,7 +543,7 @@ class RisTransactionController extends Controller
                 'unit' => $transaction->unit,
                 'issuedTo' => $transaction->issued_to,
                 'officeRequestee' => $requestee ? $requestee->office_code : 'Other',
-                'dateReleased'=> $transaction->created_at->format('F d, Y'),
+                'dateReleased'=> $transaction->created_at->format('M d, Y'),
                 'releasedBy' => $creator->name,
                 'attachment' => $transaction->attachment ?? null,
             ];
@@ -625,7 +625,7 @@ class RisTransactionController extends Controller
             'unit' => $transaction->unit,
             'issuedTo' => $transaction->issued_to,
             'officeRequestee' => $transaction->requestee ? $transaction->requestee->office_code : 'Others',
-            'dateReleased'=> $transaction->created_at->format('F d, Y'),
+            'dateReleased'=> $transaction->created_at->format('M d, Y'),
             'releasedBy' => $transaction->creator->name,
             'attachment' => $transaction->attachment ?? null,
         ])->values();

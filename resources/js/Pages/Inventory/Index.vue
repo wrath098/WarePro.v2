@@ -152,11 +152,11 @@
             render: (data, type, row) => {
                 return `
                  <span class="${data === 'Available' 
-                    ? 'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-1 rounded border border-indigo-300' 
+                    ? 'bg-indigo-200 text-indigo-800 text-xs font-medium me-2 px-2.5 py-1 rounded border border-indigo-400' 
                     : data === 'Out of Stock'
-                    ? 'bg-rose-100 text-rose-800 text-xs font-medium me-2 px-2.5 py-1 rounded border border-rose-300'
+                    ? 'bg-rose-200 text-rose-800 text-xs font-medium me-2 px-2.5 py-1 rounded border border-rose-400'
                     : data === 'Re-order'
-                    ? 'bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-1 rounded border border-orange-300'
+                    ? 'bg-amber-200 text-amber-800 text-xs font-medium me-2 px-2.5 py-1 rounded border border-amber-400'
                     : ''}">
                     ${data}
                 </span>
@@ -195,7 +195,7 @@
         </template>
         <div class="py-4 w-full px-4 lg:px-0">
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                <div class="flex items-center bg-zinc-300 border border-zinc-400 rounded-sm overflow-hidden shadow">
                     <div class="p-4 bg-indigo-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor">
                             <path fill="currentColor" d="M6 12A6 6 0 1 0 6 0a6 6 0 0 0 0 12Zm2.53-6.72L5.78 8.03a.75.75 0 0 1-1.06 0l-1-1a.75.75 0 0 1 1.06-1.06l.47.47l2.22-2.22a.75.75 0 0 1 1.06 1.06Z"/>
@@ -206,7 +206,7 @@
                         <p class="text-3xl">{{ countAvailable }}</p>
                     </div>
                 </div>
-                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                <div class="flex items-center bg-zinc-300 border border-zinc-400 rounded-sm overflow-hidden shadow">
                     <div class="p-4 bg-yellow-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
@@ -221,7 +221,7 @@
                     </div>
                 </div>
                 
-                <div class="flex items-center bg-white border rounded-sm overflow-hidden shadow">
+                <div class="flex items-center bg-zinc-300 border border-zinc-400 rounded-sm overflow-hidden shadow">
                     <div class="p-4 bg-red-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 22c-.818 0-1.6-.33-3.163-.988C4.946 19.373 3 18.554 3 17.175V7.542M12 22c.818 0 1.6-.33 3.163-.988C19.054 19.373 21 18.554 21 17.175V7.542M12 22v-9.97m9-4.488c0 .613-.802 1-2.405 1.773l-2.92 1.41c-1.804.87-2.705 1.304-3.675 1.304m9-4.487c0-.612-.802-.999-2.405-1.772L17 5M3 7.542c0 .613.802 1 2.405 1.773l2.92 1.41c1.804.87 2.705 1.304 3.675 1.304M3 7.542c0-.612.802-.999 2.405-1.772L7 5m-1 8.026l2 .997M10 2l2 2m0 0l2 2m-2-2l-2 2m2-2l2-2" color="currentColor"/>
@@ -235,9 +235,9 @@
             </div>
 
             <div class="my-4">
-                <div class="bg-white relative p-4 overflow-x-auto md:overflow-hidden shadow-md rounded-md">
+                <div class="bg-zinc-300 relative p-4 overflow-x-auto md:overflow-hidden shadow-md rounded-md">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="reformatInventory"
                         :options="{  
@@ -269,48 +269,48 @@
         </div>
         <Modal :show="isAddModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitAdd">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                             <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update Product Inventory</h3>
-                            <p class="text-sm text-gray-500">This function is dedicated solely to data initialization, such as inputting the beginning balance or reconciling product items quantity.</p>
+                            <h3 class="text-lg leading-6 text-[#040130] font-semibold" id="modal-headline"> Update Product Inventory</h3>
+                            <p class="text-sm text-zinc-700">This function is dedicated solely to data initialization, such as inputting the beginning balance or reconciling product items quantity.</p>
                             <div class="mt-3">
-                                <p class="text-sm text-[#86591e]"> Product Information: </p>
+                                <p class="text-sm text-[#040130] font-semibold"> Product Information: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Stock No: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Stock No: </span>
                                     </div>
-                                    <input v-model="addParticular.stockNo" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
+                                    <input v-model="addParticular.stockNo" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
                                 </div>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Description: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Description: </span>
                                     </div>
-                                    <textarea v-model="addParticular.desc" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full h-auto focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly> </textarea>
+                                    <textarea v-model="addParticular.desc" type="text" id="stockNo" class="mt-2 pl-24 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full h-auto focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly> </textarea>
                                 </div>
                             </div>
                             <div class="mt-5">
-                                <p class="text-sm text-[#86591e]"> Product Quantity: </p>
+                                <p class="text-sm text-[#040130] font-semibold"> Product Quantity: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Quantity: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Quantity: </span>
                                     </div>
-                                    <input v-model="addParticular.qty" type="number" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 1" required>
+                                    <input v-model="addParticular.qty" type="number" id="stockNo" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 1" required>
                                 </div>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Remarks: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Remarks: </span>
                                     </div>
-                                    <input v-model="addParticular.remarks" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Beginning Balance" required>
+                                    <input v-model="addParticular.remarks" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Beginning Balance" required>
                                 </div>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Date: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Date: </span>
                                     </div>
                                     <input v-model="addParticular.dateOfAdjustment" type="date" id="dateOfAdjustment" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="" required>
                                 </div>
@@ -318,7 +318,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <SuccessButton>
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -337,44 +337,44 @@
         </Modal>
         <Modal :show="isEditModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitEdit">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                             <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                             </svg>
                         </div>
                         <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">Update Product Item Inventory Reorder Level / Threshold</h3>
-                            <p class="text-sm text-gray-500">This functionality is designed exclusively for configuring item reorder levels.</p>
+                            <h3 class="text-lg leading-6 text-[#040130] font-semibold" id="modal-headline">Update Product Item Inventory Reorder Level / Threshold</h3>
+                            <p class="text-sm text-zinc-700">This functionality is designed exclusively for configuring item reorder levels.</p>
                             <div class="mt-3">
-                                <p class="text-sm text-[#86591e]"> Product Information: </p>
+                                <p class="text-sm text-[#040130] font-semibold"> Product Information: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Stock No: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Stock No: </span>
                                     </div>
-                                    <input v-model="editParticular.stockNo" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
+                                    <input v-model="editParticular.stockNo" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
                                 </div>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Description: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Description: </span>
                                     </div>
-                                    <input v-model="editParticular.desc" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
+                                    <input v-model="editParticular.desc" type="text" id="stockNo" class="mt-2 pl-24 p-2.5 bg-gray-200 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-10" readonly>
                                 </div>
                             </div>
                             <div class="mt-5">
-                                <p class="text-sm text-[#86591e]"> Product Reorder Level: </p>
+                                <p class="text-sm text-[#040130] font-semibold"> Product Reorder Level: </p>
                                 <div class="relative mt-1">
                                     <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">Quantity: </span>
+                                        <span class="text-zinc-700 text-sm font-semibold">Quantity: </span>
                                     </div>
-                                    <input v-model="editParticular.reorder" type="text" id="stockNo" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Reconciled Quantity" required>
+                                    <input v-model="editParticular.reorder" type="text" id="stockNo" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. Reconciled Quantity" required>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <SuccessButton>
                         <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -411,12 +411,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

@@ -116,21 +116,6 @@
             title: 'Date Released',
             width: '10%',
         },
-        // {
-        //     data: 'id',
-        //     title: 'Attachment',
-        //     render: (data, type, row) => {
-        //         if (row.attachment) {
-        //             return `<a href="${route('ris.show.attachment', { transactionId: row.id })}" tooltip="View" target="_blank" title="View">
-        //                     <svg class="w-7 h-7 text-green-700 hover:text-indigo-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-        //                         <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h14"/>
-        //                     </svg>
-        //                 </a>`;
-        //         }
-        //         return '<span class="italic text-gray-400">No Attachment</span>';
-        //     },
-        //     searchable: false,
-        // },
     ];
 </script>
 
@@ -162,24 +147,25 @@
             </nav>
         </template>
         <div class="w-full mx-auto sm:mx-4 lg:mx-0 mt-4">
-            <div class="w-full bg-white h-auto mb-2 rounded-md shadow-md">
-                <div class="bg-indigo-800 text-white p-4 flex justify-between rounded-t-md">
-                    <div class="flex flex-wrap">
-                        <p class="text-lg text-gray-100">
-                            <strong class="font-semibold">Product Information and Date of Duration</strong>
-                        </p>
-                    </div>
+            <div class="w-full bg-zinc-300 h-auto mb-2 rounded-md shadow-md">
+                <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                    <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                        Product Information and Date of Duration
+                    </h3>
+                    <p class="text-sm text-zinc-300">
+                        Displays product issuances within the selected date range, including item details and release information.
+                    </p>
                 </div>
                 <form @submit.prevent="submitFilter">
                     <div class="grid lg:grid-cols-3 lg:gap-6 my-5 mx-3">
                         <div class="relative z-0 w-full my-5 group">
                             <input v-model="filterLogs.startDate" type="date" name="from" id="from" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                            <label for="from" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
+                            <label for="from" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">From (Start Date)</label>
                         </div>
 
                         <div class="relative z-0 w-full my-5 group">
                             <input v-model="filterLogs.endDate" type="date" name="to" id="to" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                            <label for="to" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
+                            <label for="to" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">To (End Date)</label>
                         </div>
 
                         <div class="relative z-0 w-full my-5 group flex justify-center items-center">
@@ -208,11 +194,11 @@
                     </div>
                 </form>
             </div>
-            <div class="bg-white shadow-md sm:rounded-lg p-4">
+            <div class="bg-zinc-300 shadow-md sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto md:overflow-hidden">
                     <DataTable 
                         v-if="filteredLogs.length === 0"
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="props.transactions"
                         :options="{  
@@ -223,7 +209,7 @@
                     />
                     <DataTable
                         v-if="filteredLogs.length !== 0"
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="filteredLogs.data"
                         :options="{  
@@ -255,12 +241,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

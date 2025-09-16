@@ -39,7 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->withoutOverlapping();
             
             $schedule->command('db:backup')
-                ->everyFourHours()
+                ->twiceDaily(13, 18)
                 ->withoutOverlapping()
                 ->onOneServer()
                 ->timezone('Asia/Manila');

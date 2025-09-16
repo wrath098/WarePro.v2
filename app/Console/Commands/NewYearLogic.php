@@ -21,7 +21,7 @@ class NewYearLogic extends Command
      *
      * @var string
      */
-    protected $description = 'Reset the No. of IAR, RIS and Beginning Bla';
+    protected $description = 'Reset the No. of IAR, RIS and Beginning Balance';
 
     /**
      * Execute the console command.
@@ -36,7 +36,7 @@ class NewYearLogic extends Command
             'qty_issued' => 0,
         ]);
 
-        Log::info("Year-end inventory reset completed", [
+        Log::channel('backups')->info('Year-end inventory reset completed', [
             'action' => 'yearly_inventory_reset',
             'products_updated' => $updatedCount,
             'execution_time' => microtime(true) - $startTime,

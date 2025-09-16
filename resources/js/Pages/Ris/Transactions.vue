@@ -106,10 +106,10 @@
         </template>
 
         <div class="w-full mx-auto sm:mx-4 lg:mx-0 mt-4">
-            <div class="bg-white shadow-md sm:rounded-lg p-4">
+            <div class="bg-zinc-300 shadow-md sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto md:overflow-hidden">
                     <DataTable 
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="props.transactions"
                         :options="{  
@@ -147,12 +147,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

@@ -166,9 +166,9 @@ const formattedTotalAmount = computed(() => {
         </template>
 
         <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-4">
-            <div class="relative isolate flex overflow-hidden bg-indigo-600 px-6 py-2.5 rounded-md">
+            <div class="relative isolate flex overflow-hidden bg-zinc-600 px-6 py-2.5 rounded-t-md">
                 <div class="flex flex-wrap">
-                    <p class="text-base text-gray-100">
+                    <p class="text-base text-zinc-300">
                         <strong class="font-semibold">Proposed Budget for {{ year }}</strong>
                         <svg viewBox="0 0 2 2" class="mx-2 inline size-0.5 fill-current" aria-hidden="true"><circle cx="1" cy="1" r="1" /></svg>
                         <span class="text-sm">Please enter the required data in the input field.</span>

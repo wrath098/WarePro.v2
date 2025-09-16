@@ -462,12 +462,10 @@ const officeUser = hasAnyRole(['Office User']);
                                         <svg 
                                             class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
                                             :class="{ 'text-white' : route().current('show.expiry.products')}"
-                                            fill="currentColor" 
                                             aria-hidden="true"
                                             xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 16 16"
-                                        >
-                                            <path fill="currentColor" fill-rule="evenodd" d="M8.175.002a8 8 0 1 0 2.309 15.603a.75.75 0 0 0-.466-1.426a6.5 6.5 0 1 1 3.996-8.646a.75.75 0 0 0 1.388-.569A8 8 0 0 0 8.175.002ZM8.75 3.75a.75.75 0 0 0-1.5 0v3.94L5.216 9.723a.75.75 0 1 0 1.06 1.06L8.53 8.53l.22-.22V3.75ZM15 15a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm-.25-6.25a.75.75 0 0 0-1.5 0v3.5a.75.75 0 0 0 1.5 0v-3.5Z" clip-rule="evenodd"/>
+                                            viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2m-6 16h-2v-2h2zm0-4h-2v-5h2zm6-7H5V7h14z"/>
                                         </svg>
                                         <span class="ml-3 font-semibold">EXPIRING ITEMS</span>
                                     </SidebarLink>

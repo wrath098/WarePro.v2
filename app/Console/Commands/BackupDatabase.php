@@ -29,20 +29,28 @@ class BackupDatabase extends Command
     public function handle()
     {
         $startTime = microtime(true);
-        $filename = "pgso_warehouse-" . Carbon::now()->format('Y-m-d_H-i-s') . ".sql";
+        $filename = 'pgso_warehouse-' . now()->format('Y-m-d_H-i-s') . '.sql';
+
+        $backupDir = 'D:\\backups';
+        $backupPath = $backupDir . '\\' . $filename;
+
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0777, true);
+        }
+
         $mysqldumpPath = 'C:\\xampp\\mysql\\bin\\mysqldump.exe';
+
+        $command = 'cmd /c "' . $mysqldumpPath . '" --user=' . env('DB_USERNAME') .
+            ' --password=' . env('DB_PASSWORD') .
+            ' --host=' . env('DB_HOST') .
+            ' ' . env('DB_DATABASE') .
+            ' > "' . $backupPath . '"';
         
-        $command = "\"$mysqldumpPath\" --user=" . env('DB_USERNAME') . 
-               " --password=" . env('DB_PASSWORD') . 
-               " --host=" . env('DB_HOST') . 
-               " " . env('DB_DATABASE') . 
-               " > \"" . storage_path('app/backups/' . $filename) . "\"";
-        
-        $returnVar = NULL;
-        $output = NULL;
-        
+        $output = [];
+        $returnVar = null;
+
         exec($command, $output, $returnVar);
-        
+
         if ($returnVar === 0) {
             Log::channel('backups')->info('Inventory backup completed', [
                 'action' => 'database_backup',
@@ -51,7 +59,7 @@ class BackupDatabase extends Command
                 'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
         } else {
-            Log::channel('backups')->info('Backup failed:', [
+            Log::channel('backups')->error('Backup failed', [
                 'code' => $returnVar,
                 'output' => $output,
                 'command' => $command

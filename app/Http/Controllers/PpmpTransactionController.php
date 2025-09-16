@@ -1329,7 +1329,7 @@ class PpmpTransactionController extends Controller
             ];
         } else {
             #Calculate amount left in capital outlay then disburse it to contingency in first qty, second qty, total contingency
-            $contingency = $capitalOutlay - $fundTotal;
+            $contingency = bcsub($capitalOutlay, $fundTotal, 2);
 
             #Validate contingency if float
             $wholeNumber = floor($contingency);
@@ -1376,6 +1376,10 @@ class PpmpTransactionController extends Controller
 
                 $capitalId = $createBudget->id;
             }
+
+            #Delete current allocations
+            $capital = CapitalOutlay::find($capitalId);
+            $capital->allocations()->forceDelete();
 
             #Loop fund into category
             foreach($fund as $category) {

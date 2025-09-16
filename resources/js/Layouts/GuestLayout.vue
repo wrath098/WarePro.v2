@@ -1,7 +1,7 @@
 <template>
     <div class="relative w-full h-screen overflow-hidden">
         <div class="absolute inset-0 z-0 animated-gradient"></div>
-            <div class="absolute inset-0 z-10 pointer-events-none">
+        <div class="absolute inset-0 z-10 pointer-events-none">
             <div class="absolute top-10 left-10 w-1 h-1 bg-white rounded-full opacity-50 blur-sm star"></div>
             <div class="absolute top-1/3 left-2/3 w-1 h-1 bg-white rounded-full opacity-40 blur-sm star"></div>
             <div class="absolute bottom-1/4 right-1/4 w-1 h-1 bg-white rounded-full opacity-30 blur-sm star"></div>
@@ -14,7 +14,6 @@
                 <slot />
             </div>
         </div>
-
     </div>
 </template>
 <style>
@@ -28,7 +27,7 @@
     }
 
     .animated-gradient {
-        background: radial-gradient(circle at center, #6e00ff, #000010);
+        background: radial-gradient(circle at center, #57229c, #000010);
         background-size: 200% 200%;
         animation: pulseBackground 10s ease-in-out infinite;
     }
