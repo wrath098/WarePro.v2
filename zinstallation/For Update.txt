@@ -1,4 +1,7 @@
+PR Particulars qty editting
 
+
+SEPTEMBER 16, 2025 - Integrated
 #Run php artisan migrate to update the added column on ppmp_transactions table
 
 #Update table row id#66 on ppmp_transactions table

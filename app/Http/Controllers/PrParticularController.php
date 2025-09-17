@@ -45,9 +45,11 @@ class PrParticularController extends Controller
         ])->find($pr->trans_id);
 
         #Calculate product quantity on pr
-        $totalQtyonPr = collect($ppmpTransaction->purchaseRequests)->flatMap(function ($pr) {
-                return $pr->prParticulars ?? [];
-            })->sum('qty');
+        $totalQtyonPr = collect($ppmpTransaction->purchaseRequests)->flatMap(function ($pr) use ($particular) {
+            return collect($pr->prParticulars)->filter(function ($item) use ($particular) {
+                return $item->id !== $particular->id;
+            });
+        })->sum('qty');
 
         #Calculate quantity on ppmp
         $consolidatedItem = collect($ppmpTransaction->consolidated)->first();
