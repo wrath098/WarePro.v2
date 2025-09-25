@@ -285,8 +285,6 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/ppmp-type', [PrMultiStepFormController::class, 'filterToPurchase'])->name('filter.purchase.request');
 });
 
-
-
 Route::fallback(function () {
     return Inertia::render('Auth/NotFound', ['isAuth' => Auth::check()]);
 });

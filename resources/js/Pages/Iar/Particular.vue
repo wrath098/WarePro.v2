@@ -189,16 +189,20 @@
                 </ol>
             </nav>
         </template>
-        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
-            <div class="px-6 py-4 bg-indigo-900 text-white rounded-t">
-                <h1 class="text-lg font-bold">Product Items for Receipt</h1>
+        <div class="my-4 w-full bg-zinc-300 shadow rounded-md mb-8">
+            <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                    Product Items for Receipt
+                </h3>
+                <p class="text-sm text-zinc-300">
+                    Review, accept, or reject product items during the receiving process.
+                </p>
             </div>
-
             <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 m-4">
-                <li v-for="particular in particulars" :key="particular.pId" class="p-4 justify-center h-auto rounded-lg bg-gray-200 shadow-md transition-transform transform">
-                    <div class="flex-1 flex items-start justify-between bg-gray-100 p-4 rounded-lg">
+                <li v-for="particular in particulars" :key="particular.pId" class="p-4 justify-center h-auto rounded-lg bg-zinc-400 shadow-md transition-transform transform">
+                    <div class="flex-1 flex items-start justify-between bg-zinc-200 p-4 rounded-lg">
                         <div class="flex flex-col gap-1">
-                            <div class="flex text-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            <div class="flex text-xl font-semibold text-indigo-900 hover:underline">
                                 Item No. {{ particular.itemNo }}
                                 <div v-if="hasAnyRole(['Developer']) || hasPermission('update-iar-particular')" class="flex items-center">
                                     <button @click="openEditModal(particular)" class="text-emerald-500 p-2 rounded-full hover:text-gray-50  hover:bg-indigo-500 transition">
@@ -208,27 +212,36 @@
                                     </button>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium">Stock No: </span> {{ particular.stockNo }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium ">Description: </span> {{ particular.specs }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium">Quantity: </span> {{ particular.quantity }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium">Unit: </span> {{ particular.unit }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium">Price: </span> {{ particular.price }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium">Total Cost: </span> {{ particular.cost }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-medium ">Expiry Date: </span> {{ particular.expiry }}
-                            </p>
+                            <div class="text-sm text-zinc-700 font-medium space-y-1">
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Stock No:</div>
+                                    <div class="flex-1">{{ particular.stockNo ?? 'N/A' }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Description:</div>
+                                    <div class="flex-1 whitespace-pre-wrap break-words">{{ particular.specs ?? 'N/A' }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Quantity:</div>
+                                    <div class="flex-1">{{ particular.quantity ?? 'N/A' }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Unit:</div>
+                                    <div class="flex-1">{{ particular.unit ?? 'N/A' }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Price:</div>
+                                    <div class="flex-1">{{ particular.price ?? 'N/A' }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Total Cost:</div>
+                                    <div class="flex-1">{{ particular.cost ?? 'N/A' }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-28 font-semibold">Expiry Date:</div>
+                                    <div class="flex-1">{{ particular.expiry ?? 'N/A' }}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="flex md:flex-row justify-end mt-2">
@@ -249,132 +262,132 @@
             </ul>
         </div>
         <Modal :show="isAcceptModalOpen" @close="closeModal"> 
-        <form @submit.prevent="submitAcceptance">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
-                    <svg class="text-indigo-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
-                    </svg>
+            <form @submit.prevent="submitAcceptance">
+                <div class="bg-gray-300 h-auto">
+                    <div class="p-6  md:mx-auto">
+                        <svg class="text-indigo-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
+                        </svg>
 
-                    <div class="text-center">dateReceive
-                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept Product!</h3>
-                        <p class="text-gray-600 my-2">Confirming this action will add the selected Product to the Product Inventory. <br> This action can't be undone.</p>
-                        <p class="mb-5"> Please confirm if you wish to proceed.  </p>
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept Product!</h3>
+                            <p class="text-zinc-700 my-2">Confirming this action will add the selected Product to the Product Inventory. <br> This action can't be undone.</p>
+                            <p class="mb-5"> Please confirm if you wish to proceed.  </p>
 
-                        <label for="dateReceive" class="input">
-                            Date Recieved
-                            <input v-model="acceptParticular.dateReceive"  type="date" id="dateReceive" class="grow peer mt-0.5 w-1/2 rounded border-gray-300 shadow-sm sm:text-sm" placeholder="" required />
-                        </label>
+                            <label for="dateReceive" class="input text-gray-900 font-semibold">
+                                Date Recieved
+                                <input v-model="acceptParticular.dateReceive"  type="date" id="dateReceive" class="grow peer mt-0.5 w-1/2 rounded border-zinc-400 bg-zinc-200 text-zinc-700 shadow-sm sm:text-sm" placeholder="" required />
+                            </label>
 
-                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                            <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                </svg>
-                                Confirm 
-                            </SuccessButton>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
 
-                            <DangerButton @click="closeModal"> 
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                </svg>
-                                Cancel
-                            </DangerButton>
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
-    </Modal>
-    <Modal :show="isDenyModalOpen" @close="closeModal"> 
-        <form @submit.prevent="submitDeny">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
-                    <svg class="text-gray-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                    </svg>
+            </form>
+        </Modal>
+        <Modal :show="isDenyModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitDeny">
+                <div class="bg-zinc-300 h-auto">
+                    <div class="p-6  md:mx-auto">
+                        <svg class="text-zinc-700 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
 
-                    <div class="text-center">
-                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Reject Particular!</h3>
-                        <p class="text-gray-600 my-2">Confirming this action will remove the selected Product to the list. <br> This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
-                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
-                            <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                </svg>
-                                Confirm 
-                            </SuccessButton>
+                        <div class="text-center">
+                            <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Reject Particular!</h3>
+                            <p class="text-zinc-700 my-2">Confirming this action will remove the selected Product to the list. <br> This action can't be undone.</p>
+                            <p class="text-zinc-600"> Please confirm if you wish to proceed.  </p>
+                            <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Confirm 
+                                </SuccessButton>
 
-                            <DangerButton @click="closeModal"> 
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                </svg>
-                                Cancel
-                            </DangerButton>
+                                <DangerButton @click="closeModal"> 
+                                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Cancel
+                                </DangerButton>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
-    </Modal>
+            </form>
+        </Modal>
     <Modal :show="isEditModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitEdit">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
                         <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline"> Update IAR Particular</h3>
-                        <p class="text-sm text-gray-500">Please input the correct Stock No# that corresponds to the item description shown below..</p>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Update IAR Particular</h3>
+                        <p class="text-sm text-zinc-700">Please input the correct Stock No# that corresponds to the item description shown below..</p>
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]"> Product Information</p>
+                            <p class="text-sm font-semibold text-[#1a0037]"> Product Information</p>
                             <div class="relative z-0 w-full group my-2">
-                                <input v-model="editParticular.stockNo" @input="fetchProduct" type="text" name="editStockNo" id="editStockNo" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                                <label for="editStockNo" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
+                                <input v-model="editParticular.stockNo" @input="fetchProduct" type="text" name="editStockNo" id="editStockNo" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required />
+                                <label for="editStockNo" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
                             </div>
                             <div v-if="stockData">
                                 <div class="relative z-0 w-full my-5 group">
-                                    <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-1 w-full text-sm bg-gray-300 bg-opacity-30 text-gray-900 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.desc"></textarea>
-                                    <label for="prodDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
+                                    <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-1 w-full text-sm bg-gray-300 bg-opacity-30 text-gray-900 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled :value="stockData.desc"></textarea>
+                                    <label for="prodDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
                                 </div>
                                 <div class="grid lg:grid-cols-2 lg:gap-6">
                                     <div class="relative z-0 group">
-                                        <input type="text" name="unitMeasure" id="unitMeasure" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-gray-300 bg-opacity-30 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled :value="stockData.unit"/>
-                                        <label for="unitMeasure" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                        <input type="text" name="unitMeasure" id="unitMeasure" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-gray-300 bg-opacity-30 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled :value="stockData.unit"/>
+                                        <label for="unitMeasure" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
                                     </div>   
                                     <div v-if="stockData.expiry == 1" class="relative z-0 group">
-                                        <input v-model="editParticular.expiry" :min="currentDate" type="date" name="expiryDate" id="expiryDate" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
-                                        <label for="expiryDate" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Expiration Date</label>
+                                        <input v-model="editParticular.expiry" :min="currentDate" type="date" name="expiryDate" id="expiryDate" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required/>
+                                        <label for="expiryDate" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Expiration Date</label>
                                     </div>                               
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-5">
-                            <p class="text-sm text-[#86591e]">Particular Information</p>
+                            <p class="text-sm font-semibold text-[#1a0037]">Particular Information</p>
                             <div class="relative z-0 w-full my-5 group h-auto">
-                                <textarea v-model="editParticular.parDesc" type="text" name="parDesc" id="parDesc" class="block py-2.5 px-1 w-full text-sm bg-gray-300 bg-opacity-30 text-gray-900 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " disabled></textarea>
-                                <label for="parDesc" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
+                                <textarea v-model="editParticular.parDesc" type="text" name="parDesc" id="parDesc" class="block py-2.5 px-1 w-full text-sm bg-gray-300 bg-opacity-30 text-gray-900 border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled></textarea>
+                                <label for="parDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Description</label>
                             </div>
                             <div class="grid lg:grid-cols-2 lg:gap-6">
                                 <div class="relative z-0 group">
-                                    <input v-model="editParticular.parUnit" type="text" name="parUnit" id="parUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
-                                    <label for="parUnit" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                    <input v-model="editParticular.parUnit" type="text" name="parUnit" id="parUnit" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required/>
+                                    <label for="parUnit" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
                                 </div>    
                                 <div class="relative z-0 group">
-                                    <input v-model="editParticular.parQty" type="number" name="parQty" id="parQty" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required/>
-                                    <label for="parQty" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Qty</label>
+                                    <input v-model="editParticular.parQty" type="number" name="parQty" id="parQty" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required/>
+                                    <label for="parQty" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Qty</label>
                                 </div>                               
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-indigo-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                     <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -393,20 +406,20 @@
     </Modal>
     <Modal :show="isAcceptAllModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitAcceptanceAll">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
                     <svg class="text-indigo-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
                     </svg>
 
                     <div class="text-center">
                         <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Accept All Product!</h3>
-                        <p class="text-gray-600 my-2">Confirming this action will add all the Product within the list to the Product Inventory. <br> This action can't be undone.</p>
-                        <p class="mb-5"> Please confirm if you wish to proceed.  </p>
+                        <p class="text-zinc-700 my-2">Confirming this action will add all the Product within the list to the Product Inventory. <br> This action can't be undone.</p>
+                        <p class="mb-5 text-zinc-600"> Please confirm if you wish to proceed.  </p>
 
-                        <label for="dateReceiveAll" class="input">
+                        <label for="dateReceiveAll" class="input text-gray-900 font-semibold">
                             Date Recieved
-                            <input v-model="acceptAllParticular.dateReceive"  type="date" id="dateReceiveAll" class="grow peer mt-0.5 w-1/2 rounded border-gray-300 shadow-sm sm:text-sm" placeholder="" required />
+                            <input v-model="acceptAllParticular.dateReceive"  type="date" id="dateReceiveAll" class="grow peer mt-0.5 w-1/2 rounded border-zinc-400 bg-zinc-200 text-zinc-700 shadow-sm sm:text-sm" placeholder="" required />
                         </label>
 
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
@@ -431,16 +444,16 @@
     </Modal>
     <Modal :show="isDenyAllModalOpen" @close="closeModal"> 
         <form @submit.prevent="submitDenyAll">
-            <div class="bg-gray-100 h-auto">
-                <div class="bg-white p-6  md:mx-auto">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
                     <svg class="text-gray-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
 
                     <div class="text-center">
                         <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Reject All Particulars!</h3>
-                        <p class="text-gray-600 my-2">Confirming this action will remove all Particulars on the list. <br> This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
+                        <p class="text-zinc-700 my-2">Confirming this action will remove all Particulars on the list. <br> This action can't be undone.</p>
+                        <p class="text-zinc-600"> Please confirm if you wish to proceed.  </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
                                 <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">

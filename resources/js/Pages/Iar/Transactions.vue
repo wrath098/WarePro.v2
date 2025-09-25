@@ -64,8 +64,8 @@
             render: (data, type, row) => {
                 return `
                 <span class="${data === 'Pending' 
-                    ? 'bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-300' 
-                    : 'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300'}">
+                    ? 'bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-400' 
+                    : 'bg-indigo-300 text-indigo-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-400'}">
                     ${data}
                 </span>
                 `;
@@ -117,11 +117,11 @@
                 </ol>
             </nav>
         </template>
-        <div class="my-4 w-full bg-white shadow rounded-md mb-8">
+        <div class="my-4 w-full bg-zinc-300 shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
                     <DataTable
-                        class="display table-hover table-striped shadow-lg rounded-lg"
+                        class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
                         :data="props.transactions"
                         :options="{ 
@@ -159,12 +159,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

@@ -252,12 +252,12 @@
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto">
                     <ul v-if="!isTrashedActive" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 mb-4">
-                        <li v-for="category in activeCategories" :key="category.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-zinc-200 shadow-md transition-transform transform">
+                        <li v-for="category in activeCategories" :key="category.id" class="flex items-center gap-4 p-4 justify-center h-auto rounded-lg  bg-zinc-400 shadow-md transition-transform transform">
                             <div class="text-2xl font-bold text-indigo-900">
                                 {{ category.code.padStart(2, '0') }}
                             </div>
 
-                            <div class="flex-1 flex items-start justify-between bg-zinc-100 p-4 rounded-lg">
+                            <div class="flex-1 flex items-start justify-between bg-zinc-200 p-4 rounded-lg">
                                 <div class="flex flex-col gap-1">
                                     <p class="text-xl font-semibold text-indigo-900 hover:underline">
                                         {{ category.name }}
@@ -426,14 +426,14 @@
             <form @submit.prevent="submitDrop">
                 <input type="hidden" v-model="dropForm.catId">
                 <div class="bg-zinc-300 h-auto">
-                    <div class="bg-white p-6  md:mx-auto">
+                    <div class="p-6  md:mx-auto">
                         <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
                         </svg>
 
                         <div class="text-center">
                             <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Move to Trash!</h3>
-                            <p class="text-zinc-600 my-2">Confirming this action will remove the selected Category into the list.</p>
+                            <p class="text-zinc-700 my-2">Confirming this action will remove the selected Category into the list.</p>
                             <p> Please confirm if you wish to proceed.  </p>
                             <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">

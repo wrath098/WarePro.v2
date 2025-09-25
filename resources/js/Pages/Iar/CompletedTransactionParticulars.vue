@@ -41,8 +41,8 @@
             render: (data, type, row) => {
                 return `
                 <span class="${data === 'Failed' 
-                    ? 'bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-300' 
-                    : 'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300'}">
+                    ? 'bg-zinc-300 text-zinc-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-400' 
+                    : 'bg-indigo-300 text-indigo-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-400'}">
                     ${data}
                 </span>
                 `;
@@ -123,7 +123,7 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                IAR No# {{ transaction.sdiIarId }} with P.O. No# {{ transaction.poNo }}
+                                IAR No# {{ transaction.iarNo }} with P.O. No# {{ transaction.poNo }}
                             </a>
                         </div>
                     </li>
@@ -132,80 +132,105 @@
         </template>
         <div class="my-4 w-full mb-8">
             <div class="overflow-hidden">
+                <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
+                    <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
+                        <h3 class="font-bold text-lg leading-6 text-zinc-300">
+                            Inspection and Acceptance Report Information
+                        </h3>
+                        <p class="text-sm text-zinc-300">
+                            IAR No# [{{ transaction.iarNo }}] 
+                            <span :class="{
+                                'bg-amber-200 text-amber-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-amber-700': transaction.status === 'Pending',
+                                'bg-emerald-200 text-emerald-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-emerald-700': transaction.status === 'Completed',
+                                }">
+                                {{ transaction.status }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-2 lg:gap-2">
+                        <dl class="font-semibold text-base">
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    IAR No#
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                   {{ transaction.sdiIarId }}
+                                </dd>
+                            </div>
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    PO No#
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ transaction.poNo }}
+                                </dd>
+                            </div>
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    Supplier
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ transaction.supplier }}
+                                </dd>
+                            </div>
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    IAR Date
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                   {{ transaction.iarDate }}
+                                </dd>
+                            </div>
+                        </dl>
+                        <dl class="font-semibold text-base">
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    Number of Particulars
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ transaction.particularCount }}
+                                </dd>
+                            </div>
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    Updated By
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ transaction.updater }}
+                                </dd>
+                            </div>
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    Date Updated
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ transaction.dateUpdated }}
+                                </dd>
+                            </div>
+                            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-gray-600">
+                                    Remarks
+                                </dt>
+                                <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                                    {{ transaction.remark ?? 'N/a'}}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
                 <div class="mx-4 lg:mx-0">
-                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-4 lg:gap-4">
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div class="px-6 py-4 bg-indigo-900 text-white rounded-t">
-                                <h1 class="text-lg font-bold">Inspection and Acceptance Report Information</h1>
-                            </div>
-                            <div class="flow-root rounded-lg border border-gray-100 py-3 shadow-sm">
-                                <dl class="-my-3 divide-y divide-gray-100 text-base">
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">IAR No.</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.sdiIarId }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">PO No.</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.poNo }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">Supplier </dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.supplier }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">IAR Date</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.iarDate }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">Status</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">
-                                            : <span :class="{
-                                                'bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-300': transaction.status === 'Completed',
-                                                }">
-                                                {{ transaction.status }}
-                                            </span>
-                                        </dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">Number of Particulars</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.particularCount }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">Updated By</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.updater }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">Date Updated</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.dateUpdated }}</dd>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-1 p-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
-                                        <dt class="font-medium text-gray-900">Remarks</dt>
-                                        <dd class="text-gray-700 sm:col-span-2">: {{ transaction.remark }}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                        </div>
-                        <div class="col-span-3 bg-white p-4 rounded-md shadow mt-5 lg:mt-0">
-                            <div class="relative overflow-x-auto lg:overflow-hidden">
-                                <DataTable
-                                    class="display table-hover table-striped shadow-lg rounded-lg"
-                                    :columns="columns"
-                                    :data="props.particulars"
-                                    :options="{ 
-                                        paging: true,
-                                        searching: true,
-                                        ordering: false
-                                    }"
-                                />
-                            </div>
+                    <div class="col-span-3 bg-zinc-300 p-4 rounded-md shadow mt-5 lg:mt-0">
+                        <div class="relative overflow-x-auto lg:overflow-hidden">
+                            <DataTable
+                                class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
+                                :columns="columns"
+                                :data="props.particulars"
+                                :options="{ 
+                                    paging: true,
+                                    searching: true,
+                                    ordering: false
+                                }"
+                            />
                         </div>
                     </div>
                 </div>
@@ -231,12 +256,14 @@
     }
 
     :deep(div.dt-container select.dt-input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-left: 1px;
         width: 75px;
     }
 
     :deep(div.dt-container .dt-search input) {
+        background-color: #fafafa;
         border: 1px solid #03244d;
         margin-right: 1px;
         width: 250px;

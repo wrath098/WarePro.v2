@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use stdClass;
 
 class IarTransactionController extends Controller
 {
@@ -39,6 +38,7 @@ class IarTransactionController extends Controller
         $lists = $lists->map(fn($iar) => [
             'id' => $iar->id,
             'airId' => $iar->sdi_iar_id,
+            'airNo' => $iar->iar_no ?? '',
             'poId' => $iar->po_no,
             'supplier' => $iar->supplier,
             'date' => $iar->date,
@@ -147,6 +147,7 @@ class IarTransactionController extends Controller
         $iarTransaction = [
             'id' => $iarTransaction->id,
             'sdiIarId' => $iarTransaction->sdi_iar_id,
+            'iarNo' => $iarTransaction->iar_no ?? 'N/A',
             'poNo' => $iarTransaction->po_no,
             'supplier' => $iarTransaction->supplier,
             'iarDate' => $iarTransaction->date,
@@ -534,6 +535,7 @@ class IarTransactionController extends Controller
     {
         return IarTransaction::create([
             'sdi_iar_id' => $iar['air_id'],
+            'iar_no' => $iar['air_no'],
             'po_no' => $iar['po_no'],
             'supplier' => $iar['name'],
             'date' => $iar['air_date'],
@@ -542,8 +544,9 @@ class IarTransactionController extends Controller
 
     private function processCreationOfIarParticulars(array $particular, int $IarId): ?IarParticular
     {
+        $rawItemNo = trim(str_replace('`', '', $particular['item_no']));
         return IarParticular::create([
-            'item_no' => $particular['item_no'] ? str_replace('`', '', $particular['item_no']) : 0,
+            'item_no' => ctype_digit($rawItemNo) ? (int) $rawItemNo : 0,
             'stock_no' => $particular['stock_no'],
             'unit' => $particular['unit'],
             'description' => $particular['description'],

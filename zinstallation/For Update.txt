@@ -1,5 +1,11 @@
-PR Particulars qty editting
 
+
+SEPTEMBER 25, 2026
+Update Iar Transactions Table
+-added iar_no column
+run migrate
+
+PR Particulars qty editting
 
 SEPTEMBER 16, 2025 - Integrated
 #Run php artisan migrate to update the added column on ppmp_transactions table

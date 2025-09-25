@@ -16,6 +16,7 @@ class IarTransaction extends Model
 
     protected $fillable = [
         'sdi_iar_id',
+        'iar_no',
         'po_no',
         'supplier',
         'date',
