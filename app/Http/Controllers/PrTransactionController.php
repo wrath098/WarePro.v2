@@ -173,11 +173,29 @@ class PrTransactionController extends Controller
     public function showParticulars(PrTransaction $prTransaction)
     {
         $descriptionMap = $this->procurementType();
+        
+        #GET PRODUCT LIST
+        $validate_ppmp = PpmpTransaction::find($prTransaction->trans_id);
+        if($validate_ppmp){
+            $validate_ppmp->load('consolidated');
+            $product_available = $validate_ppmp->consolidated->map(function($particular) {
+                $productInfo = $this->productService->getProductInfo($particular->prod_id);
+                $price = $this->productService->getLatestPriceId($particular->price_id);
+                return [
+                    'productId' => $particular->prod_id,
+                    'code' => $productInfo['code'],
+                    'unit' => $productInfo['unit'],
+                    'description' => $productInfo['description'],
+                    'price' => $price
+                ];
+            });
+        }
+       
 
         $prTransaction->load('prParticulars', 'ppmpController', 'updater');
         $prTransaction->semester = $prTransaction->semester === 'qty_first' ? 'First Semester' : 'Second Semester';        
         $prTransaction->pr_desc = $descriptionMap[$prTransaction->pr_desc] ?? null;
-
+        
         $prTransaction->qty_adjustment = $prTransaction->qty_adjustment * 100;
         $prTransaction->pr_status = ucfirst($prTransaction->pr_status);
 
@@ -208,6 +226,7 @@ class PrTransactionController extends Controller
             'pr' =>  $prTransaction,
             'particulars' => $reformatParticular,
             'trashed' => $resultTrashedParticular,
+            'products' => $product_available
         ]);
     }
     

@@ -21,6 +21,61 @@ class PrParticularController extends Controller
         $this->productService = $productService;
     }
 
+    public function store(Request $request)
+    {
+        #Validate PR particular id
+        $transaction = PrTransaction::with(['prParticulars' => function($query) use ($request) {
+            $query->withTrashed()->where('prod_id', $request->prodId)->limit(1);
+        }])->find($request->partId);
+
+        if(!$transaction) {
+            return redirect()->back()->with(['error' => 'Particular ID no found!']);
+        }
+
+        #Validate particular
+        $particular = $transaction->prParticulars->first();
+        if($particular && $particular->deleted_at === null){
+            return redirect()->back()->with([
+                'error' => 'Product item: ' . $request->prodDesc . ', already exist!'
+            ]);
+        }
+
+        DB::beginTransaction();
+
+        try{
+            if (!$particular) {
+                PrParticular::create([
+                    'prod_id' => $request->prodId,
+                    'unitPrice' => $request->prodPrice,
+                    'unitMeasure' => $request->prodMeasure,
+                    'qty' => $request->prodQty,
+                    'revised_specs' => $request->prodDesc,
+                    'pr_id' => $request->partId,
+                ]);
+            } else {
+                $particular->restore();
+                $particular->update([
+                    'qty' => $request->prodQty,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with([
+                'message' => !$particular
+                    ? 'Successfully added item: ' . $request->prodDesc
+                    : 'Successfully restored and updated the quantity of item: ' . $request->prodDesc,
+            ]);
+
+        } catch(\Exception $e) {
+            
+            #Rollback if error
+            DB::rollBack();
+            Log::error($e->getMessage());
+            return redirect()->back()->with(['error' => 'Failed to add item code# ' . $request->prodDesc]);
+        }
+    }
+
     public function update(Request $request)
     {
         #Validate PR particular id

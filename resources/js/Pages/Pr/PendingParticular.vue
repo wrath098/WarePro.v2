@@ -1,6 +1,6 @@
 <script setup>
     import { Head, useForm, usePage } from '@inertiajs/vue3';
-    import { reactive, ref, computed, onMounted } from 'vue';
+    import { reactive, ref, computed, onMounted, watch } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Modal from '@/Components/Modal.vue';
@@ -19,6 +19,7 @@
         pr: Object,
         particulars: Object,
         trashed: Object,
+        products: Object,
     });
 
     const formatDecimal = (value) => {
@@ -29,13 +30,42 @@
         }).format(value);
     };
 
+    const stockNo = ref('');
+    const stockData = ref(null);
+
+    const fetchData = () => {
+        if (stockNo.value.length > 0) {
+            const foundStock = props.products.find(item => item.code === stockNo.value);
+            if (foundStock) {
+            stockData.value = {
+                ...foundStock,
+            };
+            } else {
+            stockData.value = null;
+            }
+        } else {
+            stockData.value = null;
+        }
+    };
+
     const modalState = ref(null);
     const closeModal = () => { modalState.value = null; }
+    const isAddPPModalOpen = computed(() => modalState.value === 'add');
     const isEditPPModalOpen = computed(() => modalState.value === 'edit');
     const isDropPrModalOpen = computed(() => modalState.value === 'drop');
     const isApprovedPrModalOpen = computed(() => modalState.value === 'approved');
     const isFailedAllModalOpen = computed(() => modalState.value === 'failedAll');
     const isApprovedAllModalOpen = computed(() => modalState.value === 'approvedAll');
+
+    const addParticular = useForm({
+        partId: '',
+        prodId: '',
+        prodCode: '',
+        prodDesc: '',
+        prodPrice:'',
+        prodMeasure: '',
+        prodQty: '',
+    });
 
     const editParticular = useForm({
         partId: '',
@@ -46,6 +76,11 @@
         prodMeasure: '',
         prodQty: '',
     });
+
+    const openAddModal = (prId) => {
+        addParticular.partId = prId;
+        modalState.value = 'add';
+    }
 
     const openEditModal = (particular) => {
         editParticular.partId = particular.id;
@@ -116,6 +151,7 @@
         });
     };
 
+    const submitAdd = () => submitForm('post', '../particular/store', addParticular);
     const submitEdit = () => submitForm('put', '../particular/update', editParticular);
     const submitDrop = () => {
         const prParticular = dropParticular.pId;
@@ -201,6 +237,14 @@
             render: '#action',
         },
     ];
+
+    watch(stockData, (newVal) => {
+        addParticular.prodId = newVal ? newVal.productId : '';
+        addParticular.prodCode = newVal ? newVal.code : '';
+        addParticular.prodDesc = newVal ? newVal.description : '';
+        addParticular.prodPrice = newVal ? newVal.price : '';
+        addParticular.prodMeasure = newVal ? newVal.unit : '';
+    });
 </script>
 
 <template>
@@ -238,6 +282,9 @@
                 </ol>
                 <ol>
                     <li class="flex flex-col lg:flex-row">
+                        <button @click="openAddModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[80px] text-center text-white bg-teal-600 border-2 border-teal-600 rounded active:text-teal-500 hover:bg-transparent hover:text-teal-600 focus:outline-none focus:ring">
+                            Add
+                        </button>
                         <button v-if="hasPermission('accept-all-pr-particular') ||  hasAnyRole(['Developer'])" @click="openApprovedAllModal(props.pr.id)" class="text-sm px-4 py-1 mx-1 my-1 lg:my-0 min-w-[120px] text-center text-white bg-indigo-600 border-2 border-indigo-600 rounded active:text-indigo-500 hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring">
                             Accept All
                         </button>
@@ -384,6 +431,66 @@
                 </div>
             </div>
         </div>
+        <Modal :show="isAddPPModalOpen" @close="closeModal"> 
+            <form @submit.prevent="submitAdd">
+                <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Additional Particular</h3>
+                            <p class="text-sm text-zinc-700"> Enter the details for the add Product/Particular you wish to add.</p>
+                            <div class="mt-3">
+                                <p class="text-sm font-semibold text-[#1a0037]"> Product Information: </p>
+                                <div class="relative z-0 w-full group my-2">
+                                    <input v-model="stockNo" @input="fetchData" type="text" name="stockNo" id="stockNo" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " required />
+                                    <label for="stockNo" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Number</label>
+                                </div>
+                                <div v-if="stockData">
+                                    <div>
+                                        <div class="relative z-0 w-full my-5 group">
+                                            <textarea type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled :value="stockData.description"></textarea>
+                                            <label for="prodDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Description</label>
+                                        </div>
+                                        <div class="relative z-0 lg:w-1/2 my-5 group">
+                                            <input type="text" name="prodDesc" id="prodDesc" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder=" " disabled :value="stockData.unit"/>
+                                            <label for="prodDesc" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Unit of Measure</label>
+                                        </div>                               
+                                    </div>
+                                </div>
+                                <div v-else-if="stockNo">
+                                    <p class="text-rose-500 text-xs italic mt-2">No product found!</p>
+                                </div>
+                                <div class="mt-5">
+                                <p class="text-sm font-semibold text-[#1a0037]"> Quantity: </p>
+                                    <div class="relative mt-1">
+                                        <input v-model="addParticular.prodQty" type="number" id="addQuantity" class="mt-2 pl-2 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Confirm 
+                    </SuccessButton>
+
+                    <DangerButton @click="closeModal"> 
+                        <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Cancel
+                    </DangerButton>
+                </div>
+            </form>
+        </Modal>
         <Modal :show="isEditPPModalOpen" @close="closeModal"> 
             <form @submit.prevent="submitEdit">
                 <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -428,10 +535,7 @@
                             <div class="mt-5">
                                 <p class="text-sm font-semibold text-[#1a0037]"> Quantity: </p>
                                 <div class="relative mt-1">
-                                    <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-600 text-sm font-semibold">1st Qty: </span>
-                                    </div>
-                                    <input v-model="editParticular.prodQty" type="number" id="quantity" class="mt-2 pl-20 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
+                                    <input v-model="editParticular.prodQty" type="number" id="quantity" class="mt-2 pl-2 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" required>
                                 </div>
                             </div>
                         </div>

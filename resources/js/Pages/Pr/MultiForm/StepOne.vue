@@ -252,8 +252,9 @@
                                     </label>
                                     <select v-model="generatePr.prDesc" id="prDescription" class="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-semibold text-zinc-700 outline-none focus:border-[#6A64F1] focus:shadow-md" required>
                                         <option value="" disabled>Select Description</option>
-                                        <option value="nc">For Bidding</option>
                                         <option value="dc">Direct Contract</option>
+                                        <option value="emergency">Emergency</option>
+                                        <option value="nc">For Bidding</option>
                                         <option value="psdbm">PS-DBM</option>
                                     </select> 
                                 </div>
