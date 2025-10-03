@@ -14,8 +14,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use stdClass;
 
 class IarTransactionController extends Controller
 {
@@ -555,4 +557,27 @@ class IarTransactionController extends Controller
             'air_id' => $IarId,
         ]);
     }
+
+    #For IAR NO UPLOAD
+    #REMOVE IF NO REVISION TO BE MADE
+    // public function uploadIarNo()
+    // {
+    //     if (!Storage::disk('local')->exists('uploads/airNo.json')) {
+    //         dd('File does not exist');
+    //     }
+
+    //     $json = Storage::disk('local')->get('uploads/airNo.json');
+    //     $data = json_decode($json, true);
+
+    //     foreach($data as $line) {
+    //         foreach($line as $iarId => $value)
+    //         {
+    //             $find = IarTransaction::where('sdi_iar_id', $iarId)->first();
+
+    //             if($find) {
+    //                 $find->update(['iar_no' => $value]);
+    //             }
+    //         }
+    //     }
+    // }
 }

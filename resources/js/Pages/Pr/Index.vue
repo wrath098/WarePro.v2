@@ -1,12 +1,13 @@
 <script setup>
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Print from '@/Components/Buttons/Print.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
     import { computed, onMounted } from 'vue';
     import useAuthPermission from '@/Composables/useAuthPermission';
-    import Download from '@/Components/Buttons/Download.vue';
+    import Pdf from '@/Components/Buttons/Icon/pdf.vue';
+    import Excel from '@/Components/Buttons/Icon/excel.vue';
+    import Word from '@/Components/Buttons/Icon/word.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -133,11 +134,16 @@
                             ordering: false
                         }">
                             <template #action="props">
-                                <ViewButton v-if="hasPermission('view-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
-                                <span v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])">
-                                    <Print v-if="props.cellData.pr_desc != 'PS-DBM'" :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="Print" />
-                                    <Download v-else :href="route('generatePdf.pr.psDbm', { pr: props.cellData.id})" tooltip="Download"/>
-                                </span>
+                                <div class="flex flex-wrap justify-center">
+                                    <ViewButton v-if="hasPermission('view-purchase-request') ||  hasAnyRole(['Developer'])" :href="route('pr.show.particular', { prTransaction: props.cellData.id})" tooltip="View" />
+                                    <div v-if="hasPermission('print-purchase-request') ||  hasAnyRole(['Developer'])">
+                                        <span v-if="props.cellData.pr_desc != 'PS-DBM'">
+                                            <Pdf  :href="route('generatePdf.PurchaseRequestDraft', { pr: props.cellData.id})" tooltip="PDF"/>
+                                            <Excel :href="route('generatePdf.PurchaseRequestExcel', { pr: props.cellData.id})" tooltip="Excel"/>
+                                        </span>
+                                        <Word v-else :href="route('generatePdf.pr.psDbm', { pr: props.cellData.id})" tooltip="Word"/>
+                                    </div>
+                                </div>
                             </template>
                     </DataTable>
                 </div>

@@ -11,6 +11,8 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class PurchaseRequestController extends Controller
 {
@@ -306,10 +308,22 @@ class PurchaseRequestController extends Controller
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        
+        $sheet->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_LEGAL);
+        $sheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_PORTRAIT);
+
+        // Column Width
+        $sheet->getColumnDimension('B')->setWidth(5);
+        $sheet->getColumnDimension('C')->setWidth(15);
+        $sheet->getColumnDimension('D')->setWidth(20);
+        $sheet->getColumnDimension('E')->setWidth(50);
+        $sheet->getColumnDimension('F')->setWidth(10);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(15);
 
         // Set document properties
         $spreadsheet->getProperties()
-            ->setCreator(SYSTEM_DEVELOPER)
+            ->setCreator('Christopher')
             ->setTitle('Consolidated PPMP')
             ->setSubject('Consolidated PPMP Particulars');
 
@@ -329,37 +343,42 @@ class PurchaseRequestController extends Controller
         $drawing2->setWorksheet($sheet);
 
         // Title
-        $sheet->mergeCells('B3:I3');
+        $sheet->mergeCells('B3:H3');
         $sheet->setCellValue('B3', 'PROVINCE OF BENGUET');
         $sheet->getStyle('B3')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('B3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        $sheet->mergeCells('B4:I4');
+        $sheet->mergeCells('B4:H4');
         $sheet->setCellValue('B4', 'PURCHASE REQUEST');
         $sheet->getStyle('B4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Header info table: Department, PR No, Date
-        $sheet->setCellValue('B6', 'Department:');
-        $sheet->setCellValue('C6', 'PGSO');
-        $sheet->setCellValue('F6', 'PR No.:');
-        // TODO: Set actual PR No here
-        $sheet->setCellValue('G6', $pr->pr_no ?? ''); 
+        $sheet->mergeCells('B6:C6');
+        $sheet->setCellValue('B6', 'Department: PGSO');
+        $sheet->mergeCells('D6:E6');
+        $sheet->setCellValue('D6', 'PR No.:');
+        $sheet->mergeCells('F6:H6');
+        $sheet->setCellValue('F6', 'Date:');
 
-        $sheet->setCellValue('B7', 'Division:');
-        $sheet->setCellValue('C7', 'PGSO-WH');
-        $sheet->setCellValue('F7', 'OBR No.:');
-        // TODO: Set actual OBR No here
-        $sheet->setCellValue('G7', $pr->obr_no ?? '');
-
-        $sheet->setCellValue('I6', 'Date:');
-        $sheet->setCellValue('J6', $pr->date->format('Y-m-d') ?? '');
-
-        $sheet->setCellValue('I7', 'Date:');
-        $sheet->setCellValue('J7', $pr->date->format('Y-m-d') ?? '');
+        $sheet->getStyle("B6:C6")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
+        $sheet->getStyle("D6:E6")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
+        $sheet->getStyle("F6:H6")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
+        
+        // Header info table: Division, OBR No, Date
+        $sheet->mergeCells('B7:C7');
+        $sheet->setCellValue('B7', 'Division: PGSO-WH');
+        $sheet->mergeCells('D7:E7');
+        $sheet->setCellValue('D7', 'OBR No.:');
+        $sheet->mergeCells('F7:H7');
+        $sheet->setCellValue('F7', 'Date:');
+        
+        $sheet->getStyle("B7:C7")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
+        $sheet->getStyle("D7:E7")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
+        $sheet->getStyle("F7:H7")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
 
         // Table headers
         $headers = [
-            'Item No', 'New Stock No', 'Unit of Issue', 'Item Description', 'Qty', 'Unit Price', 'Total Cost'
+            '#', 'New Stock No', 'Unit of Issue', 'Item Description', 'Qty', 'Unit Price', 'Total Cost'
         ];
         $colLetters = range('B', 'H');
         $headerRow = 9;
@@ -370,6 +389,8 @@ class PurchaseRequestController extends Controller
                 ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFEEEEEE');
             $sheet->getStyle($colLetters[$key] . $headerRow)->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($colLetters[$key] . $headerRow)->getBorders()
+                ->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
         }
 
         // Fetch particulars and group by categories
@@ -394,25 +415,29 @@ class PurchaseRequestController extends Controller
 
         foreach ($categories as $category) {
             // Check if this category has any matching products
-            $categoryItems = [];
+            $categoryItems = collect();
+
             foreach ($category->items as $item) {
                 foreach ($item->products as $product) {
                     $matches = $filteredParticulars->filter(function($p) use ($product) {
                         return $p['prodCode'] === $product->prod_newNo;
                     });
-                    if ($matches->count() > 0) {
+
+                    if ($matches->isNotEmpty()) {
                         $categoryItems = $categoryItems->merge($matches);
                     }
                 }
             }
+
             if ($categoryItems->isEmpty()) {
-                continue; // skip empty categories
+                continue;
             }
 
             // Category header row
             $sheet->mergeCells("B{$row}:H{$row}");
             $sheet->setCellValue("B{$row}", sprintf('%02d - %s', (int)$category->cat_code, $category->cat_name));
             $sheet->getStyle("B{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("B{$row}:H{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
             $row++;
 
             $categoryTotal = 0;
@@ -425,6 +450,18 @@ class PurchaseRequestController extends Controller
                 $sheet->setCellValue("F{$row}", $item['qty']);
                 $sheet->setCellValue("G{$row}", $item['prodPrice']);
                 $sheet->setCellValue("H{$row}", $item['totalCost']);
+                $sheet->getStyle("E{$row}")->getAlignment()->setWrapText(true);
+                $sheet->getRowDimension(1)->setRowHeight(-1);
+
+                $sheet->getStyle("B{$row}:D{$row}")->getAlignment()->setHorizontal('center')->setWrapText(true);
+                $sheet->getStyle("E{$row}")->getAlignment()->setWrapText(true);
+                $sheet->getStyle("F{$row}")->getAlignment()->setHorizontal('center')->setWrapText(true);
+                $sheet->getStyle("G{$row}:H{$row}")->getAlignment()->setHorizontal('right')->setWrapText(true);
+                $sheet->getStyle("B{$row}:H{$row}")->getBorders()
+                ->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
+
+                // Set auto row height for the current row
+                $sheet->getRowDimension($row)->setRowHeight(-1);
 
                 // Format numeric columns
                 $sheet->getStyle("F{$row}:H{$row}")
@@ -440,6 +477,7 @@ class PurchaseRequestController extends Controller
             $sheet->setCellValue("B{$row}", "Sub Total");
             $sheet->setCellValue("H{$row}", $categoryTotal);
             $sheet->getStyle("B{$row}:H{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("B{$row}:H{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
             $sheet->getStyle("H{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
             $row++;
 
@@ -451,6 +489,7 @@ class PurchaseRequestController extends Controller
         $sheet->setCellValue("B{$row}", "GRAND TOTAL");
         $sheet->setCellValue("H{$row}", $grandTotal);
         $sheet->getStyle("B{$row}:H{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("B{$row}:H{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF000000'));
         $sheet->getStyle("H{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
         $row += 2;
 
@@ -465,46 +504,49 @@ class PurchaseRequestController extends Controller
         $sheet->getStyle("B{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $row += 2;
 
-        // Signature table
-        $sheet->setCellValue("B{$row}", "");
-        $sheet->setCellValue("C{$row}", "Requested by:");
-        $sheet->setCellValue("D{$row}", "Cash Available:");
-        $sheet->setCellValue("E{$row}", "Approved by:");
+        // Labels 
+        $sheet->setCellValue("D{$row}", "Requested by:");
+        $sheet->setCellValue("E{$row}", "Cash Available:");
+        $sheet->setCellValue("G{$row}", "Approved by:");
+        $sheet->getStyle("E{$row}")->getAlignment()->setHorizontal('center')->setWrapText(true);
         $row++;
 
         // Empty signature rows
+        $sheet->mergeCells("B{$row}:H{$row}");
         $sheet->setCellValue("B{$row}", "");
         $sheet->setCellValue("C{$row}", "");
         $sheet->setCellValue("D{$row}", "");
         $sheet->setCellValue("E{$row}", "");
         $row++;
 
-        // Signature labels
+        // Signature Row
+        $sheet->mergeCells("B{$row}:C{$row}");
         $sheet->setCellValue("B{$row}", "Signature");
-        $sheet->setCellValue("C{$row}", "");
         $sheet->setCellValue("D{$row}", "");
         $sheet->setCellValue("E{$row}", "");
         $row++;
 
-        // Printed names
+        // Signature Names Row
+        $sheet->mergeCells("B{$row}:C{$row}");
         $sheet->setCellValue("B{$row}", "Printed Name");
-        $sheet->setCellValue("C{$row}", "JENNIFFER G. BAHOD");
-        $sheet->setCellValue("D{$row}", "IMELDA I. MACANES");
-        $sheet->setCellValue("E{$row}", "MELCHOR D. DICLAS, M.D.");
+        $sheet->setCellValue("D{$row}", "JENNIFFER G. BAHOD");
+        $sheet->setCellValue("E{$row}", "IMELDA I. MACANES");
+        $sheet->mergeCells("G{$row}:H{$row}");
+        $sheet->setCellValue("G{$row}", "MELCHOR D. DICLAS, M.D.");
+        $sheet->getStyle("D{$row}:G{$row}")->getAlignment()->setHorizontal('center')->setWrapText(true);
         $row++;
 
-        // Designations
+        // Designation Row
+        $sheet->mergeCells("B{$row}:C{$row}");
         $sheet->setCellValue("B{$row}", "Designation");
-        $sheet->setCellValue("C{$row}", "Provincial General Services Officer");
-        $sheet->setCellValue("D{$row}", "Provincial Treasurer");
-        $sheet->setCellValue("E{$row}", "Provincial Governor");
+        $sheet->setCellValue("D{$row}", "Provincial General Services Officer");
+        $sheet->setCellValue("E{$row}", "Provincial Treasurer");
+        $sheet->mergeCells("G{$row}:H{$row}");
+        $sheet->setCellValue("G{$row}", "Provincial Governor");
+        $sheet->getStyle("B{$row}")->getAlignment()->setVertical('top');
+        $sheet->getStyle("D{$row}:G{$row}")->getAlignment()->setHorizontal('center')->setVertical('top')->setWrapText(true);
 
-        // Autosize columns for better view
-        foreach (range('B', 'H') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        // Output to browser or save locally
+        // Download
         $writer = new Xlsx($spreadsheet);
         $filename = 'Purchase_Request_' . now()->format('Ymd_His') . '.xlsx';
 

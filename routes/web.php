@@ -259,6 +259,7 @@ Route::middleware('auth')->prefix('pdf')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generatePdf_productListActive'])->name('generatePdf.ProductActiveList');
     Route::get('/ps-dbm', [PsDbmController::class, 'generate_psDbm'])->name('generatePdf.psDbm');
     Route::get('/purchase-request-draft/{pr}', [PurchaseRequestController::class, 'generatePdf_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestDraft');
+    Route::get('/purchase-request-excel/{pr}', [PurchaseRequestController::class, 'generateExcel_purchaseRequestDraft'])->name('generatePdf.PurchaseRequestExcel');
     Route::get('/purchase-request-ps-dbm/{pr}', [PurchaseRequestController::class, 'generate_psDbm'])->name('generatePdf.pr.psDbm');
     Route::get('/ssmi', [SsmiController::class, 'generatePdf_ssmi'])->name('generatePdf.ssmi');
     Route::get('/stock-card', [StockCardController::class, 'generatePdf_StockCard'])->name('generatePdf.StockCard');
@@ -285,6 +286,12 @@ Route::middleware('auth')->prefix('api')->group(function () {
     #PR
     Route::get('/ppmp-type', [PrMultiStepFormController::class, 'filterToPurchase'])->name('filter.purchase.request');
 });
+
+#For IAR NO UPLOAD
+#REMOVE IF NO REVISION TO BE MADE
+//Route::get('/upload-iar-no', [IarTransactionController::class, 'uploadIarNo'])->name('upload.iar.no');
+
+
 
 Route::fallback(function () {
     return Inertia::render('Auth/NotFound', ['isAuth' => Auth::check()]);

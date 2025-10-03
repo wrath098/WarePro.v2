@@ -49,6 +49,7 @@ class PrTransactionController extends Controller
                     'prDescription' => $details ?? null,
                     'prStatus' => ucfirst($pr->pr_status),
                     'accountClass' => $fundNames,
+                    'pr_desc' => $prDescription,
                     'createdBy' => $pr->updater->name,
                     'createdAt' => $pr->created_at->format('M d, Y'),
                     'totalAmount' => number_format($totalAmount, 2)
