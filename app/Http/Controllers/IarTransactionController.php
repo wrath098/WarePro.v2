@@ -53,14 +53,15 @@ class IarTransactionController extends Controller
     public function showAllTransactions()
     {
         $transactionList = IarTransaction::withTrashed()
+            ->where('status', 'completed')
             ->with('updater')
             ->orderby('updated_at', 'desc')
-            ->take(1000)
             ->get();
 
         $transactionList = $transactionList->map(fn($transaction) => [
             'id' => $transaction->id,
             'airId' => $transaction->sdi_iar_id,
+            'airNo' => $transaction->iar_no,
             'poId' => $transaction->po_no,
             'supplier' => $transaction->supplier,
             'date' => Carbon::parse($transaction->date)->format('m-d-Y'),
@@ -420,6 +421,66 @@ class IarTransactionController extends Controller
             ]);
             return back()->with(['error' => 'Rejecting IAR Particular Failed. Please try again!']);
         }
+    }
+
+    public function returnParticular_toPending(Request $request)
+    {
+        $iar_particular = IarParticular::find($request->pid);
+        $productDetails = $this->validateProduct($iar_particular->stock_no);
+        
+        if(!$productDetails) {
+            DB::rollBack();
+            return back()->with('error', 'Product Item not found!');
+        }
+
+        #Get transaction
+        $inventory_transaction = ProductInventoryTransaction::withTrashed()
+            ->where('type', 'purchase')
+            ->where('ref_no',  $iar_particular->id)
+            ->first();
+        $formattedDate = $this->productService->defaultDateFormat($inventory_transaction->created_at);
+
+        #Get previous transaction
+        $previousTransaction = ProductInventoryTransaction::withTrashed()
+            ->where('prod_id', $productDetails->id)
+            ->where('created_at', '<', $formattedDate)
+            ->where('ref_no', '!=', $iar_particular->id)
+            ->latest('created_at')
+            ->first();
+
+        #Get succeeding transactions
+        $succeedingTransactions = $this->productService->getSucceedingProductInventoryTransaction($productDetails->id, $formattedDate);
+        
+        DB::beginTransaction();
+
+        try {
+            #Update IAR Particular to pending
+            $iar_particular->update(['status' => 'pending']);
+
+            #Update Product Inventory
+            $product_inventory = ProductInventory::where('prod_id', $productDetails->id)->first();
+            $product_inventory->qty_on_stock -= $inventory_transaction->qty;
+            $product_inventory->qty_purchase -= $inventory_transaction->qty;
+            $product_inventory->save();
+
+            #Delete Product Inventory Transaction
+            $inventory_transaction->forceDelete();
+
+            #Update Succeeding Product Inventory Transactions
+            $currentStock = $previousTransaction ? $previousTransaction->current_stock : 0;
+            $updateTransactions = $this->productService->updateInventoryTransactionsCurrentStock($succeedingTransactions, $currentStock);
+
+            #Update IAR transaction to pending
+            $iar_transaction = IarTransaction::find($iar_particular->air_id);
+            $iar_transaction->update(['status' => 'pending']);
+
+            DB::commit();
+            return back()->with('message', 'Particular returned to pending successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to return particular: ' . $e->getMessage());
+        }
+
     }
 
     private function verifyIarExistence($request) {

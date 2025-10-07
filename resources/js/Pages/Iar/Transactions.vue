@@ -38,13 +38,13 @@
 
     const columns = [
         {
-            data: 'airId',
-            title: 'Inspection and Acceptance No#',
+            data: 'airNo',
+            title: 'IAR No#',
             width: '10%'
         },
         {
             data: 'poId',
-            title: 'Purchase Order No#',
+            title: 'PO No#',
             width: '15%'
         },
         {
@@ -54,7 +54,7 @@
         },
         {
             data: 'date',
-            title: 'Inspection and Acceptance Date',
+            title: 'IAR Date',
             width: '10%'
         },
         {

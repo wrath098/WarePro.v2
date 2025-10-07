@@ -15,6 +15,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PrParticularController;
 use App\Http\Controllers\PrTransactionController;
 use App\Http\Controllers\Forms\PrMultiStepFormController;
+use App\Http\Controllers\IarParticularController;
 use App\Http\Controllers\IarTransactionController;
 use App\Http\Controllers\Pdf\ApprovedConsolidatedPpmpController;
 use App\Http\Controllers\Pdf\AsOfStockCardController;
@@ -224,6 +225,7 @@ Route::middleware('auth')->prefix('iar')->group(function () {
     Route::put('/particulars/update', [IarTransactionController::class, 'updateIarParticular'])->name('iar.particular.update');
     Route::put('/particulars/reject', [IarTransactionController::class, 'rejectIarParticular'])->name('iar.particular.reject');
     Route::post('/particulars/rejectAll', [IarTransactionController::class, 'rejectAllParticular'])->name('iar.particular.reject.all');
+    Route::post('/particulars/return', [IarTransactionController::class, 'returnParticular_toPending'])->name('return.iar.particular');
 });
 
 Route::middleware('auth')->prefix('inventory')->group(function () {

@@ -1,17 +1,38 @@
 <script setup>
-    import { Head, usePage } from '@inertiajs/vue3';
-    import { computed, onMounted } from 'vue';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { computed, onMounted, ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import Swal from 'sweetalert2';
+    import useAuthPermission from '@/Composables/useAuthPermission';
+    import Modal from '@/Components/Modal.vue';
+    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import DangerButton from '@/Components/DangerButton.vue';
+    import Return from '@/Components/Buttons/Icon/return.vue';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
+    const isLoading = ref(false);
     const page = usePage();
     const props = defineProps({
         transaction: Object,
         particulars: Object,
     });
+    
 
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
+
+    const returnParticular = useForm({
+        pid: '',
+    });
+
+    const modalState = ref(null);
+    const closeModal = () => { modalState.value = null; }
+    const isReturnModalOpen = computed(() => modalState.value === 'return');
+
+    const openReturnModal = (particular_id) => {
+        returnParticular.pid = particular_id;
+        modalState.value = 'return';
+    }
 
     onMounted(() => {
         if (message.value) {
@@ -51,7 +72,7 @@
         {
             data: 'itemNo',
             title: 'Item No#',
-            width: '10%'
+            width: '8%'
         },
         {
             data: 'stockNo',
@@ -71,7 +92,7 @@
         {
             data: 'quantity',
             title: 'Quantity',
-            width: '10%'
+            width: '8%'
         },
         {
             data: 'price',
@@ -90,9 +111,51 @@
         {
             data: 'expiry',
             title: 'Expiration Date',
-            width: '10%'
+            width: '8%'
         },
     ];
+
+    if (hasAnyRole(['Developer'])) {
+        columns.push({
+            data: null,
+            title: 'Action',
+            width: '6%',
+            render: '#action',
+        });
+    }
+
+    const submitForm = (url, formData) => {
+        isLoading.value = true;
+
+        formData.post(url, {
+            preserveScroll: true,
+            onFinish: () => {
+                isLoading.value = false;
+            },
+            onSuccess: () => {
+                if (errMessage.value) {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: errMessage.value,
+                        icon: 'error',
+                    });
+                } else {
+                    formData.reset();
+                    Swal.fire({
+                        title: 'Success',
+                        text: message.value,
+                        icon: 'success',
+                    }).then(() => closeModal());
+                }
+            },
+            onError: (errors) => {
+                isLoading.value = false;
+                console.log('Error: ' + JSON.stringify(errors));
+            },
+        });
+    };
+
+    const submitReturn = () => submitForm(route('return.iar.particular'), returnParticular);
 </script>
 
 <template>
@@ -130,8 +193,9 @@
                 </ol>
             </nav>
         </template>
+
         <div class="my-4 w-full mb-8">
-            <div class="overflow-hidden">
+            <div class="overflow-x-auto">
                 <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
                     <div class="bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
                         <h3 class="font-bold text-lg leading-6 text-zinc-300">
@@ -230,13 +294,49 @@
                                     searching: true,
                                     ordering: false
                                 }"
-                            />
+                            >
+                                <template #action="props">
+                                    <Return @click="openReturnModal(props.cellData.pId)" tooltip="Return"/>
+                                </template>
+                            </DataTable>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
+    <Modal :show="isReturnModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitReturn">
+            <div class="bg-zinc-300 h-auto">
+                <div class="p-6  md:mx-auto">
+                    <svg class="text-zinc-700 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+
+                    <div class="text-center">
+                        <h3 class="md:text-2xl text-base text-gray-900 font-semibold text-center">Return Particular!</h3>
+                        <p class="text-zinc-700 my-2">Confirming this action will return the selected Product to the pending list. <br> This action can't be undone.</p>
+                        <p class="text-zinc-600"> Please confirm if you wish to proceed.  </p>
+                        <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
+                            <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Confirm 
+                            </SuccessButton>
+
+                            <DangerButton @click="closeModal"> 
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                Cancel
+                            </DangerButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </Modal>
 </template>
 <style scoped>
     :deep(table.dataTable) {
