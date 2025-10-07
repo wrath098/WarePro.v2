@@ -130,10 +130,14 @@ class PrMultiStepFormController extends Controller
             })->groupBy('prod_id');
 
             #Returns a new array
-            $consolidatedParticulars = $groupedParticulars->map(function ($items, $prodId) {
+            $consolidatedParticulars = $groupedParticulars->map(function ($items, $prodId) use ($validateTransaction) {
+
+                #Get price id from consolidated
+                $priceId = $this->getProductPrice_onConsolidated($prodId, $validateTransaction->id);
+
                 return [
                     'prodId' => $prodId,
-                    'priceId' => $items->first()->price_id,
+                    'priceId' => $priceId,
                     'firstSem' => $items->sum('tresh_first_qty'),
                     'secondSem' => $items->sum('tresh_second_qty'),
                 ];
@@ -611,5 +615,13 @@ class PrMultiStepFormController extends Controller
                 return $item->allocations->sum('amount');
             });
         });
+    }
+
+    private function getProductPrice_onConsolidated(int $prodId, int $ppmpId)
+    {
+        return PpmpConsolidated:: where('trans_id', $ppmpId)
+            ->where('prod_id', $prodId)
+            ->first()
+            ->price_id;
     }
 }
