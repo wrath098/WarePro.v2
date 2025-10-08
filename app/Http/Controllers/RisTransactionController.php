@@ -40,6 +40,12 @@ class RisTransactionController extends Controller
         return Inertia::render('Ris/Transactions', ['transactions' => $transaction]);
     }
 
+    public function filterRisTransactions(Request $request)
+    {   
+        $transactions = $this->getRis($request);
+        return response()->json(['data' => $transactions]);
+    }
+
     public function ssmi()
     {
         $risTransaction = $this->getRisTransactions();
@@ -631,15 +637,45 @@ class RisTransactionController extends Controller
         ])->values();
     }
 
-    private function getRis()
+    private function getRis($request = null)
     {
-        $transactions = RisTransaction::select('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', DB::raw('COUNT(id) as transaction_count'))
-             ->with(['creator', 'requestee'])
-            ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks')
+        if($request) {
+            $period = $request->input('period');
+
+            $transactions = RisTransaction::select(
+                'ris_no',
+                'issued_to',
+                'office_id',
+                'created_by',
+                'remarks',
+                'created_at',
+                DB::raw('COUNT(id) as transaction_count')
+            )
+            ->with(['creator', 'requestee'])
+            ->when(isset($period['year']), function($q) use ($period) {
+                $q->whereYear('created_at', $period['year']);
+            })
+            ->when(isset($period['month']), function($q) use ($period) {
+                $month = str_pad($period['month'], 2, '0', STR_PAD_LEFT);
+                $q->whereMonth('created_at', $month);
+            })
+            ->when(isset($period['day']), function($q) use ($period) {
+                $day = str_pad($period['day'], 2, '0', STR_PAD_LEFT);
+                $q->whereDay('created_at', $day);
+            })
+            ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', 'created_at')
             ->orderByDesc('ris_no')
-            ->limit(200)
             ->get();
 
+        } else {
+            $transactions = RisTransaction::select('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', DB::raw('COUNT(id) as transaction_count'))
+                ->with(['creator', 'requestee'])
+                ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks')
+                ->orderByDesc('ris_no')
+                ->limit(200)
+                ->get();
+        }
+        
         return $transactions->map(fn($transaction) => [
             'risNo' => $transaction->ris_no,
             'officeRequestee' => $transaction->requestee ? $transaction->requestee->office_code : 'Others',

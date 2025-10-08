@@ -1,20 +1,23 @@
 <script setup>
     import { Head, usePage } from '@inertiajs/vue3';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import { computed, onMounted } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
     import { DataTable } from 'datatables.net-vue3';
     import Swal from 'sweetalert2';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Print from '@/Components/Buttons/Print.vue';
+    import { debounce } from 'lodash';
+    import axios from 'axios';
+    import LoadingOverlay from '@/Components/LoadingOverlay.vue';
 
     const page = usePage();
+    const isLoading = ref(false);
+    const message = computed(() => page.props.flash.message);
+    const errMessage = computed(() => page.props.flash.error);
 
     const props = defineProps({
         transactions: Object,
     });
-
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
 
     onMounted(() => {
         if (message.value) {
@@ -73,8 +76,52 @@
             width: '11%',
             render: '#action',
         },
-        
     ];
+
+    const months = [
+        'January', 'February', 'March', 'April', 
+        'May', 'June', 'July', 'August',
+        'September', 'October', 'November', 'December'
+    ];
+    
+    const risTransactions = ref([ ...props.transactions ]);
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 4 }, (_, i) => currentYear - 2 + i);
+
+    const selectedDay = ref(null);
+    const selectedMonth = ref(null);
+    const selectedYear = ref(null);
+
+    const daysInMonth = computed(() => {
+        if (!selectedMonth.value || !selectedYear.value) return 31;
+        
+        return new Date(selectedYear.value, selectedMonth.value, 0).getDate();
+    });
+
+    const updateDaysInMonth = () => {
+        if (selectedDay.value && daysInMonth.value < selectedDay.value) {
+            selectedDay.value = null;
+        }
+        handleDateFilter();
+    };
+
+    const handleDateFilter = debounce(async () => {   
+        isLoading.value = true;
+        try {
+            const filtered = {
+                day: selectedDay.value,
+                month: selectedMonth.value,
+                year: selectedYear.value
+            };
+
+            const response = await axios.get(route('filter.ris.transactions', { period: filtered }));
+            risTransactions.value = response.data?.data;
+            isLoading.value = false;
+        } catch (error) {
+            isLoading.value = false;
+            console.error('Error fetching filtered data:', error);
+        }
+    }, 1500);
 </script>
 
 <template>
@@ -102,16 +149,36 @@
                         </div>
                     </li>
                 </ol>
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="flex flex-col lg:flex-row w-20">
+                        <select v-model="selectedYear" id="filterYear" name="filterYear" @change="updateDaysInMonth" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1 bg-zinc-100">
+                            <option disabled :value="null">Year</option>
+                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                        </select>
+                    </li>
+                    <li class="flex flex-col lg:flex-row w-32">
+                        <select v-model="selectedMonth" id="filterMonth" name="filterMonth" @change="updateDaysInMonth" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1 bg-zinc-100">
+                            <option :value="null">Month</option>
+                            <option v-for="(month, index) in months" :key="index" :value="index + 1">{{ month }}</option>
+                        </select>
+                    </li>
+                    <li class="flex flex-col lg:flex-row w-20">
+                        <select v-model="selectedDay" id="filterDat" name="filterDay" @change="handleDateFilter" class="w-full h-10 border-0 focus:border-0 text-gray-500 rounded px-2 md:px-3 py-0 md:py-1 bg-zinc-100">
+                            <option :value="null">Day</option>
+                            <option v-for="day in daysInMonth" :value="day" :key="day">{{ day }}</option>
+                        </select>
+                    </li>
+                </ol>
             </nav>
         </template>
-
         <div class="w-full mx-auto sm:mx-4 lg:mx-0 mt-4">
             <div class="bg-zinc-300 shadow-md sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto md:overflow-hidden">
+                    <LoadingOverlay v-if="isLoading"/>
                     <DataTable 
                         class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"
-                        :data="props.transactions"
+                        :data="risTransactions"
                         :options="{  
                             paging: true,
                             searching: true,

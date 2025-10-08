@@ -241,6 +241,7 @@ Route::middleware('auth')->prefix('inventory')->group(function () {
 Route::middleware('auth')->prefix('ris')->group(function () {
     Route::middleware(['auth', 'role_or_permission:create-ris-transaction|Developer'])->get('/', [RisTransactionController::class, 'create'])->name('create.ris');
     Route::get('/ssmi', [RisTransactionController::class, 'ssmi'])->name('view.ssmi');
+    Route::get('/filter-ris-transactions', [RisTransactionController::class, 'filterRisTransactions'])->name('filter.ris.transactions');
     Route::post('/store', [RisTransactionController::class, 'store'])->name('store.ris');
     Route::post('/update', [RisTransactionController::class, 'update'])->name('update.ris');
     Route::post('/particular/update', [RisTransactionController::class, 'updateParticular'])->name('update.ris.particular');

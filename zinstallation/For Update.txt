@@ -1,11 +1,21 @@
 
 
-SEPTEMBER 25, 2026
-Update Iar Transactions Table
--added iar_no column
-run migrate
+#October 8, 2025 - Integrated
+#Return IAR particular to pending
+#RIS Transactions filter by Year, Month, Day
+#Add 'return-iar-particular-to-pending' to the permission table
+#Add 'delete-stock-card-transaction' to the permission table
+#Add 'update-product-inventory' to the permission table
 
-PR Particulars qty editting
+#October 3, 2025 - Integrated
+#PR Particulars qty editting
+#PR adding particular
+#PR generate excel template
+
+#SEPTEMBER 25, 2026 - Integrated
+#Update Iar Transactions Table
+#added iar_no column
+#run migrate
 
 SEPTEMBER 16, 2025 - Integrated
 #Run php artisan migrate to update the added column on ppmp_transactions table

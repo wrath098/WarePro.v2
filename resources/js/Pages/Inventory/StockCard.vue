@@ -10,11 +10,14 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import Modal from '@/Components/Modal.vue';
     import DangerButton from '@/Components/DangerButton.vue';
+    import LoadingOverlay from '@/Components/LoadingOverlay.vue';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
     const page = usePage();
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
     const isLoading = ref(false);
+    const {hasAnyRole, hasPermission} = useAuthPermission();
 
     const modalState = ref(null);
 
@@ -120,12 +123,6 @@
 
     const columns = [
         {
-            data: null,
-            title: 'Action/s',
-            width: '10%',
-            render: '#action',
-        },
-        {
             data: 'created',
             title: 'Date of Issuance/Acceptance',
             width: '10%',
@@ -156,6 +153,15 @@
             title: 'Current Stock',
         },
     ];
+
+    if (hasAnyRole(['Developer']) || hasPermission('delete-stock-card-transaction')) {
+        columns.push({
+            data: null,
+            title: 'Action/s',
+            width: '8%',
+            render: '#action',
+        },);
+    }
 
     const submitForm = (method, url, formData) => {
         isLoading.value = true;
@@ -299,18 +305,7 @@
             </div>
             <div class="bg-zinc-300 shadow-md sm:rounded-lg p-4">
                 <div class="relative overflow-x-auto md:overflow-hidden">
-                    <div v-if="isLoading" class="absolute bg-white text-indigo-800 bg-opacity-60 z-10 h-full w-full flex items-center justify-center">
-                        <div class="flex items-center">
-                        <span class="text-3xl mr-4">Loading</span>
-                        <svg class="animate-spin h-8 w-8 text-indigo-800" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                        </div>
-                    </div>
+                    <LoadingOverlay v-if="isLoading"/>
                     <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="columns"

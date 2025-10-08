@@ -61,7 +61,7 @@
             width: '10%',
             render: (data, type, row) => {
                 return `
-                <span class="${data === 'Failed' 
+                <span class="${data === 'Failed' || data === 'Pending'
                     ? 'bg-zinc-300 text-zinc-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-400' 
                     : 'bg-indigo-300 text-indigo-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-indigo-400'}">
                     ${data}
@@ -115,7 +115,7 @@
         },
     ];
 
-    if (hasAnyRole(['Developer'])) {
+    if (hasPermission('return-iar-particular-to-pending') || hasAnyRole(['Developer'])) {
         columns.push({
             data: null,
             title: 'Action',
@@ -296,7 +296,7 @@
                                 }"
                             >
                                 <template #action="props">
-                                    <Return @click="openReturnModal(props.cellData.pId)" tooltip="Return"/>
+                                    <Return v-if="props.cellData.status === 'Completed'" @click="openReturnModal(props.cellData.pId)" tooltip="Return"/>
                                 </template>
                             </DataTable>
                         </div>

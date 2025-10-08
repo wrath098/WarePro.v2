@@ -429,7 +429,7 @@ class IarTransactionController extends Controller
         $productDetails = $this->validateProduct($iar_particular->stock_no);
         
         if(!$productDetails) {
-            DB::rollBack();
+
             return back()->with('error', 'Product Item not found!');
         }
 

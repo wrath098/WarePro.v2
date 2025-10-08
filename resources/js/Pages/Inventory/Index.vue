@@ -7,7 +7,9 @@
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
     import DangerButton from '@/Components/DangerButton.vue';
     import Swal from 'sweetalert2';
+    import useAuthPermission from '@/Composables/useAuthPermission';
 
+    const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
     const message = computed(() => page.props.flash.message);
     const errMessage = computed(() => page.props.flash.error);
@@ -105,12 +107,6 @@
 
     const columns = [
         {
-            data: null,
-            title: 'Action/s',
-            width: '10%',
-            render: '#action',
-        },
-        {
             data: 'stockNo',
             title: 'Stock No.',
             width: '10%',
@@ -164,6 +160,14 @@
             },
         },
     ];
+    if (hasAnyRole(['Developer']) || hasPermission('update-product-inventory')) {
+        columns.push({
+            data: null,
+            title: 'Action/s',
+            width: '10%',
+            render: '#action',
+        },);
+    }
 </script>
 
 <template>

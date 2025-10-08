@@ -30,6 +30,13 @@ defineProps({
                     </a>
                 </div>
 
+                <div v-else class="py-5">
+                    <a class="px-6 py-2 min-w-[120px] text-center text-white bg-violet-600 border border-violet-600 rounded active:text-violet-500 hover:bg-transparent hover:text-violet-600 focus:outline-none focus:ring"
+                        :href="route('login')">
+                        Login
+                    </a>
+                </div>
+
                 <div class="flex flex-col justify-center items-center bg-primary pt-10 text-sm">
                     <p class="text-gray-500 font-bold">Copyright © Provincial General Services Office</p>
                     <p class="text-gray-300">Built by IT Dev Team, inspired by users.</p>
