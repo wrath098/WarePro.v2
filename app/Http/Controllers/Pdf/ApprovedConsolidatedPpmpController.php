@@ -177,7 +177,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                     $fundTotal += $catTotal;
                 }
                 $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="365px">Total Amount for ' . $fund->fund_name . '</td>
+                            <td width="365px">Grand Total Amount for ' . $fund->fund_name . '</td>
                             <td width="100px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
                             <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
                             <td width="25px">-</td>
