@@ -392,10 +392,10 @@
                                     <InputError class="mt-2" :message="editForm.errors.catCode" />
                                 </div>
                                 <div class="relative z-0 w-full group my2">
-                                    <select v-model="editForm.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required disabled>
+                                    <select v-model="editForm.fundId" name="fundId" id="fundId" class="block py-2.5 px-1 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
                                         <option value="" disabled selected>Please choose the Account Classification applicable</option>
-                                        <option :value="funds.id">
-                                            {{ funds.name }}
+                                        <option v-for="fund in funds" :key="fund.id" :value="fund.id">
+                                            {{ fund.name }}
                                         </option>
                                     </select>
                                     <label for="fundId" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>

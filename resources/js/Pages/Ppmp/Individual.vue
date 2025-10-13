@@ -217,7 +217,7 @@
                             <span class="mr-2">Add New Particular</span>
                         </AddButton>
                     </li>
-                    <li v-if="ppmp.ppmp_type == 'individual'">
+                    <li v-if="ppmp.ppmp_type == 'Individual'">
                         <PrintButton v-if="hasPermission('print-office-ppmp') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.DraftedOfficePpmp', { ppmp: ppmp.id, version: 'raw' })" target="_blank" class="mx-1 my-1 lg:my-0">
                             <span class="mr-2">Print</span>
                         </PrintButton>

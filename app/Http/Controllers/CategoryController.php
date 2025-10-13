@@ -25,10 +25,12 @@ class CategoryController extends Controller
     {   
         $fund->load('categories');
 
-        $formattedFunds = [
-            'id' => $fund->id,
-            'name' => $fund->fund_name
-        ];
+        $formattedFunds = $this->productService->getActiveFunds()->map(function ($query) use ($fund) {
+            return [
+                'id' => $query->id,
+                'name' => $query->fund_name,
+            ];
+        });
                     
         $categories = $fund->categories->map(function ($category) {
             return [
@@ -122,8 +124,14 @@ class CategoryController extends Controller
                         'catName' => 'Category Name under the selected account class is already exist!'
                     ]);
                 }
-;
-                $category->update(['cat_name' => $catName, 'updated_by' => $updater]);
+                
+                $category->update(
+                    [
+                        'fund_id' => $fundId, 
+                        'cat_name' => $catName, 
+                        'updated_by' => $updater
+                    ]);
+
                 return redirect()->back()
                     ->with(['message' => 'Category was updated successfully.']);
             });
