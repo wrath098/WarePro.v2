@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Services\ProductService;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -347,6 +348,44 @@ class ProductController extends Controller
             ]);
         
         return response()->json(['data' => $query]);
+    }
+
+    public function filterProductCatalog(Request $request): JsonResponse
+    {   
+        $category = strtolower($request->category);
+        $item = strtolower($request->item);
+
+        $findCategory = Category::whereRaw('LOWER(cat_name) = ?', [$category])->first();
+
+        $findItem = ItemClass::with('products')
+            ->when($findCategory, function($query) use ($findCategory) {
+                $query->where('cat_id', $findCategory->id);
+            })
+            ->when($item, function($query) use ($item) {
+                $query->whereRaw('LOWER(item_name) = ?', [$item]);
+            })
+            ->get();
+
+        $products = $findItem->flatMap(fn($item) =>
+            $item->products->map(function($product) use ($item) {
+                return [
+                    'id' => $product->id,
+                    'newNo' => $product->prod_newNo,
+                    'desc' => $product->prod_desc,
+                    'unit' => $product->prod_unit,
+                    'remarks' => $product->prod_remarks,
+                    'status' => $product->prod_status,
+                    'price' => $this->productService->getLatestPrice($product->id),
+                    'oldNo' => $product->prod_oldNo,
+                    'expiry' => $product->has_expiry == 1 ? 'Yes' : 'No',
+                    'catId' => optional($product->itemClass)->cat_id,
+                    'itemId' => optional($product->itemClass)->id,
+                    'itemName' => optional($product->itemClass)->item_name,
+                ];
+            })
+        );
+
+        return response()->json(['data' => $products->values()]);
     }
 
     private function verifyOldStockNo(string $oldStockNo, int $productId): ?Product

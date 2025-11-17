@@ -285,6 +285,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/fast-moving-items', [DashboardController::class, 'getFastMovingItems'])->name('get.fast.moving.items');
     Route::get('/monthly-product-inventory', [ProductInventoryController::class, 'getMonthlyInventory'])->name('get.monthly.inventory');
     Route::get('/filter-dashboard', [DashboardController::class, 'filterByDate'])->name('filter.dashboard');
+    Route::get('/filter-product-catalog', [ProductController::class, 'filterProductCatalog'])->name('filter.product.catalog');
     
     #PR
     Route::get('/ppmp-type', [PrMultiStepFormController::class, 'filterToPurchase'])->name('filter.purchase.request');

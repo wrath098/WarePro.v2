@@ -16,6 +16,7 @@
     import useAuthPermission from '@/Composables/useAuthPermission';
     import InputError from '@/Components/InputError.vue';
     import Dropdown from '@/Components/Dropdown.vue';
+    import InputMenu from '@/Components/InputMenu.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const page = usePage();
@@ -75,6 +76,11 @@
         prodId: '',
     });
 
+    const filterCatalog = useForm({
+        selectedCategory: '',
+        selectedItem: '',
+    });
+
     const filteredItems = ref([]);
     const modalState = ref(null);
     const years = generateYears();
@@ -87,6 +93,12 @@
     
     const onCategoryChange = (context) => {
         const category = props.categories.find(cat => cat.id === context.selectedCategory);
+        filteredItems.value = category ? category.items : [];
+        create.itemId = '';
+    };
+
+    const onCategoryChange_byName = (context) => {
+        const category = props.categories.find(cat => cat.name === context.selectedCategory);
         filteredItems.value = category ? category.items : [];
         create.itemId = '';
     };
@@ -180,6 +192,7 @@
     const submitModify = () => submitForm('put', route('product.move.modify'), edit);
     const submitDeactivate = () => submitForm('put', route('product.deactivate'), edit);
     const submitRestore = () => submitForm('put', route('product.restore'), restore);
+    //const submitFilterCatalog = () => submitForm('get', route('filter.product.catalog'), filterCatalog);
 
     const activeColumns = [
         {
@@ -312,6 +325,35 @@
         { value: 'Yard', label: 'Yard' },
     ];
 
+    const categoryNames = computed(() =>
+        props.categories.map(cat => cat.name)
+    );
+
+    const itemNames = computed(() =>
+        filteredItems.value.map(item => item.name)
+    );
+
+    const productCatalog = ref(props.products);
+    const fetchProductCatalog = async () => {
+        isLoading.value = true;
+        try {
+            const response = await axios.get('api/filter-product-catalog', {
+                params: {
+                    category: filterCatalog.selectedCategory,
+                    item: filterCatalog.selectedItem,
+                }
+            });
+            productCatalog.value = response.data.data;
+
+            console.log(productCatalog.value);
+            isLoading.value = false;
+        } catch (error) {
+            isLoading.value = false;
+            console.error('Error fetching product catalog:', error);
+        }
+    };
+    
+
 </script>
 
 <template>
@@ -398,10 +440,93 @@
 
         <div class="my-4 w-screen-2xl bg-zinc-300 shadow rounded-md mb-8">
             <div class="overflow-hidden p-4 shadow-sm sm:rounded-lg">
-                <div class="relative overflow-x-auto">
+                <div v-if="!isTrashedActive" class="relative overflow-x-auto">
+                    <div class="flex justify-between">
+                        <div class="flex flex-wrap items-end justify-center gap-2 mb-4">  
+                            <InputMenu v-model="filterCatalog.selectedCategory" @change="onCategoryChange_byName(filterCatalog)" :items="categoryNames" placeholder="Select category">
+                                <template #title>
+                                    Categories
+                                </template>
+                            </InputMenu>
+
+                            <InputMenu v-model="filterCatalog.selectedItem" :items="itemNames" placeholder="Select Item Name">
+                                <template #title>
+                                    Item Name
+                                </template>
+                            </InputMenu>
+
+                            <button type="button" @click="fetchProductCatalog" class="flex w-auto justify-center items-center min-w-[150px] px-2 py-2 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400">
+                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 16 16">
+                                    <path fill="currentColor" d="M1 2h14v2L9 9v7l-2-2V9L1 4V2zm0-2h14v1H1V0z"/>
+                                </svg>
+                                Apply Filter
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap items-end justify-center gap-2 mb-4">
+                            <input type="text" placeholder="Search..."/>
+                        </div>
+                    </div>
+
+                    <section class="my-10 p-5 md:p-0 flex gap-10 w-full flex-wrap justify-start">
+                        <section v-for="product in productCatalog" :key="product.id" class="p-5 py-10 bg-zinc-200 text-center transform duration-500 hover:-translate-y-2 w-80 rounded-lg">
+                            <div class="flex justify-end items-end">
+                                <Dropdown>
+                                    <template #trigger>
+                                        <button class="text-gray-900 hover:text-indigo-50 p-2 hover:bg-zinc-800 rounded-full transition">
+                                            <span class="sr-only">Open options</span>
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
+                                                <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
+                                            </svg>
+                                        </button>
+                                    </template>
+                                    <template #content>
+                                        <button @click="openEditModal(product)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-800 hover:text-gray-50 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                            Edit 
+                                        </button>
+                                        <button @click="openModifyModal(product)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-800 hover:text-gray-50 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                            Modify 
+                                        </button>
+                                        <button @click="openDeactivateModal(product)" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-800 hover:text-gray-50 focus:bg-gray-100 transition duration-150 ease-in-out">
+                                            Remove
+                                        </button>
+                                    </template>
+                                </Dropdown>
+                            </div>
+                            <div class="relative w-60 h-60 mx-auto">
+                                <img src="/WarePro.v2/assets/images/no_image.png" class="w-full h-full rounded-lg object-cover" alt="">
+
+                                <button @click="''" class="absolute bottom-1 right-1 bg-black/30 text-white px-2 py-1 rounded text-xs hover:bg-black/80">
+                                    Upload
+                                </button>
+                            </div>
+                            <div class="text-slate-800">
+                                <h1 class="text-3xl my-5">#{{ product.newNo }}</h1>
+                                <p class="mb-5">{{ product.desc }}. <span v-if="product.expiry == 'Yes'" class="inline-flex items-center p-1 text-xs rounded bg-red-100 text-red-800">With Expiration</span></p>
+                                <h2 class="font-semibold mb-5">₱ {{ product.price }}</h2>
+                            </div>
+                            <button class="p-2 px-6 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">Read More</button>
+                        </section>
+                    </section>
+                    <div v-if="productCatalog.length > 20" class="flex justify-center gap-2 mt-4">
+                        <button
+                            @click="loadMore"
+                            class="px-4 py-2 border-2 border-zinc-800 rounded text-zinc-800 hover:bg-zinc-800 hover:text-zinc-50"
+                            :disabled="isLoading"
+                        >
+                            Load More
+                        </button>
+
+                        <button
+                            @click="loadAll"
+                            class="px-4 py-2 border-2 border-zinc-800 rounded text-zinc-800 hover:bg-zinc-800 hover:text-zinc-50"
+                            :disabled="isLoading"
+                        >
+                            Load All ({{ total }})
+                        </button>
+                    </div>
+
                     <!-- ACTIVE TABLE -->
-                    <DataTable
-                        v-if="!isTrashedActive"
+                    <!-- <DataTable
                         class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="activeColumns"
                         :data="props.products"
@@ -414,11 +539,12 @@
                                 <ModifyButton v-if="hasPermission('modify-product-item') ||  hasAnyRole(['Developer'])" @click="openModifyModal(props.cellData)" tooltip="Move"/>
                                 <RemoveButton v-if="hasPermission('delete-product-item') ||  hasAnyRole(['Developer'])" @click="openDeactivateModal(props.cellData)" tooltip="Remove"/>
                             </template>
-                    </DataTable>
+                    </DataTable> -->
+                </div>
 
+                <div v-if="isTrashedActive" class="relative overflow-x-auto">
                     <!-- TRASHED TABLE -->
                     <DataTable
-                        v-if="isTrashedActive"
                         class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
                         :columns="trashedColumns"
                         :data="trashedItems.data"

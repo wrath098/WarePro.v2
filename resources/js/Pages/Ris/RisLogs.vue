@@ -169,7 +169,7 @@
                         </div>
 
                         <div class="relative z-0 w-full my-5 group flex justify-center items-center">
-                            <button type="submit" class="flex w-auto justify-center items-center mx-1 min-w-[100px] px-2 py-3 my-1 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
+                            <button type="submit" class="flex w-auto justify-center items-center mx-1 min-w-[100px] px-2 py-1 text-white transition-all bg-gray-600 rounded-md sm:w-auto hover:bg-gray-900 hover:text-white shadow-neutral-300 hover:shadow-2xl hover:shadow-neutral-400 hover:-tranneutral-y-px">
                                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 16 16">
                                     <path fill="currentColor" d="M1 2h14v2L9 9v7l-2-2V9L1 4V2zm0-2h14v1H1V0z"/>
                                 </svg>
