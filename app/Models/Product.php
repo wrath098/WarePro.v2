@@ -26,6 +26,7 @@ class Product extends Model
         'item_id',
         'created_by',
         'updated_by',
+        'image',
     ];
 
     protected $cast = [

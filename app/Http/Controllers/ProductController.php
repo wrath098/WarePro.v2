@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Rap2hpoutre\FastExcel\FastExcel;
@@ -46,10 +47,11 @@ class ProductController extends Controller
                 ];
         });
     
-        $products = Product::with('itemClass')
+        $products = Product::with(['itemClass', 'itemClass.category'])
             ->where('prod_status', 'active')
             ->orderBy('item_id', 'asc')
             ->orderBy('prod_desc', 'asc')
+            ->take(50)
             ->get()
             ->map(fn($product) => [
                 'id' => $product->id,
@@ -61,9 +63,11 @@ class ProductController extends Controller
                 'price' => $this->productService->getLatestPrice($product->id),
                 'oldNo' => $product->prod_oldNo,
                 'expiry' => $product->has_expiry == 1 ? 'Yes' : 'No',
-                'catId' => optional($product->itemClass)->cat_id,
+                'image_path' => $product->image ? asset('storage/' . $product->image) : '/WarePro.v2/assets/images/no_image.png',
+                'catId' => optional($product->itemClass)->cat_id, 
                 'itemId' => optional($product->itemClass)->id,
                 'itemName' => optional($product->itemClass)->item_name,
+                'className' => optional($product->itemClass)->category->cat_name,
             ]);
 
         return Inertia::render('Product/Index', [
@@ -177,6 +181,44 @@ class ProductController extends Controller
                 'data' => $validatedData
             ]);
             return back()->with('error', 'Updating Product Information Failed. Please try again!');
+        }
+    }
+
+    public function uploadProductImage(Request $request) {
+        $request->validate([
+            'prodId' => 'required|integer',
+            'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        DB::beginTransaction();
+        $product = Product::find($request->prodId);
+
+        try {
+
+            if($product->image) {
+                Storage::disk('public')->delete($product->image);
+                $product->image = null;
+                $product->save();
+            }
+
+            if ($request->hasFile('file')) {
+                $filename = Str::uuid() . '.' . $request->file('file')->extension();
+                $path = $request->file('file')->storeAs('product_image', $filename, 'public');
+                $product->image = $path;
+                $product->save();
+            }
+
+            DB::commit();
+                return redirect()->back()->with(['update_product' => $product,
+                    'message' => 'Product image has been uploaded successfully.']);
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("Product Image Upload Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $product->prod_desc
+            ]);
+            return back()->with('error', 'Product Image Upload Failed. Please try again!');
         }
     }
 
@@ -357,7 +399,7 @@ class ProductController extends Controller
 
         $findCategory = Category::whereRaw('LOWER(cat_name) = ?', [$category])->first();
 
-        $findItem = ItemClass::with('products')
+        $findItem = ItemClass::with(['products', 'category'])
             ->when($findCategory, function($query) use ($findCategory) {
                 $query->where('cat_id', $findCategory->id);
             })
@@ -378,14 +420,43 @@ class ProductController extends Controller
                     'price' => $this->productService->getLatestPrice($product->id),
                     'oldNo' => $product->prod_oldNo,
                     'expiry' => $product->has_expiry == 1 ? 'Yes' : 'No',
+                    'image_path' => $product->image ? asset('storage/' . $product->image) : '/WarePro.v2/assets/images/no_image.png',
                     'catId' => optional($product->itemClass)->cat_id,
                     'itemId' => optional($product->itemClass)->id,
                     'itemName' => optional($product->itemClass)->item_name,
+                    'className' => optional($product->itemClass)->category->cat_name,
                 ];
             })
         );
 
         return response()->json(['data' => $products->values()]);
+    }
+
+    public function searchProductCatalog(Request $request){
+        $query = Product::with(['updater', 'itemClass', 'itemClass.category'])
+            ->where('prod_desc', 'LIKE', "%{$request->search}%")
+            ->orWhere('prod_newNo', 'LIKE', "%{$request->search}%")
+            ->get()
+            ->map(function($product) {
+                    return [
+                        'id' => $product->id,
+                        'newNo' => $product->prod_newNo,
+                        'desc' => $product->prod_desc,
+                        'unit' => $product->prod_unit,
+                        'remarks' => $product->prod_remarks,
+                        'status' => $product->prod_status,
+                        'price' => $this->productService->getLatestPrice($product->id),
+                        'oldNo' => $product->prod_oldNo,
+                        'expiry' => $product->has_expiry == 1 ? 'Yes' : 'No',
+                        'image_path' => $product->image ? asset('storage/' . $product->image) : '/WarePro.v2/assets/images/no_image.png',
+                        'catId' => optional($product->itemClass)->cat_id,
+                        'itemId' => optional($product->itemClass)->id,
+                        'itemName' => optional($product->itemClass)->item_name,
+                        'className' => optional($product->itemClass)->category->cat_name,
+                    ];
+                });
+
+        return response()->json(['data' => $query->values()]);
     }
 
     private function verifyOldStockNo(string $oldStockNo, int $productId): ?Product
@@ -398,67 +469,67 @@ class ProductController extends Controller
     }
 
     #FOR UPLOAD OF PRODUCTS FROM EXCEL FILE ONLY
-    public function importProduct()
-    {
-        $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';
-        $filename = 'Book13.xlsx';
-        $destinationPath = 'uploads/' . $filename;
+    // public function importProduct()
+    // {
+    //     $sourcePath = 'd:/Users/User/Downloads/Book13.xlsx';
+    //     $filename = 'Book13.xlsx';
+    //     $destinationPath = 'uploads/' . $filename;
 
-        Storage::disk('local')->put($destinationPath, File::get($sourcePath));
-        $fullPath = storage_path('app/' . $destinationPath);
+    //     Storage::disk('local')->put($destinationPath, File::get($sourcePath));
+    //     $fullPath = storage_path('app/' . $destinationPath);
 
-        $startRow = 0; // Assuming 1 to skip header row
-        $currentRow = 0;
-        $productsUpdated = 0;
-        $productsSkipped = 0;
+    //     $startRow = 0; // Assuming 1 to skip header row
+    //     $currentRow = 0;
+    //     $productsUpdated = 0;
+    //     $productsSkipped = 0;
 
-        try {
-            (new FastExcel)->import($fullPath, function ($line) use ($startRow, &$currentRow, &$productsUpdated, &$productsSkipped) {
-                $currentRow++;
+    //     try {
+    //         (new FastExcel)->import($fullPath, function ($line) use ($startRow, &$currentRow, &$productsUpdated, &$productsSkipped) {
+    //             $currentRow++;
 
-                if ($currentRow < $startRow) {
-                    return null; // Skip rows before startRow
-                }
+    //             if ($currentRow < $startRow) {
+    //                 return null; // Skip rows before startRow
+    //             }
 
-                $newStock = $line['New_Stock_No'] ?? null;
-                $price = $line['Price'] ?? null;
+    //             $newStock = $line['New_Stock_No'] ?? null;
+    //             $price = $line['Price'] ?? null;
 
-                Log::info($newStock);
+    //             Log::info($newStock);
 
-                // Validate stock number format
-                if (!preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock)) {
-                    $productsSkipped++;
-                    return null;
-                }
+    //             // Validate stock number format
+    //             if (!preg_match("/^\d{2}-\d{2}-\d{2,4}$/", $newStock)) {
+    //                 $productsSkipped++;
+    //                 return null;
+    //             }
 
-                $product = Product::where('prod_newNo', $newStock)->first();
-                if (!$product) {
-                    $productsSkipped++;
-                    return null; // No product found, skip
-                }
+    //             $product = Product::where('prod_newNo', $newStock)->first();
+    //             if (!$product) {
+    //                 $productsSkipped++;
+    //                 return null; // No product found, skip
+    //             }
 
-                $latestPrice = (float) $this->productService->getLatestPrice($product->id);
-                $reformatPrice = (float) $price;
+    //             $latestPrice = (float) $this->productService->getLatestPrice($product->id);
+    //             $reformatPrice = (float) $price;
 
-                if ($latestPrice !== $reformatPrice) {
-                    ProductPrice::create([
-                        'prod_price' => $reformatPrice,
-                        'prod_id' => $product->id,
-                    ]);
-                    $productsUpdated++;
-                } else {
-                    $productsSkipped++;
-                }
-            });
+    //             if ($latestPrice !== $reformatPrice) {
+    //                 ProductPrice::create([
+    //                     'prod_price' => $reformatPrice,
+    //                     'prod_id' => $product->id,
+    //                 ]);
+    //                 $productsUpdated++;
+    //             } else {
+    //                 $productsSkipped++;
+    //             }
+    //         });
 
-            return response()->json([
-                'rows_processed' => $currentRow,
-                'prices_updated' => $productsUpdated,
-                'rows_skipped' => $productsSkipped,
-            ]);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json(['error' => 'Error importing data: ' . $e->getMessage()], 500);
-        }
-    }
+    //         return response()->json([
+    //             'rows_processed' => $currentRow,
+    //             'prices_updated' => $productsUpdated,
+    //             'rows_skipped' => $productsSkipped,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error($e->getMessage());
+    //         return response()->json(['error' => 'Error importing data: ' . $e->getMessage()], 500);
+    //     }
+    // }
 }

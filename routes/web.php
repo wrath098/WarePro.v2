@@ -157,9 +157,12 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::put('/deactivate', [ProductController::class, 'deactivate'])->name('product.deactivate');
     Route::post('/store-unmodified-product', [ProductPpmpExceptionController::class, 'store'])->name('store.unmodified.product');
     Route::put('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
+    Route::post('/upload-product-image', [ProductController::class, 'uploadProductImage'])->name('upload.product.image');
+
 
     #AJAX
     Route::get('/trashed-items', [ProductController::class, 'getTrashedItems'])->name('trashed.product.items');
+    Route::get('/search-product', [ProductController::class, 'searchProduct'])->name('search.product.items');
 });
 
 Route::middleware('auth')->prefix('ppmp')->group(function () {
@@ -278,17 +281,28 @@ Route::middleware('auth')->prefix('word')->group(function () {
 
 #AJAX
 Route::middleware('auth')->prefix('api')->group(function () {
+
+    #PPMP
     Route::get('/office-ppmp-particulars', [PpmpParticularController::class, 'getOfficePpmpParticulars'])->name('get.office.particulars');
-    Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
-    Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
-    Route::get('/issuances-log', [RisTransactionController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
+
+    #DASHBOARD
+    Route::get('/filter-dashboard', [DashboardController::class, 'filterByDate'])->name('filter.dashboard');
     Route::get('/fast-moving-items', [DashboardController::class, 'getFastMovingItems'])->name('get.fast.moving.items');
     Route::get('/monthly-product-inventory', [ProductInventoryController::class, 'getMonthlyInventory'])->name('get.monthly.inventory');
-    Route::get('/filter-dashboard', [DashboardController::class, 'filterByDate'])->name('filter.dashboard');
+
+    #PRODUCT
+    Route::get('/search-product-catalog', [ProductController::class, 'searchProductCatalog'])->name('search.product.catalog');
+    Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
     Route::get('/filter-product-catalog', [ProductController::class, 'filterProductCatalog'])->name('filter.product.catalog');
     
     #PR
     Route::get('/ppmp-type', [PrMultiStepFormController::class, 'filterToPurchase'])->name('filter.purchase.request');
+
+    #RIS
+    Route::get('/issuances-log', [RisTransactionController::class, 'getIssuanceLogs'])->name('get.issuances.logs');
+
+    #INVENTORY
+    Route::get('/product-inventory-log', [ProductInventoryController::class, 'getProductInventoryLogs'])->name('get.product.inventory.logs');
 });
 
 #For IAR NO UPLOAD
