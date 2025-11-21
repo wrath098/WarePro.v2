@@ -51,7 +51,7 @@ class ProductController extends Controller
             ->where('prod_status', 'active')
             ->orderBy('item_id', 'asc')
             ->orderBy('prod_desc', 'asc')
-            ->take(50)
+            ->take(30)
             ->get()
             ->map(fn($product) => [
                 'id' => $product->id,
@@ -70,7 +70,10 @@ class ProductController extends Controller
                 'className' => optional($product->itemClass)->category->cat_name,
             ]);
 
+        $total = $products->count();
+
         return Inertia::render('Product/Index', [
+            'total' => $total,
             'products' => $products, 
             'categories' => $activeCategories ,
             'authUserId' => Auth::id()

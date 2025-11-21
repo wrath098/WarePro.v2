@@ -203,8 +203,8 @@ watchEffect(() => {
                 label: 'Drops',
                 data: props.monthlyPriceEvaluation?.datasets?.drops || [],
                 fill: true,
-                backgroundColor: 'rgba(39, 183, 138, 0.1)',
-                borderColor: 'rgba(39, 183, 138, 1)',
+                backgroundColor: 'rgba(128, 71, 172, 0.3)',
+                borderColor: 'rgba(128, 71, 172, 1)',
                 tension: 0.2,
                 pointRadius: 5,
                 pointHoverRadius: 10
@@ -212,8 +212,8 @@ watchEffect(() => {
             {
                 label: 'Hikes',
                 data: props.monthlyPriceEvaluation?.datasets?.hikes || [],
-                backgroundColor: 'rgba(168, 45, 55, 0.1)',
-                borderColor: 'rgba(168, 45, 55, 1)',
+                backgroundColor: 'rgba(118, 1, 211, 0.3)',
+                borderColor: 'rgba(118, 1, 211, 1)',
                 fill: true,
                 tension: 0.2,
                 pointRadius: 5,
@@ -223,8 +223,8 @@ watchEffect(() => {
                 label: 'Stable',
                 data: props.monthlyPriceEvaluation?.datasets?.stable || [],
                 fill: true,
-                backgroundColor: 'rgba(35, 2, 169, 0.1)',
-                borderColor: 'rgba(35, 2, 169, 1)',
+                backgroundColor: 'rgba(80, 7, 36, 0.3)',
+                borderColor: 'rgba(80, 7, 36, 1)',
                 tension: 0.2,
                 pointRadius: 5,
                 pointHoverRadius: 10

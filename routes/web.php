@@ -144,8 +144,8 @@ Route::middleware('auth')->prefix('general-servies-fund')->group(function () {
 });
 
 Route::middleware('auth')->prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
     Route::middleware('productAccess')->group(function() {
-        Route::get('/', [ProductController::class, 'index'])->name('product.display.active');
         Route::get('/product-price-list', [ProductController::class, 'showPriceList'])->name('product.display.active.pricelist');
         Route::get('/unmodified', [ProductPpmpExceptionController::class, 'index'])->name('product.unmodified.list');
     });

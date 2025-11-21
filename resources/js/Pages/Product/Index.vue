@@ -3,12 +3,9 @@
     import { ref, computed, watch } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
     import Modal from '@/Components/Modal.vue';
     import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
-    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import AddButton from '@/Components/Buttons/AddButton.vue';
-    import ModifyButton from '@/Components/Buttons/ModifyButton.vue';
     import Swal from 'sweetalert2';
     import TrashedButton from '@/Components/Buttons/TrashedButton.vue';
     import axios from 'axios';
@@ -332,7 +329,7 @@
         productCatalog.value = [];
 
         if (!keyword) {
-            productCatalog.value = props.products
+            fetchProductCatalog();
             return
         }
         
@@ -400,7 +397,6 @@
                     edit.reset();
                     file.value = [];
                     closeModal('upload');
-                    fetchProductCatalog();
 
                     Swal.fire({
                         title: 'Success',
@@ -536,7 +532,7 @@
                             />
                         </div>
                     </div>
-                    <section v-if="isSearchLoading && isLoading == false" class="flex justify-center items-center">
+                    <section v-if="isSearchLoading" class="flex justify-center items-center">
                         <div class="text-center p-6">
                             <div class="w-24 h-24 border-4 border-dashed rounded-full animate-spin border-[#380252] mx-auto"></div>
                             <h2 class="text-zinc-900 mt-4">Loading...</h2>

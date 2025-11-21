@@ -81,7 +81,7 @@ const officeUser = hasAnyRole(['Office User']);
                                         <span class="flex-1 ml-3 text-left whitespace-nowrap font-semibold">DASHBOARD</span>
                                     </SidebarLink>
                                 </li>
-                                <li v-if="officeUser">
+                                <li v-if="officeUser" class="pt-2">
                                     <SidebarLink :href="route('product.display.active')" :active="route().current('product.display.active')">
                                         <svg
                                             class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
@@ -93,7 +93,7 @@ const officeUser = hasAnyRole(['Office User']);
                                         >
                                             <path fill="currentColor" fill-rule="evenodd" d="M15 4H9v16h6zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3zM4 4h3v16H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2" clip-rule="evenodd"/>
                                         </svg>
-                                        <span class="flex-1 ml-3 text-left whitespace-nowrap">Product List</span>
+                                        <span class="flex-1 ml-3 text-left whitespace-nowrap font-semibold">CATALOG</span>
                                     </SidebarLink>
                                 </li>
                             </ol>
