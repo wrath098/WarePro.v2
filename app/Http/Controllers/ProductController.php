@@ -51,7 +51,6 @@ class ProductController extends Controller
             ->where('prod_status', 'active')
             ->orderBy('item_id', 'asc')
             ->orderBy('prod_desc', 'asc')
-            ->take(30)
             ->get()
             ->map(fn($product) => [
                 'id' => $product->id,
@@ -70,10 +69,7 @@ class ProductController extends Controller
                 'className' => optional($product->itemClass)->category->cat_name,
             ]);
 
-        $total = $products->count();
-
         return Inertia::render('Product/Index', [
-            'total' => $total,
             'products' => $products, 
             'categories' => $activeCategories ,
             'authUserId' => Auth::id()
@@ -142,7 +138,7 @@ class ProductController extends Controller
             'prodDesc' => 'required|string',
             'prodPrice' => 'required|numeric',
             'hasExpiry' => 'nullable|integer',
-            'prodOldCode' => 'required|string',
+            'prodOldCode' => 'nullable|string',
             'updatedBy' => 'required|integer',
         ]);
 
@@ -150,7 +146,7 @@ class ProductController extends Controller
             $product = Product::where('id', $validatedData['prodId'])->lockForUpdate()->firstOrFail();
             $latestPrice = $this->productService->getLatestPrice($validatedData['prodId']);
 
-            $isOLdCodeFound = $this->verifyOldStockNo($validatedData['prodOldCode'], $product->id);
+            $isOLdCodeFound = $validatedData['prodOldCode'] ? $this->verifyOldStockNo($validatedData['prodOldCode'], $product->id) : '';
 
             if ($validatedData['prodOldCode'] && $isOLdCodeFound) {
                 DB::rollBack();
@@ -212,8 +208,7 @@ class ProductController extends Controller
             }
 
             DB::commit();
-                return redirect()->back()->with(['update_product' => $product,
-                    'message' => 'Product image has been uploaded successfully.']);
+                return redirect()->back()->with(['message' => 'Product image has been uploaded successfully.']);
         } catch(\Exception $e) {
             DB::rollBack();
             Log::error("Product Image Upload Failed: ", [
@@ -460,6 +455,11 @@ class ProductController extends Controller
                 });
 
         return response()->json(['data' => $query->values()]);
+    }
+
+    public function filterProductById(Product $prodId)
+    {
+        return response()->json(['data' => $prodId]);
     }
 
     private function verifyOldStockNo(string $oldStockNo, int $productId): ?Product

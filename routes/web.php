@@ -294,6 +294,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/search-product-catalog', [ProductController::class, 'searchProductCatalog'])->name('search.product.catalog');
     Route::get('/search-product-item', [ProductInventoryController::class, 'searchProductItem'])->name('search.product.item');
     Route::get('/filter-product-catalog', [ProductController::class, 'filterProductCatalog'])->name('filter.product.catalog');
+    Route::get('/fetch-product/{prodId}', [ProductController::class, 'filterProductById'])->name('filter.product.by.id');
     
     #PR
     Route::get('/ppmp-type', [PrMultiStepFormController::class, 'filterToPurchase'])->name('filter.purchase.request');

@@ -32,6 +32,7 @@
         authUserId: Number,
     });
 
+    const productCatalog = ref(props.products);
     const trashedItems = ref([]);
     const isTrashedActive = ref(false);
     const fetchTrashedItems = async () => {
@@ -190,14 +191,20 @@
                         text: warningMessage.value,
                         icon: 'warning',
                         confirmButtonText: 'OK',
-                    }).then(() => closeModal());
+                    }).then(async () => {
+                        closeModal();
+                        await refreshCatalog();
+                    });
                 } else {
                     formData.reset();
                     Swal.fire({
                         title: 'Success',
                         text: message.value,
                         icon: 'success',
-                    }).then(() => closeModal());
+                    }).then(async () => {
+                        closeModal();
+                        await refreshCatalog();
+                    });
                 }
             },
             onError: (errors) => {
@@ -302,49 +309,41 @@
         filteredItems.value.map(item => item.name)
     );
 
-    const productCatalog = ref(props.products);
     const fetchProductCatalog = async () => {
-        productCatalog.value = [];
         isSearchLoading.value = true;
-        
+
         try {
-            const response = await axios.get('api/filter-product-catalog', {
+            const { data } = await axios.get('api/filter-product-catalog', {
                 params: {
                     category: filterCatalog.selectedCategory,
                     item: filterCatalog.selectedItem,
                 }
             });
-            productCatalog.value = response.data.data;
-            isSearchLoading.value = false;
+
+            productCatalog.value = data.data;
 
         } catch (error) {
+            console.error('Catalog fetch failed:', error);
+        } finally {
             isSearchLoading.value = false;
-            console.error('Error fetching product catalog:', error);
         }
     };
 
     const search = ref('');
     const runSearch = async () => {
-        const keyword = search.value.trim()
-        productCatalog.value = [];
-
-        if (!keyword) {
-            fetchProductCatalog();
-            return
-        }
-        
-        isSearchLoading.value = true
+        isSearchLoading.value = true;
 
         try {
-            const response = await axios.get('api/search-product-catalog', {
-                params: { search: keyword }
-            })
+            const { data } = await axios.get('api/search-product-catalog', {
+                params: { search: search.value.trim() }
+            });
 
-            productCatalog.value = response.data.data
+            productCatalog.value = data.data;
+
         } catch (error) {
-            console.error('Error fetching product catalog:', error)
+            console.error('Search failed:', error);
         } finally {
-            isSearchLoading.value = false
+            isSearchLoading.value = false;
         }
     };
 
@@ -368,33 +367,33 @@
     
     const submitUpload = () => {
         if (!file.value) {
-            alert('Please select a file first!');
+            Swal.fire('Missing File', 'Please select a file first!', 'warning');
             return;
         }
 
         isLoading.value = true;
         edit.file = file.value;
+
         edit.post(route('upload.product.image'), {
-            preserveScroll: true,
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
             forceFormData: true,
+            headers: { 'Content-Type': 'multipart/form-data' },
+
             onError: (errors) => {
                 isLoading.value = false;
-                console.error('Error: ' + JSON.stringify(errors));
+                console.error('Upload error:', errors);
             },
-            onSuccess: () => {
-                if (errMessage.value) {
-                    isLoading.value = false;
-                    Swal.fire({
-                        title: 'Failed',
-                        text: errMessage.value,
-                        icon: 'error',
-                    });
-                } else {
-                    isLoading.value = false;
-                    edit.reset();
+
+            onSuccess: async () => {
+                try {
+                    if (errMessage.value) {
+                        Swal.fire({
+                            title: 'Failed',
+                            text: errMessage.value,
+                            icon: 'error',
+                        });
+                        return;
+                    }
+
                     file.value = [];
                     closeModal('upload');
 
@@ -403,17 +402,54 @@
                         text: message.value,
                         icon: 'success',
                     });
+                } catch (error) {
+                    console.error('Error fetching product:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to update product data.',
+                        icon: 'error',
+                    });
+                } finally {
+                    await refreshCatalog(); 
+                    isLoading.value = false;              
                 }
             }
         })
     };
 
-    const debouncedSearch = debounce(runSearch, 1000);
+    const debouncedSearch = debounce(async () => {
+        await refreshCatalog();
+    }, 500);
 
-    watch(search, () => {
-        debouncedSearch()
+    watch(search, debouncedSearch);
+
+    const noToShow = ref(25);
+
+    const totalItems = computed(() => {
+        return productCatalog.value.length - noToShow.value;
     });
 
+    const productsToShow = computed(() => 
+        productCatalog.value.slice(0, noToShow.value)
+    );
+
+    function loadMore() {
+        noToShow.value += 25;
+    }
+
+    function loadAll() {
+        noToShow.value = productCatalog.value.length;
+    }
+
+    const refreshCatalog = async () => {
+        const keyword = search.value.trim();
+
+        if (!keyword) {
+            await fetchProductCatalog();
+        } else {
+            await runSearch();
+        }
+    };
 </script>
 
 <template>
@@ -547,7 +583,7 @@
                         </div>
                     </section>
                     <section v-else class="p-1 flex flex-wrap items-center justify-center gap-10">
-                        <article v-for="product in productCatalog" :key="product.id" class="max-w-xs w-full bg-purple-50/100 rounded-lg shadow-lg overflow-hidden transform duration-500 hover:-translate-y-2">
+                        <article v-for="product in productsToShow" :key="product.id" class="max-w-xs w-full bg-purple-50/100 rounded-lg shadow-lg overflow-hidden transform duration-500 hover:-translate-y-2">
                             <div class="relative">
                                 <img class="object-cover h-80 w-full" :src="product.image_path" alt="Converse sneakers" />
                                 <p v-if="product.expiry == 'Yes'" class="absolute flex flex-row bottom-1 left-1 p-1 text-xs rounded bg-red-100 text-rose-800">Limited-life products</p>
@@ -593,23 +629,15 @@
                             </div>
                         </article>
                     </section>
-                    <!-- <div v-if="productCatalog.length > 20" class="flex justify-center gap-2 mt-4">
-                        <button
-                            @click="loadMore"
-                            class="px-4 py-2 border-2 border-zinc-800 rounded text-zinc-800 hover:bg-zinc-800 hover:text-zinc-50"
-                            :disabled="isLoading"
-                        >
+                    <div v-if="noToShow < productCatalog.length" class="flex justify-center gap-2 mt-4">
+                        <button @click="loadMore" class="px-4 py-2 border-2 border-zinc-800 bg-zinc-800 rounded text-zinc-50 hover:bg-zinc-50 hover:text-zinc-800">
                             Load More
                         </button>
 
-                        <button
-                            @click="loadAll"
-                            class="px-4 py-2 border-2 border-zinc-800 rounded text-zinc-800 hover:bg-zinc-800 hover:text-zinc-50"
-                            :disabled="isLoading"
-                        >
-                            Load All ({{ total }})
+                        <button @click="loadAll" class="px-4 py-2 border-2 border-zinc-800 rounded text-zinc-800 hover:bg-zinc-800 hover:text-zinc-50">
+                            Load All ({{ totalItems }})
                         </button>
-                    </div> -->
+                    </div>
                 </div>
 
                 <div v-if="isTrashedActive" class="relative overflow-x-auto">
