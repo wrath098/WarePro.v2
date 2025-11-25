@@ -11,6 +11,7 @@ use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
 use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,42 @@ class PpmpTransactionController extends Controller
             'offices' => $office,
             'user' => Auth::id(),
         ]);
+    }
+
+    public function officePpmpIndex(): Response
+    {
+        $user = Auth::user();
+        $user->load('office');
+        return Inertia::render('Ppmp/Office/Create', [
+            'user' => $user,
+        ]);
+    }
+
+    public function validateOfficePpmp(Request $request)
+    {
+        $products = Product::with(['itemClass', 'itemClass.category'])
+            ->where('prod_status', 'active')
+            ->orderBy('item_id', 'asc')
+            ->orderBy('prod_desc', 'asc')
+            ->get()
+            ->map(fn($product) => [
+                'id' => $product->id,
+                'newNo' => $product->prod_newNo,
+                'desc' => $product->prod_desc,
+                'unit' => $product->prod_unit,
+                'remarks' => $product->prod_remarks,
+                'status' => $product->prod_status,
+                'price' => $this->productService->getLatestPrice($product->id),
+                'oldNo' => $product->prod_oldNo,
+                'expiry' => $product->has_expiry == 1 ? 'Yes' : 'No',
+                'image_path' => $product->image ? asset('storage/' . $product->image) : '/WarePro.v2/assets/images/no_image.png',
+                'catId' => optional($product->itemClass)->cat_id, 
+                'itemId' => optional($product->itemClass)->id,
+                'itemName' => optional($product->itemClass)->item_name,
+                'className' => optional($product->itemClass)->category->cat_name,
+            ]);
+
+        return response()->json(['data' => $products]);
     }
 
     public function store(Request $request)#

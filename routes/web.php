@@ -159,7 +159,6 @@ Route::middleware('auth')->prefix('products')->group(function () {
     Route::put('/deactivate-unmodified-product', [ProductPpmpExceptionController::class, 'deactivate'])->name('deactivate.unmodified.product');
     Route::post('/upload-product-image', [ProductController::class, 'uploadProductImage'])->name('upload.product.image');
 
-
     #AJAX
     Route::get('/trashed-items', [ProductController::class, 'getTrashedItems'])->name('trashed.product.items');
     Route::get('/search-product', [ProductController::class, 'searchProduct'])->name('search.product.items');
@@ -188,6 +187,12 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     Route::put('/consolidated-particular/update/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'update'])->name('conso-particular-update');
     Route::delete('/consolidated-particular/destroy/{ppmpConsolidated}', [PpmpConsolidatedController::class, 'destroy'])->name('conso-particular-destroy');
     Route::delete('/individual-ppmp/delete', [PpmpParticularController::class, 'delete'])->name('indiv.particular.delete');
+
+    #OFFICE
+    Route::prefix('office')->group(function() {
+        Route::get('/create', [PpmpTransactionController::class, 'officePpmpIndex'])->name('office.ppmp.creation');
+        Route::get('/validate-office', [PpmpTransactionController::class, 'validateOfficePpmp'])->name('validate-office-ppmp');
+    });
 
     #AJAX
     Route::get('/offices-with-no-ppmp', [PpmpTransactionController::class, 'showOfficeListWithNoPpmp'])->name('show.ppmp.withNoPpmp');

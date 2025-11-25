@@ -267,19 +267,14 @@ const officeUser = hasAnyRole(['Office User']);
                                     </p>
                                 </li>
                                 <li class="mb-1">
-                                    <SidebarLink 
-                                        :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
-                                    >
+                                    <SidebarLink :href="route('office.ppmp.creation')" :active="route().current('office.ppmp.creation') || route().current('office.ppmp.creation')">
                                         <svg 
                                             class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                            :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                            :class="{ 'text-white' : route().current('office.ppmp.creation') || route().current('office.ppmp.creation') }"
                                             fill="currentColor" 
                                             aria-hidden="true" 
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path fill="currentColor" d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z"/>
-                                            <path fill="currentColor" d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z"/>
+                                            xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M19 21h-1q-.425 0-.712-.288T17 20t.288-.712T18 19h1v-1q0-.425.288-.712T20 17t.713.288T21 18v1h1q.425 0 .713.288T23 20t-.288.713T22 21h-1v1q0 .425-.288.713T20 23t-.712-.288T19 22zM5 11q-.825 0-1.412-.587T3 9V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v4q0 .825-.587 1.413T19 11zm0 10q-.825 0-1.412-.587T3 19v-4q0-.825.588-1.412T5 13h14q.825 0 1.413.588T21 15v.1q-.225-.05-.5-.075T20 15q-2.1 0-3.55 1.463T15 20q0 .275.025.525T15.1 21z"/>
                                         </svg>
                                         <span class="ml-3 font-semibold">CREATE PPMP</span>
                                     </SidebarLink>
