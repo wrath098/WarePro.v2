@@ -54,6 +54,58 @@
         const currentYear = new Date().getFullYear() + 2;
         return Array.from({ length: 3 }, (_, i) => currentYear - i);
     }
+
+    const selectedItems = ref([]);
+    const selected = (product) => {
+
+        if (!selectedItems.value.some(i => i.id === product.id)) {
+            selectedItems.value.push(product);
+        }
+
+        selectedItems.value.sort(sortByNewNo);
+
+        const index = productCatalog.value.findIndex(
+            (item) => item.id === product.id
+        );
+
+        if (index !== -1) {
+            productCatalog.value.splice(index, 1);
+        }
+    }
+
+    const deleteRow = (product) => {
+        if (!productCatalog.value.some(i => i.id === product.id)) {
+            productCatalog.value.push(product);
+        }
+
+        productCatalog.value.sort(sortByNewNo);
+
+        const index = selectedItems.value.findIndex(
+            (item) => item.id === product.id
+        );
+
+        if (index !== -1) {
+            selectedItems.value.splice(index, 1);
+        }
+    }
+
+    const formatDecimal = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    };
+
+    function sortByNewNo(a, b) {
+        const aParts = a.newNo.split('-').map(Number);
+        const bParts = b.newNo.split('-').map(Number);
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+            const diff = (aParts[i] || 0) - (bParts[i] || 0);
+            if (diff !== 0) return diff;
+        }
+        return 0;
+    }
 </script>
 
 <template>
@@ -135,22 +187,76 @@
                                 </p>
                             </div>
                             <div class="h-[calc(60vh-8rem)] overflow-y-auto bg-zinc-300 b-zinc-400">
-                                <div v-for="product in productCatalog" :key="product.id" class="flex flex-col max-w-lg m-2">
-                                    <button @click="select(product)" class="flex flex-col sm:flex-row border-b-2 border-r-2 border-zinc-400 py-1 px-1 w-full text-center sm:text-left rounded-lg bg-zinc-200 hover:bg-zinc-100 transition">
-                                        <img :src="product.image_path" :alt="product.itemName" class="flex-shrink-0 m-2 w-16 h-16 rounded-md bg-zinc-100 self-center">
-                                        <div class="flex flex-col py-2 pr-2">
-                                            <h4 class="text-sm font-semibold">{{ product.itemName }} <span class="text-xs font-hairline">#{{ product.newNo }}</span></h4>
-                                            <p class="text-xs font-hairline">{{ product.desc }}</p>
-                                        </div>
-                                    </button>
-                                </div>
+                                <TransitionGroup name="list" tag="div">
+                                    <div v-for="product in productCatalog" :key="product.id" class="flex flex-col w-full p-2">
+                                        <button @click="selected(product)" class="flex flex-col sm:flex-row border-b-2 border-r-2 border-zinc-400 py-1 px-1 w-full text-center sm:text-left rounded-lg bg-zinc-200 hover:bg-zinc-100 transition">
+                                            <img :src="product.image_path" :alt="product.itemName" class="flex-shrink-0 m-2 w-16 h-16 rounded-md bg-zinc-100 self-center">
+                                            <div class="flex flex-col py-2 pr-2">
+                                                <h4 class="text-sm font-semibold">{{ product.itemName }} <span class="text-xs font-hairline">#{{ product.newNo }}</span></h4>
+                                                <p class="text-xs font-hairline">{{ product.desc }}</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </TransitionGroup>
                             </div>
                         </div>
                             
                         <div class="w-full sm:w-9/12 p-2 rounded-md mt-5 lg:mt-0">
                             <div class="p-2 overflow-hidden">
-                                <div class="relative overflow-x-auto">
-                                    
+                                <div v-if="selectedItems.length === 0" class="relative overflow-x-auto">
+                                    <main class="flex flex-1 w-full flex-col items-center justify-center text-center px-4 sm:mt-18 mt-10"> 
+                                        <p class="border rounded-2xl py-1 px-4 text-slate-500 text-sm mb-5 hover:scale-105 transition duration-300 ease-in-out">Explore the product list and select the items you wish to include with a simple click.</p>
+                                        <h1 class="mx-auto max-w-4xl font-display text-5xl font-bold tracking-normal text-slate-900 sm:text-7xl">
+                                            Create Your
+                                            <span class="relative whitespace-nowrap text-purple-400">
+                                                <svg aria-hidden="true" viewBox="0 0 418 42" class="absolute top-2/3 left-0 h-[0.58em] w-full fill-purple-300/70" preserveAspectRatio="none"><path d="M203.371.916c-26.013-2.078-76.686 1.963-124.73 9.946L67.3 12.749C35.421 18.062 18.2 21.766 6.004 25.934 1.244 27.561.828 27.778.874 28.61c.07 1.214.828 1.121 9.595-1.176 9.072-2.377 17.15-3.92 39.246-7.496C123.565 7.986 157.869 4.492 195.942 5.046c7.461.108 19.25 1.696 19.17 2.582-.107 1.183-7.874 4.31-25.75 10.366-21.992 7.45-35.43 12.534-36.701 13.884-2.173 2.308-.202 4.407 4.442 4.734 2.654.187 3.263.157 15.593-.78 35.401-2.686 57.944-3.488 88.365-3.143 46.327.526 75.721 2.23 130.788 7.584 19.787 1.924 20.814 1.98 24.557 1.332l.066-.011c1.201-.203 1.53-1.825.399-2.335-2.911-1.31-4.893-1.604-22.048-3.261-57.509-5.556-87.871-7.36-132.059-7.842-23.239-.254-33.617-.116-50.627.674-11.629.54-42.371 2.494-46.696 2.967-2.359.259 8.133-3.625 26.504-9.81 23.239-7.825 27.934-10.149 28.304-14.005.417-4.348-3.529-6-16.878-7.066Z"></path></svg>
+                                                <span class="relative">PPMP</span>
+                                            </span>
+                                        </h1>
+                                        <p class="mx-auto mt-12 max-w-xl text-lg text-slate-700 leading-7">
+                                            This approach incorporates light technological enhancements into the existing workflow, enabling the gradual transition from manual processes to automated systems, improving accuracy, speed, and overall productivity.
+                                        </p>
+                                    </main>
+                                </div>
+                                <div v-else>
+                                    <div class="relative overflow-x-auto">
+                                        <table class="w-full text-gray-900 display border-2 border-[#7393dc]">
+                                            <thead class="text-sm uppercase bg-[#d8d8f6] text-center text-[#03244d]">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 w-2/12 border-2 border-[#7393dc]">
+                                                        Stock No. 
+                                                    </th>
+                                                    <th scope="col" class="px-6 py-3 w-6/12 border-2 border-[#7393dc]">
+                                                        Description 
+                                                    </th>
+                                                    <th scope="col" class="px-6 py-3 w-1/12 border-2 border-[#7393dc]">
+                                                        Unit Of Measure
+                                                    </th>
+                                                    <th scope="col" class="px-6 py-3 w-2/12 border-2 border-[#7393dc]">
+                                                        Price
+                                                    </th>
+                                                    <th scope="col" class="px-6 py-3 w-1/12 border-2 border-[#7393dc]">
+                                                        Quantity
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="text-xs">
+                                                <tr v-for="particular in selectedItems" :key="particular.id" class="bg-zinc-100 border-b hover:bg-zinc-400">
+                                                    <td class="px-4 py-2 text-center border-r-2 border-[#7393dc]">{{ particular.newNo }}</td>
+                                                    <td class="px-4 py-2 text-left border-r-2 border-[#7393dc]">{{ particular.desc }}</td>
+                                                    <td class="px-4 py-2 text-center border-r-2 border-[#7393dc]">{{ particular.unit }}</td>
+                                                    <td class="px-4 py-2 text-right border-r-2 border-[#7393dc]">{{ formatDecimal(particular.price) }}</td>
+                                                    <td class="px-4 py-2 text-center border-r-2 border-[#7393dc]">
+                                                        <button @click="deleteRow(particular)" class="px-2 py-1 rounded">
+                                                            <svg class="w-5 h-5 text-rose-500 hover:text-rose-900 transition duration-75" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 1216 1312">
+                                                                <path fill="currentColor" d="M1202 1066q0 40-28 68l-136 136q-28 28-68 28t-68-28L608 976l-294 294q-28 28-68 28t-68-28L42 1134q-28-28-28-68t28-68l294-294L42 410q-28-28-28-68t28-68l136-136q28-28 68-28t68 28l294 294l294-294q28-28 68-28t68 28l136 136q28 28 28 68t-28 68L880 704l294 294q28 28 28 68"/>
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -210,5 +316,15 @@
 
     :deep(table.dataTable tbody > tr > td:nth-child(1)) {
         text-align: left !important;
+    }
+
+    .list-enter-active,
+    .list-leave-active {
+        transition: all 0.5s ease;
+    }
+    .list-enter-from,
+    .list-leave-to {
+        opacity: 0;
+        transform: translateX(30px);
     }
 </style>
