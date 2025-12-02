@@ -1,7 +1,6 @@
 <script setup>
     import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-    import { reactive, ref, computed, onMounted } from 'vue';
-    import { Inertia } from '@inertiajs/inertia';
+    import { reactive, ref, computed } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
     import Modal from '@/Components/Modal.vue';
@@ -24,7 +23,7 @@
         ppmp: Object,
         ppmpParticulars: Object,
         products: Object,
-        totalItems: String,
+        totalItems: Number,
         formattedOverallPrice: String,
         createdAt: String,
         user: Number,
@@ -363,7 +362,7 @@
                                     <p class="text-rose-500 text-xs italic mt-2">No product found!</p>
                                 </div>
                             </div>
-                            <div v-if="ppmp.ppmp_type == 'individual'" class="mt-5">
+                            <div v-if="ppmp.ppmp_type == 'Individual'" class="mt-5">
                                 <p class="text-sm font-semibold text-[#1a0037]"> Product Quantity: </p>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="addParticular.firstQty" type="number" name="firstQty" id="firstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required/>

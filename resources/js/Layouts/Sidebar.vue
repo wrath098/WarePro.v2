@@ -281,11 +281,11 @@ const officeUser = hasAnyRole(['Office User']);
                                 </li>
                                 <li class="mb-1">
                                     <SidebarLink 
-                                        :href="route('import.ppmp.index')" :active="route().current('import.ppmp.index') || route().current('indiv.ppmp.show')"
+                                        :href="route('office.drafted.ppmp')" :active="route().current('office.drafted.ppmp') || route().current('indiv.ppmp.show')"
                                     >
                                         <svg 
                                             class="w-6 h-6 text-indigo-900 transition duration-75 group-hover:text-white"
-                                            :class="{ 'text-white' : route().current('import.ppmp.index') || route().current('indiv.ppmp.show') }"
+                                            :class="{ 'text-white' : route().current('office.drafted.ppmp') || route().current('indiv.ppmp.show') }"
                                             fill="currentColor" 
                                             aria-hidden="true" 
                                             xmlns="http://www.w3.org/2000/svg"

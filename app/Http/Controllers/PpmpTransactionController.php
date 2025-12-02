@@ -10,6 +10,7 @@ use App\Models\PpmpConsolidated;
 use App\Models\PpmpParticular;
 use App\Models\PpmpTransaction;
 use App\Models\Product;
+use App\Models\ProductPrice;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -80,8 +81,47 @@ class PpmpTransactionController extends Controller
         ]);
     }
 
+    public function officeDraftedPpmp(): Response
+    {
+        $user = Auth::user();
+        $user->load('office');
+
+        $query_ppmp = PpmpTransaction::with('updater')
+            ->where([
+                'office_id'   => $user->office->id,
+                'ppmp_type'   => 'individual',
+                'ppmp_status' => 'draft',
+            ])
+            ->latest()
+            ->get()
+            ->map(fn($ppmp) => [
+                'id' => $ppmp->id,
+                'ppmp_type' => $ppmp->ppmp_type,
+                'ppmp_code' => $ppmp->ppmp_code,
+                'ppmp_year' => $ppmp->ppmp_year,
+                'updatedBy' => $ppmp->updater?->name,
+                'createdAt' => $ppmp->created_at->format('M d, Y'),
+            ]);
+
+        return Inertia::render('Ppmp/Office/Drafted', [
+            'user' => $user,
+            'lists' => $query_ppmp
+        ]);
+    }
+
     public function validateOfficePpmp(Request $request)
     {
+        $validateData = [
+            'office' => $request->officeId,
+            'ppmpYear' => $request->ppmpYear
+        ];
+
+        $validateOfficePpmp = $this->validateIndivPpmp($validateData);
+
+        if($validateOfficePpmp) {
+           return response()->json(['data' => []]);
+        }
+
         $products = Product::with(['itemClass', 'itemClass.category'])
             ->where('prod_status', 'active')
             ->orderBy('item_id', 'asc')
@@ -107,6 +147,7 @@ class PpmpTransactionController extends Controller
         return response()->json(['data' => $products]);
     }
 
+    #SYSTEM ADMINISTRATOR
     public function store(Request $request)#
     {
         DB::beginTransaction();
@@ -185,6 +226,51 @@ class PpmpTransactionController extends Controller
                 'data' => $validatedData
             ]);
             return back()->with('error', 'Creation of PPMP Transaction. Please try again!');
+        }
+    }
+
+    #OFFICE ITSELF
+    public function storeOfficePpmp(Request $request)
+    {
+        $validatedData = [
+            'ppmpType' => 'individual',
+            'ppmpYear' => $request->ppmpYear,
+            'office' => $request->officeId,
+            'user' => $request->user['id'],
+        ];
+
+        $requestProducts = $request->requestProducts;
+        DB::beginTransaction();
+
+        try{
+            $createPpmp = $this->createPpmpTransaction($validatedData);
+
+            foreach($requestProducts as $product){
+                $priceId = ProductPrice::where('prod_id', $product['id'])->latest()->first();
+
+                PpmpParticular::create([
+                    'qty_first' => $product['firstQty'],
+                    'qty_second' => $product['secondQty'],
+                    'adjusted_firstQty' => $product['firstQty'],
+                    'adjusted_secondQty' => $product['secondQty'],
+                    'tresh_first_qty' => $product['firstQty'],
+                    'tresh_second_qty' => $product['secondQty'],
+                    'prod_id' => $product['id'],
+                    'price_id' => $priceId->id,
+                    'trans_id' => $createPpmp->id,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('message', 'Successfully created PPMP!');
+        }catch(\Exception $e) {
+            DB::rollBack();
+            Log::error("PPMP Creation Failed! " . Auth::user()->name, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'PPMP Creation Failed! ' . $e->getMessage());
         }
     }
 
@@ -403,6 +489,8 @@ class PpmpTransactionController extends Controller
         $formattedOverallPrice = number_format($grandTotal, 2, '.', ',');
         $createdAt = $ppmpTransaction->created_at->format('M d, Y');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
+
+        Log::info($ppmpTransaction->toArray());
 
         return Inertia::render('Ppmp/Individual', [
             'ppmp' =>  $ppmpTransaction,
@@ -1080,7 +1168,10 @@ class PpmpTransactionController extends Controller
         return PpmpTransaction::where('ppmp_year', (string) $validatedData['ppmpYear'])
             ->where('office_id', $validatedData['office'])
             ->where('ppmp_type', 'individual')
-            ->where('ppmp_status', 'draft')
+            ->where(function($q) {
+                $q->where('ppmp_status', 'draft')
+                ->orWhere('ppmp_status', 'approved');
+            })
             ->exists();
     }
 
