@@ -425,7 +425,7 @@
                                     <InputError class="mt-2" :message="editParticular.errors.prodDesc" />
                                 </div>
                             </div>
-                            <div v-if="ppmp.ppmp_type == 'individual'" class="mt-5">
+                            <div v-if="ppmp.ppmp_type == 'Individual'" class="mt-5">
                                 <p class="text-sm font-semibold text-[#1a0037]"> Product Quantity: </p>
                                 <div class="relative z-0 w-full group my-2">
                                     <input v-model="editParticular.firstQty" type="number" name="editFirstQty" id="editFirstQty" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>

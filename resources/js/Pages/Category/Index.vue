@@ -36,6 +36,7 @@
     const props = defineProps({
         activeCategories: Object,
         funds: Object,
+        selectedFund: Object,
         authUserId: Number,
     });
 
@@ -57,7 +58,7 @@
     const form = useForm({
         catName: '',
         catCode: '',
-        fundId: '',
+        fundId: props.selectedFund.id,
         createdBy: props.authUserId || '',
     });
 
@@ -330,8 +331,9 @@
                             <div class="mt-2">
                                 <input type="hidden" v-model="form.createdBy">
                                 <input type="hidden" v-model="form.fundId">
+                                
                                 <div class="relative z-0 w-full group mt-8">
-                                    <input :value="funds.name" type="text" name="fundId" id="fundId" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" readonly required />
+                                    <input :value="props.selectedFund.fund_name" type="text" name="fundId" id="fundId" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" readonly required />
                                     <label for="fundId" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Account Classification</label>
                                     <InputError class="mt-2" :message="form.errors.fundId" />
                                 </div>

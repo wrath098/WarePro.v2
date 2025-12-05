@@ -161,8 +161,10 @@ class PpmpTransactionController extends Controller
             'file' => 'nullable|file|mimes:xls,xlsx',
         ]);
 
+        $ppmpTpye = strtolower($validatedData['ppmpType']);
+
         try {
-            if($validatedData['ppmpType'] == 'individual') {
+            if($ppmpTpye == 'individual') {
                 if ($this->validateIndivPpmp($validatedData)) {
                     DB::rollBack();
                     return back()->withInput()->withErrors([
@@ -194,7 +196,7 @@ class PpmpTransactionController extends Controller
                 DB::commit();
                 return redirect()->route('import.ppmp.index')
                     ->with('message', 'Successfully create PPMP! You can now check the list to add products.');
-            } elseif ($validatedData['ppmpType'] == 'contingency') {
+            } elseif ($ppmpTpye == 'contingency') {
                 
                 $is_AppExist = $this->fetchApprovedConsolidatedPpmp($validatedData['ppmpYear'], 'consolidated');
 
@@ -489,8 +491,6 @@ class PpmpTransactionController extends Controller
         $formattedOverallPrice = number_format($grandTotal, 2, '.', ',');
         $createdAt = $ppmpTransaction->created_at->format('M d, Y');
         $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
-
-        Log::info($ppmpTransaction->toArray());
 
         return Inertia::render('Ppmp/Individual', [
             'ppmp' =>  $ppmpTransaction,

@@ -49,7 +49,8 @@ class CategoryController extends Controller
 
         return Inertia::render('Category/Index', [
             'activeCategories' => $categories,
-            'funds' => $formattedFunds, 
+            'funds' => $formattedFunds,
+            'selectedFund' => $fund,
             'authUserId' => Auth::id()
         ]); 
     }

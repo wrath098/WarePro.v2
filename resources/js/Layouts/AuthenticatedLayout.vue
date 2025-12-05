@@ -142,7 +142,7 @@ const showingAppSideBar = ref(true);
             </header>
             <slot />
             <footer class="mb-2 px-4 border-gray-500 flex justify-center items-center">
-                <div class="text-xs text-zinc-600"> © 2025 Provincial General Services Office | CG</div>
+                <div class="text-xs text-zinc-600">CG | © 2025 Provincial General Services Office </div>
             </footer>
         </main>
     </div>

@@ -423,7 +423,7 @@
 
     watch(search, debouncedSearch);
 
-    const noToShow = ref(25);
+    const noToShow = ref(28);
 
     const totalItems = computed(() => {
         return productCatalog.value.length - noToShow.value;
@@ -434,7 +434,7 @@
     );
 
     function loadMore() {
-        noToShow.value += 25;
+        noToShow.value += 28;
     }
 
     function loadAll() {
@@ -666,14 +666,17 @@
                     <div class="flex flex-wrap">
                         <h1 class="flex-auto text-xl font-semibold text-zinc-800">Code #{{ create.prodId.newNo }}</h1>
                         <div class="text-xl font-semibold text-zinc-800">₱ {{ create.prodId.price }} </div>
-                        <div class="flex-none w-full mt-2 text-sm font-medium text-zinc-800">Classification: {{ create.prodId.itemName }} - {{ create.prodId.className }}</div>
+                        <div class="flex-none w-full mt-2 text-sm font-medium text-zinc-800">
+                            <p>{{ create.prodId.className }}</p>
+                            <p>{{ create.prodId.itemName }}</p>
+                        </div>
                     </div>
-                    <div class="flex mt-4 mb-6 text-zinc-700">
-                        Description: {{ create.prodId.desc }}
+                    <div class="flex mt-4 mb-6 text-zinc-700 text-base">
+                        {{ create.prodId.desc }}
                     </div>
                     <div class="mt-4 mb-6 text-zinc-700">
-                        <p>Unit: {{ create.prodId.unit }}</p>
-                        <p>Previous Code: # {{ create.prodId.oldNo }}</p>
+                        <p class="text-base"><span class="font-semibold">Measurement :</span> {{ create.prodId.unit }}</p>
+                        <p class="text-base"><span class="font-semibold">Previous Code :</span> # {{ create.prodId.oldNo }}</p>
                     </div>
                     <div class="flex mb-4 text-sm font-medium">
                         <p class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 focus:ring-offset-indigo-200 text-white w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg ">Available</p>
@@ -963,6 +966,9 @@
                                         </select>
                                         <label for="modifyItem" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Item Class</label>
                                         <InputError class="mt-2" :message="edit.errors.itemId" />
+                                    </div>
+                                    <div v-else-if="edit.selectedCategory && filteredItems.length == 0">
+                                        <p class="text-rose-500 text-xs italic mt-2">No Item Category Found. Please create and try again.</p>
                                     </div>
                                 </div>
                                 <div class="mt-5">

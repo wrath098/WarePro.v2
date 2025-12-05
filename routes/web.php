@@ -195,6 +195,7 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
         Route::post('/store', [PpmpTransactionController::class, 'storeOfficePpmp'])->name('store-office-ppmp');
 
         Route::get('/draft-ppmp', [PpmpTransactionController::class, 'officeDraftedPpmp'])->name('office.drafted.ppmp');
+        Route::get('/approved-ppmp', [PpmpTransactionController::class, 'officeApprovedPpmp'])->name('office.approved.ppmp');
     });
 
     #AJAX

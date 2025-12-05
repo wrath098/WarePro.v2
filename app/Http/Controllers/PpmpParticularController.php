@@ -46,7 +46,7 @@ class PpmpParticularController extends Controller
                 return back()->with(['error' => 'The Product No. '. $param['prodCode'] . ' does not exist or has been inactive on current product list.']);
             }
 
-            $particularExist = $param['transType'] == 'individual'
+            $particularExist = strtolower($param['transType']) == 'individual'
                 ? $this->validateProductOnParticular($param['transId'], $productExist->id)
                 : $this->validateProductOnConsolidated($param['transId'], $productExist->id);
 
@@ -54,7 +54,7 @@ class PpmpParticularController extends Controller
                 return back()->with(['error' => 'The Product No. '. $param['prodCode'] . ' already exist on the list.']);
             } else {
 
-                $create = $param['transType'] == 'individual'
+                $create = strtolower($param['transType']) == 'individual'
                     ? $this->createProductOnParticular($validatedData, $productExist->id)
                     : $this->createProductOnConsolidated($validatedData, $productExist->id);
 
@@ -91,7 +91,7 @@ class PpmpParticularController extends Controller
 
         try {
 
-            $particular = $validatedData['transType'] == 'individual'
+            $particular = strtolower($validatedData['transType']) == 'individual'
                 ? PpmpParticular::findOrFail($validatedData['partId'])
                 : PpmpConsolidated::findOrFail($validatedData['partId']);
 
@@ -128,7 +128,7 @@ class PpmpParticularController extends Controller
 
         try {
 
-            $particular = $validatedData['transType'] == 'individual'
+            $particular = strtolower($validatedData['transType']) == 'individual'
                 ? PpmpParticular::findOrFail($validatedData['partId'])
                 : PpmpConsolidated::findOrFail($validatedData['partId']);
 

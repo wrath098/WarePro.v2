@@ -434,6 +434,7 @@ class ProductController extends Controller
         $query = Product::with(['updater', 'itemClass', 'itemClass.category'])
             ->where('prod_desc', 'LIKE', "%{$request->search}%")
             ->orWhere('prod_newNo', 'LIKE', "%{$request->search}%")
+            ->where('prod_status', 'active')
             ->get()
             ->map(function($product) {
                     return [
