@@ -216,11 +216,11 @@ class StockCardController extends Controller
                     <tr style="font-size: 9px; font-weight:bold;">
                         <td width="60px"></td>
                         <td width="150px" style="text-align:center;">**** Ending Balance ****</td>
-                        <td width="35px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
+                        <td width="35px" style="text-align:center;">'. number_format($currentStock, 0, '.', ',') .'</td>
                         <td width="52px"></td>
                         <td width="35px"></td>
                         <td width="52px"></td>
-                        <td width="87px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
+                        <td width="87px" style="text-align:center;">'. number_format($currentStock, 0, '.', ',') .'</td>
                         <td width="48px"></td>
                     </tr>
                 ';
