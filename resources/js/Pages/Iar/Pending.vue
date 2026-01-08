@@ -1,11 +1,14 @@
 <script setup>
-    import { Head, router } from '@inertiajs/vue3';
-    import { ref } from 'vue';
+    import { Head, router, useForm } from '@inertiajs/vue3';
+    import { computed, ref } from 'vue';
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import ViewButton from '@/Components/Buttons/ViewButton.vue';
     import Swal from 'sweetalert2';
     import axios from 'axios';
     import useAuthPermission from '@/Composables/useAuthPermission';
+    import Modal from '@/Components/Modal.vue';
+    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+    import DangerButton from '@/Components/DangerButton.vue';
 
     const {hasAnyRole, hasPermission} = useAuthPermission();
     const isLoading = ref(false);
@@ -13,6 +16,25 @@
     const props = defineProps({
         iar: Object,
         lastId: Number,
+    });
+
+    const modalState = ref(null);
+    const closeModal = () => { modalState.value = null; }
+    const isRetrieveTransactionModalOpen = computed(() => modalState.value === 'retrieve');
+
+    const openRetrieveTransactionModal = () => {
+        modalState.value = 'retrieve';
+    };
+
+    const years = generateYears();
+    function generateYears() {
+        const currentYear = new Date().getFullYear() - 0;
+        return Array.from({ length: 3 }, (_, i) => currentYear - i);
+    }
+
+    const retrievedIar = useForm({
+        iar_no: '',
+        year: '',
     });
 
     const API_BASE_URL = 'http://192.168.2.16/pgso-pms/api/fetch-iar';
@@ -87,6 +109,78 @@
             };
         }
     }
+
+    const API_RETRIEVE_BASE_URL = 'http://192.168.2.16/pgso-pms/api/unfetch-iar';
+    const submitRetrieveTransaction = async () => {
+        isLoading.value = true;
+
+        try {
+            const retrieveResponse = await axios.get(API_RETRIEVE_BASE_URL, {
+                params: {
+                    iar_no: retrievedIar.iar_no,
+                    year: retrievedIar.year,
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000
+            });
+
+            const transactionData = retrieveResponse.data;
+
+            if (!transactionData || Object.keys(transactionData).length === 0) {
+                throw new Error('No transaction data received from server.');
+            }
+
+            const saveResponse = await axios.post('iar/store-retrieve-transaction', {
+                param: transactionData
+            }, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!saveResponse.data.success) {
+                throw new Error(saveResponse.data.message || 'Failed to store transaction.');
+            }
+
+            await Swal.fire({
+                title: 'Success',
+                text: saveResponse.data.message || 'Transaction retrieved successfully!',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+
+            closeModal();
+            router.visit(route('iar'), {
+                preserveScroll: true,
+                preserveState: false,
+            });
+
+            return saveResponse.data;
+
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to retrieve or store transaction.';
+
+            await Swal.fire({
+                title: 'Error',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+
+            throw {
+                userMessage: 'Failed to load or save IAR Transaction. Please try again later.',
+                technicalMessage: errorMessage,
+                code: error.response?.status || 'NETWORK_ERROR'
+            };
+
+        } finally {
+            isLoading.value = false;
+        }
+    };
 
     const columns = [
         {
@@ -168,6 +262,12 @@
                             </svg>
                             <span>Get Transactions from AssetPRO</span>
                         </button>
+                        <button @click="openRetrieveTransactionModal" class="lg:ms-2 mt-2 lg:mt-0 flex items-center justify-center text-white bg-gradient-to-r from-green-400 via-green-600 to-green-800 hover:bg-gradient-to-br font-medium rounded-lg text-sm text-center px-4 py-1">
+                            <svg class="w-6 h-6 mr-2" aria-hidden="true" fill="none"  xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M9 19.4q-2.025-.8-3.338-2.512T4.076 13H6.1q.225 1.325.975 2.425T9 17.2zm3.5 2.6q-.625 0-1.062-.437T11 20.5v-6q0-.625.438-1.062T12.5 13h2.2q.375 0 .713.175t.537.5l.55.825h4q.625 0 1.063.438T22 16v4.5q0 .625-.437 1.063T20.5 22zm-9-11q-.625 0-1.062-.437T2 9.5v-6q0-.625.438-1.062T3.5 2h2.2q.375 0 .713.175t.537.5l.55.825h4q.625 0 1.063.438T13 5v4.5q0 .625-.437 1.063T11.5 11zM18 12q0-1.625-.8-3.012T15 6.8V4.6q2.275.925 3.638 2.938T20 12z"/>
+                            </svg>
+                            <span>Retrieve Transaction</span>
+                        </button>
                     </li>
                 </ol>
             </nav>
@@ -205,6 +305,54 @@
             </div>
         </div>
     </AuthenticatedLayout>
+    <Modal :show="isRetrieveTransactionModalOpen" @close="closeModal"> 
+        <form @submit.prevent="submitRetrieveTransaction(retrievedIar)">
+            <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" fill="currentColor"  xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M9 19.4q-2.025-.8-3.338-2.512T4.076 13H6.1q.225 1.325.975 2.425T9 17.2zm3.5 2.6q-.625 0-1.062-.437T11 20.5v-6q0-.625.438-1.062T12.5 13h2.2q.375 0 .713.175t.537.5l.55.825h4q.625 0 1.063.438T22 16v4.5q0 .625-.437 1.063T20.5 22zm-9-11q-.625 0-1.062-.437T2 9.5v-6q0-.625.438-1.062T3.5 2h2.2q.375 0 .713.175t.537.5l.55.825h4q.625 0 1.063.438T13 5v4.5q0 .625-.437 1.063T11.5 11zM18 12q0-1.625-.8-3.012T15 6.8V4.6q2.275.925 3.638 2.938T20 12z"/>
+                        </svg>
+                    </div>
+                    <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Retrieve Transaction</h3>
+                        <p class="text-sm text-zinc-700"> Retrieve a transaction that didn’t appear in the main transaction list.</p>
+                        <div class="mt-2">
+                            <div class="mt-5">
+                                <p class="text-sm font-semibold text-[#1a0037] mb-2"> Transaction Information</p>
+                                <div class="relative z-0 w-full mb-5 group">
+                                    <input v-model="retrievedIar.iar_no" type="text" name="iar_no" id="iar_no" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required/>
+                                    <label for="iar_no" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">IAR Number/Code</label>
+                                </div>
+                                <div class="relative z-0 w-full my-3 group">
+                                    <select v-model="retrievedIar.year" name="year" id="year" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" required>
+                                        <option value="" disabled selected>Select year</option>
+                                        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+                                    </select>
+                                    <label for="year" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Calendar Year</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Confirm 
+                </SuccessButton>
+
+                <DangerButton @click="closeModal"> 
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Cancel
+                </DangerButton>
+            </div>
+        </form>
+    </Modal>
 </template>
 <style scoped>
     :deep(table.dataTable) {

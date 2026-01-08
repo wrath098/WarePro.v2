@@ -102,6 +102,60 @@ class IarTransactionController extends Controller
         }
     }
 
+    public function storeRetrieveTransaction(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $transaction = $request->param;
+            $iarTransaction = $transaction[0];
+
+            $verify_transaction = IarTransaction::withTrashed()
+                ->where('sdi_iar_id', $iarTransaction['air_id'])
+                ->first();
+
+            if($verify_transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "IAR Transaction with IAR No. {$iarTransaction['air_no']} already exists in the system with status:" . ucfirst($verify_transaction->status)
+                ], 422);
+            }
+
+            if (empty($iarTransaction['particulars'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "IAR Transaction with IAR No. {$iarTransaction['air_no']} has no particulars to be saved!"
+                ], 422);
+            }
+
+            $createIar = $this->processCreationOfIarTransaction($iarTransaction);
+            foreach ($iarTransaction['particulars'] as $particular) {
+                $this->processCreationOfIarParticulars($particular, $createIar['id']);
+            }
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully saved the retrieved IAR Transaction from AssetPro!',
+                'transaction' => $createIar
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Storing Retrieved IAR Transaction Failed: ", [
+                'user' => Auth::user()->name,
+                'error' => $e->getMessage(),
+                'data' => $request->toArray(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to save the retrieved IAR Transaction. Please try again!',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function fetchIarParticular(Request $request)
     {   
         $iarId = $request->input('iar');
@@ -618,6 +672,33 @@ class IarTransactionController extends Controller
             'air_id' => $IarId,
         ]);
     }
+
+    #BASIS FOR API CALL TO ASSETPRO
+    // public function retrieveUnfetchIarTransaction(Request $request)
+    // {
+    //     $id = (int) $request->input('iar_no');
+    //     $year = (int) $request->input('year');
+
+    //     $transaction = DB::table('sdi_air')
+    //         ->select('sdi_air.air_id', 'sdi_air.air_no', 'sdi_air.po_no', 'psu_suppliers.name', 'sdi_air.air_date', 'sdi_air.warehouse')
+    //         ->join('psu_suppliers', 'sdi_air.supplier_id', '=', 'psu_suppliers.supplier_id')
+    //         ->where([
+    //             ['sdi_air.destination', '=', 'office_supplies'],
+    //             [DB::raw('YEAR(sdi_air.air_date)'), '=', $year],
+    //             ['sdi_air.air_no', '=', $id],
+    //         ])
+    //         ->first()
+    //         ->map(function($transaction) {
+    //             $particulars = DB::table('sdi_air_particulars')
+    //                 ->where('sdi_air_particulars.air_id', $transaction->air_id)
+    //                 ->get();
+
+    //             $transaction->particulars = $particulars;
+    //             return $transaction;
+    //         });
+
+    //     return response()->json($transaction);
+    // }
 
     #For IAR NO UPLOAD
     #REMOVE IF NO REVISION TO BE MADE
