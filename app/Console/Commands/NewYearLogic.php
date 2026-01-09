@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Product;
 use App\Models\ProductInventory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -28,18 +29,24 @@ class NewYearLogic extends Command
      */
     public function handle()
     {
-        $startTime = microtime(true);
-    
-        $updatedCount = ProductInventory::query()->update([
-            'qty_physical_count' => DB::raw('qty_on_stock'),
-            'qty_purchase' => 0,
-            'qty_issued' => 0,
-        ]);
+        $productList = Product::withTrashed()->with('inventory')->get();
 
-        Log::channel('backups')->info('Year-end inventory reset completed', [
-            'action' => 'yearly_inventory_reset',
-            'products_updated' => $updatedCount,
-            'execution_time' => microtime(true) - $startTime,
-        ]);
+        foreach ($productList as $product) {
+            Log::info($product->prod_desc, [$product->prod_status, $product->inventory]);
+        }
+        
+        // $startTime = microtime(true);
+    
+        // $updatedCount = ProductInventory::query()->update([
+        //     'qty_physical_count' => DB::raw('qty_on_stock'),
+        //     'qty_purchase' => 0,
+        //     'qty_issued' => 0,
+        // ]);
+
+        // Log::channel('backups')->info('Year-end inventory reset completed', [
+        //     'action' => 'yearly_inventory_reset',
+            // 'products_updated' => $updatedCount,
+            // 'execution_time' => microtime(true) - $startTime,
+        // ]);
     }
 }
