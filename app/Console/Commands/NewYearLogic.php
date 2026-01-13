@@ -51,28 +51,38 @@ class NewYearLogic extends Command
                     ->orderBy('created_at', 'asc')
                     ->get();
 
+                $first = $transactionLastYear->first();
+                $currentStock = $first ? $first->current_stock : 0;
+
                 foreach ($transactionLastYear as $transaction) {
-                    Log::info($transaction->toArray());
+
+                    if($transaction->id != $first->id) {
+                        if($transaction->type == 'purchase' || $transaction->type == 'adjustment') {
+                            $currentStock += $transaction->qty;
+                        } elseif($transaction->type == 'issuance') {
+                            $currentStock -= $transaction->qty;
+                        }
+                    }
                 }
 
-                // if ($transactionLastYear) {
-                //     $productInventory->qty_physical_count = $transactionLastYear->current_stock;
-                // } else {
-                //     $productInventory->qty_physical_count = $productInventory->qty_on_stock;
-                // }
+                if($transactionLastYear->count() == 0) {
+                    $productInventory->qty_physical_count = $productInventory->qty_on_stock;
+                }
 
-                // $productInventory->qty_purchase = 0;
-                // $productInventory->qty_issued = 0;
-                // $productInventory->save();
+                $productInventory->qty_physical_count = $currentStock;
 
-                // $countUpdated++;
+                $productInventory->qty_purchase = 0;
+                $productInventory->qty_issued = 0;
+                $productInventory->save();
+
+                $countUpdated++;
             }
         }
 
-        // Log::channel('backups')->info('Year-end inventory reset completed', [
-        //     'action' => 'yearly_inventory_reset',
-        //     'products_updated' => $countUpdated,
-        //     'execution_time' => microtime(true) - $startTime,
-        // ]);
+        Log::channel('backups')->info('Year-end inventory reset completed', [
+            'action' => 'yearly_inventory_reset',
+            'products_updated' => $countUpdated,
+            'execution_time' => microtime(true) - $startTime,
+        ]);
     }
 }
