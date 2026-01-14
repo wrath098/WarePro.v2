@@ -1,0 +1,49 @@
+01-10-01	Cartolina, glossy, assorted colors	Pc	572	577	0	0
+01-13-02	Cover, Folder, Arch File, PVC Cover, t	Pc	0	80	0	0
+01-13-03	Cover, Folder, arch file, PVC cover, 	Pc	116	616	0	0
+01-13-03	Cover, Folder, arch file, PVC cover, 	Pc	116	616	0	0
+01-13-07	Cover, PVC, 200 microns, blue, 8.5 x 11	Box	16	33	0	0
+01-13-08	Cover, PVC, 200 microns, blue, 8.5 x 13	Box	17	32	0	0
+01-14-01	Crayons, 16s	                        Box	71	100	0	0
+01-24-03	Holder, Diploma, short, hardbound, with cover	Pc	290	540	0	0
+01-25-01	Ink Refill for Pilot, Permanent marker, Genuine, black, 30 ml	Bottle	62	86	0	0
+01-25-02	Ink Refill for Pilot, Permanent marker, Genuine, blue, 30 ml	Bottle	64	88	0	0
+01-25-03	Ink Refill for Pilot, Permanent marker, Genuine, red, 30 ml	Bottle	38	56	0	0
+01-30-07	Pad refill, for Shiny S-400-7C	Pc	0	23	0	0
+01-30-08	Pad refill, for Shiny S-400-7D	Pc	0	1	0	0
+01-30-10	Pad refill, for Shiny S-830D	Pc	0	1	0	0
+01-32-07	Paper, Board, specialty, long, 10s/pack, 180gsm -220 GSM	Pack	732	1138	0	0
+01-32-08	Paper, Board, specialty, short, 10s/pack, 180gsm -220 GSM	Pack	404	696	0	0
+01-32-17	Paper, specialty, 120 gsm, A4, 10s ,inkjet laser compatible	Pack	1532	2132	0	0
+01-33-18	Pen, Signpen, gel, 1.0mm, Uni-ball, black	Pc	0	516	0	0
+01-33-19	Pen, Signpen, 0.5mm Ball, Needle point, Liquid Gel,Black	Pc	2297	2359	0	0
+01-34-01	Pencil, Lead, for mechanical , 0.5mm	Tube	109	168	0	0
+01-35-05	Pin, Thumb tacks, metal, 100	Box	155	304	0	0
+01-37-02	Ruler, plastic, 24 inches	Pc	27	48	0	0
+01-37-03	Ruler, Protractor	Pc	0	2	0	0
+01-37-04	Ruler, triangle, plastic	Pc	0	4	0	0
+01-40-02	Stamp, numbering machine, Generat	Pc	14	20	0	0
+01-42-04	Staple Wire No. 14mm	Box	0	2	0	0
+01-42-06	Staple Wire No. 35, 26/6	Box	973	2029	0	0
+01-43-01	Stick-on/Adhesive, Notepad, 3 x 4 inches, Multi-color	Pad	2074	3406	0	0
+01-44-01	Tab, Index (A-Z)	Pack	4	23	0	0
+01-48-01	Twine, plastic, 1kg/roll	Roll	119	219	0	0
+01-49-01	Correction fluid, water-based, 15 ml	Pc	0	12	0	0
+01-49-02	Correction pen, White Liquid Correction Pen Type 9ml Quick Dry Correction Fluid, metal tip	Pc	985	1945	0	0
+02-04-02	Roll, Master CZ, 100cuts, Risograph CZ180	Roll	0	32	0	0
+02-06-16	Toner, TN619 Black, (for Develop Inoe+ 1070 Production Printer)	Pc	0	4	0	0
+02-06-17	Toner, TN619 Magenta, (for Develop Inoe+ 1070 Production Printer)	Pc	0	3	0	0
+02-06-18	Toner, TN619 Yellow, (for Develop Inoe+ 1070 Production Printer)	Pc	0	3	0	0
+02-06-20	Toner, TN 217, black, for Ineo 283	Cart	0	31	0	0
+02-07-11	Toner cartridge,APEOS C2560, Fujifilm Black	Cart	24	40	0	0
+02-07-12	Toner cartridge,APEOS C2560, Fujifilm Cyan	Cart	39	51	0	0
+03-05-01	Bag, Zip, resealable, 3.5 x 5 inches, size #4, 100s/pack	Pack	79	95	0	0
+03-15-01	Duster microfiber with plastic/wooden handle	Pc	129	171	0	0
+03-20-04	Glove, Rubbern Medium	Pair	0	2	0	0
+03-28-01	Towel, hand, thick, 12 x 26 inches, assorted colors	Pc	468	1140	0	0
+03-29-01	Wax, Liquid, floor, 1 liter (Natural and Red Color)	Bottle	107	191	0	0
+04-02-06	Board, white, magnetic, aluminum frame, 1X2 feet	Pc	0	3	0	0
+04-02-11	Board, white, magnetic, aluminum frame, 3X5 feet	Pc	2	4	0	0
+04-02-12	Board, white, aluminum frame, with stand, 3X4 feet	Pc	2	4	0	0
+04-04-01	Charger for Battery Size: AA and AAA with two AA,AAA chargeable batteries	Pc	9	15	0	0
+04-10-02	Tray, file, 2 layers, desk mesh organizer, document paper tray	Pc	9	29	0	0
