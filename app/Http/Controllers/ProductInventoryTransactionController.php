@@ -139,14 +139,14 @@ class ProductInventoryTransactionController extends Controller
 
     public function removeParticularTransaction(Request $request)
     {
-         $validated = $request->validate([
+        $validated = $request->validate([
             'transactionId' => 'required|exists:product_inventory_transactions,id',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $transaction = ProductInventoryTransaction::findOrFail($validated['transactionId']);
+            $transaction = ProductInventoryTransaction::withTrashed()->findOrFail($validated['transactionId']);
             $productInventory = ProductInventory::firstWhere('prod_id', $transaction->prod_id);
             
             if (!$productInventory) {

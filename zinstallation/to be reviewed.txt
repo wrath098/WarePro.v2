@@ -42,8 +42,49 @@
 03-20-04	Glove, Rubbern Medium	Pair	0	2	0	0
 03-28-01	Towel, hand, thick, 12 x 26 inches, assorted colors	Pc	468	1140	0	0
 03-29-01	Wax, Liquid, floor, 1 liter (Natural and Red Color)	Bottle	107	191	0	0
-04-02-06	Board, white, magnetic, aluminum frame, 1X2 feet	Pc	0	3	0	0
-04-02-11	Board, white, magnetic, aluminum frame, 3X5 feet	Pc	2	4	0	0
-04-02-12	Board, white, aluminum frame, with stand, 3X4 feet	Pc	2	4	0	0
-04-04-01	Charger for Battery Size: AA and AAA with two AA,AAA chargeable batteries	Pc	9	15	0	0
-04-10-02	Tray, file, 2 layers, desk mesh organizer, document paper tray	Pc	9	29	0	0
+04-02-06	469     3   Board, white, magnetic, aluminum frame, 1X2 feet	Pc	0	3	0	0
+04-02-11	474     2   Board, white, magnetic, aluminum frame, 3X5 feet	Pc	2	4	0	0
+04-02-12	475     2   Board, white, aluminum frame, with stand, 3X4 feet	Pc	2	4	0	0
+04-04-01    479     9	Charger for Battery Size: AA and AAA with two AA,AAA chargeable batteries	Pc	9	15	0	0
+04-10-02    487     9	Tray, file, 2 layers, desk mesh organizer, document paper tray	Pc	9	29	0	0
+
+01-04-13    18  90  126
+01-10-01    41  572 577
+01-13-02    51  0   80
+01-13-03    52  116	616
+01-13-07    56  16	33
+01-13-08    57  17	32
+01-14-01    61  71	100
+01-24-01    92  1179	679
+01-24-03    94  290	540
+01-25-01    95  62	86
+01-25-02    96  64	88
+01-25-03    97  38	56
+01-32-07    126 732	1138
+01-32-08    127 404	696
+01-32-17    136 1532	2132
+01-32-18    137 1058	1858
+01-33-18    157 516 for validation no transaction on database
+01-34-01    164 109	168
+01-35-05    172 155	304
+01-37-02    175 27	48
+01-40-02    181 14	20
+01-42-06    198 973	2029
+01-43-01    201 2074	3406
+01-44-01    203 4	23
+01-48-01    218 119	219
+01-49-01    219 0	12
+01-49-02    220 985	1945
+02-07-11    316 24	40
+02-07-12    317 39	51
+03-05-01    328 79	95
+03-15-01    352 129	171
+03-28-01    379 468	1140
+03-29-01    380 107	191
+04-02-08    471 7	8
+04-02-11    474 2	4
+04-02-12    475 2	4
+04-04-01    479 9	9
+04-10-02    487 9	29
+
+
