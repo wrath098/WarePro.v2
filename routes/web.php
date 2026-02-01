@@ -289,7 +289,7 @@ Route::middleware('auth')->prefix('word')->group(function () {
     Route::get('/product-active-list', [ProductListActiveController::class, 'generate_productlist_word'])->name('generate.product.active.list.word');
 });
 
-#AJAX
+#API ROUTES
 Route::middleware('auth')->prefix('api')->group(function () {
 
     #PPMP

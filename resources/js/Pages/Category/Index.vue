@@ -46,7 +46,7 @@
         isLoading.value = true;
         isTrashedActive.value = true;
         try {
-            const response = await axios.get(`${props.funds.id}/trashed-categories`, {params: {fundId: props.funds.id}});
+            const response = await axios.get(`${props.selectedFund.id}/trashed-categories`, {params: {fundId: props.selectedFund.id}});
             trashedCategories.value = response.data;
             isLoading.value = false;
         } catch (error) {
@@ -223,7 +223,7 @@
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
                             <a :href="''" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                                {{ funds.name }}
+                                {{ selectedFund.fund_name }}
                             </a>
                         </div>
                     </li>

@@ -397,7 +397,9 @@ class ProductController extends Controller
 
         $findCategory = Category::whereRaw('LOWER(cat_name) = ?', [$category])->first();
 
-        $findItem = ItemClass::with(['products', 'category'])
+        $findItem = ItemClass::with(['products' => function($product) {
+                $product->where('prod_status', 'active');
+            }, 'category'])
             ->when($findCategory, function($query) use ($findCategory) {
                 $query->where('cat_id', $findCategory->id);
             })
@@ -432,9 +434,9 @@ class ProductController extends Controller
 
     public function searchProductCatalog(Request $request){
         $query = Product::with(['updater', 'itemClass', 'itemClass.category'])
+            ->where('prod_status', 'active')
             ->where('prod_desc', 'LIKE', "%{$request->search}%")
             ->orWhere('prod_newNo', 'LIKE', "%{$request->search}%")
-            ->where('prod_status', 'active')
             ->get()
             ->map(function($product) {
                     return [
