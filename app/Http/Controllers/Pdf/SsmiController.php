@@ -22,12 +22,11 @@ class SsmiController extends Controller
         $this->productService = $productService;
     }
 
-    public function generatePdf_ssmi(Request $request){
+    public function generatePdf_ssmi(Request $request)
+    {        
         // $response = Http::withHeaders([
         //     'x-api-key' => '2idqUEqD16WlkMwoWohuluNqFIm9ZqKmsw4GuSsM15E'
         // ])->get('http://192.168.2.50/api/getEmployees');
-
-        // dd($response->json());
 
         $query = $request->filters;
 
@@ -107,6 +106,8 @@ class SsmiController extends Controller
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
+
+        $pdf->writeHtml($this->footer(), true, false, true, false, '');
 
         $pdf->Output('product.pdf', 'I');
     }
@@ -199,18 +200,18 @@ class SsmiController extends Controller
             }
         }
 
-        $text .= '<tr>
-                    <td style="border:1px solid #fff;" width="25%">
-                        <p style="font-size: 10px; line-height: 0.4;"><i>Number of Items: <span>'. $countItemIssued .'</span></i></p>
-                    </td>
-                    <td style="border:1px solid #fff;" width="25%">
-                        <p style="font-size: 10px; line-height: 0.4;"><i>Number of Issuances: <span>'. $countTransactions .'</span></i></p>
-                    </td>
-                    <td style="border:1px solid #fff;" width="50%">
-                        <p style="font-size: 10px; line-height: 0.4;"></p>
-                    </td>
-                </tr>
-                ';
+        // $text .= '<tr>
+        //             <td style="border:1px solid #fff;" width="25%">
+        //                 <p style="font-size: 10px; line-height: 0.4;"><i>Number of Items: <span>'. $countItemIssued .'</span></i></p>
+        //             </td>
+        //             <td style="border:1px solid #fff;" width="25%">
+        //                 <p style="font-size: 10px; line-height: 0.4;"><i>Number of Issuances: <span>'. $countTransactions .'</span></i></p>
+        //             </td>
+        //             <td style="border:1px solid #fff;" width="50%">
+        //                 <p style="font-size: 10px; line-height: 0.4;"></p>
+        //             </td>
+        //         </tr>
+        //         ';
 
         return $text;
     }
@@ -247,5 +248,68 @@ class SsmiController extends Controller
                     <td width="50px" style="text-align:center;">' . $particular['qty'] . '</td>
                     <td width="54px">' . $totalText . '</td>
                 </tr>';
+    }
+
+    private function footer()
+    {
+        $signatories = $this->signatories();
+
+        return '
+            <table>
+                <thead>
+                    <tr style="font-size: 11px;">
+                        <th style="margin-left: 15px;" width="293px" rowspan="3">Prepared By:</th>
+                        <th style="margin-left: 15px;" width="293px" rowspan="3">Reviewed By:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td width="100%"><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="273px">'. $signatories['prepared_by']['name'].'</td>
+                        <td width="273px">'. $signatories['reviewed_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="273px">'. $signatories['prepared_by']['position'].'</td>
+                        <td width="273px">'. $signatories['reviewed_by']['position'].'</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+            <br>
+            <br>
+            <table>
+                <thead>
+                    <tr style="font-size: 11px; text-align:center;" >
+                        <th style="margin-left: 15px;" width="300px">APPROVED BY:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td width="100%"><br><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="100%">'. $signatories['approved_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="100%">'. $signatories['approved_by']['position'].'</td>
+                    </tr>
+                </tbody>
+            </table>';
+    }
+
+    private function signatories()
+    {
+        return [
+            'prepared_by' => [
+                'name' => 'JESSER ANJELO G. MAYOS',
+                'position' => 'Administrative Aide VI',
+            ],
+            'reviewed_by' => [
+                'name' => 'MARJORIE A. BOMOGAO',
+                'position' => 'Supervising Administrative Officer',
+            ],
+            'approved_by' => [
+                'name' => 'JENNIFER G. BAHOD',
+                'position' => 'Provincial General Services Officer',
+            ],
+        ];
     }
 }
