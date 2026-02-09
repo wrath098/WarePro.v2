@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('pr_no')->nullable();
             $table->string('semester')->nullable();
-            $table->decimal('qty_adjustment', 5, 2)->default(1.00);
             $table->string('pr_desc')->nullable();
             $table->string('pr_status')->default('draft');
             $table->string('pr_remarks')->nullable();

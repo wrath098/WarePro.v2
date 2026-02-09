@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('adjusted_firstQty')->default(0)->comment('For Adjustment if didnt met the proposed budget');
             $table->integer('adjusted_secondQty')->default(0)->comment('For Adjustment if didnt met the proposed budget');
             $table->integer('tresh_first_qty')->default(0)->comment('Basis for Qty Issuances');
-            $table->integer('tresh_adjustment')->default(0)->comment('Basis for Qty Issuances');
+            $table->integer('tresh_second_qty')->default(0)->comment('Basis for Qty Issuances');
             $table->integer('released_qty')->default(0)->comment('For Product Requisition monitoring of released qty');
             $table->unsignedBigInteger('prod_id')->nullable();
             $table->unsignedBigInteger('price_id')->nullable();

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('prod_status', 20)->default('active');// active || deactivate
             $table->string('prod_remarks', 20)->nullable();
             $table->string('prod_oldNo', 10)->nullable();
-            $table->integer('has_expiry', 2)->default(0);
+            $table->integer('has_expiry')->default(0);
             $table->unsignedBigInteger('item_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
