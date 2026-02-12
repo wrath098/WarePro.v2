@@ -85,7 +85,10 @@ class RisTransactionController extends Controller
             'remarks' => $risInfo->remarks,
             'issuedTo' => $risInfo->issued_to,
             'issuedBy' => $risInfo->creator ? $risInfo->creator->name : '',
-            'dateIssued' => $risInfo->created_at->format('F d, Y'),
+            'dateIssued' => $risInfo->ris_date
+                ? \Carbon\Carbon::parse($risInfo->ris_date)->format('F d, Y')
+                : null,
+            'rawDateIssued' => $risInfo->ris_date,
             'noOfItems' => $transaction->count(),
         ];
         
@@ -208,6 +211,7 @@ class RisTransactionController extends Controller
         $request->validate([
             'risNo' => 'required|string',
             'issuedTo' => 'required|string',
+            'dateIssued' => 'required|date',
             'oldData' => 'required|array',
         ]);
 
@@ -224,7 +228,8 @@ class RisTransactionController extends Controller
             foreach($transactions as $transaction) {
                 $transaction->update([
                     'ris_no' => $request->risNo,
-                    'issued_to' => $request->issuedTo
+                    'issued_to' => $request->issuedTo,
+                    'ris_date' => $request->dateIssued
                 ]);
             }
             
