@@ -127,11 +127,6 @@
             width: '10%',
         },
         {
-            data: 'stockAvailable',
-            title: 'Stock Available',
-            width: '10%',
-        },
-        {
             data: 'purchases',
             title: 'Purchases',
             width: '10%',
@@ -158,6 +153,11 @@
                 </span>
                 `;
             },
+        },
+        {
+            data: 'stockAvailable',
+            title: 'Stock Available',
+            width: '10%',
         },
     ];
     if (hasAnyRole(['Developer']) || hasPermission('update-product-inventory')) {
