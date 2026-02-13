@@ -74,9 +74,8 @@ class InventoryController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                 <th width="25px">No.</th>
-                <th width="40px">Old Stock No.</th>
-                <th width="63px">New Stock No.</th>
-                <th width="268px">Item Description</th>
+                <th width="63px">Stock No.</th>
+                <th width="308px">Item Description</th>
                 <th width="60px">Unit of Measure</th>
                 <th width="63px">Beginning Balance</th>
             </tr>';
@@ -109,14 +108,12 @@ class InventoryController extends Controller
                             $text .= sprintf(
                                 '<tr style="font-size: 9px;">
                                     <th width="25px">%d</th>
-                                    <th width="40px" style="text-align: center;">%s</th>
                                     <th width="63px">%s</th>
-                                    <th width="268px">%s</th>
+                                    <th width="308px">%s</th>
                                     <th width="60px">%s</th>
                                     <th width="63px" style="text-align: right;">%s</th>
                                 </tr>',
                                 $count,
-                                $product->prod_oldNo ?? '',
                                 $product->prod_newNo ?? '',
                                 $product->prod_desc ?? '',
                                 $product->prod_unit ?? '',
