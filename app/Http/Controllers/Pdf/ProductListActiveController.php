@@ -73,9 +73,8 @@ class ProductListActiveController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="25px">No.</th>
-                    <th width="40px">Old Stock No.</th>
-                    <th width="63px">New Stock No.</th>
-                    <th width="268px">Item Description</th>
+                    <th width="63px">Stock No.</th>
+                    <th width="308px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Price</th>
                 </tr>';
@@ -101,9 +100,9 @@ class ProductListActiveController extends Controller
                             $formattedPrice = number_format($price, 2, '.', ',');
                             $text .= '<tr style="font-size: 9px;">
                                         <th width="25px">' . $count . '</th>
-                                        <th width="40px" style="text-align: center;">' . $product->prod_oldNo . '</th>
+
                                         <th width="63px">' . $product->prod_newNo . '</th>
-                                        <th width="268px">' . $product->prod_desc . '</th>
+                                        <th width="308px">' . $product->prod_desc . '</th>
                                         <th width="60px">' . $product->prod_unit . '</th>
                                         <th width="63px" style="text-align: right;">' . $formattedPrice . '</th>
                                         </tr>';
@@ -145,7 +144,6 @@ class ProductListActiveController extends Controller
 
                             $productsData[] = [
                                 'count' => $globalCount,
-                                'oldCode' => $this->sanitizeForXml($product->prod_oldNo ?? ''),
                                 'newCode' => $this->sanitizeForXml($product->prod_newNo),
                                 'prodDesc' => $this->sanitizeForXml($product->prod_desc),
                                 'prodUnit' => $this->sanitizeForXml($product->prod_unit),
