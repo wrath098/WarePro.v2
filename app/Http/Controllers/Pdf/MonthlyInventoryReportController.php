@@ -83,7 +83,7 @@ class MonthlyInventoryReportController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="25px">No.</th>
-                    <th width="63px">New Stock No.</th>
+                    <th width="63px">Stock No.</th>
                     <th width="308px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Quantity</th>
