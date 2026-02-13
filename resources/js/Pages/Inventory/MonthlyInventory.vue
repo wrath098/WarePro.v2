@@ -52,11 +52,11 @@
             title: 'New Stock No#',
             width: '10%',
         },
-        {
-            data: 'oldStockNo',
-            title: 'Old Code',
-            width: '10%',
-        },
+        // {
+        //     data: 'oldStockNo',
+        //     title: 'Old Code',
+        //     width: '10%',
+        // },
         {
             data: 'description',
             title: 'Description',
