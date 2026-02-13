@@ -136,18 +136,18 @@ import InputError from '@/Components/InputError.vue';
     const columns = [
         {
             data: 'code',
-            title: 'New Stock No#',
+            title: 'Stock No#',
             width: '10%',
         },
-        {
-            data: 'oldCode',
-            title: 'Old Stock No#',
-            width: '10%',
-        },
+        // {
+        //     data: 'oldCode',
+        //     title: 'Old Stock No#',
+        //     width: '10%',
+        // },
         {
             data: 'desc',
             title: 'Description',
-            width: '50%',
+            width: '60%',
         },
         {
             data: 'unit',
