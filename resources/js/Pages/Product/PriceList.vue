@@ -113,15 +113,15 @@
                         <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-3 w-1/12">
-                                    Stock No.
+                                    New Stock No.
                                 </th>
-                                <!-- <th scope="col" class="px-6 py-3 w-1/12">
+                                <th scope="col" class="px-6 py-3 w-1/12">
                                     Old Stock No.
-                                </th> -->
+                                </th>
                                 <th scope="col" class="px-6 py-3 w-1/12">
                                     Item Class
                                 </th>
-                                <th scope="col" class="px-6 py-3 w-4/12">
+                                <th scope="col" class="px-6 py-3 w-3/12">
                                     Description
                                 </th>
                                 <th scope="col" class="px-6 py-3 w-1/12">
@@ -141,9 +141,9 @@
                                 <td scope="row" class="py-2">
                                     {{  product.newNo }}
                                 </td>
-                                <!-- <td scope="row" class="py-2">
+                                <td scope="row" class="py-2">
                                     {{  product.oldNo }}
-                                </td> -->
+                                </td>
                                 <td class="py-2">
                                     {{ product.itemName }}
                                 </td>
