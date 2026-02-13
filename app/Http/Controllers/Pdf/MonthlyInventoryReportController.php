@@ -83,9 +83,8 @@ class MonthlyInventoryReportController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="25px">No.</th>
-                    <th width="40px">Old Stock No.</th>
                     <th width="63px">New Stock No.</th>
-                    <th width="268px">Item Description</th>
+                    <th width="308px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Quantity</th>
                 </tr>';
@@ -132,9 +131,8 @@ class MonthlyInventoryReportController extends Controller
                                         $count++;
                                         $text .= '<tr style="font-size: 9px; text-align: center;">
                                                 <td width="25px">'. $count .'</td>
-                                                <td width="40px">'. $matchedParticulars['oldStockNo'] .'</td>
                                                 <td width="63px">'. $matchedParticulars['newStockNo'] .'</td>
-                                                <td width="268px" style="text-align: left;">'. $matchedParticulars['description'] .'</td>
+                                                <td width="308px" style="text-align: left;">'. $matchedParticulars['description'] .'</td>
                                                 <td width="60px">'. $matchedParticulars['unit'] .'</td>
                                                 <td width="63px" style="text-align: right;">'. $matchedParticulars['currentInventory'] .'</td>
                                             </tr>';
