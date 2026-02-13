@@ -277,14 +277,15 @@ class SsmiController extends Controller
             <br>
             <br>
             <br>
+            <br>
             <table>
                 <thead>
                     <tr style="font-size: 11px; text-align:center;" >
-                        <th style="margin-left: 15px;" width="300px">APPROVED BY:</th>
+                        <th style="margin-left: 15px;" width="300px">Certified Correct:</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td width="100%"><br><br></td></tr>
+                    <tr><td width="100%"><br></td></tr>
                     <tr style="font-size: 11px; font-weight:bold; text-align:center;">
                         <td width="100%">'. $signatories['approved_by']['name'].'</td>
                     </tr>
