@@ -37,6 +37,7 @@ const closeModal = () => {modalState.value = null;}
 
 const form = useForm({
     name: '',
+    position:'',
     email: '',
     password: '',
     password_confirmation: '',
@@ -117,25 +118,30 @@ const columns = [
         width: '20%'
     },
     {
+        data: 'position',
+        title: 'Position',
+        width: '20%'
+    },
+    {
         data: 'email',
         title: 'Email Address',
-        width: '20%'
+        width: '15%'
     },
     {
         data: 'roles',
         title: 'User Role/s',
-        width: '20%'
+        width: '15%'
     },
     {
         data: 'office',
         title: 'Office',
-        width: '25%'
+        width: '20%'
     },
     {
         data: null,
         title: 'Action',
         render: '#action',
-        width: '15%'
+        width: '10%'
     }
 ];
 </script>
@@ -218,6 +224,14 @@ const columns = [
                                     <label for="name" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Full Name</label>
                                 </div>
                                 <InputError class="mt-2" :message="form.errors.name" />
+                            </div>
+                                                        <div class="mt-10">
+                                <p class="text-sm font-semibold text-[#1a0037] mb-2">Position</p>
+                                <div class="relative z-0 w-full group my-1">
+                                    <input v-model="form.position" type="text" name="position" id="position" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required />
+                                    <label for="position" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Position</label>
+                                </div>
+                                <InputError class="mt-2" :message="form.errors.position" />
                             </div>
                             <div class="mt-10">
                                 <p class="text-sm font-semibold text-[#1a0037] mb-2">Email Address</p>

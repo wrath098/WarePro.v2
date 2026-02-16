@@ -43,6 +43,7 @@ const removeUserPermission = useForm({});
 const updateUser = useForm({
     id: props.user.id,
     name: props.user.name,
+    position: props.user.position,
     email: props.user.email,
     officeId: props.office
 });
@@ -255,6 +256,12 @@ const submitRemovePermission = async () => {
                                 </div>
                             </div>
                             <div>
+                                <label for="to" class="text-xs xs:text-sm text-[#1a0037] mb-1"><span class="font-semibold">Position</span></label>
+                                <div class="relative max-w-xs">
+                                    <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-semibold text-indigo-700 bg-zinc-200" placeholder="" :value="user?.position" disabled>
+                                </div>
+                            </div>
+                            <div>
                                 <label for="from" class="text-xs xs:text-sm text-[#1a0037] mb-1"><span class="font-semibold">Email Address</span></label>
                                 <div class="relative max-w-xs">
                                     <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-semibold text-indigo-700 bg-zinc-200" placeholder="" :value="user?.email" disabled>
@@ -422,6 +429,14 @@ const submitRemovePermission = async () => {
                                     <input v-model="updateUser.name" type="text" name="name" id="name" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required />
                                     <label for="name" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Full Name</label>
                                     <InputError class="mt-2" :message="updateUser.errors.name" />
+                                    </div>
+                            </div>
+                            <div class="mt-10">
+                                <p class="text-sm font-semibold text-[#1a0037] mb-2">Position</p>
+                                <div class="relative z-0 w-full group my-1">
+                                    <input v-model="updateUser.position" type="text" name="position" id="position" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer" placeholder="" required />
+                                    <label for="position" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Enter Position</label>
+                                    <InputError class="mt-2" :message="updateUser.errors.position" />
                                     </div>
                             </div>
                             <div class="mt-10">
