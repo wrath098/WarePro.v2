@@ -53,13 +53,13 @@ class OfficePpmpController extends Controller
                     <h5>PROVINCIAL GENERAL SERVICES OFFICE</h5>
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
-                    <h4>PROJECT PROCUREMENT MANAGEMENT PLAN '. $ppmp->ppmp_year.'</h4>
-                    <h5>OFFICE & JANITORIAL SUPPLIES</h5>
+                    <h4>PROJECT PROCUREMENT MANAGEMENT PLAN (PPMP) NO. ___</h4>
+                    <h5>INDICATIVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FINAL </h5>
                 </div>
             </div>
             <div style="line-height: 0.80;">
-                <h5>FPP CODE: <u> </u></h5>
-                <h5>END USER / OFFICE: ' . strtoupper($ppmp->requestee->office_name) . '</h5>
+                <h5>Fiscal Year: '. $ppmp->ppmp_year.'</h5>
+                <h5>End-User or Implementing Unit: ' . strtoupper($ppmp->requestee->office_name) . '</h5>
             </div>
             <br>
             ';     
