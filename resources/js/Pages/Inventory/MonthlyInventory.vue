@@ -36,7 +36,7 @@ const fetchproductTransactions = async () => {
             date_to: searchDate.date_to,
         });
         try {
-            const response = await axios.get('../api/monthly-product-inventory', {
+            const response = await axios.get('../api/monthly-product-inventory-report', {
                 params: {
                     date_from: searchDate.date_from,
                     date_to: searchDate.date_to,
