@@ -21,13 +21,13 @@ class MonthlyInventoryReportController extends Controller
 
     public function generatePdf_MonthlyInventoryReport(Request $request)
     {
-        $date = Carbon::createFromFormat('Y-m', $request->input('searchDate'));
-        $dateInWords = Carbon::parse($date)->format('F Y');
-        $query_year = $date->year;
-        $query_month= $date->month;
+        $date_from = Carbon::createFromFormat('Y-m-d', $request->input('date_from'))->startOfDay();
+        $date_to   = Carbon::createFromFormat('Y-m-d', $request->input('date_to'))->endOfDay();
 
-        $start_date = Carbon::createFromDate($query_year, 1, 1)->startOfDay();
-        $limit_date = Carbon::createFromDate($query_year, $query_month, 1)->endOfMonth()->endOfDay();
+        $dateInWords = $date_from->format('F d, Y') . " to " . $date_to->format('F d, Y');
+
+        $start_date = $date_from;
+        $limit_date = $date_to;
 
         $pdf = new MyPDF('P', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
 
@@ -88,6 +88,41 @@ class MonthlyInventoryReportController extends Controller
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Quantity</th>
                 </tr>';
+    }
+
+    public function fetchMonthlyInventory(Request $request)
+    {
+        $request->validate([
+            'date_from' => 'required|date',
+            'date_to'   => 'required|date|after_or_equal:date_from',
+        ]);
+
+        try {
+            $start_date = Carbon::parse($request->date_from)->startOfDay();
+            $end_date   = Carbon::parse($request->date_to)->endOfDay();
+
+            $products = Product::with([
+                'inventory:id,prod_id,qty_physical_count',
+                'inventoryTransactions' => function ($q) use ($start_date, $end_date) {
+                    $q->withTrashed()
+                    ->select('id','type','qty','prod_id','created_at')
+                    ->whereBetween('created_at', [$start_date, $end_date])
+                    ->orderBy('created_at','asc');
+                }
+            ])->get();
+
+            $adjustedProducts = $this->reformatProductArray($products);
+
+            return response()->json(['data' => $adjustedProducts]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch product inventory', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+            return response()->json(['error' => 'Failed to fetch product inventory'], 500);
+        }
     }
 
     protected function tableContent($start_date, $limit_date)
