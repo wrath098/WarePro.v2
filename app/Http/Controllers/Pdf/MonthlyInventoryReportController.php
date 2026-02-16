@@ -76,6 +76,10 @@ class MonthlyInventoryReportController extends Controller
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
+        
+
+        $pdf->writeHtml($this->footer(), true, false, true, false, '');
+
         $pdf->Output('Product List.pdf', 'I');
     }
 
@@ -227,5 +231,69 @@ class MonthlyInventoryReportController extends Controller
         }
 
         return $newProductArray;
+    }
+
+    private function footer()
+    {
+        $signatories = $this->signatories();
+
+        return '
+            <table>
+                <thead>
+                    <tr style="font-size: 11px;">
+                        <th style="margin-left: 15px;" width="293px" rowspan="3">Prepared By:</th>
+                        <th style="margin-left: 15px;" width="293px" rowspan="3">Reviewed By:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td width="100%"><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="273px">'. $signatories['prepared_by']['name'].'</td>
+                        <td width="273px">'. $signatories['reviewed_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="273px">'. $signatories['prepared_by']['position'].'</td>
+                        <td width="273px">'. $signatories['reviewed_by']['position'].'</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+            <br>
+            <br>
+            <br>
+            <table>
+                <thead>
+                    <tr style="font-size: 11px; text-align:center;" >
+                        <th style="margin-left: 15px;" width="300px">Certified Correct:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td width="100%"><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="100%">'. $signatories['approved_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="100%">'. $signatories['approved_by']['position'].'</td>
+                    </tr>
+                </tbody>
+            </table>';
+    }
+
+    private function signatories()
+    {
+        return [
+            'prepared_by' => [
+                'name' => 'JESSER ANJELO G. MAYOS',
+                'position' => 'Administrative Aide VI',
+            ],
+            'reviewed_by' => [
+                'name' => 'MARJORIE A. BOMOGAO',
+                'position' => 'Supervising Administrative Officer',
+            ],
+            'approved_by' => [
+                'name' => 'JENNIFER G. BAHOD',
+                'position' => 'Provincial General Services Officer',
+            ],
+        ];
     }
 }
