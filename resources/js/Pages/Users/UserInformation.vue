@@ -18,7 +18,8 @@ const props = defineProps({
     direct_permissions: Array,
     roleList: Object,
     permissionList: Object,
-    offices: Object,
+    office_name: String,
+    offices: Array,
 });
 
 const isLoading = ref(false);
@@ -45,7 +46,7 @@ const updateUser = useForm({
     name: props.user.name,
     position: props.user.position,
     email: props.user.email,
-    officeId: props.office
+    officeId: props.user.office_id,
 });
 
 const changePassword = useForm({
@@ -273,10 +274,10 @@ const submitRemovePermission = async () => {
                                     <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-semibold text-indigo-700 bg-zinc-200" placeholder="" :value="user?.created_at" disabled>
                                 </div>
                             </div>
-                            <div v-if="office">
+                            <div v-if="office_name">
                                 <label for="to" class="text-xs xs:text-sm text-[#1a0037] mb-1"><span class="font-semibold">Office Name</span></label>
                                 <div class="relative max-w-xs">
-                                    <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-semibold text-indigo-700 bg-zinc-200" placeholder="" :value="office" disabled>
+                                    <input type="text" class="h-[50px] rounded-[5px] text-xs xs:text-sm border border-[#D1D5DB] w-full px-2 pl-4 font-semibold text-indigo-700 bg-zinc-200" placeholder="" :value="office_name" disabled>
                                 </div>
                             </div>
                         </div>
@@ -454,7 +455,7 @@ const submitRemovePermission = async () => {
                                         <option value="" disabled selected>Select Office</option>
                                         <option v-for="off in offices" :key="off.id" :value="off.id">{{ off.name }}</option>
                                     </select>
-                                    <label for="ppmpSem" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Office</label>
+                                    <label for="ppmpSem" class="font-semibold absolute text-sm text-zinc-700 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Choose Office</label>
                                 </div>
                                 <InputError class="mt-2" :message="updateUser.errors.officeId" />
                             </div>

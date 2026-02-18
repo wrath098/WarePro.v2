@@ -53,15 +53,17 @@ class UserController extends Controller
         $offices = $this->getOffices();
         
         return Inertia::render('Users/UserInformation', [
-            'user' => $user->only([
-                'id', 
-                'name', 
-                'position',
-                'email',
-                'created_at',
-                'updated_at'
-            ]),
-            'office' => $user->office ? $user->office->office_name : '',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'position' => $user->position,
+                'email' => $user->email,
+                'office_id' => $user->office_id,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
+            'office_name' => optional($user->office)->office_name,
+            'offices' => $offices,
             'roles' => $user->roles->map(function ($role) {
                 return [
                     'id' => $role->id,
