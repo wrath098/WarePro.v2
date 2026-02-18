@@ -1,16 +1,67 @@
 <script setup>
-import { reactive, ref } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { reactive, ref, computed, onMounted } from 'vue'
+import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DataTable } from 'datatables.net-vue3'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
 const isLoading = ref(false)
+const page = usePage()
 
 const searchDate = reactive({
     date_from: '',
     date_to: '',
+})
+
+const props = defineProps({
+    users: Array,
+});
+
+const filterLogs = reactive({
+    prepared_by: '',
+    reviewed_by: '',
+    certified_correct: ''
+})
+
+const getUserById = (id) =>
+    props.users.find(u => u.id === id)
+
+const preparedByPosition = computed(() => {
+    const user = props.users.find(
+        u => u.id === filterLogs.prepared_by
+    )
+    return user ? user.position : ''
+})
+
+const reviewedByPosition = computed(() => {
+    const user = getUserById(filterLogs.reviewed_by)
+    return user ? user.position : ''
+})
+
+const certifiedCorrectPosition = computed(() => {
+    const user = getUserById(filterLogs.certified_correct)
+    return user ? user.position : ''
+})
+
+onMounted(() => {
+    if (page.props.auth?.user) {
+        filterLogs.prepared_by = page.props.auth.user.id
+    }
+
+    const reviewer = props.users.find(
+        user => user.name === 'Marjorie A. Bomogao'
+    )
+    if (reviewer) {
+        filterLogs.reviewed_by = reviewer.id
+    }
+
+    const certifier = props.users.find(
+        user => user.name === 'Jennifer G. Bahod'
+    )
+    if (certifier) {
+        filterLogs.certified_correct = certifier.id
+    }
 })
 
 const getAsOfParams = () => {
@@ -22,6 +73,7 @@ const getAsOfParams = () => {
     return {
         date_from: `${year}-01-01`,
         date_to: searchDate.date_to,
+        filters : filterLogs
     }
 }
 
@@ -31,15 +83,12 @@ const fetchproductTransactions = async () => {
     isLoading.value = true
 
     if (searchDate.date_from && searchDate.date_to) {
-        console.log('Fetching products with params:', {
-            date_from: searchDate.date_from,
-            date_to: searchDate.date_to,
-        });
         try {
             const response = await axios.get('../api/monthly-product-inventory-report', {
                 params: {
                     date_from: searchDate.date_from,
                     date_to: searchDate.date_to,
+                    query: filterLogs
                 },
             });
 
@@ -136,7 +185,7 @@ const columns = [
                     <div class="grid gap-2 grid-cols-1 lg:grid-cols-4 lg:gap-6 my-5 mx-3">
                         <div class="relative z-0 my-5 group">
                             <input v-model="searchDate.date_from" type="date" name="date_from" id="date_from"
-                                class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer"
+                                class="block py-2.5 px-0 w-full text-medium text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer"
                                 placeholder=" " required />
                             <label for="date_from"
                                 class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
@@ -146,7 +195,7 @@ const columns = [
 
                         <div class="relative z-0 my-5 group">
                             <input v-model="searchDate.date_to" type="date" name="date_to" id="date_to"
-                                class="block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer"
+                                class="text-sm block py-2.5 px-0 w-full text-medium text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer"
                                 placeholder=" " required />
                             <label for="date_to"
                                 class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
@@ -165,7 +214,7 @@ const columns = [
                             </button>
                             <a :href="productTransactions.data && productTransactions.data.length > 0 ? route('generatePdf.MonthlyInventoryReport', {
                                 date_from: searchDate.date_from,
-                                date_to: searchDate.date_to
+                                date_to: searchDate.date_to, filters : filterLogs
                             }) : '#'" target="_blank"
                                 class="flex w-auto text-center mx-1 min-w-[125px] px-6 py-3 text-white transition-all bg-gray-600 rounded-md shadow-xl sm:w-auto hover:bg-gray-900 hover:text-white hover:-tranneutral-y-px"
                                 :class="{ 'opacity-25 cursor-not-allowed': !(productTransactions.data && productTransactions.data.length > 0) }"
@@ -190,6 +239,89 @@ const columns = [
                             </a>
                         </div>
                     </div>
+                                            <div class="grid lg:grid-cols-3 lg:gap-6 my-5 mx-3">
+                        <div class="relative z-0 w-full my-5 group">
+                            <select id="preparedBy" v-model="filterLogs.prepared_by" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent
+               border-0 border-b-2 border-gray-700 appearance-none
+               focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                <option value="" disabled hidden></option>
+                                <option v-for="user in users" :key="user.id" :value="user.id">
+                                    {{ user.name }}
+                                </option>
+                            </select>
+
+                            <label for="preparedBy" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform
+               -translate-y-6 scale-75 top-3 -z-10 origin-[0]
+               peer-focus:text-blue-600
+               peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0
+               peer-focus:scale-75 peer-focus:-translate-y-6">
+                                Prepared By:
+                            </label>
+
+                            <label class="mt-6 font-semibold text-zinc-500 absolute text-sm duration-300 transform
+               -translate-y-6 scale-75 top-12 left-0 origin-[0]" v-show="preparedByPosition">
+                                Position
+                            </label>
+                            <input type="text" :value="preparedByPosition" disabled v-show="preparedByPosition" class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent
+               border-0 appearance-none
+               focus:outline-none focus:ring-0 peer cursor-not-allowed mt-4" />
+
+                        </div>
+
+                        <div class="relative z-0 w-full my-5 group">
+                            <select id="reviewedBy" v-model="filterLogs.reviewed_by" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent
+               border-0 border-b-2 border-gray-700 appearance-none
+               focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                <option value="" disabled hidden></option>
+                                <option v-for="user in users" :key="user.id" :value="user.id">
+                                    {{ user.name }}
+                                </option>
+                            </select>
+
+                            <label for="reviewedBy" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform
+               -translate-y-6 scale-75 top-3 -z-10 origin-[0]
+               peer-focus:text-blue-600
+               peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0
+               peer-focus:scale-75 peer-focus:-translate-y-6">
+                                Reviewed By:
+                            </label>
+                            <label class="mt-6 font-semibold text-zinc-500 absolute text-sm duration-300 transform
+               -translate-y-6 scale-75 top-12 left-0 origin-[0]" v-show="reviewedByPosition">
+                                Position
+                            </label>
+                            <input type="text" :value="reviewedByPosition" disabled v-show="reviewedByPosition" class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent
+               border-0 appearance-none
+               focus:outline-none focus:ring-0 peer cursor-not-allowed mt-4" />
+
+                        </div>
+
+                        <div class="relative z-0 w-full my-5 group">
+                            <select id="certifiedCorrect" v-model="filterLogs.certified_correct" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent
+               border-0 border-b-2 border-gray-700 appearance-none
+               focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                <option value="" disabled hidden></option>
+                                <option v-for="user in users" :key="user.id" :value="user.id">
+                                    {{ user.name }}
+                                </option>
+                            </select>
+
+                            <label for="certifiedCorrect" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform
+               -translate-y-6 scale-75 top-3 -z-10 origin-[0]
+               peer-focus:text-blue-600
+               peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0
+               peer-focus:scale-75 peer-focus:-translate-y-6">
+                                Certified Correct:
+                            </label>
+                            <label class="mt-6 font-semibold text-zinc-500 absolute text-sm duration-300 transform
+               -translate-y-6 scale-75 top-12 left-0 origin-[0]" v-show="certifiedCorrectPosition">
+                                Position
+                            </label>
+                            <input type="text" :value="certifiedCorrectPosition" disabled
+                                v-show="certifiedCorrectPosition" class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent
+               border-0 appearance-none
+               focus:outline-none focus:ring-0 peer cursor-not-allowed mt-4" />
+                        </div>
+</div>
                 </form>
             </div>
             <div class="bg-zinc-300 shadow-md sm:rounded-lg p-4">

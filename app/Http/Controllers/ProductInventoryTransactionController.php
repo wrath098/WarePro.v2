@@ -7,6 +7,7 @@ use App\Models\IarTransaction;
 use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
+use App\Models\User;
 use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -45,8 +46,12 @@ class ProductInventoryTransactionController extends Controller
     }
 
     public function inventoryReport(Request $request)
-    {
-        return Inertia::render('Inventory/MonthlyInventory');
+    {   
+        $users = User::select('id', 'name', 'position')->get();
+
+        return Inertia::render('Inventory/MonthlyInventory', [
+            'users' => $users,
+        ]);
     }
 
     public function store(Request $request)

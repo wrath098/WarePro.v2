@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Pdf;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\MyPDF;
 use App\Services\ProductService;
 use Carbon\Carbon;
@@ -20,7 +21,20 @@ class MonthlyInventoryReportController extends Controller
     }
 
     public function generatePdf_MonthlyInventoryReport(Request $request)
-    {
+    {       
+        $query = $request->filters;
+
+        $preparedById = $request->filters['prepared_by'] ?? null;
+        $reviewedById = $request->filters['reviewed_by'] ?? null;
+        $certifiedCorrectId = $request->filters['certified_correct'] ?? null;
+
+        $signatories = [
+            'prepared_by' => $preparedById ? $this->getUserSignatory($preparedById) : ['name'=>'', 'position'=>''],
+            'reviewed_by' => $reviewedById ? $this->getUserSignatory($reviewedById) : ['name'=>'', 'position'=>''],
+            'approved_by' => $certifiedCorrectId ? $this->getUserSignatory($certifiedCorrectId) : ['name'=>'', 'position'=>''],
+        ];
+
+
         $date_from = Carbon::createFromFormat('Y-m-d', $request->input('date_from'))->startOfDay();
         $date_to   = Carbon::createFromFormat('Y-m-d', $request->input('date_to'))->endOfDay();
 
@@ -77,8 +91,7 @@ class MonthlyInventoryReportController extends Controller
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
         
-
-        $pdf->writeHtml($this->footer(), true, false, true, false, '');
+        $pdf->writeHtml($this->footer($signatories), true, false, true, false, '');
 
         $pdf->Output('Product List.pdf', 'I');
     }
@@ -233,16 +246,14 @@ class MonthlyInventoryReportController extends Controller
         return $newProductArray;
     }
 
-    private function footer()
+    private function footer($signatories)
     {
-        $signatories = $this->signatories();
-
         return '
             <table>
                 <thead>
                     <tr style="font-size: 11px;">
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Prepared By:</th>
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Reviewed By:</th>
+                        <th width="293px" rowspan="3">Prepared By:</th>
+                        <th width="293px" rowspan="3">Reviewed By:</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -257,14 +268,11 @@ class MonthlyInventoryReportController extends Controller
                     </tr>
                 </tbody>
             </table>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br>
             <table>
                 <thead>
                     <tr style="font-size: 11px; text-align:center;" >
-                        <th style="margin-left: 15px;" width="300px">Certified Correct:</th>
+                        <th width="300px">Certified Correct:</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -294,6 +302,19 @@ class MonthlyInventoryReportController extends Controller
                 'name' => 'JENNIFER G. BAHOD',
                 'position' => 'Provincial General Services Officer',
             ],
+        ];
+    }
+
+    private function getUserSignatory($userId)
+    {
+        $user = \App\Models\User::find($userId);
+        if(!$user) {
+            return ['name'=>'', 'position'=>''];
+        }
+
+        return [
+            'name' => strtoupper($user->name),
+            'position' => ($user->position ?? ''),
         ];
     }
 }
