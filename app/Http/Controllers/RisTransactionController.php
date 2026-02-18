@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
+use App\Models\User;
 use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -49,7 +50,12 @@ class RisTransactionController extends Controller
     public function ssmi()
     {
         $risTransaction = $this->getRisTransactions();
-        return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
+        $users = User::select('id', 'name', 'position')->get();
+
+        return Inertia::render('Ris/RisLogs', [
+            'transactions' => $risTransaction,
+            'users' => $users,
+        ]);
     }
 
     public function showAttachment(Request $request)
