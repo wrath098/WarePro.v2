@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Pdf;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\MyPDF;
 use App\Services\ProductService;
 use Carbon\Carbon;
@@ -20,14 +21,27 @@ class MonthlyInventoryReportController extends Controller
     }
 
     public function generatePdf_MonthlyInventoryReport(Request $request)
-    {
-        $date = Carbon::createFromFormat('Y-m', $request->input('searchDate'));
-        $dateInWords = Carbon::parse($date)->format('F Y');
-        $query_year = $date->year;
-        $query_month= $date->month;
+    {       
+        $query = $request->filters;
 
-        $start_date = Carbon::createFromDate($query_year, 1, 1)->startOfDay();
-        $limit_date = Carbon::createFromDate($query_year, $query_month, 1)->endOfMonth()->endOfDay();
+        $preparedById = $request->filters['prepared_by'] ?? null;
+        $reviewedById = $request->filters['reviewed_by'] ?? null;
+        $certifiedCorrectId = $request->filters['certified_correct'] ?? null;
+
+        $signatories = [
+            'prepared_by' => $preparedById ? $this->getUserSignatory($preparedById) : ['name'=>'', 'position'=>''],
+            'reviewed_by' => $reviewedById ? $this->getUserSignatory($reviewedById) : ['name'=>'', 'position'=>''],
+            'approved_by' => $certifiedCorrectId ? $this->getUserSignatory($certifiedCorrectId) : ['name'=>'', 'position'=>''],
+        ];
+
+
+        $date_from = Carbon::createFromFormat('Y-m-d', $request->input('date_from'))->startOfDay();
+        $date_to   = Carbon::createFromFormat('Y-m-d', $request->input('date_to'))->endOfDay();
+
+        $dateInWords = $date_from->format('F d, Y') . " to " . $date_to->format('F d, Y');
+
+        $start_date = $date_from;
+        $limit_date = $date_to;
 
         $pdf = new MyPDF('P', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
 
@@ -76,6 +90,9 @@ class MonthlyInventoryReportController extends Controller
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
+        
+        $pdf->writeHtml($this->footer($signatories), true, false, true, false, '');
+
         $pdf->Output('Product List.pdf', 'I');
     }
 
@@ -83,12 +100,46 @@ class MonthlyInventoryReportController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="25px">No.</th>
-                    <th width="40px">Old Stock No.</th>
-                    <th width="63px">New Stock No.</th>
-                    <th width="268px">Item Description</th>
+                    <th width="63px">Stock No.</th>
+                    <th width="308px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Quantity</th>
                 </tr>';
+    }
+
+    public function fetchMonthlyInventory(Request $request)
+    {
+        $request->validate([
+            'date_from' => 'required|date',
+            'date_to'   => 'required|date|after_or_equal:date_from',
+        ]);
+
+        try {
+            $start_date = Carbon::parse($request->date_from)->startOfDay();
+            $end_date   = Carbon::parse($request->date_to)->endOfDay();
+
+            $products = Product::with([
+                'inventory:id,prod_id,qty_physical_count',
+                'inventoryTransactions' => function ($q) use ($start_date, $end_date) {
+                    $q->withTrashed()
+                    ->select('id','type','qty','prod_id','created_at')
+                    ->whereBetween('created_at', [$start_date, $end_date])
+                    ->orderBy('created_at','asc');
+                }
+            ])->get();
+
+            $adjustedProducts = $this->reformatProductArray($products);
+
+            return response()->json(['data' => $adjustedProducts]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch product inventory', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+            return response()->json(['error' => 'Failed to fetch product inventory'], 500);
+        }
     }
 
     protected function tableContent($start_date, $limit_date)
@@ -132,9 +183,8 @@ class MonthlyInventoryReportController extends Controller
                                         $count++;
                                         $text .= '<tr style="font-size: 9px; text-align: center;">
                                                 <td width="25px">'. $count .'</td>
-                                                <td width="40px">'. $matchedParticulars['oldStockNo'] .'</td>
                                                 <td width="63px">'. $matchedParticulars['newStockNo'] .'</td>
-                                                <td width="268px" style="text-align: left;">'. $matchedParticulars['description'] .'</td>
+                                                <td width="308px" style="text-align: left;">'. $matchedParticulars['description'] .'</td>
                                                 <td width="60px">'. $matchedParticulars['unit'] .'</td>
                                                 <td width="63px" style="text-align: right;">'. $matchedParticulars['currentInventory'] .'</td>
                                             </tr>';
@@ -194,5 +244,77 @@ class MonthlyInventoryReportController extends Controller
         }
 
         return $newProductArray;
+    }
+
+    private function footer($signatories)
+    {
+        return '
+            <table>
+                <thead>
+                    <tr style="font-size: 11px;">
+                        <th width="293px" rowspan="3">Prepared By:</th>
+                        <th width="293px" rowspan="3">Reviewed By:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td width="100%"><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="273px">'. $signatories['prepared_by']['name'].'</td>
+                        <td width="273px">'. $signatories['reviewed_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="273px">'. $signatories['prepared_by']['position'].'</td>
+                        <td width="273px">'. $signatories['reviewed_by']['position'].'</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br><br><br><br>
+            <table>
+                <thead>
+                    <tr style="font-size: 11px; text-align:center;" >
+                        <th width="300px">Certified Correct:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td width="100%"><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="100%">'. $signatories['approved_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="100%">'. $signatories['approved_by']['position'].'</td>
+                    </tr>
+                </tbody>
+            </table>';
+    }
+
+    private function signatories()
+    {
+        return [
+            'prepared_by' => [
+                'name' => 'JESSER ANJELO G. MAYOS',
+                'position' => 'Administrative Aide VI',
+            ],
+            'reviewed_by' => [
+                'name' => 'MARJORIE A. BOMOGAO',
+                'position' => 'Supervising Administrative Officer',
+            ],
+            'approved_by' => [
+                'name' => 'JENNIFER G. BAHOD',
+                'position' => 'Provincial General Services Officer',
+            ],
+        ];
+    }
+
+    private function getUserSignatory($userId)
+    {
+        $user = \App\Models\User::find($userId);
+        if(!$user) {
+            return ['name'=>'', 'position'=>''];
+        }
+
+        return [
+            'name' => strtoupper($user->name),
+            'position' => ($user->position ?? ''),
+        ];
     }
 }

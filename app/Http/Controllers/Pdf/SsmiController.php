@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Pdf;
 
 use App\Http\Controllers\Controller;
 use App\Models\RisTransaction;
+use App\Models\User;
 use App\Services\ProductService;
 use App\Services\MyPDF;
 use Carbon\Carbon;
@@ -29,6 +30,16 @@ class SsmiController extends Controller
         // ])->get('http://192.168.2.50/api/getEmployees');
 
         $query = $request->filters;
+
+        $preparedById = $request->filters['prepared_by'] ?? null;
+        $reviewedById = $request->filters['reviewed_by'] ?? null;
+        $certifiedCorrectId = $request->filters['certified_correct'] ?? null;
+
+        $signatories = [
+            'prepared_by' => $preparedById ? $this->getUserSignatory($preparedById) : ['name'=>'', 'position'=>''],
+            'reviewed_by' => $reviewedById ? $this->getUserSignatory($reviewedById) : ['name'=>'', 'position'=>''],
+            'approved_by' => $certifiedCorrectId ? $this->getUserSignatory($certifiedCorrectId) : ['name'=>'', 'position'=>''],
+        ];
 
         $startDate = Carbon::parse($query['startDate']);
         $endDate = Carbon::parse($query['endDate']);
@@ -107,7 +118,7 @@ class SsmiController extends Controller
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
 
-        $pdf->writeHtml($this->footer(), true, false, true, false, '');
+        $pdf->writeHtml($this->footer($signatories), true, false, true, false, '');
 
         $pdf->Output('product.pdf', 'I');
     }
@@ -250,16 +261,14 @@ class SsmiController extends Controller
                 </tr>';
     }
 
-    private function footer()
+    private function footer($signatories)
     {
-        $signatories = $this->signatories();
-
         return '
             <table>
                 <thead>
                     <tr style="font-size: 11px;">
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Prepared By:</th>
-                        <th style="margin-left: 15px;" width="293px" rowspan="3">Reviewed By:</th>
+                        <th width="293px" rowspan="3">Prepared By:</th>
+                        <th width="293px" rowspan="3">Reviewed By:</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -274,17 +283,15 @@ class SsmiController extends Controller
                     </tr>
                 </tbody>
             </table>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br>
             <table>
                 <thead>
                     <tr style="font-size: 11px; text-align:center;" >
-                        <th style="margin-left: 15px;" width="300px">APPROVED BY:</th>
+                        <th width="300px">Certified Correct:</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td width="100%"><br><br></td></tr>
+                    <tr><td width="100%"><br></td></tr>
                     <tr style="font-size: 11px; font-weight:bold; text-align:center;">
                         <td width="100%">'. $signatories['approved_by']['name'].'</td>
                     </tr>
@@ -310,6 +317,19 @@ class SsmiController extends Controller
                 'name' => 'JENNIFER G. BAHOD',
                 'position' => 'Provincial General Services Officer',
             ],
+        ];
+    }
+
+    private function getUserSignatory($userId)
+    {
+        $user = \App\Models\User::find($userId);
+        if(!$user) {
+            return ['name'=>'', 'position'=>''];
+        }
+
+        return [
+            'name' => strtoupper($user->name),
+            'position' => ($user->position ?? ''),
         ];
     }
 }

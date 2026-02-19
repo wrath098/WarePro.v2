@@ -23,6 +23,7 @@ class UserController extends Controller
             ->map(fn($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'position' => $user->position,
                 'office' => $user->office ? $user->office->office_name : '',
                 'email' => $user->email,
                 'roles' => $user->getRoleNames(),
@@ -52,14 +53,17 @@ class UserController extends Controller
         $offices = $this->getOffices();
         
         return Inertia::render('Users/UserInformation', [
-            'user' => $user->only([
-                'id', 
-                'name', 
-                'email',
-                'created_at',
-                'updated_at'
-            ]),
-            'office' => $user->office ? $user->office->office_name : '',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'position' => $user->position,
+                'email' => $user->email,
+                'office_id' => $user->office_id,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
+            'office_name' => optional($user->office)->office_name,
+            'offices' => $offices,
             'roles' => $user->roles->map(function ($role) {
                 return [
                     'id' => $role->id,
@@ -159,13 +163,15 @@ class UserController extends Controller
         $validated = $request->validate([
             'id' => 'required|exists:users,id',
             'name' => 'required|string',
+            'position' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users,email,' . $request['id'],
             'officeId' => 'required'
         ]);
 
         $user = User::findOrFail($validated['id']);
         $user->update([
-            'name' => $validated['name'], 
+            'name' => $validated['name'],
+            'position' => $validated['position'],
             'email' => $validated['email'],
             'office_id' => $validated['officeId']
         ]);

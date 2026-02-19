@@ -53,15 +53,30 @@ class OfficePpmpController extends Controller
                     <h5>PROVINCIAL GENERAL SERVICES OFFICE</h5>
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
-                    <h4>PROJECT PROCUREMENT MANAGEMENT PLAN '. $ppmp->ppmp_year.'</h4>
-                    <h5>OFFICE & JANITORIAL SUPPLIES</h5>
+                    <h4>PROJECT PROCUREMENT MANAGEMENT PLAN (PPMP) NO. ___</h4>
+                    <h5>INDICATIVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FINAL </h5>
+                    <table align="center" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td width="420px"></td>
+                            <td width="20px" align="center">
+                                <table border="1" cellpadding="3" cellspacing="0">
+                                    <tr><td></td></tr>
+                                </table>
+                            </td>
+                            <td width="95px"></td>
+                            <td width="20px" align="center">
+                                <table border="1" cellpadding="3" cellspacing="0">
+                                    <tr><td></td></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
             <div style="line-height: 0.80;">
-                <h5>FPP CODE: <u> </u></h5>
-                <h5>END USER / OFFICE: ' . strtoupper($ppmp->requestee->office_name) . '</h5>
+                <h5>Fiscal Year: '. $ppmp->ppmp_year.'</h5>
+                <h5>End-User or Implementing Unit: ' . strtoupper($ppmp->requestee->office_name) . '</h5>
             </div>
-            <br>
             ';     
         $pdf->writeHTML($html, true, false, true, false, '');
         $table = '<table border="1" cellpadding="2" cellspacing="0">';
@@ -74,7 +89,7 @@ class OfficePpmpController extends Controller
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
 
-        $table2 = '<p style="font-size: 10px; line-height: 0.0001;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>';     
+        $table2 = '<p style="font-size: 8px; line-height: 0.0001;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>';     
         $pdf->writeHTML($table2, true, false, true, false, '');
 
         $pdf->Output(strtoupper($ppmp->requestee->office_name) . '.pdf', 'I');
@@ -95,6 +110,7 @@ class OfficePpmpController extends Controller
         $funds = $this->productService->getAllProduct_FundModel();
         $categories = $this->productService->getAllProduct_Category();
         $productsOnCategory = $this->countProductsWithinCategory($categories, $sortedParticulars);
+        $overallTotal = 0;
 
         if ($totalQtySecond != 0) {
             foreach ($funds as $fund) {
@@ -140,11 +156,12 @@ class OfficePpmpController extends Controller
                             $text .= $this->generateCategoryFooterForBothSemesters($category, $catTotal, $catFirstTotal, $catSecondTotal);
                         }
                     }
-
+                    
                     $text .= $this->generateFundFooterForBothSemesters($fund, $fundTotal, $fundFirstTotal, $fundSecondTotal);
+                    $overallTotal += $fundTotal;
                 }
             }
-
+            $text .= $this->generateTotalBudgetFooterForBothSemesters($overallTotal);
             return $text;
         }
 
@@ -189,83 +206,129 @@ class OfficePpmpController extends Controller
                     if ($catTotal > 0) {
                         $text .= $this->generateCategoryFooterForFirstSemester($category, $catTotal, $catFirstTotal);
                     }
-
+                    
                     $fundFirstTotal += $catFirstTotal; 
                     $fundTotal += $catTotal;
+
+                    
                 }
 
-                $text .= $this->generateFundFooterForFirstSemester($fund, $fundTotal, $fundFirstTotal);
-
+                $text .= $this->generateFundFooterForFirstSemester($fund, $fundTotal, $fundFirstTotal, $overallTotal);
+                $overallTotal += $fundTotal;
             }
         }
-
+        $text .= $this->generateTotalBudgetFooterForBothSemesters($overallTotal);
         return $text;
     }
 
     private function tableHeaderForBothSemesters()
     {
-        return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
-                    <th width="40px" rowspan="3">Old Stock. No</th>
-                    <th width="45px" rowspan="3">New Stock. No</th>
-                    <th width="195px" rowspan="3">Item Description</th>
-                    <th width="45px" rowspan="3">Unit of Measure</th>
-                    <th width="50px" rowspan="3">Price</th>
-                    <th width="40px" rowspan="3">Total Qantity</th>
-                    <th width="50px" rowspan="3">Total Amount</th>
-                    <th width="414px" colspan="12">SCHEDULE/MILESTONE OF ACTIVITIES</th>
+        return '<tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #FFFFFF;">
+                    <th width="590px" colspan="9">PROCUREMENT PROJECT DETAILS</th>
+                    <th width="120px" colspan="3">PROJECTED TIMELINE (MM/YYYY)</th>
+                    <th width="90px" colspan="2">FUNDING DETAILS</th>
+                    <th width="40px" rowspan="2">ATTACHED SUPPORTING DOCUMENTS</th>
+                    <th width="40px" rowspan="2">REMARKS</th>
                 </tr>
-                <tr style="font-size: 8px; font-weight:bold; background-color: #EEEEEE;">
-                    <th width="82px" colspan="2" style="text-align:center;">JAN</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">FEB</th>
-                    <th width="25px" rowspan="2" style="text-align:center;" >MAR</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">APR</th>
-                    <th width="82px" colspan="2" style="text-align:center;" >MAY</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">JUN</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">JUL</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">AUG</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">SEP</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">OCT</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">NOV</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">DEC</th>
+                <tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #FFFFFF;">
+                    <th width="50px">General Description and Objective of the Prject to be Procured</th>
+                    <th width="40px">Type of the Project to be Procured</th>
+                    <th width="410px" colspan="5">Quantity and Size of the Project to be Procured</th>
+                    <th width="50px">Recommended Mode of Procurement</th>
+                    <th width="40px">Pre-Procurement Conference, if applicable (Yes/No)</th>
+                    <th width="40px">Start of Procurement Activity</th>
+                    <th width="40px">End of Procurement Activity</th>
+                    <th width="40px">Expected Delivery/Implementation Period</th>
+                    <th width="50px">Source of Funds</th>
+                    <th width="40px">Estimated Budget / Authorized Budgetary Allocation (PhP)</th>
                 </tr>
-                <tr style="font-size: 8px; font-weight: bold; background-color: #EEEEEE;">
-                    <th width="32px" style="text-align: center;">QTY</th>
-                    <th width="50px" style="text-align: center;">AMT</th>
-                    <th width="32px" style="text-align: center;">QTY</th>
-                    <th width="50px" style="text-align: center;">AMT</th>
+                <tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
+                    <th width="50px">Column 1</th>
+                    <th width="40px">Column 2</th>
+                    <th width="410px" colspan="5">Column 3</th>
+                    <th width="50px">Column 4</th>
+                    <th width="40px">Column 5</th>
+                    <th width="40px">Column 6</th>
+                    <th width="40px">Column 7</th>
+                    <th width="40px">Column 8</th>
+                    <th width="50px">Column 9</th>
+                    <th width="40px">Column 10</th>
+                    <th width="40px">Column 11</th>
+                    <th width="40px">Column 12</th>
+                </tr>
+                <tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
+                    <th width="50px"></th>
+                    <th width="40px"></th>
+                    <th width="45px">Stock No.</th>
+                    <th width="30px">Qty</th>
+                    <th width="35px">Unit</th>
+                    <th width="250px">Descriptions</th>
+                    <th width="50px">Unit Price</th>
+                    <th width="50px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="50px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
                 </tr>';
     }
 
     private function tableHeaderForFirstSemester()
     {
-        return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
-                    <th width="40px" rowspan="3">Old Stock. No</th>
-                    <th width="45px" rowspan="3">New Stock. No</th>
-                    <th width="252px" rowspan="3">Item Description</th>
-                    <th width="45px" rowspan="3">Unit of Measure</th>
-                    <th width="50px" rowspan="3">Price</th>
-                    <th width="40px" rowspan="3">Total Qantity</th>
-                    <th width="50px" rowspan="3">Total Amount</th>
-                    <th width="357px" colspan="12">SCHEDULE/MILESTONE OF ACTIVITIES</th>
+        return '<tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #FFFFFF;">
+                    <th width="590px" colspan="9">PROCUREMENT PROJECT DETAILS</th>
+                    <th width="120px" colspan="3">PROJECTED TIMELINE (MM/YYYY)</th>
+                    <th width="90px" colspan="2">FUNDING DETAILS</th>
+                    <th width="40px" rowspan="2">ATTACHED SUPPORTING DOCUMENTS</th>
+                    <th width="40px"rowspan="2">REMARKS</th>
                 </tr>
-                <tr style="font-size: 8px; font-weight:bold; background-color: #EEEEEE;">
-                    <th width="82px" colspan="2" style="text-align:center;">JAN</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">FEB</th>
-                    <th width="25px" rowspan="2" style="text-align:center;" >MAR</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">APR</th>
-                    <th width="25px" rowspan="2" style="text-align:center;" >MAY</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">JUN</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">JUL</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">AUG</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">SEP</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">OCT</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">NOV</th>
-                    <th width="25px" rowspan="2" style="text-align:center;">DEC</th>
+                <tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #FFFFFF;">
+                    <th width="50px">General Description and Objective of the Prject to be Procured</th>
+                    <th width="40px">Type of the Project to be Procured</th>
+                    <th width="410px" colspan="5">Quantity and Size of the Project to be Procured</th>
+                    <th width="50px">Recommended Mode of Procurement</th>
+                    <th width="40px">Pre-Procurement Conference, if applicable (Yes/No)</th>
+                    <th width="40px">Start of Procurement Activity</th>
+                    <th width="40px">End of Procurement Activity</th>
+                    <th width="40px">Expected Delivery/Implementation Period</th>
+                    <th width="50px">Source of Funds</th>
+                    <th width="40px">Estimated Budget / Authorized Budgetary Allocation (PhP)</th>
                 </tr>
-                <tr style="font-size: 8px; font-weight: bold; background-color: #EEEEEE;">
-                    <th width="32px" style="text-align: center;">QTY</th>
-                    <th width="50px" style="text-align: center;">AMT</th>
-                </tr>';        
+                <tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
+                    <th width="50px">Column 1</th>
+                    <th width="40px">Column 2</th>
+                    <th width="410px" colspan="5">Column 3</th>
+                    <th width="50px">Column 4</th>
+                    <th width="40px">Column 5</th>
+                    <th width="40px">Column 6</th>
+                    <th width="40px">Column 7</th>
+                    <th width="40px">Column 8</th>
+                    <th width="50px">Column 9</th>
+                    <th width="40px">Column 10</th>
+                    <th width="40px">Column 11</th>
+                    <th width="40px">Column 12</th>
+                </tr>
+                <tr style="font-size: 7px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
+                    <th width="50px"></th>
+                    <th width="40px"></th>
+                    <th width="45px">Stock No.</th>
+                    <th width="30px">Qty</th>
+                    <th width="35px">Unit</th>
+                    <th width="250px">Descriptions</th>
+                    <th width="50px">Unit Price</th>
+                    <th width="50px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="50px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                    <th width="40px"></th>
+                </tr>';
     }
 
     private function formattedAndSortedParticulars($ppmp, $requestType)
@@ -343,15 +406,15 @@ class OfficePpmpController extends Controller
 
     public function generateFundHeader($fund)
     {
-        return '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                    <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+        return '<tr class="bg-gray-100" style="font-size: 8px; font-weight: bold;">
+                    <td width="880px" colspan="16">' . strtoupper($fund->fund_name) . '</td>
                 </tr>';
     }
 
     public function generateCategoryHeader($category)
     {
-        return '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                    <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+        return '<tr class="bg-gray-100" style="font-size: 8px; font-weight: bold;">
+                    <td width="880px" colspan="16">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                 </tr>';
     }
 
@@ -361,29 +424,26 @@ class OfficePpmpController extends Controller
         $firstQtyAmount = (float) $particular['qtyFirst'] * (float) $particular['prodPrice'];
         $secondQtyAmount = (float) $particular['qtySecond'] * (float) $particular['prodPrice'];
         $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-        $text .= $prodQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+        $text .= $prodQtyAmount > 0
+    ? '<tr nobr="true" style="font-size: 8px; text-align: center;">'
+    : '<tr nobr="true" style="font-size: 8px; text-align: center; background-color:#f87171;">';
         $text .= '
-            <td width="40px">' . $product->prod_oldNo . '</td>
+            <td width="50px"></td>
+            <td width="40px">Goods</td>
             <td width="45px">' . $product->prod_newNo . '</td>
-            <td width="195px" style="text-align: left;">' . $product->prod_desc . '</td>
-            <td width="45px">' . $product->prod_unit. '</td>
-            <td width="50px" style="text-align: right;">' . $this->formatToFloat($particular['prodPrice']) . '</td>
-            <td width="40px" style="text-align: right;">' . $this->formatToInteger($prodQty) . '</td>
-            <td width="50px" style="text-align: right;">' . $this->formatToFloat($prodQtyAmount) . '</td>
-            <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? $this->formatToInteger($particular['qtyFirst']) : '-') . '</td>
-            <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? $this->formatToFloat($firstQtyAmount) : '-') . '</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="32px" style="text-align: right;">' . ($particular['qtySecond'] != 0 ? $this->formatToInteger($particular['qtySecond']) : '-') . '</td>
-            <td width="50px" style="text-align: right;">' . ($secondQtyAmount != 0 ? $this->formatToFloat($secondQtyAmount) : '-') . '</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
+            <td width="30px">' . $this->formatToInteger($prodQty) . '</td>
+            <td width="35px">' . $product->prod_unit. '</td>
+            <td width="250px">' . $product->prod_desc . '</td>
+            <td width="50px">' . $this->formatToFloat($particular['prodPrice']) . '</td>
+            <td width="50px"></td>
+            <td width="40px"></td>
+            <td width="40px"></td>
+            <td width="40px"></td>
+            <td width="40px"></td>
+            <td style="font-size: 7px" width="50px">General Fund</td>
+            <td style="font-size: 7px; text-align: right;" width="40px">' . $this->formatToFloat($prodQtyAmount) . '</td>
+            <td width="40px"></td>
+            <td width="40px"></td>
         </tr>';
 
         $catFirstTotal += $firstQtyAmount; 
@@ -395,28 +455,26 @@ class OfficePpmpController extends Controller
     {
         $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
         $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
-        $text .= $firstQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+        $text .= $firstQtyAmount > 0
+    ? '<tr nobr="true" style="font-size: 8px; text-align: center;">'
+    : '<tr nobr="true" style="font-size: 8px; text-align: center; background-color:#f87171;">';
         $text .= '
-            <td width="40px">' . $product->prod_oldNo . '</td>
+            <td width="50px"></td>
+            <td width="40px">Goods</td>
             <td width="45px">' . $product->prod_newNo . '</td>
-            <td width="252px" style="text-align: left;">'. $product->prod_desc . '</td>
-            <td width="45px">' . $product->prod_unit. '</td>
-            <td width="50px" style="text-align: right;">' . $this->formatToFloat($particular['prodPrice']) . '</td>
-            <td width="40px" style="text-align: right;">' . $this->formatToInteger($prodQty) . '</td>
-            <td width="50px" style="text-align: right;">' . $this->formatToFloat($firstQtyAmount) . '</td>
-            <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? $this->formatToInteger($particular['qtyFirst']) : '-') . '</td>
-            <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? $this->formatToFloat($firstQtyAmount) : '-') . '</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
+            <td width="30px">' . $this->formatToInteger($prodQty) . '</td>
+            <td width="35px">' . $product->prod_unit. '</td>
+            <td width="250px">' . $product->prod_desc . '</td>
+            <td width="50px">' . $this->formatToFloat($particular['prodPrice']) . '</td>
+            <td width="50px"></td>
+            <td width="40px"></td>
+            <td width="40px"></td>
+            <td width="40px"></td>
+            <td width="40px"></td>
+            <td style="font-size: 7px" width="50px">General Fund</td>
+            <td style="font-size: 7px; text-align: right;" width="40px">' . $this->formatToFloat($firstQtyAmount) . '</td>
+            <td width="40px"></td>
+            <td width="40px"></td>
         </tr>';
 
         $catFirstTotal += $firstQtyAmount; 
@@ -424,81 +482,54 @@ class OfficePpmpController extends Controller
     }
 
     private function generateCategoryFooterForBothSemesters($category, $catTotal, $catFirstTotal, $catSecondTotal) {
-        return '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                    <td width="375px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
-                    <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? $this->formatToFloat($catTotal) : '-') . '</td>
-                    <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? $this->formatToFloat($catFirstTotal) : '-') . '</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="82px" style="text-align: right;">' . ($catSecondTotal != 0 ? $this->formatToFloat($catSecondTotal) : '-') . '</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
+        return '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                    <td colspan="12">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                    <td colspan="2" style="text-align: right;">' . ($catTotal != 0 ? $this->formatToFloat($catTotal) : '-') . '</td>
+                    <td></td>
+                    <td></td>
                 </tr>';
     }
 
     private function generateCategoryFooterForFirstSemester($category, $catTotal, $catFirstTotal)
     {
-        return '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                    <td width="432px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
-                    <td width="90px" style="text-align: right;">' . ($catTotal != 0 ? $this->formatToFloat($catTotal) : '-') . '</td>
-                    <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? $this->formatToFloat($catFirstTotal) : '-') . '</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
+        return '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                    <td colspan="12">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                    <td colspan="2" style="text-align: right;">' . ($catTotal != 0 ? $this->formatToFloat($catTotal) : '-') . '</td>
+                    <td></td>
+                    <td></td>
                 </tr>';
     }
 
     private function generateFundFooterForBothSemesters($fund, $fundTotal, $fundFirstTotal, $fundSecondTotal)
     {
-        return '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                    <td width="375px">Total Amount for ' . $fund->fund_name . '</td>
-                    <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? $this->formatToFloat($fundTotal) : '-') . '</td>
-                    <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? $this->formatToFloat($fundFirstTotal) : '-') . '</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="82px" style="text-align: right;">' . ($fundSecondTotal != 0 ? $this->formatToFloat($fundSecondTotal) : '-') . '</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
+        return '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                    <td colspan="12">Total Amount for ' . $fund->fund_name . '</td>
+                    <td colspan="2" style="text-align: right;">' . ($fundTotal != 0 ? $this->formatToFloat($fundTotal) : '-') . '</td>
+                    <td></td>
+                    <td></td>
                 </tr>';
     }
 
     private function generateFundFooterForFirstSemester($fund, $fundTotal, $fundFirstTotal)
     {
-        return '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                    <td width="432px">Total Amount for ' . $fund->fund_name . '</td>
-                    <td width="90px" style="text-align: right;">' . ($fundTotal != 0 ? $this->formatToFloat($fundTotal) : '-') . '</td>
-                    <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? $this->formatToFloat($fundFirstTotal) : '-') . '</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
-                    <td width="25px">-</td>
+        return '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                    <td colspan="12">Total Amount for ' . $fund->fund_name . '</td>
+                    <td colspan="2" style="text-align: right;">' . ($fundTotal != 0 ? $this->formatToFloat($fundTotal) : '-') . '</td>
+                    <td></td>
+                    <td></td>
+                </tr>';
+    }
+
+    private function generateTotalBudgetFooterForBothSemesters($overallTotal)
+    {
+        return '<tr style="font-size: 8px; font-weight:bold; text-align: center;">
+                    <td colspan="10"></td>
+                    <td colspan="2" style="text-align: right; background-color: #d1fae5;">TOTAL BUDGET</td>
+                    <td colspan="2" style="text-align: right; background-color: #d1fae5;">' .
+                        ($overallTotal != 0 ? $this->formatToFloat($overallTotal) : '-') .
+                    '</td>
+                    <td></td>
+                    <td></td>
                 </tr>';
     }
 

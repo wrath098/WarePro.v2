@@ -21,28 +21,37 @@ class ProductInventoryController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(): Response
-    {
-        $products = $this->filterProductsWithInventory();
-        $countOutOfStock = $products->filter(function($transaction) {
-            return $transaction['status'] === 'Out of Stock';
-        })->count();
+public function index(Request $request): Response
+{
+    $priority = $request->query('priority');
 
-        $countAvailable = $products->filter(function($transaction) {
-            return $transaction['status'] === 'Available';
-        })->count();
+    $products = $this->filterProductsWithInventory();
 
-        $countReorder = $products->filter(function($transaction) {
-            return $transaction['status'] === 'Re-order';
-        })->count();
+    $priorityMap = [
+        'available'     => ['Available', 'Re-order', 'Out of Stock'],
+        'reorder'       => ['Re-order', 'Available', 'Out of Stock'],
+        'out_of_stock'  => ['Out of Stock', 'Re-order', 'Available'],
+    ];
 
-        return Inertia::render('Inventory/Index', [
-            'inventory' => $products,
-            'countOutOfStock' => $countOutOfStock,
-            'countAvailable' => $countAvailable,
-            'countReorder' => $countReorder,
-        ]);
+    if ($priority && isset($priorityMap[$priority])) {
+        $order = $priorityMap[$priority];
+        $products = $products
+            ->sortBy(fn($item) => array_search($item['status'], $order))
+            ->values();
     }
+
+    $countOutOfStock = $products->filter(fn($item) => $item['status'] === 'Out of Stock')->count();
+    $countAvailable  = $products->filter(fn($item) => $item['status'] === 'Available')->count();
+    $countReorder    = $products->filter(fn($item) => $item['status'] === 'Re-order')->count();
+
+    return Inertia::render('Inventory/Index', [
+        'inventory'       => $products,
+        'countOutOfStock' => $countOutOfStock,
+        'countAvailable'  => $countAvailable,
+        'countReorder'    => $countReorder,
+        'priority'        => $priority,
+    ]);
+}
 
     public function showStockCard()
     {

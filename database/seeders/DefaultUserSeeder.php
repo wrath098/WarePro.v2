@@ -21,6 +21,13 @@ class DefaultUserSeeder extends Seeder
         ]);
         $developer->assignRole('Developer');
 
+        $anotherDeveloper = User::create([
+            'name' => 'Jasper Jay Elio',
+            'email' => 'jasper@gmail.com',
+            'password' => Hash::make('12345678')
+        ]);
+        $anotherDeveloper->assignRole('Developer');
+
         $sysAdmin = User::create([
             'name' => 'System Admin', 
             'email' => 'sysadmin@gmail.com',

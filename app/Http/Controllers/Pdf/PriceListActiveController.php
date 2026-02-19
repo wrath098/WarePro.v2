@@ -72,9 +72,8 @@ class PriceListActiveController extends Controller
     {
         return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="25px">No.</th>
-                    <th width="40px">Old Stock No.</th>
-                    <th width="63px">New Stock No.</th>
-                    <th width="376px">Item Description</th>
+                    <th width="63px">Stock No.</th>
+                    <th width="416px">Item Description</th>
                     <th width="60px">Unit of Measure</th>
                     <th width="63px">Price <br> (Latest)</th>
                     <th width="63px">Price <br> (Previous)</th>
@@ -104,9 +103,8 @@ class PriceListActiveController extends Controller
                             $price = array_pad($price, 5, 0.0);
                             $text .= '<tr style="font-size: 9px;">
                                         <th width="25px">' . $count . '</th>
-                                        <th width="40px">' . $product->prod_oldNo . '</th>
                                         <th width="63px">' . $product->prod_newNo . '</th>
-                                        <th width="376px">' . $product->prod_desc . '</th>
+                                        <th width="416px">' . $product->prod_desc . '</th>
                                         <th width="60px">' . $product->prod_unit . '</th>
                                         <th width="63px" style="text-align: right;">' . ($price[0] != 0 ? number_format($price[0], 2, '.', ',') : '-') . '</th>
                                         <th width="63px" style="text-align: right;">' . ($price[1] != 0 ? number_format($price[1], 2, '.', ',') : '-') . '</th>
