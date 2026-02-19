@@ -214,10 +214,10 @@ class OfficePpmpController extends Controller
                 }
 
                 $text .= $this->generateFundFooterForFirstSemester($fund, $fundTotal, $fundFirstTotal, $overallTotal);
-
+                $overallTotal += $fundTotal;
             }
         }
-
+        $text .= $this->generateTotalBudgetFooterForBothSemesters($overallTotal);
         return $text;
     }
 
@@ -442,8 +442,8 @@ class OfficePpmpController extends Controller
             <td></td>
             <td></td>
             <td>' . $this->formatToFloat($prodQtyAmount) . '</td>
-            <td>-</td>
-            <td>-</td>
+            <td></td>
+            <td></td>
         </tr>';
 
         $catFirstTotal += $firstQtyAmount; 
@@ -455,28 +455,26 @@ class OfficePpmpController extends Controller
     {
         $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
         $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
-        $text .= $firstQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+        $text .= $firstQtyAmount > 0
+    ? '<tr nobr="true" style="font-size: 6px; text-align: center;">'
+    : '<tr nobr="true" style="font-size: 6px; text-align: center; background-color:#f87171;">';
         $text .= '
-            <td width="40px">' . $product->prod_oldNo . '</td>
-            <td width="45px">' . $product->prod_newNo . '</td>
-            <td width="252px" style="text-align: left;">'. $product->prod_desc . '</td>
-            <td width="45px">' . $product->prod_unit. '</td>
-            <td width="50px" style="text-align: right;">' . $this->formatToFloat($particular['prodPrice']) . '</td>
-            <td width="40px" style="text-align: right;">' . $this->formatToInteger($prodQty) . '</td>
-            <td width="50px" style="text-align: right;">' . $this->formatToFloat($firstQtyAmount) . '</td>
-            <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? $this->formatToInteger($particular['qtyFirst']) : '-') . '</td>
-            <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? $this->formatToFloat($firstQtyAmount) : '-') . '</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
-            <td width="25px">-</td>
+            <td></td>
+            <td></td>
+            <td width="35px">' . $product->prod_newNo . '</td>
+            <td width="20px">' . $this->formatToInteger($prodQty) . '</td>
+            <td width="25px">' . $product->prod_unit. '</td>
+            <td width="150px">' . $product->prod_desc . '</td>
+            <td width="45px">' . $this->formatToFloat($particular['prodPrice']) . '</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>' . $this->formatToFloat($firstQtyAmount) . '</td>
+            <td></td>
+            <td></td>
         </tr>';
 
         $catFirstTotal += $firstQtyAmount; 
