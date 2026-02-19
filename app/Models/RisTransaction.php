@@ -15,7 +15,6 @@ class RisTransaction extends Model
 
     protected $fillable = [
         'ris_no',
-        'ris_date',
         'qty',
         'unit',
         'remarks',

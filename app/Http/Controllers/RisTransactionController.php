@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\RisTransaction;
-use App\Models\User;
 use App\Services\ProductService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -50,12 +49,7 @@ class RisTransactionController extends Controller
     public function ssmi()
     {
         $risTransaction = $this->getRisTransactions();
-        $users = User::select('id', 'name', 'position')->get();
-
-        return Inertia::render('Ris/RisLogs', [
-            'transactions' => $risTransaction,
-            'users' => $users,
-        ]);
+        return Inertia::render('Ris/RisLogs', ['transactions' => $risTransaction]);
     }
 
     public function showAttachment(Request $request)
@@ -91,10 +85,7 @@ class RisTransactionController extends Controller
             'remarks' => $risInfo->remarks,
             'issuedTo' => $risInfo->issued_to,
             'issuedBy' => $risInfo->creator ? $risInfo->creator->name : '',
-            'dateIssued' => $risInfo->ris_date
-                ? \Carbon\Carbon::parse($risInfo->ris_date)->format('F d, Y')
-                : null,
-            'rawDateIssued' => $risInfo->ris_date,
+            'dateIssued' => $risInfo->created_at->format('F d, Y'),
             'noOfItems' => $transaction->count(),
         ];
         
@@ -217,7 +208,6 @@ class RisTransactionController extends Controller
         $request->validate([
             'risNo' => 'required|string',
             'issuedTo' => 'required|string',
-            'dateIssued' => 'required|date',
             'oldData' => 'required|array',
         ]);
 
@@ -234,8 +224,7 @@ class RisTransactionController extends Controller
             foreach($transactions as $transaction) {
                 $transaction->update([
                     'ris_no' => $request->risNo,
-                    'issued_to' => $request->issuedTo,
-                    'ris_date' => $request->dateIssued
+                    'issued_to' => $request->issuedTo
                 ]);
             }
             
