@@ -247,7 +247,7 @@ if (hasAnyRole(['Developer']) || hasPermission('update-product-inventory')) {
                         </svg>
                     </div>
                     <div class="px-4 text-gray-700">
-                        <h3 class="text-sm tracking-wider"></h3>
+                        <h3 class="text-sm tracking-wider">Total Items for Reorder</h3>
                         <p class="text-3xl">{{ countReorder }}</p>
                     </div>
                 </div>
