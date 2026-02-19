@@ -204,63 +204,7 @@ class OfficePpmpController extends Controller
 
     private function tableHeaderForBothSemesters()
     {
-        return '<table border="1" cellpadding="2" cellspacing="0">
-        <thead>
-        <tr style="font-size: 6px; font-weight:bold; text-align:center; background-color: #FFFFFF;">
-                    <th colspan="9">PROCUREMENT PROJECT DETAILS</th>
-                    <th colspan="3">PROJECTED TIMELINE (MM/YYYY)</th>
-                    <th colspan="2">FUNDING DETAILS</th>
-                    <th rowspan="2">ATTACHED SUPPORTING DOCUMENTS</th>
-                    <th rowspan="2">REMARKS</th>
-                </tr>
-                <tr style="font-size: 6px; font-weight:bold; text-align:center; background-color: #FFFFFF;">
-                    <th>General Description and Objective of the Prject to be Procured</th>
-                    <th>Type of the Project to be Procured (whether Goods, Infrastructure and Consulting Services)</th>
-                    <th colspan="5">Quantity and Size of the Project to be Procured</th>
-                    <th>Recommended Mode of Procurement</th>
-                    <th>Pre-Procurement Conference, if applicable (Yes/No)</th>
-                    <th>Start of Procurement Activity</th>
-                    <th>End of Procurement Activity</th>
-                    <th>Expected Delivery/Implementation Period</th>
-                    <th>Source of Funds</th>
-                    <th>Estimated Budget / Authorized Budgetary Allocation (PhP)</th>
-                </tr>
-                <tr style="font-size: 6px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
-                    <th>Column 1</th>
-                    <th>Column 2</th>
-                    <th colspan="5">Column 3</th>
-                    <th>Column 4</th>
-                    <th>Column 5</th>
-                    <th>Column 6</th>
-                    <th>Column 7</th>
-                    <th>Column 8</th>
-                    <th>Column 9</th>
-                    <th>Column 10</th>
-                    <th>Column 11</th>
-                    <th>Column 12</th>
-                </tr>
-                <tr style="font-size: 6px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
-                    <th></th>
-                    <th></th>
-                    <th>Stock No.</th>
-                    <th>Qty</th>
-                    <th>Unit</th>
-                    <th>Descriptions</th>
-                    <th>Unit Price</th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-                </thead>
-                </table>
-                <br>
-                <tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
+        return '<tr style="font-size: 10px; font-weight:bold; text-align:center; background-color: #EEEEEE;">
                     <th width="40px" rowspan="3">Old Stock. No</th>
                     <th width="45px" rowspan="3">New Stock. No</th>
                     <th width="195px" rowspan="3">Item Description</th>
