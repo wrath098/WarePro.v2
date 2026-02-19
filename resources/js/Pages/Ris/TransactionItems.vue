@@ -336,7 +336,6 @@ const submitDeletion = () => submitForm(route('remove.ris.particular'), removeRi
                                 </label>
                                 <InputError class="mt-2" :message="editRis.errors.dateIssued" />
                             </div>
-
                         </div>
                     </div>
                 </div>
