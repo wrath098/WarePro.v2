@@ -14,6 +14,43 @@ import Checkbox from '@/Components/Checkbox.vue';
 import debounce from 'lodash/debounce';
 import axios from 'axios';
 
+const autoFillDates = async (rowId, procurementMode, startPa) => {
+    if (!startPa || !procurementMode) return
+
+    let endPa = ''
+    let expectedDelivery = ''
+
+    if (procurementMode === 'Bidding') {
+        endPa = addMonths(startPa, 3)
+        expectedDelivery = addMonths(endPa, 1)
+    }
+
+    if (procurementMode === 'SVP') {
+        endPa = addMonths(startPa, 1)
+        expectedDelivery = addMonths(endPa, 1)
+    }
+
+    if (procurementMode === 'DA/DC') {
+        endPa = startPa
+        expectedDelivery = addMonths(endPa, 1)
+    }
+
+    // ✅ Use NON-debounced saves
+    await saveRowFieldImmediate(rowId, 'end_pa', endPa)
+    await saveRowFieldImmediate(rowId, 'expected_delivery', expectedDelivery)
+
+    // Update UI immediately
+    const endSpan = document.querySelector(
+        `.month-display[data-id="${rowId}"][data-field="end_pa"]`
+    )
+    const deliverySpan = document.querySelector(
+        `.month-display[data-id="${rowId}"][data-field="expected_delivery"]`
+    )
+
+    if (endSpan) endSpan.textContent = endPa
+    if (deliverySpan) deliverySpan.textContent = expectedDelivery
+}
+
 const handleClick = (e) => {
     const target = e.target;
 
@@ -51,6 +88,22 @@ const handleChange = (e) => {
     console.log('INLINE SAVE TRIGGERED', { id, field, value });
 
     saveRowField(id, field, value);
+
+    if (field === 'start_pa') {
+        const select = document.querySelector(
+            `.procurement-mode-select[data-id="${id}"]`
+        )
+        const mode = select?.value
+        autoFillDates(id, mode, value)
+    }
+
+    if (field === 'procurement_mode') {
+        const startSpan = document.querySelector(
+            `.month-display[data-id="${id}"][data-field="start_pa"]`
+        )
+        const startValue = startSpan?.textContent
+        autoFillDates(id, value, startValue)
+    }
 
     const display = target.previousElementSibling;
     if (display) {
@@ -109,7 +162,6 @@ const dropParticular = useForm({
     user: props.user,
 });
 
-// Modal state
 const modalState = ref(null);
 const showModal = (modalType) => (modalState.value = modalType);
 const closeModal = () => (modalState.value = null);
@@ -250,12 +302,60 @@ const renderMonthInput = (value, rowId, field) => {
     `;
 };
 
+const parseMonthYear = (value) => {
+    if (!value || typeof value !== 'string') return null
+
+    const parts = value.split('/')
+    if (parts.length !== 2) return null
+
+    const month = parseInt(parts[0], 10)
+    const year = parseInt(parts[1], 10)
+
+    if (
+        isNaN(month) ||
+        isNaN(year) ||
+        month < 1 ||
+        month > 12
+    ) {
+        return null
+    }
+
+    return { month, year }
+}
+
+const formatMonthYear = (month, year) => {
+    const mm = String(month).padStart(2, '0')
+    return `${mm}/${year}`
+}
+
+const addMonths = (value, monthsToAdd) => {
+    const parsed = parseMonthYear(value)
+    if (!parsed) return ''
+
+    let { month, year } = parsed
+    month += monthsToAdd
+
+    while (month > 12) {
+        month -= 12
+        year += 1
+    }
+
+    while (month < 1) {
+        month += 12
+        year -= 1
+    }
+
+    return formatMonthYear(month, year)
+}
+
+const selectedRows = ref([])
 const savingRows = ref({});
 
-const saveRowField = debounce(async (id, field, value) => {
-    console.log('INLINE SAVE TRIGGERED', { id, field, value }); 
+const saveRowFieldImmediate = async (id, field, value) => {
     try {
-        savingRows.value[id] = true;
+        savingRows.value[id] = true
+
+        console.log('INLINE SAVE TRIGGERED', { id, field, value })
 
         await axios.put(
             route('ppmp.particular.inline-update', id),
@@ -264,38 +364,50 @@ const saveRowField = debounce(async (id, field, value) => {
                 value,
                 user: props.user,
             }
-        );
+        )
 
     } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'Failed to save changes', 'error');
+        console.error(e)
+        Swal.fire('Error', 'Failed to save changes', 'error')
     } finally {
-        savingRows.value[id] = false;
+        savingRows.value[id] = false
     }
-}, 400);
+}
+
+const saveRowField = debounce(saveRowFieldImmediate, 400)
 
 
 const columns = [
-    // {
-    //     data: 'selected',
-    //     title: '<input type="checkbox" id="select-all" />',
-    //     width: '4%',
-    //     render: (data, type, row) => `
-    //         <input
-    //             type="checkbox"
-    //             class="row-checkbox"
-    //             data-id="${row.pId}"
-    //             ${data ? 'checked' : ''}
-    //         />
-    //     `,
-    // },
-    { data: 'prodCode', title: 'Stock No#', width: '8%' },
-    { data: 'prodName', title: 'Description', width: '26%' },
+    {
+        title: '<input type="checkbox" id="select-all" />',
+        data: null,
+        orderable: false,
+        searchable: false,
+        render: function (data, type, row) {
+            return `
+            <input 
+                type="checkbox" 
+                class="row-checkbox"
+                data-id="${row.pId}"
+            />
+            `
+        }
+    },
+    {
+        data: 'prodCode',
+        title: 'Stock No#',
+        width: '8%'
+    },
+    {
+        data: 'prodName',
+        title: 'Description',
+        width: '24%'
+    },
     {
         data: 'procurement_mode',
         title: 'Recommended Mode of Procurement',
         width: '8%',
-            render: (data, type, row) => {
+        render: (data, type, row) => {
             const value = data ?? '';
             return `
             <select class="inline-input procurement-mode-select" style="border-radius: 0.5rem; border: 1px solid #d1d5db; padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.25rem; padding-right: 2rem;"data-id="${row.pId}" data-field="procurement_mode">
@@ -308,25 +420,25 @@ const columns = [
         },
     },
     {
-    data: 'ppc',
-    title: 'Pre-Procurement Conference',
-    width: '8%',
-    render: (data, type, row) => {
-        const value = data ? 'Yes' : 'No';
-        return `
+        data: 'ppc',
+        title: 'Pre-Procurement Conference',
+        width: '8%',
+        render: (data, type, row) => {
+            const value = data ? 'Yes' : 'No';
+            return `
         <select 
         class="inline-input ppc-select" style="border-radius: 0.5rem; border: 1px solid #d1d5db; padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.25rem; padding-right: 2rem;" data-id="${row.pId}" data-field="ppc">
             <option value="Yes" ${value === 'Yes' ? 'selected' : ''}>Yes</option>
             <option value="No" ${value === 'No' ? 'selected' : ''}>No</option>
         </select>
         `;
-    },
+        },
     },
     {
         data: 'start_pa',
         title: 'Start of Procurement Activity',
         width: '8%',
-        render: (data, type, row) => renderMonthInput(data, row.pId, 'start_pa') ,
+        render: (data, type, row) => renderMonthInput(data, row.pId, 'start_pa'),
     },
     {
         data: 'end_pa',
@@ -340,9 +452,10 @@ const columns = [
         width: '8%',
         render: (data, type, row) => renderMonthInput(data, row.pId, 'expected_delivery'),
     },
-    {   data: 'amount',
+    {
+        data: 'amount',
         title: 'Estimated Budget',
-        width: '8%', render: (data, type, row) => data ?? row.totalAmount 
+        width: '8%', render: (data, type, row) => data ?? row.totalAmount
     },
     {
         data: 'supporting_doc',
@@ -385,6 +498,37 @@ const columns = [
 onMounted(() => {
     document.addEventListener('click', handleClick);
     document.addEventListener('change', handleChange);
+
+    document.addEventListener('change', (e) => {
+
+        // Individual row checkbox
+        if (e.target.classList.contains('row-checkbox')) {
+            const id = e.target.dataset.id
+
+            if (e.target.checked) {
+                if (!selectedRows.value.includes(id)) {
+                    selectedRows.value.push(id)
+                }
+            } else {
+                selectedRows.value = selectedRows.value.filter(i => i !== id)
+            }
+        }
+
+        // Select All
+        if (e.target.id === 'select-all') {
+            const checked = e.target.checked
+            const checkboxes = document.querySelectorAll('.row-checkbox')
+
+            selectedRows.value = []
+
+            checkboxes.forEach(cb => {
+                cb.checked = checked
+                if (checked) {
+                    selectedRows.value.push(cb.dataset.id)
+                }
+            })
+        }
+    });
 });
 
 onUnmounted(() => {
@@ -394,6 +538,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+
     <Head title="PPMP" />
     <AuthenticatedLayout>
         <template #header>
@@ -401,10 +546,11 @@ onUnmounted(() => {
                 <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
                     <li class="inline-flex items-center">
                         <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4 h-4 w-4">
-                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="mr-4 h-4 w-4">
+                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
                             </svg>
                             Project Procurement Management Plan
                         </a>
@@ -412,7 +558,8 @@ onUnmounted(() => {
                     <li>
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
-                            <a :href="route('conso.ppmp.type', { type: 'consolidated' , status: 'draft'})" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <a :href="route('conso.ppmp.type', { type: 'consolidated', status: 'draft' })"
+                                class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
                                 Consolidated PPMP List
                             </a>
                         </div>
@@ -420,7 +567,8 @@ onUnmounted(() => {
                     <li aria-current="page">
                         <div class="flex items-center">
                             <span class="mx-2.5 text-gray-800 ">/</span>
-                            <a href="#" class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
+                            <a href="#"
+                                class="ml-1 inline-flex text-sm font-medium text-gray-800 hover:underline md:ml-2">
                                 No# {{ ppmp.ppmp_code }}
                             </a>
                         </div>
@@ -431,54 +579,81 @@ onUnmounted(() => {
                         <template #trigger>
                             <button class="flex items-center rounded-full transition">
                                 <span class="sr-only">Open options</span>
-                                <svg class="w-7 h-7 text-indigo-800 hover:text-indigo-600" fill="currentColor" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                    <path d="m23.365,3.699l-1.322,1.322-3.064-3.064,1.234-1.234c.801-.801,2.108-.955,2.985-.237,1.009.825,1.064,2.316.166,3.214Zm-5.8-.328l-5.296,5.296c-.813.813-1.269,1.915-1.269,3.064v.769c0,.276.224.5.5.5h.769c1.149,0,2.251-.457,3.064-1.269l5.296-5.296-3.064-3.064Zm3.707,10.514l-.451-.26c.102-.544.153-1.088.153-1.625s-.051-1.081-.153-1.625l-.29-1.015-3.784,3.784c-1.196,1.196-2.786,1.855-4.478,1.855h-.77c-1.379,0-2.5-1.121-2.5-2.5v-.77c0-1.691.659-3.281,1.855-4.478l4.119-4.119v-.134c0-1.654-1.346-3-3-3s-3,1.346-3,3v.522c-1.047.37-2.016.929-2.857,1.649l-.45-.259c-.693-.398-1.501-.504-2.277-.295-.773.208-1.419.706-1.818,1.4-.4.694-.505,1.503-.296,2.277.208.773.706,1.419,1.401,1.819l.451.259c-.102.544-.153,1.088-.153,1.626s.051,1.082.153,1.626l-.451.259c-.695.4-1.192,1.046-1.401,1.819-.209.774-.104,1.583.295,2.276.399.695,1.045,1.193,1.819,1.401.776.21,1.584.104,2.277-.295l.45-.259c.841.721,1.81,1.279,2.857,1.649v.522c0,1.654,1.346,3,3,3s3-1.346,3-3v-.522c1.047-.37,2.016-.929,2.857-1.649l.45.259c.695.399,1.503.505,2.277.295.773-.208,1.419-.706,1.819-1.401.825-1.434.329-3.271-1.105-4.096Z"/>
+                                <svg class="w-7 h-7 text-indigo-800 hover:text-indigo-600" fill="currentColor"
+                                    xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="m23.365,3.699l-1.322,1.322-3.064-3.064,1.234-1.234c.801-.801,2.108-.955,2.985-.237,1.009.825,1.064,2.316.166,3.214Zm-5.8-.328l-5.296,5.296c-.813.813-1.269,1.915-1.269,3.064v.769c0,.276.224.5.5.5h.769c1.149,0,2.251-.457,3.064-1.269l5.296-5.296-3.064-3.064Zm3.707,10.514l-.451-.26c.102-.544.153-1.088.153-1.625s-.051-1.081-.153-1.625l-.29-1.015-3.784,3.784c-1.196,1.196-2.786,1.855-4.478,1.855h-.77c-1.379,0-2.5-1.121-2.5-2.5v-.77c0-1.691.659-3.281,1.855-4.478l4.119-4.119v-.134c0-1.654-1.346-3-3-3s-3,1.346-3,3v.522c-1.047.37-2.016.929-2.857,1.649l-.45-.259c-.693-.398-1.501-.504-2.277-.295-.773.208-1.419.706-1.818,1.4-.4.694-.505,1.503-.296,2.277.208.773.706,1.419,1.401,1.819l.451.259c-.102.544-.153,1.088-.153,1.626s.051,1.082.153,1.626l-.451.259c-.695.4-1.192,1.046-1.401,1.819-.209.774-.104,1.583.295,2.276.399.695,1.045,1.193,1.819,1.401.776.21,1.584.104,2.277-.295l.45-.259c.841.721,1.81,1.279,2.857,1.649v.522c0,1.654,1.346,3,3,3s3-1.346,3-3v-.522c1.047-.37,2.016-.929,2.857-1.649l.45.259c.695.399,1.503.505,2.277.295.773-.208,1.419-.706,1.819-1.401.825-1.434.329-3.271-1.105-4.096Z" />
                                 </svg>
                             </button>
                         </template>
                         <template #content>
-                            <button @click="openAdjustmentPpmpModal(ppmp)" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M3 21V5.8L5.3 3h13.4L21 5.8v2.325l-5 5V8H8v8l4-2l2.075 1.05L12 17.1V21zm11 0v-3.075l6.575-6.55l3.075 3.05L17.075 21zm6.575-5.6l.925-.975l-.925-.925l-.95.95zM5.4 6h13.2l-.85-1H6.25z"/>
+                            <button @click="openAdjustmentPpmpModal(ppmp)"
+                                class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24">
+                                    <path fill="currentColor"
+                                        d="M3 21V5.8L5.3 3h13.4L21 5.8v2.325l-5 5V8H8v8l4-2l2.075 1.05L12 17.1V21zm11 0v-3.075l6.575-6.55l3.075 3.05L17.075 21zm6.575-5.6l.925-.975l-.925-.925l-.95.95zM5.4 6h13.2l-.85-1H6.25z" />
                                 </svg>
-                                <span class="ml-2">Initial Qty Adj</span>   
+                                <span class="ml-2">Initial Qty Adj</span>
                             </button>
 
-                            <button @click="openFinalAdjustmentModal(ppmp)" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M3 21V5.8L5.3 3h13.4L21 5.8v2.325l-5 5V8H8v8l4-2l2.075 1.05L12 17.1V21zm11 0v-3.075l6.575-6.55l3.075 3.05L17.075 21zm6.575-5.6l.925-.975l-.925-.925l-.95.95zM5.4 6h13.2l-.85-1H6.25z"/>
+                            <button @click="openFinalAdjustmentModal(ppmp)"
+                                class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24">
+                                    <path fill="currentColor"
+                                        d="M3 21V5.8L5.3 3h13.4L21 5.8v2.325l-5 5V8H8v8l4-2l2.075 1.05L12 17.1V21zm11 0v-3.075l6.575-6.55l3.075 3.05L17.075 21zm6.575-5.6l.925-.975l-.925-.925l-.95.95zM5.4 6h13.2l-.85-1H6.25z" />
                                 </svg>
-                                <span class="ml-2">Final Qty Adj</span>   
+                                <span class="ml-2">Final Qty Adj</span>
                             </button>
 
-                            <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'raw'})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                            <a v-if="hasPermission('print-app') || hasAnyRole(['Developer'])"
+                                :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'raw' })"
+                                target="_blank"
+                                class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                    height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2"
+                                        d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z" />
                                 </svg>
                                 <span class="ml-2">Raw File Format</span>
                             </a>
 
-                            <a v-if="hasPermission('print-app') ||  hasAnyRole(['Developer'])" :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'contingency'})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                            <a v-if="hasPermission('print-app') || hasAnyRole(['Developer'])"
+                                :href="route('generatePdf.ConsolidatedPpmp', { ppmp: ppmp.id, type: 'contingency' })"
+                                target="_blank"
+                                class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                    height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2"
+                                        d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z" />
                                 </svg>
                                 <span class="ml-2">Contingency Format</span>
                             </a>
 
-                            <div v-if="hasPermission('print-app-summary-overview') ||  hasAnyRole(['Developer'])">
-                                <a v-if="ppmp.ppmp_type == 'Consolidated'" :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id})" target="_blank" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                    <svg class="w-6 h-6" aria-hidden="true"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z"/>
+                            <div v-if="hasPermission('print-app-summary-overview') || hasAnyRole(['Developer'])">
+                                <a v-if="ppmp.ppmp_type == 'Consolidated'"
+                                    :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id })" target="_blank"
+                                    class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
+                                    <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linejoin="round" stroke-width="2"
+                                            d="M16.444 18H19a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2.556M17 11V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v6h10ZM7 15h10v4a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-4Z" />
                                     </svg>
                                     <span class="ml-2">Summary Overview</span>
                                 </a>
                             </div>
-                            
-                            <button v-if="hasPermission('confirm-app-finalization') ||  hasAnyRole(['Developer'])" @click="showModal('confirm')" class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
+
+                            <button v-if="hasPermission('confirm-app-finalization') || hasAnyRole(['Developer'])"
+                                @click="showModal('confirm')"
+                                class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 17h7m9-3l-4 4l-2-2M4 12h11M4 7h11"/>
+                                    <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                        stroke-linejoin="round" stroke-width="2"
+                                        d="M4 17h7m9-3l-4 4l-2-2M4 12h11M4 7h11" />
                                 </svg>
-                                <span class="ml-2">Proceed as Approved</span>   
+                                <span class="ml-2">Proceed as Approved</span>
                             </button>
                         </template>
                     </Dropdown>
@@ -499,11 +674,9 @@ onUnmounted(() => {
                                     ID# [{{ ppmp.ppmp_code }}]
                                 </p>
                             </div>
-                                                        <div>
-                                <Link
-                                    :href="route('conso.ppmp.show', ppmpId)"
-                                    class="bg-indigo-900 font-bold text-md leading-6 text-white p-2 rounded-md hover:bg-indigo-800 transition"
-                                >
+                            <div>
+                                <Link :href="route('conso.ppmp.show', ppmpId)"
+                                    class="bg-indigo-900 font-bold text-md leading-6 text-white p-2 rounded-md hover:bg-indigo-800 transition">
                                     Done
                                 </Link>
                             </div>
@@ -581,7 +754,7 @@ onUnmounted(() => {
                                         Initial Quantity Adjustment
                                     </dt>
                                     <dd class="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
-                                        {{ ppmp.init_qty_adjustment ?? 'Not Available'}}
+                                        {{ ppmp.init_qty_adjustment ?? 'Not Available' }}
                                     </dd>
                                 </div>
                                 <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -614,18 +787,20 @@ onUnmounted(() => {
                     <div class="col-span-3 p-2 bg-zinc-300 rounded-md shadow mt-5 lg:mt-0">
                         <div class="p-2 overflow-hidden">
                             <div class="relative overflow-x-auto">
-                                <DataTable
-                                    class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
-                                    :columns="columns"
-                                    :data="ppmp.transactions"
-                                    :options="{  paging: true,
+                                <DataTable class="display table-hover table-striped shadow-lg rounded-lg bg-zinc-100"
+                                    :columns="columns" :data="ppmp.transactions" :options="{
+                                        paging: true,
                                         searching: true,
                                         ordering: false
                                     }">
-                                        <template #action="props">
-                                            <EditButton v-if="hasPermission('edit-app-particular') ||  hasAnyRole(['Developer'])" @click="openEditPpmpModal(props.cellData)" tooltip="Edit"/>
-                                            <RemoveButton v-if="hasPermission('delete-app-particular') ||  hasAnyRole(['Developer'])" @click="openDropPpmpModal(props.cellData)" tooltip="Remove"/>
-                                        </template>
+                                    <template #action="props">
+                                        <EditButton
+                                            v-if="hasPermission('edit-app-particular') || hasAnyRole(['Developer'])"
+                                            @click="openEditPpmpModal(props.cellData)" tooltip="Edit" />
+                                        <RemoveButton
+                                            v-if="hasPermission('delete-app-particular') || hasAnyRole(['Developer'])"
+                                            @click="openDropPpmpModal(props.cellData)" tooltip="Remove" />
+                                    </template>
                                 </DataTable>
                             </div>
                         </div>
@@ -635,43 +810,66 @@ onUnmounted(() => {
         </div>
 
     </AuthenticatedLayout>
-    <Modal :show="isEditAdjustment" @close="closeModal"> 
+    <Modal :show="isEditAdjustment" @close="closeModal">
         <form @submit.prevent="submitAdjustment">
             <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                    <div
+                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                            width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd"
+                                d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Edit Initial Quantity Adjustment</h3>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Edit Initial
+                            Quantity
+                            Adjustment</h3>
                         <p class="text-sm text-zinc-700"> Enter the desired adjustment.</p>
                         <div class="mt-5">
                             <p class="text-sm font-semibold text-[#1a0037]">Adjustment Type </p>
                             <div class="relative z-0 w-full my-3 group">
-                                <select v-model="editAdjustment.adjustmentType" name="adjustmentType" id="adjustmentType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                <select v-model="editAdjustment.adjustmentType" name="adjustmentType"
+                                    id="adjustmentType"
+                                    class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                    required>
                                     <option disabled selected value="">Type</option>
                                     <option value="grouped">Group</option>
                                     <option value="custom">Custom</option>
                                 </select>
-                                <label for="adjustmentType" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select Type</label>
+                                <label for="adjustmentType"
+                                    class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select
+                                    Type</label>
                             </div>
                         </div>
                         <div v-if="editAdjustment.adjustmentType == 'grouped'" class="mt-5">
                             <div class="mt-5">
                                 <p class="text-sm font-semibold text-[#1a0037]">Initial Quantity Adjustment</p>
                                 <div class="relative z-0 w-full group my-2">
-                                    <input v-model="editAdjustment.initAdjustment" type="text" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                    <label for="qtyAdjust" class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>
+                                    <input v-model="editAdjustment.initAdjustment" type="text" name="qtyAdjust"
+                                        id="qtyAdjust"
+                                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                        placeholder="" required />
+                                    <label for="qtyAdjust"
+                                        class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value
+                                        must be within 50 to 100</label>
                                 </div>
                             </div>
                         </div>
                         <div v-if="editAdjustment.adjustmentType == 'custom'" class="mt-5">
-                            <p class="text-sm font-semibold text-[#1a0037]"> Initial Quantity Adjustment: <span class="font-medium">Value must be within 50 to 100</span></p>
-                            <div v-for="account in accountClass" :key="account.id" class="relative z-0 w-full group my-2">
-                                <input v-model="editAdjustment.customInitAdjustment[account.id]" type="text" name="qtyAdjustment" :id="'qtyAdjustment-' + account.id" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label :for="'qtyAdjustment-' + account.id" class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{ account.fund_name}}</label>
+                            <p class="text-sm font-semibold text-[#1a0037]"> Initial Quantity Adjustment: <span
+                                    class="font-medium">Value must be within 50 to 100</span></p>
+                            <div v-for="account in accountClass" :key="account.id"
+                                class="relative z-0 w-full group my-2">
+                                <input v-model="editAdjustment.customInitAdjustment[account.id]" type="text"
+                                    name="qtyAdjustment" :id="'qtyAdjustment-' + account.id"
+                                    class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                    placeholder="" required />
+                                <label :for="'qtyAdjustment-' + account.id"
+                                    class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{
+                                    account.fund_name}}</label>
                             </div>
                         </div>
                     </div>
@@ -679,61 +877,89 @@ onUnmounted(() => {
             </div>
             <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    Confirm 
+                    Confirm
                 </SuccessButton>
 
-                <DangerButton @click="closeModal"> 
-                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                <DangerButton @click="closeModal">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Cancel
                 </DangerButton>
             </div>
         </form>
     </Modal>
-    <Modal :show="isEditFinalAdjustment" @close="closeModal"> 
+    <Modal :show="isEditFinalAdjustment" @close="closeModal">
         <form @submit.prevent="submitFinalAdjustment">
             <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                    <div
+                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                            width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd"
+                                d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Edit Final Quantity Adjustment</h3>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline">Edit Final
+                            Quantity
+                            Adjustment</h3>
                         <p class="text-sm text-zinc-700">
-                            Sets the final item quantity limit for each office request. 
-                            <strong>Note:</strong> Applies only to office requests; consolidated particulars remain unchanged.
+                            Sets the final item quantity limit for each office request.
+                            <strong>Note:</strong> Applies only to office requests; consolidated particulars remain
+                            unchanged.
                         </p>
                         <div class="mt-5">
                             <p class="text-sm font-semibold text-[#1a0037]">Adjustment Type </p>
                             <div class="relative z-0 w-full my-3 group">
-                                <select v-model="editFinalAdjustment.adjustmentType" name="adjustmentType" id="adjustmentType" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
+                                <select v-model="editFinalAdjustment.adjustmentType" name="adjustmentType"
+                                    id="adjustmentType"
+                                    class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                    required>
                                     <option disabled selected value="">Type</option>
                                     <option value="grouped">Group</option>
                                     <option value="custom">Custom</option>
                                 </select>
-                                <label for="adjustmentType" class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select Type</label>
+                                <label for="adjustmentType"
+                                    class="font-semibold text-zinc-700 absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Select
+                                    Type</label>
                             </div>
                         </div>
                         <div v-if="editFinalAdjustment.adjustmentType == 'grouped'" class="mt-5">
                             <div class="mt-5">
                                 <p class="text-sm font-semibold text-[#1a0037]">Final Quantity Adjustment</p>
                                 <div class="relative z-0 w-full group my-2">
-                                    <input v-model="editFinalAdjustment.initAdjustment" type="text" name="qtyAdjust" id="qtyAdjust" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                    <label for="qtyAdjust" class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value must be within 50 to 100</label>
+                                    <input v-model="editFinalAdjustment.initAdjustment" type="text" name="qtyAdjust"
+                                        id="qtyAdjust"
+                                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                        placeholder="" required />
+                                    <label for="qtyAdjust"
+                                        class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Value
+                                        must be within 50 to 100</label>
                                 </div>
                             </div>
                         </div>
                         <div v-if="editFinalAdjustment.adjustmentType == 'custom'" class="mt-5">
-                            <p class="text-sm font-semibold text-[#1a0037]"> Final Quantity Adjustment: <span class="font-medium">Value must be within 50 to 100</span></p>
-                            <div v-for="account in accountClass" :key="account.id" class="relative z-0 w-full group my-2">
-                                <input v-model="editFinalAdjustment.customInitAdjustment[account.id]" type="text" name="qtyAdjustment" :id="'qtyAdjustment-' + account.id" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="" required/>
-                                <label :for="'qtyAdjustment-' + account.id" class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{ account.fund_name}}</label>
+                            <p class="text-sm font-semibold text-[#1a0037]"> Final Quantity Adjustment: <span
+                                    class="font-medium">Value must be within 50 to 100</span></p>
+                            <div v-for="account in accountClass" :key="account.id"
+                                class="relative z-0 w-full group my-2">
+                                <input v-model="editFinalAdjustment.customInitAdjustment[account.id]" type="text"
+                                    name="qtyAdjustment" :id="'qtyAdjustment-' + account.id"
+                                    class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-700 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                    placeholder="" required />
+                                <label :for="'qtyAdjustment-' + account.id"
+                                    class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{
+                                    account.fund_name}}</label>
                             </div>
                         </div>
                     </div>
@@ -741,37 +967,50 @@ onUnmounted(() => {
             </div>
             <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    Confirm 
+                    Confirm
                 </SuccessButton>
 
-                <DangerButton @click="closeModal"> 
-                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                <DangerButton @click="closeModal">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Cancel
                 </DangerButton>
             </div>
         </form>
     </Modal>
-    <Modal :show="isEditPPModalOpen" @close="closeModal"> 
+    <Modal :show="isEditPPModalOpen" @close="closeModal">
         <form @submit.prevent="submitEdit">
             <div class="bg-zinc-300 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                    <div
+                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-8 w-8 text-indigo-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                            width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd"
+                                d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
                     <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Update Quantity</h3>
+                        <h3 class="text-lg leading-6 font-semibold text-[#1a0037]" id="modal-headline"> Update Quantity
+                        </h3>
                         <p class="text-sm text-zinc-700"> Enter the quantity you want to update on the input field.</p>
                         <div class="mt-3">
                             <p class="text-sm font-semibold text-[#1a0037]"> Product Information: </p>
-                            <input v-model="editParticular.prodCode" type="text" id="prodCode" class="mt-2 p-2 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" readonly>
-                            <textarea v-model="editParticular.prodDesc" type="text" id="prodCode" class="mt-2 p-2 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Ex. 01-01-01" readonly></textarea>
+                            <input v-model="editParticular.prodCode" type="text" id="prodCode"
+                                class="mt-2 p-2 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500"
+                                placeholder="Ex. 01-01-01" readonly>
+                            <textarea v-model="editParticular.prodDesc" type="text" id="prodCode"
+                                class="mt-2 p-2 bg-gray-100 border border-gray-100 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500"
+                                placeholder="Ex. 01-01-01" readonly></textarea>
                         </div>
                         <div class="mt-5">
                             <p class="text-sm font-semibold text-[#1a0037]"> Quantity: </p>
@@ -779,13 +1018,17 @@ onUnmounted(() => {
                                 <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-2 pointer-events-none">
                                     <span class="text-zinc-700 text-sm font-semibold">1st Qty: </span>
                                 </div>
-                                <input v-model="editParticular.firstQty" type="number" id="firstQty" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="First Semester" required>
+                                <input v-model="editParticular.firstQty" type="number" id="firstQty"
+                                    class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500"
+                                    placeholder="First Semester" required>
                             </div>
                             <div class="relative mt-1">
                                 <div class="absolute inset-y-0 left-0 pt-2 flex items-center pl-2 pointer-events-none">
                                     <span class="text-zinc-700 text-sm font-semibold">2nd Qty: </span>
                                 </div>
-                                <input v-model="editParticular.secondQty" type="number" id="secondQty" class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500" placeholder="Second Semester">
+                                <input v-model="editParticular.secondQty" type="number" id="secondQty"
+                                    class="mt-2 pl-16 p-2.5 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-indigo-500"
+                                    placeholder="Second Semester">
                             </div>
                         </div>
                     </div>
@@ -793,44 +1036,60 @@ onUnmounted(() => {
             </div>
             <div class="bg-zinc-400 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    Confirm 
+                    Confirm
                 </SuccessButton>
 
-                <DangerButton @click="closeModal"> 
-                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                <DangerButton @click="closeModal">
+                    <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Cancel
                 </DangerButton>
             </div>
         </form>
     </Modal>
-    <Modal :show="isDropPPModalOpen" @close="closeModal"> 
+    <Modal :show="isDropPPModalOpen" @close="closeModal">
         <form @submit.prevent="submitDrop">
             <div class="bg-zinc-300 h-auto">
                 <div class="p-6  md:mx-auto">
-                    <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z" clip-rule="evenodd"/>
+                    <svg class="text-rose-600 w-16 h-16 mx-auto my-6" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                        viewBox="0 0 24 24">
+                        <path fill-rule="evenodd"
+                            d="M8.586 2.586A2 2 0 0 1 10 2h4a2 2 0 0 1 2 2v2h3a1 1 0 1 1 0 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a1 1 0 0 1 0-2h3V4a2 2 0 0 1 .586-1.414ZM10 6h4V4h-4v2Zm1 4a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Zm4 0a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"
+                            clip-rule="evenodd" />
                     </svg>
 
                     <div class="text-center">
                         <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Move to Trash!</h3>
-                        <p class="text-zinc-700 my-2">Confirming this action will remove the selected Product from the list. This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
+                        <p class="text-zinc-700 my-2">Confirming this action will remove the selected Product from the
+                            list.
+                            This action can't be undone.</p>
+                        <p> Please confirm if you wish to proceed. </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
-                                Confirm 
+                                Confirm
                             </SuccessButton>
 
-                            <DangerButton @click="closeModal"> 
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            <DangerButton @click="closeModal">
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
                                 Cancel
                             </DangerButton>
@@ -840,32 +1099,42 @@ onUnmounted(() => {
             </div>
         </form>
     </Modal>
-    <Modal :show="isConfirmModalOpen" @close="closeModal"> 
+    <Modal :show="isConfirmModalOpen" @close="closeModal">
         <form @submit.prevent="submit">
             <div class="bg-zinc-300 h-auto">
                 <div class="p-6  md:mx-auto">
-                    <svg class="text-indigo-700 w-16 h-16 mx-auto my-6" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18.5,3h-5.53c-.08,0-.16-.02-.22-.05l-3.16-1.58c-.48-.24-1.02-.37-1.56-.37h-2.53C2.47,1,0,3.47,0,6.5v11c0,3.03,2.47,5.5,5.5,5.5h13c3.03,0,5.5-2.47,5.5-5.5V8.5c0-3.03-2.47-5.5-5.5-5.5Zm2.5,14.5c0,1.38-1.12,2.5-2.5,2.5H5.5c-1.38,0-2.5-1.12-2.5-2.5V8H20.95c.03,.16,.05,.33,.05,.5v9Zm-3.13-3.71c.39,.39,.39,1.02,0,1.41l-3.16,3.16c-.63,.63-1.71,.18-1.71-.71v-1.66H7.5c-.83,0-1.5-.67-1.5-1.5s.67-1.5,1.5-1.5h5.5v-1.66c0-.89,1.08-1.34,1.71-.71l3.16,3.16Z"/>
+                    <svg class="text-indigo-700 w-16 h-16 mx-auto my-6" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
+                        data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M18.5,3h-5.53c-.08,0-.16-.02-.22-.05l-3.16-1.58c-.48-.24-1.02-.37-1.56-.37h-2.53C2.47,1,0,3.47,0,6.5v11c0,3.03,2.47,5.5,5.5,5.5h13c3.03,0,5.5-2.47,5.5-5.5V8.5c0-3.03-2.47-5.5-5.5-5.5Zm2.5,14.5c0,1.38-1.12,2.5-2.5,2.5H5.5c-1.38,0-2.5-1.12-2.5-2.5V8H20.95c.03,.16,.05,.33,.05,.5v9Zm-3.13-3.71c.39,.39,.39,1.02,0,1.41l-3.16,3.16c-.63,.63-1.71,.18-1.71-.71v-1.66H7.5c-.83,0-1.5-.67-1.5-1.5s.67-1.5,1.5-1.5h5.5v-1.66c0-.89,1.08-1.34,1.71-.71l3.16,3.16Z" />
                     </svg>
                     <div class="text-center">
-                        <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Confirm as Approved!</h3>
-                        <p class="text-zinc-700 my-2">Confirming this action will remark the selected PPMP as Final/Approved. This action can't be undone.</p>
-                        <p> Please confirm if you wish to proceed.  </p>
+                        <h3 class="md:text-2xl text-base font-semibold text-[#1a0037] text-center">Confirm as Approved!
+                        </h3>
+                        <p class="text-zinc-700 my-2">Confirming this action will remark the selected PPMP as
+                            Final/Approved. This action can't be undone.</p>
+                        <p> Please confirm if you wish to proceed. </p>
                         <div class="px-4 py-6 sm:px-6 flex justify-center flex-col sm:flex-row-reverse">
                             <SuccessButton :class="{ 'opacity-25': isLoading }" :disabled="isLoading">
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
-                                Confirm 
+                                Confirm
                             </SuccessButton>
 
-                            <DangerButton @click="closeModal"> 
-                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            <DangerButton @click="closeModal">
+                                <svg class="w-5 h-5 text-white mr-1" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
                                 Cancel
                             </DangerButton>
-                        </div> 
+                        </div>
                     </div>
                 </div>
             </div>
@@ -873,75 +1142,76 @@ onUnmounted(() => {
     </Modal>
 </template>
 <style scoped>
-    :deep(table.dataTable) {
-        border: 2px solid #7393dc;
-    }
+:deep(table.dataTable) {
+    border: 2px solid #7393dc;
+}
 
-    :deep(table.dataTable thead > tr > th) {
-        background-color: #d8d8f6;
-        border: 2px solid #7393dc;
-        text-align: center;
-        color: #03244d;
-    }
+:deep(table.dataTable thead > tr > th) {
+    background-color: #d8d8f6;
+    border: 2px solid #7393dc;
+    text-align: center;
+    color: #03244d;
+}
 
-    :deep(table.dataTable tbody > tr > td) {
-        border-right: 2px solid #7393dc;
-        text-align: center;
-    }
+:deep(table.dataTable tbody > tr > td) {
+    border-right: 2px solid #7393dc;
+    text-align: center;
+}
 
-    :deep(div.dt-container select.dt-input) {
-        background-color: #fafafa;
-        border: 1px solid #03244d;
-        margin-left: 1px;
-        width: 75px;
-    }
+:deep(div.dt-container select.dt-input) {
+    background-color: #fafafa;
+    border: 1px solid #03244d;
+    margin-left: 1px;
+    width: 75px;
+}
 
-    :deep(div.dt-container .dt-search input) {
-        background-color: #fafafa;
-        border: 1px solid #03244d;
-        margin-right: 1px;
-        width: 250px;
-    }
+:deep(div.dt-container .dt-search input) {
+    background-color: #fafafa;
+    border: 1px solid #03244d;
+    margin-right: 1px;
+    width: 250px;
+}
 
-    :deep(div.dt-length > label) {
-        display: none;
-    }
+:deep(div.dt-length > label) {
+    display: none;
+}
 
-    :deep(table.dataTable tbody > tr > td:nth-child(2)) {
-        text-align: left !important;
-    }
-    :deep(.month-editor.month-display) {
-        display: flex;
-        justify-content: center;
-        align-items: center; 
-        width: 100px;
-        padding: 2px;
-        cursor: pointer;
-        background-color: #fafafa;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        font-weight: 500;
-        color: #03244d;
-        height: 30px;
-        text-align: center !important;
-    }
+:deep(table.dataTable tbody > tr > td:nth-child(2)) {
+    text-align: left !important;
+}
 
-    :deep(.month-editor.month-display:hover) {
-        border-color: #7393dc;
-        background-color: #eef1ff;
-    }
+:deep(.month-editor.month-display) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    padding: 2px;
+    cursor: pointer;
+    background-color: #fafafa;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-weight: 500;
+    color: #03244d;
+    height: 30px;
+    text-align: center !important;
+}
 
-    :deep(.month-editor.month-input) {
-        width: 100px;
-        padding: 2px;
-        border: 1px solid #7393dc;
-        border-radius: 4px;
-        background-color: #ffffff;
-        text-align: center !important;
-        height: 30px;
-    }
+:deep(.month-editor.month-display:hover) {
+    border-color: #7393dc;
+    background-color: #eef1ff;
+}
 
-    :deep(.month-editor.hidden) {
-        display: none;
-    }
+:deep(.month-editor.month-input) {
+    width: 100px;
+    padding: 2px;
+    border: 1px solid #7393dc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    text-align: center !important;
+    height: 30px;
+}
+
+:deep(.month-editor.hidden) {
+    display: none;
+}
 </style>
