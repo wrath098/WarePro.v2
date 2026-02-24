@@ -173,6 +173,9 @@ Route::middleware('auth')->prefix('ppmp')->group(function () {
     
     Route::get('/individual-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showIndividualPpmp'])->name('indiv.ppmp.show');
     Route::get('/consolidated-ppmp/{ppmpTransaction}', [PpmpTransactionController::class, 'showConsolidatedPpmp'])->name('conso.ppmp.show');
+    Route::get('/consolidated-ppmp/{ppmpTransaction}/set-modes',[PpmpTransactionController::class, 'setModes'])->name('conso.ppmp.setModes');
+    Route::put('/ppmp-particular/{id}/inline-update', [PpmpConsolidatedController::class, 'inlineUpdate'])->name('ppmp.particular.inline-update');
+    Route::post('/update-ppmp/{id}', [PpmpParticularController::class, 'update'])->name('ppmp.update');
     Route::post('/proceed-to-approved/{ppmpTransaction}', [PpmpTransactionController::class, 'storeAsFinal'])->name('proceed.to.final.ppmp');
     Route::post('/copy-ppmp', [PpmpTransactionController::class, 'storeCopy'])->name('make.copy.ppmp');
     Route::any('/create', [PpmpTransactionController::class, 'store'])->name('create.ppmp.store');

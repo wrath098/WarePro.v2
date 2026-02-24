@@ -15,6 +15,14 @@ class PpmpConsolidated extends Model
     protected $table = 'ppmp_consolidateds';
 
     protected $fillable = [
+        'procurement_mode',
+        'ppc',
+        'start_pa',
+        'end_pa',
+        'expected_delivery',
+        'estimated_budget',
+        'supporting_doc',
+        'remarks',
         'qty_first',
         'qty_second',
         'prod_id',
@@ -27,6 +35,7 @@ class PpmpConsolidated extends Model
     protected $casts = [
         'created_by' => 'integer',
         'updated_by' => 'integer',
+        'ppc' => 'boolean',
     ];
     
     public function transaction(): BelongsTo

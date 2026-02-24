@@ -110,4 +110,32 @@ class PpmpConsolidatedController extends Controller
             return redirect()->back()->with(['error' => 'Product No. '. $prodCode . ' failed to move to trash!']);
         }
     }
+
+    public function inlineUpdate(Request $request, $id)
+    {
+        $particular = PpmpConsolidated::findOrFail($id);
+
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        $fieldMap = [
+            'procurement_mode'   => 'procurement_mode',
+            'ppc'                => 'ppc',
+            'start_pa'           => 'start_pa',
+            'end_pa'             => 'end_pa',
+            'expected_delivery'  => 'expected_delivery',
+            'estimated_budget'   => 'estimated_budget',
+            'supporting_doc'     => 'supporting_doc',
+            'remarks'           => 'remarks',
+        ];
+
+        if (!isset($fieldMap[$field])) {
+            return response()->json(['error' => 'Invalid field'], 422);
+        }
+
+        $particular->{$fieldMap[$field]} = $value;
+        $particular->save();
+
+        return response()->json(['success' => true]);
+    }
 }

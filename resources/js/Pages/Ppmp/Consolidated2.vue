@@ -1,231 +1,396 @@
 <script setup>
-    import { Head, useForm, usePage, Link} from '@inertiajs/vue3';
-    import { reactive, ref, computed } from 'vue';
-    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import Modal from '@/Components/Modal.vue';
-    import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
-    import DangerButton from '@/Components/Buttons/DangerButton.vue';
-    import Dropdown from '@/Components/Dropdown.vue';
-    import EditButton from '@/Components/Buttons/EditButton.vue';
-    import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
-    import Swal from 'sweetalert2';
-    import useAuthPermission from '@/Composables/useAuthPermission';
-    import InputError from '@/Components/InputError.vue';
+import { Head, useForm, usePage, Link } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Modal from '@/Components/Modal.vue';
+import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
+import DangerButton from '@/Components/Buttons/DangerButton.vue';
+import Dropdown from '@/Components/Dropdown.vue';
+import EditButton from '@/Components/Buttons/EditButton.vue';
+import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
+import Swal from 'sweetalert2';
+import useAuthPermission from '@/Composables/useAuthPermission';
+import Checkbox from '@/Components/Checkbox.vue';
+import debounce from 'lodash/debounce';
+import axios from 'axios';
 
-    const {hasAnyRole, hasPermission} = useAuthPermission();
-    const page = usePage();
-    const isLoading = ref(false);
-    const message = computed(() => page.props.flash.message);
-    const errMessage = computed(() => page.props.flash.error);
-    const ppmpId = page.props.ppmpTransaction.id
+const handleClick = (e) => {
+    const target = e.target;
 
-    const props = defineProps({
-        ppmp: Object,
-        countTrashed: Number,
-        accountClass: Object,
-        user: Number,
-    });
+    if (
+        !target.classList.contains('month-display') ||
+        !target.classList.contains('month-editor')
+    ) return;
 
-    const form = useForm({
-        conId: props.ppmp.id,
-        user: props.user,
-    });
+    const input = target.nextElementSibling;
+    if (!input) return;
 
-    const editParticular = useForm({
-        partId: '',
-        prodCode: '',
-        prodDesc: '',
-        firstQty: '',
-        secondQty: '',
-        user: props.user,
-    });
+    target.classList.add('hidden');
+    input.classList.remove('hidden');
+    input.focus();
+};
 
-    const editAdjustment = useForm({
-        ppmpId: '',
-        adjustmentType: '',
-        initAdjustment: 100,
-        customInitAdjustment: [],
-        user: props.user,
-    });
+const handleChange = (e) => {
+    const target = e.target;
 
-    const editFinalAdjustment = useForm({
-        ppmpId: '',
-        adjustmentType: '',
-        initAdjustment: 100,
-        customInitAdjustment: [],
-        user: props.user,
-    });
+    if (!target.classList.contains('inline-input')) return;
 
-    const dropParticular = useForm({
-        pId: '',
-        user: props.user,
-    });
+    const id = target.dataset.id;
+    let field = target.dataset.field;
+    let value = target.value;
 
-    const modalState = ref(null);
-    const showModal = (modalType) => { modalState.value = modalType; }
-    const closeModal = () => { modalState.value = null; }
-    const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
-    const isEditPPModalOpen = computed(() => modalState.value === 'edit');
-    const isDropPPModalOpen = computed(() => modalState.value === 'drop');
-    const isEditAdjustment = computed(() => modalState.value === 'adjustment');
-    const isEditFinalAdjustment = computed(() => modalState.value === 'finalAdjustment');
-
-    const openEditPpmpModal = (particular) => {
-        editParticular.partId = particular.pId;
-        editParticular.prodCode = particular.prodCode;
-        editParticular.prodDesc = particular.prodName;
-        editParticular.firstQty = numberWithoutCommas(particular.qtyFirst);
-        editParticular.secondQty = numberWithoutCommas(particular.qtySecond);
-        modalState.value = 'edit';
+    if (target.type === 'month' && value) {
+        const [yyyy, mm] = value.split('-');
+        value = `${mm}/${yyyy}`;
     }
 
-    const openAdjustmentPpmpModal = (ppmp) => {
-        editAdjustment.ppmpId = ppmp.id;
-        modalState.value = 'adjustment';
+    if (field === 'ppc') {
+        value = value === 'Yes' ? 1 : 0;
     }
 
-    const openFinalAdjustmentModal = (ppmp) => {
-        editFinalAdjustment.ppmpId = ppmp.id;
-        modalState.value = 'finalAdjustment';
+    console.log('INLINE SAVE TRIGGERED', { id, field, value });
+
+    saveRowField(id, field, value);
+
+    const display = target.previousElementSibling;
+    if (display) {
+        display.textContent = value;
+        display.classList.remove('hidden');
+        target.classList.add('hidden');
     }
+};
 
-    const openDropPpmpModal = (particular) => {
-        dropParticular.pId = particular.pId;
-        modalState.value = 'drop';
-    }
+const { hasAnyRole, hasPermission } = useAuthPermission();
+const page = usePage();
+const isLoading = ref(false);
 
-    const numberWithoutCommas = (qty) => {
-        return qty.replace(/,/g, '');
-    };
+const message = computed(() => page.props.flash.message);
+const errMessage = computed(() => page.props.flash.error);
 
-    const submitRequest = (method, url, formData) => {
-        isLoading.value = true;
+const props = defineProps({
+    ppmp: Object,
+    countTrashed: Number,
+    accountClass: Object,
+    user: Number,
+});
 
-        formData[method](url, {
-            preserveScroll: true,
-            onSuccess: () => {
-                if (errMessage.value) {
-                    Swal.fire({
-                        title: 'Failed',
-                        text: errMessage.value,
-                        icon: 'error',
-                    }).then(() => {
-                        isLoading.value = false;
-                    });
-                } else {
-                    formData.reset();
-                    Swal.fire({
-                        title: 'Success',
-                        text: message.value,
-                        icon: 'success',
-                    }).then(() => {
-                        closeModal();
-                        isLoading.value = false;
-                    });
-                }
-            },
-            onError: (errors) => {
-                isLoading.value = false;
-                console.info('Error: ' + JSON.stringify(errors));
-            },
-        });
-    };
+const form = useForm({
+    conId: props.ppmp.id,
+    user: props.user,
+});
 
-    const submitEdit = () => submitRequest('put', route('conso-particular-update', { ppmpConsolidated: editParticular.partId }), editParticular);
-    const submitDrop = () => submitRequest('delete', route('conso-particular-destroy', { ppmpConsolidated: dropParticular.pId }), dropParticular);
-    const submitAdjustment = () => submitRequest('post', route('updateInitialAdjustment'), editAdjustment);
-    const submitFinalAdjustment = () => submitRequest('post', route('updateFinalAdjustment'), editFinalAdjustment);
+const editParticular = useForm({
+    partId: '',
+    prodCode: '',
+    prodDesc: '',
+    firstQty: '',
+    secondQty: '',
+    user: props.user,
+});
 
-    const submit = async () => {
-        const confirm = await Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, Proceed!'
-        });
-    
-        if (!confirm.isConfirmed) return;
+const editAdjustment = useForm({
+    ppmpId: '',
+    adjustmentType: '',
+    initAdjustment: 100,
+    customInitAdjustment: [],
+    user: props.user,
+});
 
-        isLoading.value = true;
-        form.post(route('proceed.to.final.ppmp', { ppmpTransaction: form.conId }), {
-            preserveScroll: true,
-            onSuccess: () => {
-                if (errMessage.value) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: errMessage.value,
-                        icon: 'error'
-                    });
-                    isLoading.value = false;
-                    return;
-                }
+const editFinalAdjustment = useForm({
+    ppmpId: '',
+    adjustmentType: '',
+    initAdjustment: 100,
+    customInitAdjustment: [],
+    user: props.user,
+});
 
-                closeModal();
-                isLoading.value = false;
-            },
-            onError: (errors) => {
-                const errorMessage = Object.values(errors).flat().join('\n') || 'An error occurred.';
+const dropParticular = useForm({
+    pId: '',
+    user: props.user,
+});
+
+// Modal state
+const modalState = ref(null);
+const showModal = (modalType) => (modalState.value = modalType);
+const closeModal = () => (modalState.value = null);
+
+const isConfirmModalOpen = computed(() => modalState.value === 'confirm');
+const isEditPPModalOpen = computed(() => modalState.value === 'edit');
+const isDropPPModalOpen = computed(() => modalState.value === 'drop');
+const isEditAdjustment = computed(() => modalState.value === 'adjustment');
+const isEditFinalAdjustment = computed(() => modalState.value === 'finalAdjustment');
+
+const numberWithoutCommas = (qty) => qty.replace(/,/g, '');
+
+const openEditPpmpModal = (particular) => {
+    editParticular.partId = particular.pId;
+    editParticular.prodCode = particular.prodCode;
+    editParticular.prodDesc = particular.prodName;
+    editParticular.firstQty = numberWithoutCommas(particular.qtyFirst);
+    editParticular.secondQty = numberWithoutCommas(particular.qtySecond);
+    modalState.value = 'edit';
+};
+
+const openAdjustmentPpmpModal = (ppmp) => {
+    editAdjustment.ppmpId = ppmp.id;
+    modalState.value = 'adjustment';
+};
+
+const openFinalAdjustmentModal = (ppmp) => {
+    editFinalAdjustment.ppmpId = ppmp.id;
+    modalState.value = 'finalAdjustment';
+};
+
+const openDropPpmpModal = (particular) => {
+    dropParticular.pId = particular.pId;
+    modalState.value = 'drop';
+};
+
+const submitRequest = (method, url, formData) => {
+    isLoading.value = true;
+    formData[method](url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            if (errMessage.value) {
                 Swal.fire({
-                    title: 'Error!',
-                    text: errorMessage,
-                    icon: 'error'
+                    title: 'Failed',
+                    text: errMessage.value,
+                    icon: 'error',
+                }).then(() => (isLoading.value = false));
+            } else {
+                formData.reset();
+                Swal.fire({
+                    title: 'Success',
+                    text: message.value,
+                    icon: 'success',
+                }).then(() => {
+                    closeModal();
+                    isLoading.value = false;
                 });
-                isLoading.value = false;
             }
-        });
-    };
+        },
+        onError: (errors) => {
+            isLoading.value = false;
+            console.info('Error: ' + JSON.stringify(errors));
+        },
+    });
+};
 
-    const columns = [
-        {
-            data: 'prodCode',
-            title: 'Stock No#',
-            width: '8%'
+const submitEdit = () =>
+    submitRequest('put', route('conso-particular-update', { ppmpConsolidated: editParticular.partId }), editParticular);
+const submitDrop = () =>
+    submitRequest('delete', route('conso-particular-destroy', { ppmpConsolidated: dropParticular.pId }), dropParticular);
+const submitAdjustment = () => submitRequest('post', route('updateInitialAdjustment'), editAdjustment);
+const submitFinalAdjustment = () => submitRequest('post', route('updateFinalAdjustment'), editFinalAdjustment);
+
+const submit = async () => {
+    const confirm = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, Proceed!',
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    isLoading.value = true;
+    form.post(route('proceed.to.final.ppmp', { ppmpTransaction: form.conId }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            if (errMessage.value) {
+                Swal.fire({ title: 'Error!', text: errMessage.value, icon: 'error' });
+                isLoading.value = false;
+                return;
+            }
+            closeModal();
+            isLoading.value = false;
         },
-        {
-            data: 'prodName',
-            title: 'Description',
-            width: '36%'
+        onError: (errors) => {
+            const errorMessage = Object.values(errors).flat().join('\n') || 'An error occurred.';
+            Swal.fire({ title: 'Error!', text: errorMessage, icon: 'error' });
+            isLoading.value = false;
         },
-        {
-            data: 'qtyFirst',
-            title: 'Jan (Qty)',
-            width: '8%',
+    });
+};
+
+const ppmpId = usePage().props.ppmp.id
+
+const formatMonthDisplay = (value) => {
+    if (!value) return '';
+    const [mm, yyyy] = value.split('/');
+    return `${mm.padStart(2, '0')}/${yyyy}`;
+};
+
+const renderMonthInput = (value, rowId, field) => {
+    let monthValue = '';
+    if (value) {
+        const [mm, yyyy] = value.split('/');
+        if (mm && yyyy) monthValue = `${yyyy}-${mm.padStart(2, '0')}`;
+    }
+
+    return `
+        <span
+            class="month-editor month-display"
+            data-id="${rowId}"
+            data-field="${field}"
+        >
+            ${formatMonthDisplay(value)}
+        </span>
+
+        <input
+            type="month"
+            class="month-editor inline-input month-input hidden"
+            data-id="${rowId}"
+            data-field="${field}"
+            value="${monthValue}"
+        />
+    `;
+};
+
+const savingRows = ref({});
+
+const saveRowField = debounce(async (id, field, value) => {
+    console.log('INLINE SAVE TRIGGERED', { id, field, value }); 
+    try {
+        savingRows.value[id] = true;
+
+        await axios.put(
+            route('ppmp.particular.inline-update', id),
+            {
+                field,
+                value,
+                user: props.user,
+            }
+        );
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Failed to save changes', 'error');
+    } finally {
+        savingRows.value[id] = false;
+    }
+}, 400);
+
+
+const columns = [
+    // {
+    //     data: 'selected',
+    //     title: '<input type="checkbox" id="select-all" />',
+    //     width: '4%',
+    //     render: (data, type, row) => `
+    //         <input
+    //             type="checkbox"
+    //             class="row-checkbox"
+    //             data-id="${row.pId}"
+    //             ${data ? 'checked' : ''}
+    //         />
+    //     `,
+    // },
+    { data: 'prodCode', title: 'Stock No#', width: '8%' },
+    { data: 'prodName', title: 'Description', width: '26%' },
+    {
+        data: 'procurement_mode',
+        title: 'Recommended Mode of Procurement',
+        width: '8%',
+            render: (data, type, row) => {
+            const value = data ?? '';
+            return `
+            <select class="inline-input procurement-mode-select" style="border-radius: 0.5rem; border: 1px solid #d1d5db; padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.25rem; padding-right: 2rem;"data-id="${row.pId}" data-field="procurement_mode">
+                <option disabled selected style="font-size: 10px">Select</option>
+                <option value="Bidding" ${value === 'Bidding' ? 'selected' : ''}>Bidding</option>
+                <option value="SVP" ${value === 'SVP' ? 'selected' : ''}>SVP</option>
+                <option value="DA/DC" ${value === 'DA/DC' ? 'selected' : ''}>DA/DC</option>
+            </select>
+            `;
         },
-        {
-            data: 'qtySecond',
-            title: 'May (Qty)',
-            width: '8%'
+    },
+    {
+    data: 'ppc',
+    title: 'Pre-Procurement Conference',
+    width: '8%',
+    render: (data, type, row) => {
+        const value = data ? 'Yes' : 'No';
+        return `
+        <select 
+        class="inline-input ppc-select" style="border-radius: 0.5rem; border: 1px solid #d1d5db; padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.25rem; padding-right: 2rem;" data-id="${row.pId}" data-field="ppc">
+            <option value="Yes" ${value === 'Yes' ? 'selected' : ''}>Yes</option>
+            <option value="No" ${value === 'No' ? 'selected' : ''}>No</option>
+        </select>
+        `;
+    },
+    },
+    {
+        data: 'start_pa',
+        title: 'Start of Procurement Activity',
+        width: '8%',
+        render: (data, type, row) => renderMonthInput(data, row.pId, 'start_pa') ,
+    },
+    {
+        data: 'end_pa',
+        title: 'End of Procurement Activity',
+        width: '8%',
+        render: (data, type, row) => renderMonthInput(data, row.pId, 'end_pa'),
+    },
+    {
+        data: 'expected_delivery',
+        title: 'Expected Delivery',
+        width: '8%',
+        render: (data, type, row) => renderMonthInput(data, row.pId, 'expected_delivery'),
+    },
+    {   data: 'amount',
+        title: 'Estimated Budget',
+        width: '8%', render: (data, type, row) => data ?? row.totalAmount 
+    },
+    {
+        data: 'supporting_doc',
+        title: 'Supporting Document',
+        width: '8%',
+        render: (data, type, row) => {
+            const value = data ?? '';
+            return `
+                <input
+                    type="text"
+                    class="inline-input"
+                    data-id="${row.pId}"
+                    data-field="supporting_doc"
+                    value="${value}"
+                    style="width: 80px !important; margin: 0 !important; padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.25rem; padding-right: 0.25rem; border-radius: 0.5rem; border: 1px solid #d1d5db;"
+                />
+            `;
         },
-        {
-            data: 'prodUnit',
-            title: 'Unit',
-            width: '8%'
+    },
+    {
+        data: 'remarks',
+        title: 'Remarks',
+        width: '8%',
+        render: (data, type, row) => {
+            const value = data ?? '';
+            return `
+                <input
+                    type="text"
+                    class="inline-input"
+                    data-id="${row.pId}"
+                    data-field="remarks"
+                    value="${value}"
+                    style="width: 80px !important; margin: 0 !important; padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.25rem; padding-right: 0.25rem; border-radius: 0.5rem; border: 1px solid #d1d5db;"
+                />
+            `;
         },
-        {
-            data: 'prodPrice',
-            title: 'Price',
-            width: '8%'
-        },
-        {
-            data: 'totalQty',
-            title: 'Total (Qty)',
-            width: '8%'
-        },
-        {
-            data: 'amount',
-            title: 'Total (Amount)',
-            width: '8%'
-        },
-        {
-            data: null,
-            title: 'Action',
-            width: '8%',
-            render: '#action',
-        },
-    ];
+    },
+];
+
+onMounted(() => {
+    document.addEventListener('click', handleClick);
+    document.addEventListener('change', handleChange);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClick);
+    document.removeEventListener('change', handleChange);
+});
 </script>
 
 <template>
@@ -334,12 +499,12 @@
                                     ID# [{{ ppmp.ppmp_code }}]
                                 </p>
                             </div>
-                            <div>
+                                                        <div>
                                 <Link
-                                    :href="route('conso.ppmp.setModes', ppmpId)"
+                                    :href="route('conso.ppmp.show', ppmpId)"
                                     class="bg-indigo-900 font-bold text-md leading-6 text-white p-2 rounded-md hover:bg-indigo-800 transition"
                                 >
-                                    Set Modes
+                                    Done
                                 </Link>
                             </div>
                         </div>
@@ -745,8 +910,38 @@
     :deep(table.dataTable tbody > tr > td:nth-child(2)) {
         text-align: left !important;
     }
+    :deep(.month-editor.month-display) {
+        display: flex;
+        justify-content: center;
+        align-items: center; 
+        width: 100px;
+        padding: 2px;
+        cursor: pointer;
+        background-color: #fafafa;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        font-weight: 500;
+        color: #03244d;
+        height: 30px;
+        text-align: center !important;
+    }
 
-    :deep(table.dataTable tbody > tr > td:nth-child(8)) {
-        text-align: right !important;
+    :deep(.month-editor.month-display:hover) {
+        border-color: #7393dc;
+        background-color: #eef1ff;
+    }
+
+    :deep(.month-editor.month-input) {
+        width: 100px;
+        padding: 2px;
+        border: 1px solid #7393dc;
+        border-radius: 4px;
+        background-color: #ffffff;
+        text-align: center !important;
+        height: 30px;
+    }
+
+    :deep(.month-editor.hidden) {
+        display: none;
     }
 </style>

@@ -563,6 +563,91 @@ class PpmpTransactionController extends Controller
         $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
 
         return Inertia::render('Ppmp/Consolidated', [
+            'ppmpTransaction' => $ppmpTransaction,
+            'ppmp' =>  $ppmpTransaction,
+            'countTrashed' => $countTrashedItems,
+            'accountClass' => $accountClass,
+            'user' => Auth::id(),
+        ]);
+    }
+
+    public function setModes(PpmpTransaction $ppmpTransaction)
+    {
+        #Get transaction particulars
+        $ppmpTransaction->load('updater', 'consolidated');
+
+        $ppmpTransaction->ppmp_type = ucfirst($ppmpTransaction->ppmp_type);
+        
+        #Format transaction account class and count office ppmp
+        $accountClassIds = json_decode($ppmpTransaction->account_class_ids ?? '[]');
+        $funds = Fund::whereIn('id', $accountClassIds)->get()->pluck('fund_name');
+        $ppmpTransaction->account_class_ids = $funds->isNotEmpty() ? $funds->implode(', ') : 'N/a';
+
+        $officePpmpIds = json_decode($ppmpTransaction->office_ppmp_ids, true);
+        $ppmpTransaction->office_ppmp_ids = is_array($officePpmpIds) ? count($officePpmpIds) : 0;
+        
+        #Count trashed particulars
+        $countTrashedItems = $ppmpTransaction->consolidated()->onlyTrashed()->count();
+
+        #Get active account class
+        $accountClass = $this->productService->getActiveFunds();
+
+        #Format transaction particulars
+        $groupParticulars = $ppmpTransaction->consolidated->map(function ($items) use (&$totalAmount, $ppmpTransaction) {
+            $prodPrice = (float)$this->productService->getLatestPriceId($items->price_id) * $ppmpTransaction->price_adjustment;
+            
+            #RETURN IT BACK IF PRICE SHOULD BE ROUND UP ALL FLOAT PRICES
+            #$prodPrice = $prodPrice != null ? (float) ceil($prodPrice) : 0;
+            
+            $firstAmount = $items->qty_first * $prodPrice;
+            $secondAmount = $items->qty_second * $prodPrice;
+
+            $qty = $items->qty_first + $items->qty_second;
+            $amount = $firstAmount + $secondAmount;
+
+            $items->update([
+                'estimated_budget' => $amount,
+            ]);
+
+            logger()->info('Saved budget', [
+                'id' => $items->id,
+                'estimated_budget' => $amount,
+            ]);
+
+            $totalAmount += $amount;
+            $prodDesc = $this->productService->getProductName($items->prod_id);
+            $limitedDescription = Str::limit($prodDesc, 90, '...');
+
+            return [
+                'pId' => $items->id, 
+                'prodId' => $items->prod_id,
+                'prodCode' => $this->productService->getProductCode($items->prod_id),
+                'prodName' => $limitedDescription,
+                'prodUnit' => $this->productService->getProductUnit($items->prod_id),
+                'prodPrice' => number_format($prodPrice, 2,'.','.'),
+                'qtyFirst' => number_format($items->qty_first, 0, '.', ','),
+                'qtySecond' => number_format($items->qty_second, 0, '.', ','),
+                'totalQty' => number_format($qty, 0, '.', ','),
+                'amount' => number_format($amount, 2, '.', ','),
+                'procurement_mode' => $items->procurement_mode,
+                'ppc' => $items->ppc,
+                'start_pa' => $items->start_pa,
+                'end_pa' => $items->end_pa,
+                'expected_delivery' => $items->expected_delivery,
+                'estimated_budget' => number_format($amount, 2, '.', ','),
+                'supporting_doc' => $items->supporting_doc,
+                'remarks' => $items->remarks,
+            ];
+        });
+
+        $sortedParticulars = $groupParticulars->sortBy('prodCode');
+        $ppmpTransaction->init_qty_adjustment = $ppmpTransaction->init_qty_adjustment;
+        $ppmpTransaction->formatted_created = $ppmpTransaction->created_at->format('M d, Y');
+        $ppmpTransaction->transactions = $sortedParticulars->values();
+        $ppmpTransaction->totalItems = $sortedParticulars->count();
+        $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
+        
+        return Inertia::render('Ppmp/Consolidated2', [
             'ppmp' =>  $ppmpTransaction,
             'countTrashed' => $countTrashedItems,
             'accountClass' => $accountClass,
@@ -1617,4 +1702,6 @@ class PpmpTransactionController extends Controller
             ];
         })->sortBy('prodCode')->values();
     }
+
+
 }
