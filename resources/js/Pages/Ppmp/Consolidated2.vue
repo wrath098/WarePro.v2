@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm, usePage, Link } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import SuccessButton from '@/Components/Buttons/SuccessButton.vue';
@@ -10,9 +10,126 @@ import EditButton from '@/Components/Buttons/EditButton.vue';
 import RemoveButton from '@/Components/Buttons/RemoveButton.vue';
 import Swal from 'sweetalert2';
 import useAuthPermission from '@/Composables/useAuthPermission';
-import Checkbox from '@/Components/Checkbox.vue';
 import debounce from 'lodash/debounce';
 import axios from 'axios';
+
+const ymToMMYYYY = (ym) => {
+    if (!ym) return ''
+    const [yyyy, mm] = ym.split('-')
+    if (!yyyy || !mm) return ''
+    return `${mm}/${yyyy}`
+}
+
+const mmYYYYToYM = (value) => {
+    if (!value) return ''
+    const [mm, yyyy] = value.split('/')
+    if (!mm || !yyyy) return ''
+    return `${yyyy}-${mm.padStart(2, '0')}`
+}
+
+const bulkForm = ref({
+    procurement_mode: '',
+    ppc: '',
+    start_pa: '',
+    end_pa: '',
+    expected_delivery: '',
+    supporting_doc: '',
+    remarks: ''
+});
+
+const isBulkModalOpen = computed(() => modalState.value === 'bulk')
+
+const openBulkModal = () => {
+    if (!selectedRows.value.length) {
+        Swal.fire('Warning', 'Please select at least one row.', 'warning')
+        return
+    }
+
+    bulkForm.value = {
+        procurement_mode: '',
+        start_pa: ''
+    }
+
+    modalState.value = 'bulk'
+}
+
+const applyBulkUpdate = async () => {
+    const hasValue = Object.values(bulkForm.value).some(val => val !== '' && val !== null && val !== undefined);
+    if (!hasValue) {
+        Swal.fire('Warning', 'Please fill at least one field to apply bulk update.', 'warning');
+        return;
+    }
+
+    isLoading.value = true;
+
+    try {
+        for (const id of selectedRows.value) {
+            const rowPayload = {};
+
+            for (const field of [
+                'procurement_mode',
+                'ppc',
+                'start_pa',
+                'end_pa',
+                'expected_delivery',
+                'supporting_doc',
+                'remarks'
+            ]) {
+                const value = bulkForm.value[field];
+                if (value !== '' && value !== null && value !== undefined) {
+                    if (field === 'ppc') {
+                        rowPayload[field] = value === 'Yes' ? 1 : 0;
+                    } else if (['start_pa', 'end_pa', 'expected_delivery'].includes(field)) {
+                        const [mm, yyyy] = value.split('/');
+                        rowPayload[field] = `${yyyy}-${mm.padStart(2, '0')}-01`;
+                    } else {
+                        rowPayload[field] = value;
+                    }
+                }
+            }
+
+            if (Object.keys(rowPayload).length) {
+                await axios.put(route('ppmp.particular.inline-update', id), {
+                    ...rowPayload,
+                    user: props.user
+                });
+            }
+
+            for (const field in rowPayload) {
+                const value = rowPayload[field];
+
+                if (field === 'procurement_mode') {
+                    const select = document.querySelector(`.procurement-mode-select[data-id="${id}"]`);
+                    if (select) select.value = bulkForm.value.procurement_mode;
+                }
+
+                if (['start_pa', 'end_pa', 'expected_delivery'].includes(field)) {
+                    const span = document.querySelector(`.month-display[data-id="${id}"][data-field="${field}"]`);
+                    if (span) span.textContent = bulkForm.value[field];
+                }
+
+                if (['supporting_doc', 'remarks'].includes(field)) {
+                    const input = document.querySelector(`.inline-input[data-id="${id}"][data-field="${field}"]`);
+                    if (input) input.value = bulkForm.value[field];
+                }
+            }
+
+            if (bulkForm.value.start_pa && bulkForm.value.procurement_mode) {
+                await autoFillDates(id, bulkForm.value.procurement_mode, bulkForm.value.start_pa);
+            }
+        }
+
+        Swal.fire('Success', 'Bulk update applied.', 'success');
+        selectedRows.value = [];
+        closeModal();
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Bulk update failed.', 'error');
+    } finally {
+        isLoading.value = false;
+    }
+};
 
 const autoFillDates = async (rowId, procurementMode, startPa) => {
     if (!startPa || !procurementMode) return
@@ -35,11 +152,9 @@ const autoFillDates = async (rowId, procurementMode, startPa) => {
         expectedDelivery = addMonths(endPa, 1)
     }
 
-    // ✅ Use NON-debounced saves
     await saveRowFieldImmediate(rowId, 'end_pa', endPa)
     await saveRowFieldImmediate(rowId, 'expected_delivery', expectedDelivery)
 
-    // Update UI immediately
     const endSpan = document.querySelector(
         `.month-display[data-id="${rowId}"][data-field="end_pa"]`
     )
@@ -374,8 +489,7 @@ const saveRowFieldImmediate = async (id, field, value) => {
     }
 }
 
-const saveRowField = debounce(saveRowFieldImmediate, 400)
-
+const saveRowField = debounce(saveRowFieldImmediate, 200)
 
 const columns = [
     {
@@ -634,7 +748,8 @@ onUnmounted(() => {
 
                             <div v-if="hasPermission('print-app-summary-overview') || hasAnyRole(['Developer'])">
                                 <a v-if="ppmp.ppmp_type == 'Consolidated'"
-                                    :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id })" target="_blank"
+                                    :href="route('generatePdf.summaryOfConsolidated', { ppmp: ppmp.id })"
+                                    target="_blank"
                                     class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
                                     <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                         width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -784,6 +899,12 @@ onUnmounted(() => {
                             </dl>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <button @click="openBulkModal"
+                            class="bg-indigo-900 text-white px-4 py-2 rounded-md hover:bg-indigo-800 transition">
+                            Bulk Update
+                        </button>
+                    </div>
                     <div class="col-span-3 p-2 bg-zinc-300 rounded-md shadow mt-5 lg:mt-0">
                         <div class="p-2 overflow-hidden">
                             <div class="relative overflow-x-auto">
@@ -869,7 +990,7 @@ onUnmounted(() => {
                                     placeholder="" required />
                                 <label :for="'qtyAdjustment-' + account.id"
                                     class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{
-                                    account.fund_name}}</label>
+                                        account.fund_name }}</label>
                             </div>
                         </div>
                     </div>
@@ -895,6 +1016,89 @@ onUnmounted(() => {
                 </DangerButton>
             </div>
         </form>
+    </Modal>
+    <Modal :show="isBulkModalOpen" @close="closeModal">
+        <div class="bg-zinc-300 px-6 pt-6 pb-4">
+            <h3 class="text-lg font-semibold text-[#1a0037] mb-4">
+                Bulk Update Selected Rows
+            </h3>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    Recommended Mode of Procurement
+                </label>
+                <select v-model="bulkForm.procurement_mode" class="w-full border rounded-md p-2">
+                    <option disabled value="">Select</option>
+                    <option value="Bidding">Bidding</option>
+                    <option value="SVP">SVP</option>
+                    <option value="DA/DC">DA/DC</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    Pre-Procurement Conference
+                </label>
+                <select v-model="bulkForm.ppc" class="w-full border rounded-md p-2">
+                    <option disabled value="">-- Select --</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    Start of Procurement Activity
+                </label>
+                <input type="month" :value="mmYYYYToYM(bulkForm.start_pa)"
+                    @change="e => bulkForm.start_pa = ymToMMYYYY(e.target.value)"
+                    class="w-full border rounded-md p-2" />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    End of Procurement Activity
+                </label>
+                <input type="month" :value="mmYYYYToYM(bulkForm.end_pa)"
+                    @change="e => bulkForm.end_pa = ymToMMYYYY(e.target.value)" class="w-full border rounded-md p-2" />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    Expected Delivery
+                </label>
+                <input type="month" :value="mmYYYYToYM(bulkForm.expected_delivery)"
+                    @change="e => bulkForm.expected_delivery = ymToMMYYYY(e.target.value)"
+                    class="w-full border rounded-md p-2" />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    Supporting Document
+                </label>
+                <input type="text" v-model="bulkForm.supporting_doc" class="w-full border rounded-md p-2"
+                    placeholder="Market Scoping Checklist, etc..." />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">
+                    Remarks
+                </label>
+                <input type="text" v-model="bulkForm.remarks" class="w-full border rounded-md p-2"
+                    placeholder="Additional Details..." />
+            </div>
+        </div>
+
+        <div class="bg-zinc-400 px-6 py-3 flex justify-end gap-3">
+            <button @click="closeModal" class="bg-red-600 text-white px-4 py-2 rounded-md">
+                Cancel
+            </button>
+
+            <button @click="applyBulkUpdate" :disabled="isLoading"
+                class="bg-indigo-900 text-white px-4 py-2 rounded-md">
+                Done
+            </button>
+        </div>
     </Modal>
     <Modal :show="isEditFinalAdjustment" @close="closeModal">
         <form @submit.prevent="submitFinalAdjustment">
@@ -959,7 +1163,7 @@ onUnmounted(() => {
                                     placeholder="" required />
                                 <label :for="'qtyAdjustment-' + account.id"
                                     class="font-semibold text-zinc-700  absolute text-sm duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">{{
-                                    account.fund_name}}</label>
+                                        account.fund_name }}</label>
                             </div>
                         </div>
                     </div>
