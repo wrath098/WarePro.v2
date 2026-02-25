@@ -213,7 +213,7 @@ const officeUser = hasAnyRole(['Office User']);
                                 </li>
                                 <li v-if="hasPermission('view-office-ppmp-list') ||  hasAnyRole(['Developer'])" class="mb-1">
                                     <SidebarLink 
-                                        v-if="hasPermission('create-office-ppmp') ||  hasAnyRole(['Developer'])"
+                                        v-if="hasPermission('view-office-ppmp-list') ||  hasAnyRole(['Developer'])"
                                         :href="route('indiv.ppmp.type')" 
                                         :active="route().current('indiv.ppmp.type')"
                                     >
