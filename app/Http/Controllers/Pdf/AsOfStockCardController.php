@@ -30,14 +30,19 @@ class AsOfStockCardController extends Controller
         $query['stockNo'] = $this->productService->getProductCode($query['prodId']);
         $query['reorder'] = $this->productService->getProductReorderPoint($query['prodId']);
 
-        $startDate =  Carbon::now()->firstOfYear();
         $endDate = Carbon::parse($request->productDetails['endDate']);
-        $customEndDate = $endDate->setTime(23, 59, 59);
-        $formattedEndDate = $customEndDate->format('Y-m-d H:i:s');
-        
+        $startDate = $endDate->copy()->startOfYear();
+
+        $formattedStartDate = $startDate->format('Y-m-d H:i:s');
+        $formattedEndDate = $endDate->copy()->endOfDay()->format('Y-m-d H:i:s');
+
         $duration = $endDate->format('F d, Y') ;
 
-        $inventoryTransactions = $this->getProductInventoryTransactions($query['prodId'], $startDate, $formattedEndDate);
+        $inventoryTransactions = $this->getProductInventoryTransactions(
+            $query['prodId'],
+            $formattedStartDate,
+            $formattedEndDate
+        );
         $totalRequest = count($inventoryTransactions);
 
         $pdf = new MyPDF('P', 'mm', array(203.2, 330.2), true, 'UTF-8', false);
@@ -107,7 +112,11 @@ class AsOfStockCardController extends Controller
         $table .= $this->tableHeader();
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($inventoryTransactions, $query['prodId']);
+        $table .= $this->tableContent(
+            $inventoryTransactions,
+            $query['prodId'],
+            $startDate
+        );
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');
@@ -133,83 +142,86 @@ class AsOfStockCardController extends Controller
                 </tr>';
     }
 
-    protected function tableContent(iterable $inventoryTransactions, int $prodId)
+    protected function tableContent(iterable $inventoryTransactions, int $prodId, Carbon $startDate)
     {
         $text = '';
-        
+
         $lastTransaction  = $inventoryTransactions->last();
-        $beginningBalance = $this->getBeginningBalance($prodId);
+        $beginningBalance = $this->getBeginningBalance($prodId, $startDate);
 
         $text .= '
-                    <tr style="font-size: 9px; font-weight:bold;">
-                        <td width="60px"></td>
-                        <td width="150px" style="text-align:center;">**** Beginning Balance ****</td>
-                        <td width="35px" style="text-align:center;">'. ($beginningBalance ? number_format($beginningBalance, 0, '.', ',') : 0) .'</td>
-                        <td width="52px"></td>
-                        <td width="35px"></td>
-                        <td width="52px"></td>
-                        <td width="87px" style="text-align:center;">'. ($beginningBalance ? number_format($beginningBalance, 0, '.', ',') : 0) .'</td>
-                        <td width="48px"></td>
-                    </tr>
-                ';
+            <tr style="font-size: 9px; font-weight:bold;">
+                <td width="60px"></td>
+                <td width="150px" style="text-align:center;">**** Beginning Balance ****</td>
+                <td width="35px" style="text-align:center;">'. number_format($beginningBalance ?? 0, 0, '.', ',') .'</td>
+                <td width="52px"></td>
+                <td width="35px"></td>
+                <td width="52px"></td>
+                <td width="87px" style="text-align:center;">'. number_format($beginningBalance ?? 0, 0, '.', ',') .'</td>
+                <td width="48px"></td>
+            </tr>
+        ';
 
-        foreach($inventoryTransactions as $transaction) {
+        if ($inventoryTransactions->isEmpty()) {
+            $text .= '
+                <tr style="font-size: 12px; font-style: italic;">
+                    <td colspan="8" style="text-align:center;">
+                        No Transactions Available
+                    </td>
+                </tr>
+            ';
+
+            $text .= '
+                <tr style="font-size: 9px; font-weight:bold;">
+                    <td width="60px"></td>
+                    <td width="150px" style="text-align:center;">**** Ending Balance ****</td>
+                    <td width="35px" style="text-align:center;">'. number_format($beginningBalance ?? 0, 0, '.', ',') .'</td>
+                    <td width="52px"></td>
+                    <td width="35px"></td>
+                    <td width="52px"></td>
+                    <td width="87px" style="text-align:center;">'. number_format($beginningBalance ?? 0, 0, '.', ',') .'</td>
+                    <td width="48px"></td>
+                </tr>
+            ';
+
+            return $text;
+        }
+
+        foreach ($inventoryTransactions as $transaction) {
             $text .= '
                 <tr style="font-size: 9px;">
                     <td width="60px" style="text-align:center;">' . $transaction['created'] . '</td>
                     <td width="150px">';
 
-                    if ($transaction['type'] == 'issuance') {
-                        $text .= 'RIS #' . $transaction['risDetails']['risNo'];
-                    } elseif ($transaction['type'] == 'purchase') {
-                        $text .= 'IAR #' . $transaction['iarDetails']['iarNo'] . '<br>PO #' . $transaction['iarDetails']['poNo'];
-                    } elseif ($transaction['type'] == 'adjustment') {
-                        $text .= '';
-                    }
+            if ($transaction['type'] === 'issuance') {
+                $text .= 'RIS #' . $transaction['risDetails']['risNo'];
+            } elseif ($transaction['type'] === 'purchase') {
+                $text .= 'IAR #' . $transaction['iarDetails']['iarNo'] . '<br>PO #' . $transaction['iarDetails']['poNo'];
+            }
 
             $text .= '</td>
-                    <td width="35px" style="text-align:center;">' . ($transaction['type'] != 'issuance' ? number_format($transaction['qty'], 0, '.', ',') : '') . '</td>
-                    <td width="52px"style="text-align:right;">' . ($transaction['type'] == 'purchase' ? $transaction['iarDetails']['price'] : '') . '</td>
-                    <td width="35px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? number_format($transaction['qty'], 0, '.', ',') : '') . '</td>
-                    <td width="52px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? $transaction['risDetails']['officeCode'] : '') . '</td>
+                    <td width="35px" style="text-align:center;">' . ($transaction['type'] !== 'issuance' ? number_format($transaction['qty'], 0, '.', ',') : '') . '</td>
+                    <td width="52px" style="text-align:right;">' . ($transaction['type'] === 'purchase' ? $transaction['iarDetails']['price'] : '') . '</td>
+                    <td width="35px" style="text-align:center;">' . ($transaction['type'] === 'issuance' ? number_format($transaction['qty'], 0, '.', ',') : '') . '</td>
+                    <td width="52px" style="text-align:center;">' . ($transaction['type'] === 'issuance' ? $transaction['risDetails']['officeCode'] : '') . '</td>
                     <td width="87px" style="text-align:center;">' . number_format($transaction['currentStock'], 0, '.', ',') . '</td>
-                    <td width="48px" style="text-align:center;">' . ($transaction['type'] == 'issuance' ? $transaction['risDetails']['remarks'] : '') . '</td>
+                    <td width="48px" style="text-align:center;">' . ($transaction['type'] === 'issuance' ? $transaction['risDetails']['remarks'] : '') . '</td>
                 </tr>
             ';
         }
-        
-        if(!$lastTransaction) {
-            $text .= '
-                    <tr style="font-size: 9px; font-weight:bold;">
-                        <td width="519px" style="text-align:center;">**** No transactions have been recorded yet this year. ****</td>
-                    </tr>
-                    <tr style="font-size: 9px; font-weight:bold;">
-                        <td width="60px"></td>
-                        <td width="150px" style="text-align:center;">**** Ending Balance ****</td>
-                        <td width="35px" style="text-align:center;">'. ($beginningBalance ? number_format($beginningBalance, 0, '.', ',') : 0) .'</td>
-                        <td width="52px"></td>
-                        <td width="35px"></td>
-                        <td width="52px"></td>
-                        <td width="87px" style="text-align:center;">'. ($beginningBalance ? number_format($beginningBalance, 0, '.', ',') : 0) .'</td>
-                        <td width="48px"></td>
-                    </tr>
-                ';
-                
-            return $text;
-        }
 
         $text .= '
-                    <tr style="font-size: 9px; font-weight:bold;">
-                        <td width="60px"></td>
-                        <td width="150px" style="text-align:center;">**** Ending Balance ****</td>
-                        <td width="35px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
-                        <td width="52px"></td>
-                        <td width="35px"></td>
-                        <td width="52px"></td>
-                        <td width="87px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
-                        <td width="48px"></td>
-                    </tr>
-                ';
+            <tr style="font-size: 9px; font-weight:bold;">
+                <td width="60px"></td>
+                <td width="150px" style="text-align:center;">**** Ending Balance ****</td>
+                <td width="35px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
+                <td width="52px"></td>
+                <td width="35px"></td>
+                <td width="52px"></td>
+                <td width="87px" style="text-align:center;">'. number_format($lastTransaction['currentStock'], 0, '.', ',') .'</td>
+                <td width="48px"></td>
+            </tr>
+        ';
 
         return $text;
     }
@@ -291,10 +303,20 @@ class AsOfStockCardController extends Controller
         return [];
     }
 
-    private function getBeginningBalance(int $id): int
+    private function getBeginningBalance(int $prodId, Carbon $startDate): int
     {
+        $lastTransaction = ProductInventoryTransaction::withTrashed()
+            ->where('prod_id', $prodId)
+            ->where('created_at', '<', $startDate)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($lastTransaction) {
+            return $lastTransaction->current_stock;
+        }
+
         return ProductInventory::withTrashed()
-            ->where('prod_id', $id)
+            ->where('prod_id', $prodId)
             ->value('qty_physical_count') ?? 0;
     }
 }
