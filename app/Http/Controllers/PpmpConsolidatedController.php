@@ -9,6 +9,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PpmpConsolidatedController extends Controller
 {
@@ -171,5 +172,133 @@ class PpmpConsolidatedController extends Controller
         $particular->update($data);
 
         return response()->json(['success' => true]);
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+        ]);
+
+        $fillable = [
+            'procurement_mode',
+            'ppc',
+            'start_pa',
+            'end_pa',
+            'expected_delivery',
+            'supporting_doc',
+            'remarks',
+        ];
+
+        $fields = collect($request->fields)
+            ->only($fillable)
+            ->filter(fn ($v) => $v !== null && $v !== '');
+
+        if ($fields->isEmpty()) {
+            return response()->json(['error' => 'No valid fields'], 422);
+        }
+
+        try {
+
+            DB::transaction(function () use ($request, $fields) {
+
+                $records = PpmpConsolidated::whereIn('id', $request->ids)->get();
+
+                foreach ($records as $particular) {
+
+                    $data = $fields->toArray();
+
+                    $mode = $data['procurement_mode'] ?? $particular->procurement_mode;
+                    $startPa = $data['start_pa'] ?? $particular->start_pa;
+
+                    foreach (['start_pa','end_pa','expected_delivery'] as $dateField) {
+                        if (!empty($data[$dateField]) &&
+                            !preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $data[$dateField])) {
+                            abort(422, "Invalid format for $dateField. Expected MM/YYYY.");
+                        }
+                    }
+
+                    if ($mode && $startPa &&
+                        preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $startPa)
+                    ) {
+
+                        [$month, $year] = explode('/', $startPa);
+                        $month = (int) $month;
+                        $year  = (int) $year;
+
+                        $addMonths = function ($m, $y, $add) {
+                            $m += $add;
+                            while ($m > 12) { 
+                                $m -= 12; 
+                                $y++; 
+                            }
+                            return str_pad($m, 2, '0', STR_PAD_LEFT) . '/' . $y;
+                        };
+
+                        $userProvidedEnd = !empty($fields['end_pa']);
+                        $userProvidedDelivery = !empty($fields['expected_delivery']);
+
+                        if ($mode === 'Bidding') {
+                            $data['ppc'] = 1;
+
+                            if (!$userProvidedEnd) {
+                                $data['end_pa'] = $addMonths($month, $year, 3);
+                            }
+
+                            $deliveryBase = $data['end_pa'] ?? $startPa;
+                            [$em, $ey] = explode('/', $deliveryBase);
+
+                            if (!$userProvidedDelivery) {
+                                $data['expected_delivery'] = $addMonths((int)$em, (int)$ey, 1);
+                            }
+                        }
+
+                        if ($mode === 'SVP') {
+                            $data['ppc'] = 0;
+
+                            if (!$userProvidedEnd) {
+                                $data['end_pa'] = $addMonths($month, $year, 1);
+                            }
+
+                            $deliveryBase = $data['end_pa'] ?? $startPa;
+                            [$em, $ey] = explode('/', $deliveryBase);
+
+                            if (!$userProvidedDelivery) {
+                                $data['expected_delivery'] = $addMonths((int)$em, (int)$ey, 1);
+                            }
+                        }
+
+                        if ($mode === 'DA/DC') {
+                            $data['ppc'] = 0;
+
+                            if (!$userProvidedEnd) {
+                                $data['end_pa'] = $startPa;
+                            }
+
+                            $deliveryBase = $data['end_pa'] ?? $startPa;
+                            [$em, $ey] = explode('/', $deliveryBase);
+
+                            if (!$userProvidedDelivery) {
+                                $data['expected_delivery'] = $addMonths((int)$em, (int)$ey, 1);
+                            }
+                        }
+                    }
+
+                    $particular->update($data);
+                }
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk update applied successfully.'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 422);
+        }
     }
 }

@@ -45,11 +45,6 @@ const openBulkModal = () => {
         return
     }
 
-    bulkForm.value = {
-        procurement_mode: '',
-        start_pa: ''
-    }
-
     modalState.value = 'bulk'
 }
 
@@ -59,46 +54,41 @@ const applyBulkUpdate = async () => {
     );
 
     if (!hasValue) {
-        Swal.fire('Warning', 'Please fill at least one field to apply bulk update.', 'warning');
+        Swal.fire('Warning', 'Please fill at least one field.', 'warning');
+        return;
+    }
+
+    if (!selectedRows.value.length) {
+        Swal.fire('Warning', 'Please select at least one row.', 'warning');
         return;
     }
 
     isLoading.value = true;
 
     try {
-        for (const id of selectedRows.value) {
+        const payload = {
+            ids: JSON.parse(JSON.stringify(selectedRows.value)),
+            fields: JSON.parse(JSON.stringify(bulkForm.value)),
+            user: props.user,
+        };
 
-            if (bulkForm.value.procurement_mode) {
-                await saveRowFieldImmediate(id, 'procurement_mode', bulkForm.value.procurement_mode);
+        console.log('FINAL PAYLOAD', payload);
 
-                const startPa = bulkForm.value.start_pa || document.querySelector(`.month-display[data-id="${id}"][data-field="start_pa"]`)?.textContent;
-                await autoFillDates(id, bulkForm.value.procurement_mode, startPa);
-            }
+        await axios.post(
+            route('ppmp.particular.bulk-update'),
+            payload
+        );
 
-            if (bulkForm.value.start_pa) {
-                await saveRowFieldImmediate(id, 'start_pa', bulkForm.value.start_pa);
-
-                const mode = bulkForm.value.procurement_mode || document.querySelector(`.procurement-mode-select[data-id="${id}"]`)?.value;
-                if (mode) await autoFillDates(id, mode, bulkForm.value.start_pa);
-            }
-
-            for (const field of ['supporting_doc', 'remarks']) {
-                if (bulkForm.value[field]) {
-                    await saveRowFieldImmediate(id, field, bulkForm.value[field]);
-                }
-            }
-        }
-
-        Swal.fire('Success', 'Bulk update applied.', 'success').then(() => {
-            selectedRows.value = [];
-            closeModal();
-
-            window.location.reload();
-        });
+        Swal.fire('Success', 'Bulk update applied.', 'success')
+            .then(() => {
+                selectedRows.value = [];
+                closeModal();
+                window.location.reload();
+            });
 
     } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'Bulk update failed.', 'error');
+        console.error(e.response?.data || e);
+        Swal.fire('Error', e.response?.data?.error || 'Bulk update failed.', 'error');
     } finally {
         isLoading.value = false;
     }
@@ -766,10 +756,10 @@ onUnmounted(() => {
             </nav>
         </template>
 
-        <div class="my-4 w-screen-2xl mb-8">
+        <div class="my-4 w-screen-2xl mb-4">
             <div class="overflow-hidden">
                 <div class="mx-4 lg:mx-0">
-                    <div class="shadow sm:rounded-lg bg-zinc-300 mb-5">
+                    <div class="shadow sm:rounded-lg bg-zinc-300 mb-3">
                         <div class="flex items-center justify-between bg-zinc-600 px-4 py-5 sm:px-6 rounded-t-lg">
                             <div>
                                 <h3 class="font-bold text-lg leading-6 text-zinc-300">
@@ -781,7 +771,7 @@ onUnmounted(() => {
                             </div>
                             <div>
                                 <Link :href="route('conso.ppmp.show', ppmpId)"
-                                    class="bg-indigo-900 font-bold text-md leading-6 text-white p-2 rounded-md hover:bg-indigo-800 transition">
+                                    class="bg-indigo-900 font-bold text-md leading-6 text-white p-2 rounded-md hover:bg-indigo-500 transition">
                                     Done
                                 </Link>
                             </div>
@@ -889,9 +879,9 @@ onUnmounted(() => {
                             </dl>
                         </div>
                     </div>
-                    <div class="mb-3">
+                    <div class="flex justify-end items-start rounded-lg mb-3">
                         <button @click="openBulkModal"
-                            class="bg-indigo-900 text-white px-4 py-2 rounded-md hover:bg-indigo-800 transition">
+                            class="bg-indigo-900 text-white px-4 py-2 rounded-md hover:bg-indigo-500 transition">
                             Bulk Update
                         </button>
                     </div>
@@ -919,7 +909,28 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-
+        <div class="p-2 rounded-md mb-2 bg-zinc-300 font-bold flex items-center justify-center">*Note</div>
+        <div class="flex items-start rounded-lg">
+            <span class="px-4 py-2 rounded-md mr-4 w-[33%] bg-zinc-300">
+                <b>Recommended Modes of Procurement:</b>
+                <br>Bidding
+                <br>SVP - Small Value Procurement
+                <br>DA/DC - Direct Acquisition/Direct Contracting
+            </span>
+            <span class="px-4 py-2 rounded-md mr-4 w-[33%] bg-zinc-300">
+                <b>End of Procurement Activity</b>
+                <br>Bidding - 3 months after the Start of Procurement Activity
+                <br>SVP - 1 month after the Start of Procurement Activity
+                <br>DA/DC - 15 days after the Start of Procurement Activity
+            </span>
+            <span class="px-4 py-2 rounded-md w-[33%]" style="background-color: #d4d4d4;">
+                <b></b>
+                <br>
+                <br>
+                <br>
+                <br>
+            </span>
+        </div>
     </AuthenticatedLayout>
     <Modal :show="isEditAdjustment" @close="closeModal">
         <form @submit.prevent="submitAdjustment">
