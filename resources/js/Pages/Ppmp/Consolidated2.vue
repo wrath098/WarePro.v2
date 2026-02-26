@@ -54,7 +54,10 @@ const openBulkModal = () => {
 }
 
 const applyBulkUpdate = async () => {
-    const hasValue = Object.values(bulkForm.value).some(val => val !== '' && val !== null && val !== undefined);
+    const hasValue = Object.values(bulkForm.value).some(
+        val => val !== '' && val !== null && val !== undefined
+    );
+
     if (!hasValue) {
         Swal.fire('Warning', 'Please fill at least one field to apply bulk update.', 'warning');
         return;
@@ -64,64 +67,34 @@ const applyBulkUpdate = async () => {
 
     try {
         for (const id of selectedRows.value) {
-            const rowPayload = {};
 
-            for (const field of [
-                'procurement_mode',
-                'ppc',
-                'start_pa',
-                'end_pa',
-                'expected_delivery',
-                'supporting_doc',
-                'remarks'
-            ]) {
-                const value = bulkForm.value[field];
-                if (value !== '' && value !== null && value !== undefined) {
-                    if (field === 'ppc') {
-                        rowPayload[field] = value === 'Yes' ? 1 : 0;
-                    } else if (['start_pa', 'end_pa', 'expected_delivery'].includes(field)) {
-                        const [mm, yyyy] = value.split('/');
-                        rowPayload[field] = `${yyyy}-${mm.padStart(2, '0')}-01`;
-                    } else {
-                        rowPayload[field] = value;
-                    }
-                }
+            if (bulkForm.value.procurement_mode) {
+                await saveRowFieldImmediate(id, 'procurement_mode', bulkForm.value.procurement_mode);
+
+                const startPa = bulkForm.value.start_pa || document.querySelector(`.month-display[data-id="${id}"][data-field="start_pa"]`)?.textContent;
+                await autoFillDates(id, bulkForm.value.procurement_mode, startPa);
             }
 
-            if (Object.keys(rowPayload).length) {
-                await axios.put(route('ppmp.particular.inline-update', id), {
-                    ...rowPayload,
-                    user: props.user
-                });
+            if (bulkForm.value.start_pa) {
+                await saveRowFieldImmediate(id, 'start_pa', bulkForm.value.start_pa);
+
+                const mode = bulkForm.value.procurement_mode || document.querySelector(`.procurement-mode-select[data-id="${id}"]`)?.value;
+                if (mode) await autoFillDates(id, mode, bulkForm.value.start_pa);
             }
 
-            for (const field in rowPayload) {
-                const value = rowPayload[field];
-
-                if (field === 'procurement_mode') {
-                    const select = document.querySelector(`.procurement-mode-select[data-id="${id}"]`);
-                    if (select) select.value = bulkForm.value.procurement_mode;
+            for (const field of ['supporting_doc', 'remarks']) {
+                if (bulkForm.value[field]) {
+                    await saveRowFieldImmediate(id, field, bulkForm.value[field]);
                 }
-
-                if (['start_pa', 'end_pa', 'expected_delivery'].includes(field)) {
-                    const span = document.querySelector(`.month-display[data-id="${id}"][data-field="${field}"]`);
-                    if (span) span.textContent = bulkForm.value[field];
-                }
-
-                if (['supporting_doc', 'remarks'].includes(field)) {
-                    const input = document.querySelector(`.inline-input[data-id="${id}"][data-field="${field}"]`);
-                    if (input) input.value = bulkForm.value[field];
-                }
-            }
-
-            if (bulkForm.value.start_pa && bulkForm.value.procurement_mode) {
-                await autoFillDates(id, bulkForm.value.procurement_mode, bulkForm.value.start_pa);
             }
         }
 
-        Swal.fire('Success', 'Bulk update applied.', 'success');
-        selectedRows.value = [];
-        closeModal();
+        Swal.fire('Success', 'Bulk update applied.', 'success').then(() => {
+            selectedRows.value = [];
+            closeModal();
+
+            window.location.reload();
+        });
 
     } catch (e) {
         console.error(e);
@@ -132,45 +105,60 @@ const applyBulkUpdate = async () => {
 };
 
 const autoFillDates = async (rowId, procurementMode, startPa) => {
-    if (!startPa || !procurementMode) return
+    if (!procurementMode) return
 
     let endPa = ''
     let expectedDelivery = ''
 
+    if (startPa) {
+        if (procurementMode === 'Bidding') {
+            endPa = addMonths(startPa, 3)
+            expectedDelivery = addMonths(endPa, 1)
+        }
+
+        if (procurementMode === 'SVP') {
+            endPa = addMonths(startPa, 1)
+            expectedDelivery = addMonths(endPa, 1)
+        }
+
+        if (procurementMode === 'DA/DC') {
+            endPa = startPa
+            expectedDelivery = addMonths(endPa, 1)
+        }
+    }
+
     if (procurementMode === 'Bidding') {
-        endPa = addMonths(startPa, 3)
-        expectedDelivery = addMonths(endPa, 1)
+        await saveRowFieldImmediate(rowId, 'ppc', 1);
+        const ppcSelect = document.querySelector(`.ppc-select[data-id="${rowId}"]`);
+        if (ppcSelect) ppcSelect.value = 'Yes';
+    } else if (procurementMode === 'SVP' || procurementMode === 'DA/DC') {
+        await saveRowFieldImmediate(rowId, 'ppc', 0);
+        const ppcSelect = document.querySelector(`.ppc-select[data-id="${rowId}"]`);
+        if (ppcSelect) ppcSelect.value = 'No';
     }
 
-    if (procurementMode === 'SVP') {
-        endPa = addMonths(startPa, 1)
-        expectedDelivery = addMonths(endPa, 1)
+    if (endPa) {
+        await saveRowFieldImmediate(rowId, 'end_pa', endPa)
+        const endSpan = document.querySelector(
+            `.month-display[data-id="${rowId}"][data-field="end_pa"]`
+        )
+        if (endSpan) endSpan.textContent = endPa
     }
 
-    if (procurementMode === 'DA/DC') {
-        endPa = startPa
-        expectedDelivery = addMonths(endPa, 1)
+    if (expectedDelivery) {
+        await saveRowFieldImmediate(rowId, 'expected_delivery', expectedDelivery)
+        const deliverySpan = document.querySelector(
+            `.month-display[data-id="${rowId}"][data-field="expected_delivery"]`
+        )
+        if (deliverySpan) deliverySpan.textContent = expectedDelivery
     }
-
-    await saveRowFieldImmediate(rowId, 'end_pa', endPa)
-    await saveRowFieldImmediate(rowId, 'expected_delivery', expectedDelivery)
-
-    const endSpan = document.querySelector(
-        `.month-display[data-id="${rowId}"][data-field="end_pa"]`
-    )
-    const deliverySpan = document.querySelector(
-        `.month-display[data-id="${rowId}"][data-field="expected_delivery"]`
-    )
-
-    if (endSpan) endSpan.textContent = endPa
-    if (deliverySpan) deliverySpan.textContent = expectedDelivery
 }
 
 const handleClick = (e) => {
     const target = e.target;
 
     if (
-        !target.classList.contains('month-display') ||
+        !target.classList.contains('month-display') &&
         !target.classList.contains('month-editor')
     ) return;
 
@@ -184,6 +172,34 @@ const handleClick = (e) => {
 
 const handleChange = (e) => {
     const target = e.target;
+
+    if (target.classList.contains('row-checkbox')) {
+        const id = target.dataset.id;
+
+        if (target.checked) {
+            if (!selectedRows.value.includes(id)) {
+                selectedRows.value.push(id);
+            }
+        } else {
+            selectedRows.value = selectedRows.value.filter(i => i !== id);
+        }
+        return;
+    }
+
+    if (target.id === 'select-all') {
+        const checked = target.checked;
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+
+        selectedRows.value = [];
+
+        checkboxes.forEach(cb => {
+            cb.checked = checked;
+            if (checked) {
+                selectedRows.value.push(cb.dataset.id);
+            }
+        });
+        return;
+    }
 
     if (!target.classList.contains('inline-input')) return;
 
@@ -207,17 +223,19 @@ const handleChange = (e) => {
     if (field === 'start_pa') {
         const select = document.querySelector(
             `.procurement-mode-select[data-id="${id}"]`
-        )
-        const mode = select?.value
-        autoFillDates(id, mode, value)
+        );
+        autoFillDates(id, select?.value, value);
     }
 
     if (field === 'procurement_mode') {
-        const startSpan = document.querySelector(
-            `.month-display[data-id="${id}"][data-field="start_pa"]`
-        )
-        const startValue = startSpan?.textContent
-        autoFillDates(id, value, startValue)
+        const startSpan = document.querySelector(`.month-display[data-id="${id}"][data-field="start_pa"]`);
+        autoFillDates(id, value, startSpan?.textContent);
+
+        if (value === 'SVP' || value === 'DA/DC') {
+            const ppcInput = document.querySelector(`.ppc-select[data-id="${id}"]`);
+            if (ppcInput) ppcInput.value = 'No';
+            saveRowField(id, 'ppc', 0);
+        }
     }
 
     const display = target.previousElementSibling;
@@ -612,37 +630,6 @@ const columns = [
 onMounted(() => {
     document.addEventListener('click', handleClick);
     document.addEventListener('change', handleChange);
-
-    document.addEventListener('change', (e) => {
-
-        // Individual row checkbox
-        if (e.target.classList.contains('row-checkbox')) {
-            const id = e.target.dataset.id
-
-            if (e.target.checked) {
-                if (!selectedRows.value.includes(id)) {
-                    selectedRows.value.push(id)
-                }
-            } else {
-                selectedRows.value = selectedRows.value.filter(i => i !== id)
-            }
-        }
-
-        // Select All
-        if (e.target.id === 'select-all') {
-            const checked = e.target.checked
-            const checkboxes = document.querySelectorAll('.row-checkbox')
-
-            selectedRows.value = []
-
-            checkboxes.forEach(cb => {
-                cb.checked = checked
-                if (checked) {
-                    selectedRows.value.push(cb.dataset.id)
-                }
-            })
-        }
-    });
 });
 
 onUnmounted(() => {
@@ -655,6 +642,9 @@ onUnmounted(() => {
 
     <Head title="PPMP" />
     <AuthenticatedLayout>
+        <div v-if="isLoading" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div class="w-16 h-16 border-4 border-t-indigo-600 border-gray-200 rounded-full animate-spin"></div>
+        </div>
         <template #header>
             <nav class="flex justify-between flex-col lg:flex-row" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center justify-center space-x-1 md:space-x-3 bg">
@@ -1018,86 +1008,97 @@ onUnmounted(() => {
         </form>
     </Modal>
     <Modal :show="isBulkModalOpen" @close="closeModal">
-        <div class="bg-zinc-300 px-6 pt-6 pb-4">
-            <h3 class="text-lg font-semibold text-[#1a0037] mb-4">
-                Bulk Update Selected Rows
-            </h3>
-
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    Recommended Mode of Procurement
-                </label>
-                <select v-model="bulkForm.procurement_mode" class="w-full border rounded-md p-2">
-                    <option disabled value="">Select</option>
-                    <option value="Bidding">Bidding</option>
-                    <option value="SVP">SVP</option>
-                    <option value="DA/DC">DA/DC</option>
-                </select>
+        <div class="relative">
+            <div v-if="isLoading" class="absolute inset-0 bg-black/30 flex items-center justify-center z-50 rounded-md">
+                <div class="w-12 h-12 border-4 border-t-indigo-600 border-gray-200 rounded-full animate-spin"></div>
             </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    Pre-Procurement Conference
-                </label>
-                <select v-model="bulkForm.ppc" class="w-full border rounded-md p-2">
-                    <option disabled value="">-- Select --</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
+            <div class="bg-zinc-300 px-6 pt-6 pb-4 opacity-100">
+                <h3 class="text-lg font-semibold text-[#1a0037] mb-4">
+                    Bulk Update Selected Rows
+                </h3>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Recommended Mode of Procurement</label>
+                    <select v-model="bulkForm.procurement_mode" class="w-full border rounded-md p-2">
+                        <option disabled value="">Select</option>
+                        <option value="Bidding">Bidding</option>
+                        <option value="SVP">SVP</option>
+                        <option value="DA/DC">DA/DC</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">
+                        Pre-Procurement Conference
+                    </label>
+                    <select v-model="bulkForm.ppc" class="w-full border rounded-md p-2">
+                        <option disabled value="">-- Select --</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">
+                        Start of Procurement Activity
+                    </label>
+                    <input type="month" :value="mmYYYYToYM(bulkForm.start_pa)"
+                        @change="e => bulkForm.start_pa = ymToMMYYYY(e.target.value)"
+                        class="w-full border rounded-md p-2" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">
+                        End of Procurement Activity
+                    </label>
+                    <input type="month" :value="mmYYYYToYM(bulkForm.end_pa)"
+                        @change="e => bulkForm.end_pa = ymToMMYYYY(e.target.value)"
+                        class="w-full border rounded-md p-2" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">
+                        Expected Delivery
+                    </label>
+                    <input type="month" :value="mmYYYYToYM(bulkForm.expected_delivery)"
+                        @change="e => bulkForm.expected_delivery = ymToMMYYYY(e.target.value)"
+                        class="w-full border rounded-md p-2" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">
+                        Supporting Document
+                    </label>
+                    <input type="text" v-model="bulkForm.supporting_doc" class="w-full border rounded-md p-2"
+                        placeholder="Market Scoping Checklist, etc..." />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">
+                        Remarks
+                    </label>
+                    <input type="text" v-model="bulkForm.remarks" class="w-full border rounded-md p-2"
+                        placeholder="Additional Details..." />
+                </div>
             </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    Start of Procurement Activity
-                </label>
-                <input type="month" :value="mmYYYYToYM(bulkForm.start_pa)"
-                    @change="e => bulkForm.start_pa = ymToMMYYYY(e.target.value)"
-                    class="w-full border rounded-md p-2" />
+            <div class="bg-zinc-400 px-6 py-3 flex justify-end gap-3">
+                <button @click="closeModal" class="bg-red-600 text-white px-4 py-2 rounded-md" :disabled="isLoading">
+                    Cancel
+                </button>
+
+                <button @click="applyBulkUpdate" :disabled="isLoading"
+                    class="bg-indigo-900 text-white px-4 py-2 rounded-md flex items-center gap-2">
+                    <svg v-if="isLoading" class="w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Done
+                </button>
             </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    End of Procurement Activity
-                </label>
-                <input type="month" :value="mmYYYYToYM(bulkForm.end_pa)"
-                    @change="e => bulkForm.end_pa = ymToMMYYYY(e.target.value)" class="w-full border rounded-md p-2" />
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    Expected Delivery
-                </label>
-                <input type="month" :value="mmYYYYToYM(bulkForm.expected_delivery)"
-                    @change="e => bulkForm.expected_delivery = ymToMMYYYY(e.target.value)"
-                    class="w-full border rounded-md p-2" />
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    Supporting Document
-                </label>
-                <input type="text" v-model="bulkForm.supporting_doc" class="w-full border rounded-md p-2"
-                    placeholder="Market Scoping Checklist, etc..." />
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-semibold mb-2">
-                    Remarks
-                </label>
-                <input type="text" v-model="bulkForm.remarks" class="w-full border rounded-md p-2"
-                    placeholder="Additional Details..." />
-            </div>
-        </div>
-
-        <div class="bg-zinc-400 px-6 py-3 flex justify-end gap-3">
-            <button @click="closeModal" class="bg-red-600 text-white px-4 py-2 rounded-md">
-                Cancel
-            </button>
-
-            <button @click="applyBulkUpdate" :disabled="isLoading"
-                class="bg-indigo-900 text-white px-4 py-2 rounded-md">
-                Done
-            </button>
         </div>
     </Modal>
     <Modal :show="isEditFinalAdjustment" @close="closeModal">

@@ -115,26 +115,60 @@ class PpmpConsolidatedController extends Controller
     {
         $particular = PpmpConsolidated::findOrFail($id);
 
-        $field = $request->input('field');
-        $value = $request->input('value');
-
-        $fieldMap = [
-            'procurement_mode'   => 'procurement_mode',
-            'ppc'                => 'ppc',
-            'start_pa'           => 'start_pa',
-            'end_pa'             => 'end_pa',
-            'expected_delivery'  => 'expected_delivery',
-            'estimated_budget'   => 'estimated_budget',
-            'supporting_doc'     => 'supporting_doc',
-            'remarks'           => 'remarks',
+        $fillable = [
+            'procurement_mode',
+            'ppc',
+            'start_pa',
+            'end_pa',
+            'expected_delivery',
+            'estimated_budget',
+            'supporting_doc',
+            'remarks',
         ];
 
-        if (!isset($fieldMap[$field])) {
-            return response()->json(['error' => 'Invalid field'], 422);
+        if ($request->filled('field')) {
+            $field = $request->field;
+            $value = $request->value;
+
+            if (!in_array($field, $fillable)) {
+                return response()->json(['error' => 'Invalid field'], 422);
+            }
+
+            if ($field === 'ppc') {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+
+            if (in_array($field, ['start_pa', 'end_pa', 'expected_delivery']) && $value) {
+                if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $value)) {
+                    return response()->json(['error' => "Invalid format for $field, expected MM/YYYY"], 422);
+                }
+            }
+
+            $particular->$field = $value;
+            $particular->save();
+
+            return response()->json(['success' => true]);
         }
 
-        $particular->{$fieldMap[$field]} = $value;
-        $particular->save();
+        $data = $request->only($fillable);
+
+        if (empty($data)) {
+            return response()->json(['error' => 'No valid fields'], 422);
+        }
+
+        if (array_key_exists('ppc', $data)) {
+            $data['ppc'] = filter_var($data['ppc'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        foreach (['start_pa', 'end_pa', 'expected_delivery'] as $dateField) {
+            if (!empty($data[$dateField])) {
+                if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $data[$dateField])) {
+                    return response()->json(['error' => "Invalid format for $dateField, expected MM/YYYY"], 422);
+                }
+            }
+        }
+
+        $particular->update($data);
 
         return response()->json(['success' => true]);
     }
