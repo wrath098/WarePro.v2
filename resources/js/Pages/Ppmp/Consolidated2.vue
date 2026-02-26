@@ -13,6 +13,31 @@ import useAuthPermission from '@/Composables/useAuthPermission';
 import debounce from 'lodash/debounce';
 import axios from 'axios';
 
+const REQUIRED_FIELDS = [
+    'procurement_mode',
+    'ppc',
+    'start_pa',
+    'end_pa',
+    'expected_delivery',
+]
+
+const handleProceedClick = () => {
+    if (hasIncompleteParticulars.value) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete Items',
+            text: 'All Items should have Recommended Mode of Procurement, Pre-Procurement Conference, Start of Procurement Activity, End of Procurement Activity and Expected Delivery',
+        });
+        return;
+    }
+
+    showModal('confirm');
+};
+
+const hasIncompleteParticulars = computed(() => {
+    return page.props.hasIncompleteParticulars
+})
+
 const ymToMMYYYY = (ym) => {
     if (!ym) return ''
     const [yyyy, mm] = ym.split('-')
@@ -222,6 +247,7 @@ const handleChange = (e) => {
         autoFillDates(id, value, startSpan?.textContent);
 
         if (value === 'SVP' || value === 'DA/DC') {
+            saveRowFieldImmediate(id, 'procurement_mode', value);
             const ppcInput = document.querySelector(`.ppc-select[data-id="${id}"]`);
             if (ppcInput) ppcInput.value = 'No';
             saveRowField(id, 'ppc', 0);
@@ -739,17 +765,26 @@ onUnmounted(() => {
                                     <span class="ml-2">Summary Overview</span>
                                 </a>
                             </div>
-
-                            <button v-if="hasPermission('confirm-app-finalization') || hasAnyRole(['Developer'])"
-                                @click="showModal('confirm')"
-                                class="flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100 transition duration-150 ease-in-out">
-                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path fill="none" stroke="currentColor" stroke-linecap="round"
-                                        stroke-linejoin="round" stroke-width="2"
-                                        d="M4 17h7m9-3l-4 4l-2-2M4 12h11M4 7h11" />
-                                </svg>
-                                <span class="ml-2">Proceed as Approved</span>
-                            </button>
+                            <div v-if="hasPermission('confirm-app-finalization') || hasAnyRole(['Developer'])">
+<button
+  @click="handleProceedClick"
+  class="flex w-full px-4 py-2 text-left text-sm leading-5
+         transition duration-150 ease-in-out
+         text-gray-700 hover:bg-indigo-900 hover:text-gray-50 focus:bg-indigo-100
+         rounded
+         "
+  :class="{
+    'opacity-50 cursor-not-allowed': hasIncompleteParticulars,
+  }"
+>
+  <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-linecap="round"
+          stroke-linejoin="round" stroke-width="2"
+          d="M4 17h7m9-3l-4 4l-2-2M4 12h11M4 7h11" />
+  </svg>
+  <span class="ml-2">Proceed as Approved</span>
+</button>
+                            </div>
                         </template>
                     </Dropdown>
                 </ol>

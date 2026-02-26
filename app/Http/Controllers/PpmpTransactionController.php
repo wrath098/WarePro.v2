@@ -397,10 +397,10 @@ class PpmpTransactionController extends Controller
         $recapitulation = [];
         
         #Validate Consolidation if approved transaction is already exist
-        $isApprovedExist = $this->validateApprovedConsolidation($ppmpTransaction);
-        if($isApprovedExist) {
-            return back()->with('error', 'Approved Consolidated Transaction is already exist. Please verify and try again.');
-        }
+        // $isApprovedExist = $this->validateApprovedConsolidation($ppmpTransaction);
+        // if($isApprovedExist) {
+        //     return back()->with('error', 'Approved Consolidated Transaction is already exist. Please verify and try again.');
+        // }
 
         #Office PPMP Transaction IDs
         $officePpmpIds = json_decode($ppmpTransaction->office_ppmp_ids, true);
@@ -647,10 +647,21 @@ class PpmpTransactionController extends Controller
         $ppmpTransaction->totalItems = $sortedParticulars->count();
         $ppmpTransaction->totalAmount = number_format($totalAmount, 2, '.', ',');
         
+        $hasIncompleteParticulars = $ppmpTransaction->consolidated()
+        ->where(function ($q) {
+            $q->whereNull('procurement_mode')
+            ->orWhereNull('ppc')
+            ->orWhereNull('start_pa')
+            ->orWhereNull('end_pa')
+            ->orWhereNull('expected_delivery');
+        })
+        ->exists();
+        
         return Inertia::render('Ppmp/Consolidated2', [
             'ppmp' =>  $ppmpTransaction,
             'countTrashed' => $countTrashedItems,
             'accountClass' => $accountClass,
+            'hasIncompleteParticulars' => $hasIncompleteParticulars,
             'user' => Auth::id(),
         ]);
     }
@@ -819,11 +830,11 @@ class PpmpTransactionController extends Controller
             }
 
             #Validate Consolidation if approved transaction is already exist
-            $isApprovedExist = $this->validateApprovedConsolidation($consoTransactionInfo);
-            if($isApprovedExist) {
-                DB::rollBack();
-                return back()->with('error', 'Updating Failed. Approved Consolidated Transaction is already exist!');
-            }
+            // $isApprovedExist = $this->validateApprovedConsolidation($consoTransactionInfo);
+            // if($isApprovedExist) {
+            //     DB::rollBack();
+            //     return back()->with('error', 'Updating Failed. Approved Consolidated Transaction is already exist!');
+            // }
 
             #Office PPMP Transaction IDs
             $officePpmpIds = json_decode($consoTransactionInfo->office_ppmp_ids);

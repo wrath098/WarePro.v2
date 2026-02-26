@@ -151,6 +151,13 @@ class PpmpConsolidatedController extends Controller
             return response()->json(['success' => true]);
         }
 
+        if ($field === 'procurement_mode') {
+            $allowed = ['Bidding', 'SVP', 'DA/DC'];
+            if (!in_array($value, $allowed)) {
+                return response()->json(['error' => 'Invalid procurement mode'], 422);
+            }
+        }
+
         $data = $request->only($fillable);
 
         if (empty($data)) {
