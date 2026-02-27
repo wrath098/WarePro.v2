@@ -54,16 +54,16 @@ class OfficePpmpController extends Controller
                 </div>
                 <div style="line-height: 0.60; text-align: center; font-size: 10px;">
                     <h4>PROJECT PROCUREMENT MANAGEMENT PLAN (PPMP) NO. ___</h4>
-                    <h5>INDICATIVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FINAL </h5>
+                    <h5>INDICATIVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FINAL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h5>
                     <table align="center" cellpadding="0" cellspacing="0">
                         <tr>
-                            <td width="420px"></td>
+                            <td width="400px"></td>
                             <td width="20px" align="center">
                                 <table border="1" cellpadding="3" cellspacing="0">
                                     <tr><td></td></tr>
                                 </table>
                             </td>
-                            <td width="95px"></td>
+                            <td width="105px"></td>
                             <td width="20px" align="center">
                                 <table border="1" cellpadding="3" cellspacing="0">
                                     <tr><td></td></tr>
