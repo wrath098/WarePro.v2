@@ -461,7 +461,7 @@ class RisTransactionController extends Controller
             'office_id' => $officeId,
             'ppmp_ref_no' => $ppmpId,
             'created_by' => $requestData['user'],
-            'created_at' => $requestData['risDate'],
+            'ris_date' => $requestData['risDate'],
         ]);
     }
 
@@ -541,7 +541,7 @@ class RisTransactionController extends Controller
         $transactions = RisTransaction::with(['creator', 'requestee', 'productDetails' => function($query) {
                 $query->withTrashed();
             }])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('ris_date', 'desc')
             ->limit(100)
             ->get();
 
@@ -630,7 +630,7 @@ class RisTransactionController extends Controller
             ->with(['creator', 'requestee', 'productDetails' => function($query) {
                 $query->withTrashed();
             }])
-            ->latest('created_at')
+            ->latest('ris_date')
             ->get();
 
         return $resultLogs->map(fn($transaction) => [
@@ -659,22 +659,22 @@ class RisTransactionController extends Controller
                 'office_id',
                 'created_by',
                 'remarks',
-                'created_at',
+                'ris_date',
                 DB::raw('COUNT(id) as transaction_count')
             )
             ->with(['creator', 'requestee'])
             ->when(isset($period['year']), function($q) use ($period) {
-                $q->whereYear('created_at', $period['year']);
+                $q->whereYear('ris_date', $period['year']);
             })
             ->when(isset($period['month']), function($q) use ($period) {
                 $month = str_pad($period['month'], 2, '0', STR_PAD_LEFT);
-                $q->whereMonth('created_at', $month);
+                $q->whereMonth('ris_date', $month);
             })
             ->when(isset($period['day']), function($q) use ($period) {
                 $day = str_pad($period['day'], 2, '0', STR_PAD_LEFT);
-                $q->whereDay('created_at', $day);
+                $q->whereDay('ris_date', $day);
             })
-            ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', 'created_at')
+            ->groupBy('ris_no', 'issued_to', 'office_id', 'created_by', 'remarks', 'ris_date')
             ->orderByDesc('ris_no')
             ->get();
 
@@ -694,6 +694,7 @@ class RisTransactionController extends Controller
             'issuedTo' => $transaction->issued_to,
             'releasedBy' => $transaction->creator->name,
             'noOfItems' => $transaction->transaction_count,
+            'dateIssued' => Carbon::parse($transaction->ris_date)->format('M d, Y'),
         ]);
     }
 
