@@ -96,61 +96,81 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                                     <td width="880px" colspan="16">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                                     </tr>';
 
-                    $catFirstTotal = 0; 
-                    $catSecondTotal = 0;
-                    $catTotal = 0;
-        
+                        $catFirstTotal = 0;
+                        $catSecondTotal = 0;
+                        $catTotal = 0;
+
+                        $allCategoryParticulars = [];
                         foreach ($category->items as $item) {
-                            if ($item->products->isNotEmpty()) {  
+                            if ($item->products->isNotEmpty()) {
                                 foreach ($item->products as $product) {
-                                    $matchedParticulars = $sortedParticulars->filter(function ($particular) use ($product) {
-                                        return $particular['prodCode'] === $product->prod_newNo;
-                                    });
+                                    $matchedParticulars = $sortedParticulars
+                                        ->filter(fn ($p) => $p['prodCode'] === $product->prod_newNo);
 
-                                    if ($matchedParticulars->isNotEmpty()) {
-                                        foreach ($matchedParticulars as $particular) {
-                                            $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
-                                            $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
-                                            $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
-                                            $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                            $text .= $prodQtyAmount > 0
-                                                ? '<tr nobr="true" style="font-size: 8px; text-align: center;">'
-                                                : '<tr nobr="true" style="font-size: 8px; text-align: center; background-color:#f87171;">';
-
-                                            $text .= '
-                                                <td width="50px"></td>
-                                                <td width="40px">Goods</td>
-                                                <td width="45px">' . $product->prod_newNo . '</td>
-                                                <td width="30px" style="text-align: right;">' . number_format($prodQty, 0, ".", ",") . '</td>
-                                                <td width="35px">' . $product->prod_unit . '</td>
-                                                <td width="250px" style="text-align: left;">' . $product->prod_desc . '</td>
-                                                <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, ".", ",") . '</td>
-                                                <td width="50px">' . $particular['procurement_mode'] . '</td>
-                                                <td width="40px">' . ($particular['ppc'] ? 'Yes' : 'No') . '</td>
-                                                <td width="40px">' . $particular['start_pa'] . '</td>
-                                                <td width="40px">' . $particular['end_pa'] . '</td>
-                                                <td width="40px">' . $particular['expected_delivery'] . '</td>
-                                                <td style="font-size: 7px" width="50px">General Fund</td>
-                                                <td style="font-size: 7px; text-align: right;" width="40px">' . number_format($prodQtyAmount, 2, ".", ",") . '</td>
-                                                <td width="40px"></td>
-                                                <td width="40px"></td>
-                                            </tr>';
-
-                                            $catFirstTotal += $firstQtyAmount; 
-                                            $catSecondTotal += $secondQtyAmount;
-                                            $catTotal += $prodQtyAmount;
-                                        }
+                                    foreach ($matchedParticulars as $particular) {
+                                        $allCategoryParticulars[] = [
+                                            'product' => $product,
+                                            'particular' => $particular,
+                                        ];
                                     }
-                                }  
-                            }         
+                                }
+                            }
                         }
-                        $recapitulation[$fund->fund_name][] =  [
+
+                        usort($allCategoryParticulars, function ($a, $b) {
+                            $aIsDA = $a['particular']['procurement_mode'] === 'DA/DC' ? 1 : 0;
+                            $bIsDA = $b['particular']['procurement_mode'] === 'DA/DC' ? 1 : 0;
+
+                            if ($aIsDA !== $bIsDA) return $aIsDA - $bIsDA;
+
+                            return strcmp($a['particular']['prodCode'], $b['particular']['prodCode']);
+                        });
+
+                        foreach ($allCategoryParticulars as $row) {
+                            $product = $row['product'];
+                            $particular = $row['particular'];
+
+                            $prodQty = $particular['qtyFirst'] + $particular['qtySecond'];
+                            $firstQtyAmount = $particular['qtyFirst'] * (float) $particular['prodPrice'];
+                            $secondQtyAmount = $particular['qtySecond'] * (float) $particular['prodPrice'];
+                            $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
+
+                            $text .= $prodQtyAmount > 0
+                                ? '<tr nobr="true" style="font-size: 8px; text-align: center;">'
+                                : '<tr nobr="true" style="font-size: 8px; text-align: center; background-color:#f87171;">';
+
+                            $text .= '
+                                <td width="50px"></td>
+                                <td width="40px">Goods</td>
+                                <td width="45px">' . $product->prod_newNo . '</td>
+                                <td width="30px" style="text-align: right;">' . number_format($prodQty, 0, ".", ",") . '</td>
+                                <td width="35px">' . $product->prod_unit . '</td>
+                                <td width="250px" style="text-align: left;">' . $product->prod_desc . '</td>
+                                <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, ".", ",") . '</td>
+                                <td width="50px">' . $particular['procurement_mode'] . '</td>
+                                <td width="40px">' . ($particular['ppc'] ? 'Yes' : 'No') . '</td>
+                                <td width="40px">' . $particular['start_pa'] . '</td>
+                                <td width="40px">' . $particular['end_pa'] . '</td>
+                                <td width="40px">' . $particular['expected_delivery'] . '</td>
+                                <td style="font-size: 7px" width="50px">General Fund</td>
+                                <td style="font-size: 7px; text-align: right;" width="40px">' . number_format($prodQtyAmount, 2, ".", ",") . '</td>
+                                <td width="40px"></td>
+                                <td width="40px"></td>
+                            </tr>';
+
+                            $catFirstTotal += $firstQtyAmount;
+                            $catSecondTotal += $secondQtyAmount;
+                            $catTotal += $prodQtyAmount;
+                        }
+
+                        $recapitulation[$fund->fund_name][] = [
                             'name' => sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name,
                             'total' => $catTotal,
                             'firstSem' => $catFirstTotal,
                             'secondSem' => $catSecondTotal,
                         ];
                     }
+
                     $text .= '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
                             <td colspan="12">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
                             <td colspan="2" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
@@ -158,7 +178,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                             <td></td>
                         </tr>';
 
-                    $fundFirstTotal += $catFirstTotal; 
+                    $fundFirstTotal += $catFirstTotal;
                     $fundSecondTotal += $catSecondTotal;
                     $fundTotal += $catTotal;
                 }
@@ -206,14 +226,24 @@ class ApprovedConsolidatedPpmpController extends TemplateController
             }
         }
         
-        $text .= '<tr>
-                    <td style="border:1px solid #fff;" width="100%">
-                        <p colspan="16" style="font-size: 10px; line-height: 0.4;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
-                        <br>
+        $text .= '<tr> 
+                    <td width="880px" style="border:1px solid black; padding:6px; font-size:10px; line-height:1.2;">
+                        <div style="margin:0; padding:0;"> 
+                            <i> 
+                                <b>Note:</b> Technical specifications for each item/request being proposed shall be submitted as part of the PPMP. 
+                            </i>
+                        </div>
+                        <div style="margin-top:4px;">
+                            <i>
+                                <b>Recommended Modes of Procurement:</b>
+                                    <ul style="padding-left:20px; ">     
+                                        <li>Bidding</li>
+                                        <li>SVP - Small Value Procurement</li>
+                                        <li>DA/DC - Direct Acquisition/Direct Contracting</li>
+                                    </ul>
+                            </i>
+                        </div>
                     </td>
-                </tr>
-                <tr>
-                    <td width="100%" style="line-height: 0.00001; border:1px solid black; border-left:1px solid white;  border-right:1px solid white;"></td>
                 </tr>';
 
         $text .= '</tbody></table><br><br>';
@@ -296,6 +326,9 @@ class ApprovedConsolidatedPpmpController extends TemplateController
             ];
         });
         
-        return $groupParticulars->sortBy('prodCode');
+        return $groupParticulars->sortBy([
+    fn ($p) => $p['procurement_mode'] === 'DA/DC' ? 1 : 0,
+    fn ($p) => $p['prodCode'],
+]);
     }
 }
