@@ -65,9 +65,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $table .= $this->tableContent($ppmp, $version);
         $table .= '</tbody>';
         $table .= '</table>';
-        $pdf->writeHTML($table, true, false, true, false, '');
-        $table2 = $this->ppmpFooter();     
-        $pdf->writeHTML($table2, true, false, true, false, '');
+        $pdf->writeHTML($table, true, false, true, false, '');   
 
         $pdf->Output('cPPMP-' . strtoupper($ppmp->ppmp_status) . '-' . $ppmp->ppmp_status . '.pdf', 'I');
     }
@@ -88,14 +86,14 @@ class ApprovedConsolidatedPpmpController extends TemplateController
             $fundTotal = 0;
 
             if ($fund->categories->isNotEmpty()) {
-                $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                            <td width="100%">' . strtoupper($fund->fund_name) . '</td>
+                $text .= '<tr class="bg-gray-100" style="font-size: 8px; font-weight: bold;">
+                            <td width="880px" colspan="16">' . strtoupper($fund->fund_name) . '</td>
                             </tr>';
 
                 foreach ($fund->categories as $category) {
                     if ($category->items->isNotEmpty()) {
-                        $text .= '<tr class="bg-gray-100" style="font-size: 10px; font-weight: bold;">
-                                    <td width="100%">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
+                        $text .= '<tr class="bg-gray-100" style="font-size: 8px; font-weight: bold;">
+                                    <td width="880px" colspan="16">' . sprintf('%02d', (int) $category->cat_code) . ' - ' . $category->cat_name . '</td>
                                     </tr>';
 
                     $catFirstTotal = 0; 
@@ -115,29 +113,27 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                                             $firstQtyAmount =  $particular['qtyFirst'] * (float) $particular['prodPrice'];
                                             $secondQtyAmount =  $particular['qtySecond'] * (float) $particular['prodPrice'];
                                             $prodQtyAmount = $firstQtyAmount + $secondQtyAmount;
-                                            $text .= $prodQtyAmount > 0 ? '<tr style="font-size: 9px; text-align: center;">' : '<tr style="font-size: 9px; text-align: center; background-color:#f87171;">';
+                                            $text .= $prodQtyAmount > 0
+                                                ? '<tr nobr="true" style="font-size: 8px; text-align: center;">'
+                                                : '<tr nobr="true" style="font-size: 8px; text-align: center; background-color:#f87171;">';
+
                                             $text .= '
-                                                <td width="40px">' . $product->prod_oldNo . '</td>
+                                                <td width="50px"></td>
+                                                <td width="40px">Goods</td>
                                                 <td width="45px">' . $product->prod_newNo . '</td>
-                                                <td width="190px" style="text-align: left;">' . $product->prod_desc . '</td>
-                                                <td width="45px">' . $product->prod_unit. '</td>
-                                                <td width="45px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, '.', ',') . '</td>
-                                                <td width="40px" style="text-align: right;">' . number_format($prodQty, 0, '.', ',') . '</td>
-                                                <td width="60px" style="text-align: right;">' . number_format($prodQtyAmount, 2, '.', ',') . '</td>
-                                                <td width="32px" style="text-align: right;">' . ($particular['qtyFirst'] != 0 ? number_format($particular['qtyFirst'], 0, '.', ',') : '-') . '</td>
-                                                <td width="50px" style="text-align: right;">' . ($firstQtyAmount != 0 ? number_format($firstQtyAmount, 2, '.', ',') : '-') . '</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="32px" style="text-align: right;">' . ($particular['qtySecond'] != 0 ? number_format($particular['qtySecond'], 0, '.', ',') : '-') . '</td>
-                                                <td width="50px" style="text-align: right;">' . ($secondQtyAmount != 0 ? number_format($secondQtyAmount, 2, '.', ',') : '-') . '</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
-                                                <td width="25px">-</td>
+                                                <td width="30px" style="text-align: right;">' . number_format($prodQty, 0, ".", ",") . '</td>
+                                                <td width="35px">' . $product->prod_unit . '</td>
+                                                <td width="250px" style="text-align: left;">' . $product->prod_desc . '</td>
+                                                <td width="50px" style="text-align: right;">' . number_format($particular['prodPrice'], 2, ".", ",") . '</td>
+                                                <td width="50px">' . $particular['procurement_mode'] . '</td>
+                                                <td width="40px">' . ($particular['ppc'] ? 'Yes' : 'No') . '</td>
+                                                <td width="40px">' . $particular['start_pa'] . '</td>
+                                                <td width="40px">' . $particular['end_pa'] . '</td>
+                                                <td width="40px">' . $particular['expected_delivery'] . '</td>
+                                                <td style="font-size: 7px" width="50px">General Fund</td>
+                                                <td style="font-size: 7px; text-align: right;" width="40px">' . number_format($prodQtyAmount, 2, ".", ",") . '</td>
+                                                <td width="40px"></td>
+                                                <td width="40px"></td>
                                             </tr>';
 
                                             $catFirstTotal += $firstQtyAmount; 
@@ -155,42 +151,22 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                             'secondSem' => $catSecondTotal,
                         ];
                     }
-                    $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="365px">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
-                            <td width="100px" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="82px" style="text-align: right;">' . ($catFirstTotal != 0 ? number_format($catFirstTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="82px" style="text-align: right;">' . ($catSecondTotal != 0 ? number_format($catSecondTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
+                    $text .= '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td colspan="12">Total Amount for ' . htmlspecialchars($category->cat_name) . '</td>
+                            <td colspan="2" style="text-align: right;">' . ($catTotal != 0 ? number_format($catTotal, 2, '.', ',') : '-') . '</td>
+                            <td></td>
+                            <td></td>
                         </tr>';
 
                     $fundFirstTotal += $catFirstTotal; 
                     $fundSecondTotal += $catSecondTotal;
                     $fundTotal += $catTotal;
                 }
-                $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="365px">Grand Total Amount for ' . $fund->fund_name . '</td>
-                            <td width="100px" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="82px" style="text-align: right;">' . ($fundFirstTotal != 0 ? number_format($fundFirstTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="82px" style="text-align: right;">' . ($fundSecondTotal != 0 ? number_format($fundSecondTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
+                $text .= '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td colspan="12">Grand Total Amount for ' . $fund->fund_name . '</td>
+                            <td colspan="2" style="text-align: right;">' . ($fundTotal != 0 ? number_format($fundTotal, 2, '.', ',') : '-') . '</td>
+                            <td></td>
+                            <td></td>
                         </tr>';
             }
            
@@ -208,37 +184,17 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                 $grandTotalSecondQty = $fundSecondTotal + $contingencySecond;
                 $granTotal = $fundTotal + $contingency;
 
-                $text .= '<tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="365px">Total Amount of Contingency</td>
-                            <td width="100px" style="text-align: right;">' . ($contingency != 0 ? number_format($contingency, 2, '.', ',') : '-') . '</td>
-                            <td width="82px" style="text-align: right;">' . ($contingencyFirst != 0 ? number_format($contingencyFirst, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="82px" style="text-align: right;">' . ($contingencySecond != 0 ? number_format($contingencySecond, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                        </tr>
-                        <tr style="font-size: 10px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
-                            <td width="365px">Grand Total</td>
-                            <td width="100px" style="text-align: right;">' . ($granTotal != 0 ? number_format($granTotal, 2, '.', ',') : '-') . '</td>
-                            <td width="82px" style="text-align: right;">' . ($grandTotalFirstQty != 0 ? number_format($grandTotalFirstQty, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="82px" style="text-align: right;">' . ($grandTotalSecondQty != 0 ? number_format($grandTotalSecondQty, 2, '.', ',') : '-') . '</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
-                            <td width="25px">-</td>
+                $text .= '<tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td colspan="12">Total Amount of Contingency</td>
+                            <td colspan="2" style="text-align: right;">' . ($contingency != 0 ? number_format($contingency, 2, '.', ',') : '-') . '</td>
+                            <td></td>
+                            <td></td>
+                            </tr>
+                        <tr style="font-size: 8px; font-weight:bold; text-align: center; background-color: #f2f2f2;">
+                            <td colspan="12">Grand Total</td>
+                            <td colspan="2" style="text-align: right;">' . ($granTotal != 0 ? number_format($granTotal, 2, '.', ',') : '-') . '</td>
+                            <td></td>
+                            <td></td>
                         </tr>';
 
                 $recapitulation[$fund->fund_name][] = [
@@ -252,17 +208,20 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         
         $text .= '<tr>
                     <td style="border:1px solid #fff;" width="100%">
-                        <p style="font-size: 10px; line-height: 0.4;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
+                        <p colspan="16" style="font-size: 10px; line-height: 0.4;"><i>Note: Technical specifications for each item/request being proposed shall be submitted as part of the PPMP.</i></p>
                         <br>
                     </td>
                 </tr>
                 <tr>
                     <td width="100%" style="line-height: 0.00001; border:1px solid black; border-left:1px solid white;  border-right:1px solid white;"></td>
-                </tr>
-                ';
-        
+                </tr>';
+
+        $text .= '</tbody></table><br><br>';
+        $text .= '<table nobr="true" border="1" cellpadding="2" cellspacing="0">';
+        $text .= '<tbody>';
         $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                    <td width="100%" style="line-height: 2; border:1px solid black;">Recapitulation</td>
+                    <td width="440px" style="line-height: 2; border-left:1px solid #000; border-top:1px solid #000; border-bottom:1px solid #000; border-right:0px solid #fff;">Recapitulation</td>
+                    <td width="440px" style="line-height: 2; border-right:1px solid #000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:0px solid #fff; text-align: right;">Estimated Budget</td>
                 </tr>';
 
         $overAllAmount = 0;
@@ -270,7 +229,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $overAllSecondAmount = 0;
         foreach ($recapitulation as $expenses => $fund) {
             $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                    <td width="100%" style="border:1px solid #000;"> <span style="color:#fff;">&nbsp</span> '. $expenses .'</td>
+                    <td width="880px" style="border:1px solid #000;"> <span style="color:#fff;">&nbsp</span> '. $expenses .'</td>
                 </tr>';
             
             $allAmount = 0;
@@ -283,44 +242,28 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                 if($cat['name'] != 'Contingency') {
                     $text .= '<tr style="font-size: 10px; font-weight:bold;">
                         <td width="55px" style="border-left:1px solid #000; border-right:0px solid #fff; border-bottom:1px solid #000;"></td>
-                        <td width="320px" style="border-left:0px solid #fff; border-right:0px solid #fff; border-bottom:1px solid #000;">'. $cat['name'] .'</td>
-                        <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;">'. number_format($cat['total'], 2, '.', ',') .'</td>
-                        <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. number_format($cat['firstSem'], 2, '.', ',') .'</td>
-                        <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
-                        <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. number_format($cat['secondSem'], 2, '.', ',') .'</td>
-                        <td width="175px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #000;"></td>
+                        <td width="625px" style="border-left:0px solid #fff; border-right:0px solid #fff; border-bottom:1px solid #000;">'. $cat['name'] .'</td>
+                        <td width="200px" style="text-align:right; border-left:0px solid #fff; border-right:1px solid #000; border-bottom:1px solid #000;">'. number_format($cat['total'], 2, '.', ',') .'</td>
                     </tr>';
                 } else {
                     $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                        <td width="75px" style="border-left:1px solid #000; border-right:0px solid #fff; border-bottom:1px solid #000;"></td>
-                        <td width="300px" style="border-left:0px solid #fff; border-right:0px solid #fff; border-bottom:1px solid #000;">'. $cat['name'] .'</td>
-                        <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;">'. number_format($cat['total'], 2, '.', ',') .'</td>
-                        <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. number_format($cat['firstSem'], 2, '.', ',') .'</td>
-                        <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
-                        <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. number_format($cat['secondSem'], 2, '.', ',') .'</td>
-                        <td width="175px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #000;"></td>
+                        <td width="55px" style="border-left:1px solid #000; border-right:0px solid #fff; border-bottom:1px solid #000;"></td>
+                        <td width="625px" style="border-left:0px solid #fff; border-right:0px solid #fff; border-bottom:1px solid #000;">'. $cat['name'] .'</td>
+                        <td width="200px" style="text-align:right; border-left:0px solid #fff; border-right:1px solid #000; border-bottom:1px solid #000;">'. number_format($cat['total'], 2, '.', ',') .'</td>
                     </tr>';
                 }
             }
             $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                    <td width="375px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;"><span style="color:white;">&nbsp</span> Total</td>
-                    <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;">'. number_format($allAmount, 2, '.', ',') .'</td>
-                    <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. number_format($firstAmount, 2, '.', ',') .'</td>
-                    <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
-                    <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;">'. number_format($secondAmount, 2, '.', ',') .'</td>
-                    <td width="175px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #000;"></td>
+                    <td width="440px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;"><span style="color:white;">&nbsp</span> Total</td>
+                    <td width="440px" style="text-align:right; border-left:0px solid #fff; border-right:1px solid #000; border-bottom:1px solid #000;">'. number_format($allAmount, 2, '.', ',') .'</td>
                 </tr>';
             $overAllAmount += $allAmount;
             $overAllFirstAmount += $firstAmount;
             $overAllSecondAmount += $secondAmount;
         }
         $text .= '<tr style="font-size: 10px; font-weight:bold;">
-                    <td width="375px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;">Grand Total</td>
-                    <td width="90px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;"><u>'. number_format($overAllAmount, 2, '.', ',') .'</u></td>
-                    <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"><u>'. number_format($overAllFirstAmount, 2, '.', ',') .'</u></td>
-                    <td width="75px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"></td>
-                    <td width="82px" style="text-align:right; border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #fff;"><u>'. number_format($overAllSecondAmount, 2, '.', ',') .'</u></td>
-                    <td width="175px" style="border:1px solid #fff; border-bottom:1px solid #000;border-right:1px solid #000;"></td>
+                    <td width="440px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;">Grand Total</td>
+                    <td width="440px" style="text-align:right; border-left:0px solid #fff; border-right:1px solid #000; border-bottom:1px solid #000;">'. number_format($overAllAmount, 2, '.', ',') .'</td>
                 </tr>';
         
         return $text;
@@ -342,6 +285,14 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                 'prodPrice' => $prodPrice,
                 'qtyFirst' => $qtyFirst,
                 'qtySecond' => $qtySecond,
+                'procurement_mode' => $items->procurement_mode,
+                'ppc' => $items->ppc,
+                'start_pa' => $items->start_pa,
+                'end_pa' => $items->end_pa,
+                'expected_delivery' => $items->expected_delivery,
+                'estimated_budget' => $items->estimated_budget,
+                'supporting_doc' => $items->supporting_doc,
+                'remarks' => $items->remarks,
             ];
         });
         
