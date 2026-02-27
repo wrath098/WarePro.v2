@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pdf;
 use App\Models\PpmpTransaction;
 use App\Services\PpmpPDF;
 use App\Services\ProductService;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ApprovedConsolidatedPpmpController extends TemplateController
@@ -20,6 +21,16 @@ class ApprovedConsolidatedPpmpController extends TemplateController
     {
         $version = $request->query('version');
         $pdf = new PpmpPDF('L', 'mm', array(203.2, 330.2), true, 'UTF-8', false, $ppmp->ppmp_code);
+
+        $preparedById = $request->query('preparedBy');
+        $reviewedById = $request->query('reviewedBy');
+        $certifiedCorrectId = $request->query('approvedBy');
+
+        $signatories = [
+            'prepared_by' => $preparedById ? $this->getUserSignatory($preparedById) : ['name'=>'', 'position'=>''],
+            'reviewed_by' => $reviewedById ? $this->getUserSignatory($reviewedById) : ['name'=>'', 'position'=>''],
+            'approved_by' => $certifiedCorrectId ? $this->getUserSignatory($certifiedCorrectId) : ['name'=>'', 'position'=>''],
+        ];
 
         $logoPath = public_path('assets/images/benguet_logo.png');
         $pilipinasPath = public_path('assets/images/Bagong_Pilipinas_logo.png');
@@ -62,7 +73,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $table .= $this->consolidationHeader();
         $table .= '</thead>';
         $table .= '<tbody>';
-        $table .= $this->tableContent($ppmp, $version);
+        $table .= $this->tableContent($ppmp, $version, $signatories);
         $table .= '</tbody>';
         $table .= '</table>';
         $pdf->writeHTML($table, true, false, true, false, '');   
@@ -70,7 +81,7 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         $pdf->Output('cPPMP-' . strtoupper($ppmp->ppmp_status) . '-' . $ppmp->ppmp_status . '.pdf', 'I');
     }
 
-    protected function tableContent(PpmpTransaction $ppmpTransaction, $version)
+    protected function tableContent(PpmpTransaction $ppmpTransaction, $version, $signatories)
     {
         $text = '';
 
@@ -295,7 +306,25 @@ class ApprovedConsolidatedPpmpController extends TemplateController
                     <td width="440px" style="border:1px solid #fff; border-bottom:1px solid #000; border-left:1px solid #000;">Grand Total</td>
                     <td width="440px" style="text-align:right; border-left:0px solid #fff; border-right:1px solid #000; border-bottom:1px solid #000;">'. number_format($overAllAmount, 2, '.', ',') .'</td>
                 </tr>';
-        
+        $text .= '</tbody></table><br><br>';
+        $text .= '<table><tbody>';
+        $text .= '<tr style="font-size: 11px;">
+                        <td width="293px" rowspan="3">Prepared By:</td>
+                        <td width="293px" rowspan="3">Reviewed By:</td>
+                        <td width="293px" rowspan="3">Approved By:</td>
+                    </tr>
+                    <tr><td width="880px" colspan="3"><br></td></tr>
+                    <tr><td width="880px" colspan="3"><br></td></tr>
+                    <tr style="font-size: 11px; font-weight:bold; text-align:center;">
+                        <td width="293px">'. $signatories['prepared_by']['name'].'</td>
+                        <td width="293px">'. $signatories['reviewed_by']['name'].'</td>
+                        <td width="293px">'. $signatories['approved_by']['name'].'</td>
+                    </tr>
+                    <tr style="font-size: 11px; text-align:center;">
+                        <td width="293px">'. $signatories['prepared_by']['position'].'</td>
+                        <td width="293px">'. $signatories['reviewed_by']['position'].'</td>
+                        <td width="293px">'. $signatories['approved_by']['position'].'</td>
+                    </tr>';
         return $text;
     }
 
@@ -327,8 +356,18 @@ class ApprovedConsolidatedPpmpController extends TemplateController
         });
         
         return $groupParticulars->sortBy([
-    fn ($p) => $p['procurement_mode'] === 'DA/DC' ? 1 : 0,
-    fn ($p) => $p['prodCode'],
-]);
+            fn ($p) => $p['procurement_mode'] === 'DA/DC' ? 1 : 0,
+            fn ($p) => $p['prodCode'],
+        ]);
+    }
+
+    private function getUserSignatory($userId)
+    {
+        $user = \App\Models\User::find($userId);
+
+        return [
+            'name' => ($user->name ?? ''),
+            'position' => ($user->position ?? ''),
+        ];
     }
 }

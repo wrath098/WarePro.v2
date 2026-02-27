@@ -751,6 +751,8 @@ class PpmpTransactionController extends Controller
             'transactions' => $transactions, 
             'individualList' => $result,
             'accountClass' => $accountClass,
+            'user' => Auth::id(),
+            'users' => \App\Models\User::select('id', 'name', 'position')->orderBy('name')->get()
         ]);
     }
 
